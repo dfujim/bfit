@@ -6244,7 +6244,7 @@ Error message and password prompt
 <div modified="20171215084937325" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/EditToolbar</pre>
 </div>
-<div list="[[Help Index]]" title="$:/StoryList">
+<div list="[[Help Index]] Hotkeys" title="$:/StoryList">
 <pre></pre>
 </div>
 <div modified="20171215083831245" title="$:/temp/advancedsearch">
@@ -6662,7 +6662,7 @@ Multiscans are considered as a single scan with long integration time. Histogram
 &quot;&quot;&quot;
 </pre>
 </div>
-<div created="20171215082810696" modified="20171215083537650" title="Hotkeys">
+<div created="20171215082810696" modified="20180626234231887" title="Hotkeys">
 <pre>Hotkey assignment varies depending on the tab shown. Global hotkeys are constant. 
 
 ! Global hotkeys
@@ -6672,13 +6672,12 @@ Multiscans are considered as a single scan with long integration time. Histogram
 | ctrl+s | set draw mode &quot;stack&quot; |
 | ctrl+r | set draw mode &quot;redraw&quot; |
 
-! File Viewer Tab
+! File Details Tab
 
 | !Command | !Effect |
 | return | fetch file |
 | ctrl+return | draw file |
 | shift+return | draw file |
-| ctrl+a | toggle check all |
 
 ! Fetch Data Tab
 | !Command | !Focus | !Effect |
@@ -6687,28 +6686,29 @@ Multiscans are considered as a single scan with long integration time. Histogram
 |~|bin omit entry | set checked |
 | ctrl+return || draw file |
 | shift+return || draw file |
+| ctrl+a || toggle check all |
 </pre>
 </div>
-<div created="20171215075709744" modified="20171215082751986" title="Installation">
+<div created="20171215075709744" modified="20180626234053256" title="Installation">
 <pre>To install, one need to first acquire mudpy and bdata. 
 
-! mudpy Installation 
+! mudpy and bdata Installation 
 
-* Download mudpy [ext[here|https://github.com/dfujim/Tools/blob/master/mudpy/mudpy.zip]]. 
+* Download mudpy [ext[here|https://ms-code.phas.ubc.ca:2633/dfujim_public/bdata/releases]]. 
 * Extract the files using your distribution's archive manager, or via
 ```bash
-unzip mudpy.zip
+unzip bdata.zip
 ```
-* Navigate to mudpy directory. 
+* Navigate to bdata directory. 
 
 ```bash
-cd mudpy
+cd bdata
 ```
 
 * Compile
 
 ```bash
-python3 build.py
+python3 setup_mudpy.py build_ext --inplace
 ```
 
 !! Dependencies 
@@ -6732,21 +6732,11 @@ sudo -H pip3 install Cython
 One then should add mudpy to the python path. Add the following line to your ``${HOME}/.bashrc`` file. This will be found in your home directory. Append: 
 
 ```bash
-export PYTHONPATH:${PYTHONPATH}:/path/mudpy/
+export PYTHONPATH:${PYTHONPATH}:/path/bdata/
 ```
 
----
 
-! bdata Installation
-
-* bdata can be downloaded [ext[here|https://github.com/dfujim/Tools/blob/master/mudpy/bdata.py]]
-* bdata is simply a python module, so there is no further installation needed. One may find it useful to add it to your python path, if it is not already: 
-
-```bash
-export PYTHONPATH:${PYTHONPATH}:/path_to_directory_containing_bdata/
-```
-
-* bdata can be told where to fetch bnmr and bnqr data if it is stored locally. The format for data storage is to have the data files sorted by year, with each year getting it's own directory. One should set the location for the directory holding all of the directories corresponding to each year. Add the following to your ``${HOME}/.bashrc`` file:
+bdata can be told where to fetch bnmr and bnqr data if it is stored locally. The format for data storage is to have the data files sorted by year, with each year getting it's own directory. One should set the location for the directory holding all of the directories corresponding to each year. Add the following to your ``${HOME}/.bashrc`` file:
 
 ```bash
 export BNMR_ARCHIVE=/path_to_bnmr_year_directories/
@@ -6757,7 +6747,7 @@ export BNQR_ARCHIVE=/path_to_bnqr_year_directories/
 
 ! bfit Installation
 
-* bfit can be downloaded [ext[here|https://github.com/dfujim/Tools/tree/master/bfit]]
+* bfit can be downloaded [ext[here|https://ms-code.phas.ubc.ca:2633/dfujim_public/bfit/releases]]
 * Again, this is simply a python module, however there are some dependencies needed. These are 
 ** python 3.5.2 or higher
 ** tkinter 8.5 or higher  (python3-tk)
@@ -6767,6 +6757,12 @@ export BNQR_ARCHIVE=/path_to_bnqr_year_directories/
 ** pandas 0.21.0 or higher (pandas)
 
 If you are unconcerned with the exact version of the above, one can upgrade each by calling ``pip install --upgrade package_name`` where the package name is in brackets in the above.
+
+We also need the fitting functions to be on the python path. In your ``${HOME}/.bashrc`` add the line: 
+
+```bash
+export PYTHONPATH:${PYTHONPATH}:/path_to_bfit/Fitting
+```
 
 For ease of use, one should add the bfit module as an alias. If ``${HOME}/.bash_aliases`` exists, add the following line there, or alternatively to your ``${HOME}/.bashrc`` file. Append: 
 
