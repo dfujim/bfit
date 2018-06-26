@@ -9,8 +9,8 @@
 #include <math.h>
 #include "DEIntegrator.h"
 
-// ========================================================================= //
-// Stretched exponential class for integration
+/// ======================================================================= ///
+/// Stretched exponential class for integration
 class StrExp
 {
     public:
@@ -35,8 +35,8 @@ class StrExp
         }
 };
 
-// ========================================================================= //
-// Stretched exponential class for integration
+/// ======================================================================= ///
+/// Stretched exponential class for integration
 class MixedStrExp
 {
     public:
@@ -70,31 +70,45 @@ class MixedStrExp
         }
 };
 
-// ========================================================================= //
-// Integral of stretched exponential from 0 to x
-class IntegralStrExp
+/// ======================================================================= ///
+/// Integral of stretched exponential from 0 to x
+class Integrator
 {
     public:
-        double out;
-        IntegralStrExp(double t, double tprime, double l, double b, double life)
-        {
-            out = DEIntegrator<StrExp>::Integrate(StrExp(t,l,b,life),0,tprime,1e-6);
-        }
-};
-
-// ========================================================================= //
-// Integral of stretched exponential from 0 to x
-class IntegralMixedStrExp
-{
-    public:
-        double out;
-        IntegralMixedStrExp(double t, double tprime, double l1, double b1, 
-                double l2, double b2, double a, double life)
-        {
-            out = DEIntegrator<MixedStrExp>::Integrate(MixedStrExp(t,l1,b1,l2,
-                    b2,a,life),0,tprime,1e-6);
-        }
-};
-
+        // Variables
+        double lifetime;
     
+        // Methods
+        Integrator(double lifetime);
+        double StrExp(double t, double tprime, double lamb, double beta);
+        double MixedStrExp(double t, double tprime, double lamb1, double beta1, 
+                double lamb2, double beta2, double amp);
+};
+
+
+/// ======================================================================= ///
+/// Integrator Class Methods ///
+
+// Constructor ----------------------------------------------------------------
+Integrator::Integrator(double lifetime)
+{
+    this->lifetime = lifetime;
+}
+
+// Integrate StrExp -----------------------------------------------------------
+double Integrator::StrExp(double t, double tprime, double lamb, double beta)
+{
+    return DEIntegrator<StrExp>::Integrate(StrExp(t,lamb,beta,lifetime),0,
+                                           tprime,1e-6);
+}
+
+// Integrate MixedStrExp ------------------------------------------------------
+double Integrator::MixedStrExp(double t, double tprime, double lamb1, 
+                               double beta1, double lamb2, double beta2, 
+                               double amp)
+{
+    return DEIntegrator<MixedStrExp>::Integrate(MixedStrExp(t,lamb1,beta1,lamb2,
+            beta2,aamp,life),0,tprime,1e-6);
+}
+
 #endif // INTEGRATION_FNS_CPP
