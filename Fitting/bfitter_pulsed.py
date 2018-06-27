@@ -5,8 +5,6 @@
 from integrator import PulsedFns
 from bdata import bdata
 from scipy.optimize import curve_fit
-import matplotlib.pyplot as plt
-#~ import pandas as pd
 import numpy as np
 
 # number of input parameters (not detectable)
@@ -15,6 +13,8 @@ ninputs_dict = {'exp':2,'strexp':3,'mixed_strexp':6}
 # ========================================================================== #
 def bfitter_pulsed(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs):
     """
+        Fit combined asymetry from pulsed beam SLR data: time scan. 
+    
         data: tuple of (xdata,ydata,yerr,life,pulse) OR bdata object.
             xdata:  np array of xaxis data to fit.
             ydata:  np array of yaxis data to fit.
