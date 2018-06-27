@@ -285,7 +285,7 @@ class bfit(object):
                 
             # plot comined helicities
             elif asym_type == 'c':
-                a = data.asym(rebin=rebin)
+                a = data.asym(rebin=rebin,omit=option)
                 plt.errorbar(x,a.c[0],a.c[1],fmt='.',\
                         label="Run %d" % data.run)
                 
