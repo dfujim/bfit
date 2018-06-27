@@ -34,3 +34,13 @@ bfitter_pulsed(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs)
             cov: covariance matrix
             fn:  function pointer to fitted function
 ```
+
+Function parameter order on output
+
+| Mode | Parameter Order |
+| -------- | -------- |
+| exp     | lambda, amp |
+| strexp     | lambda, beta, amp |
+| mixed_strexp     | lambda1, beta1, lambda2, beta2, alpha, amp |
+
+for `ncomp > 1`, the above order repeats `ncomp` times. If `offset = True`, then the last parameter is the offset. 
