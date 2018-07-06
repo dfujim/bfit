@@ -76,7 +76,7 @@ def lor(freq,peak,width,amp):
     return -amp*0.25*np.square(width)/(np.square(freq-peak)+np.square(0.5*width))
 
 def gaus(freq,peak,width,amp):
-    return amp*np.exp(-np.square((freq-peak)/(width))/2)
+    return -amp*np.exp(-np.square((freq-peak)/(width))/2)
 
 
 
