@@ -217,7 +217,10 @@ class fetch_files(object):
         
         # filename
         filename = self.bfit.fileviewer.default_export_filename
-        filename = filedialog.askdirectory()+'/'+filename
+        try:
+            filename = filedialog.askdirectory()+'/'+filename
+        except TypeError:
+            pass
         
         # get data and write
         for k in self.data.keys():
