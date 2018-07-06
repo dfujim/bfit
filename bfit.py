@@ -12,6 +12,7 @@ import sys,os,datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import webbrowser
 import subprocess
 
@@ -21,6 +22,7 @@ from fetch_files_tab import fetch_files
 from fit_files_tab import fit_files
 from zahersCalculator import zahersCalculator
 from monikasCalculator import monikasCalculator
+from drawstyle_popup import drawstyle_popup
 
 __doc__="""
     BNMR/BNQR data visualization and curve fitting.
@@ -124,6 +126,14 @@ class bfit(object):
         # event bindings
         root.protocol("WM_DELETE_WINDOW",self.on_closing)
         
+        # drawing styles
+        self.style = {'linestyle':'None',
+                      'linewidth':mpl.rcParams['lines.linewidth'],
+                      'marker':'.',
+                      'markersize':mpl.rcParams['lines.markersize'],
+                      'capsize':0.,
+                      'elinewidth':mpl.rcParams['lines.linewidth']}
+        
         # main frame
         mainframe = ttk.Frame(root,pad=5)
         mainframe.grid(column=0,row=0,sticky=(N,W))
@@ -148,11 +158,13 @@ class bfit(object):
         # Settings
         menu_settings = Menu(menubar)
         menubar.add_cascade(menu=menu_settings, label='Settings')
-        
         menu_settings_dir = Menu(menu_settings)
         
+        # Settings cascade commands
         menu_settings.add_command(label="Set matplotlib defaults",\
                 command=self.set_matplotlib)
+        menu_settings.add_command(label='Set drawing style',
+                command=self.set_draw_style)
         menu_settings.add_cascade(menu=menu_settings_dir,label='Data Directory')
         
         # Settings: data directory
@@ -234,7 +246,7 @@ class bfit(object):
             pass
     
     # ======================================================================= #
-    def draw(self,data,asym_type,rebin=1,option='',label=''):
+    def draw(self,data,asym_type,rebin=1,option='',**drawargs):
         """Draw the selected file"""
         
         # Settings
@@ -246,8 +258,15 @@ class bfit(object):
         plt.ion()
         
         # default label value
-        if label == '':
+        if 'label' not in drawargs.keys():
             label = str(data.run)
+        else:
+            label = drawargs['label']
+
+        # set drawing style arguments
+        for k in self.style:
+            if k not in drawargs.keys():
+                drawargs[k] = self.style[k]
         
         # make new window according to draw style and get axes
         if draw_style.get() == 'new':
@@ -265,10 +284,10 @@ class bfit(object):
             idx_n = a.n[0]!=0
             
             xlabel = 'Bin'
-            plt.errorbar(x[idx_p],a.p[0][idx_p],a.p[1][idx_p],fmt='.',\
-                    label=label+"($+$)")
-            plt.errorbar(x[idx_n],a.n[0][idx_n],a.n[1][idx_n],fmt='.',\
-                    label=label+"($-$)")
+            plt.errorbar(x[idx_p],a.p[0][idx_p],a.p[1][idx_p],
+                    label=label+"($+$)",**drawargs)
+            plt.errorbar(x[idx_n],a.n[0][idx_n],a.n[1][idx_n],
+                    label=label+"($-$)",**drawargs)
         
         # get asymmetry: other
         else:
@@ -282,16 +301,13 @@ class bfit(object):
             
             # plot split helicities
             if asym_type == 'h':
-                plt.errorbar(x,a.p[0],a.p[1],fmt='.',\
-                        label=label+" ($+$)")
-                plt.errorbar(x,a.n[0],a.n[1],fmt='.',\
-                        label=label+" ($+$)")
+                plt.errorbar(x,a.p[0],a.p[1],label=label+" ($+$)",**drawargs)
+                plt.errorbar(x,a.n[0],a.n[1],label=label+" ($+$)",**drawargs)
                 
             # plot comined helicities
             elif asym_type == 'c':
                 a = data.asym(rebin=rebin,omit=option)
-                plt.errorbar(x,a.c[0],a.c[1],fmt='.',\
-                        label=label)
+                plt.errorbar(x,a.c[0],a.c[1],label=label,**drawargs)
                 
             # attempting to draw raw scans unlawfully
             elif asym_type == 'r':
@@ -406,7 +422,7 @@ class bfit(object):
         if type(d) == str:
             self.bnqr_data_dir = d
             os.environ[self.bnqr_archive_label] = d
-
+        
     # ======================================================================= #
     def set_matplotlib(self): 
         """Edit matplotlib settings file, or give info on how to do so."""
@@ -437,6 +453,7 @@ class bfit(object):
         state = self.fetch_files.check_state.get()
         self.fetch_files.check_state.set(not state)
         self.fetch_files.check_all()
+    def set_draw_style(self):       drawstyle_popup(self)
     def set_style_new(self,x):      self.draw_style.set('new')
     def set_style_stack(self,x):    self.draw_style.set('stack')
     def set_style_redraw(self,x):   self.draw_style.set('redraw')
