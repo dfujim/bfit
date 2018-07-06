@@ -384,6 +384,7 @@ class dataline(object):
         
         # variables
         self.bin_remove = StringVar()
+        self.label = StringVar()
         self.rebin = IntVar()
         self.check_state = BooleanVar()
         self.mode = bd.mode
@@ -434,9 +435,11 @@ class dataline(object):
         bias_label = ttk.Label(line_frame,text=bias_text,pad=5)
         bin_remove_entry = ttk.Entry(line_frame,textvariable=self.bin_remove,\
                 width=20)
+        label_entry = ttk.Entry(line_frame,textvariable=self.label,\
+                width=10)
         remove_button = ttk.Button(line_frame,text='Remove',\
-                command=self.remove,pad=5)
-        draw_button = ttk.Button(line_frame,text='Draw',command=self.draw,pad=5)
+                command=self.remove,pad=1)
+        draw_button = ttk.Button(line_frame,text='Draw',command=self.draw,pad=1)
         
         rebin_label = ttk.Label(line_frame,text="Rebin:",pad=5)
         rebin_box = Spinbox(line_frame,from_=1,to=100,width=3,\
@@ -455,21 +458,33 @@ class dataline(object):
         bin_remove_entry.bind('<FocusIn>', entry_fn)
         bin_remove_entry.bind('<FocusOut>', on_focusout_fn)
         bin_remove_entry.config(foreground='grey')
+             
+        # add grey text to label
+        label_entry.insert(0,str(self.run))
+        entry_fn_lab = partial(on_entry_click,text=str(self.run),
+                               entry=label_entry)
+        on_focusout_fn_lab = partial(on_focusout,text=str(self.run),
+                                 entry=label_entry)
+        label_entry.bind('<FocusIn>', entry_fn_lab)
+        label_entry.bind('<FocusOut>', on_focusout_fn_lab)
+        label_entry.config(foreground='grey')
                 
         # grid
-        year_label.grid(column=1,row=0,sticky=E)
-        run_label.grid(column=2,row=0,sticky=E)
-        temp_label.grid(column=3,row=0,sticky=E)
-        field_label.grid(column=4,row=0,sticky=E)
-        bias_label.grid(column=5,row=0,sticky=E)
+        c = 1
+        year_label.grid(column=c,row=0,sticky=E); c+=1
+        run_label.grid(column=c,row=0,sticky=E); c+=1
+        temp_label.grid(column=c,row=0,sticky=E); c+=1
+        field_label.grid(column=c,row=0,sticky=E); c+=1
+        bias_label.grid(column=c,row=0,sticky=E); c+=1
         if self.mode in ['1f','1n']: 
-            bin_remove_entry.grid(column=6,row=0,sticky=E)
+            bin_remove_entry.grid(column=c,row=0,sticky=E); c+=1
         if self.mode == '20': 
-            rebin_label.grid(column=6,row=0,sticky=E)
-            rebin_box.grid(column=7,row=0,sticky=E)
-        check.grid(column=8,row=0,sticky=E)
-        draw_button.grid(column=9,row=0,sticky=E)
-        remove_button.grid(column=10,row=0,sticky=E)
+            rebin_label.grid(column=c,row=0,sticky=E); c+=1
+            rebin_box.grid(column=c,row=0,sticky=E); c+=1
+        label_entry.grid(column=c,row=0,sticky=E); c+=1
+        check.grid(column=c,row=0,sticky=E); c+=1
+        draw_button.grid(column=c,row=0,sticky=E); c+=1
+        remove_button.grid(column=c,row=0,sticky=E); c+=1
         
         # passing
         self.line_frame = line_frame
@@ -508,10 +523,11 @@ class dataline(object):
         d = self.bfit.fileviewer.asym_dict[d]
         
         if self.bin_remove.get() == self.bin_remove_starter_line:
-            self.bfit.draw(self.datalist[self.run],d,self.rebin.get())
+            self.bfit.draw(self.datalist[self.run],d,self.rebin.get(),
+                label=self.label.get())
         else:
             self.bfit.draw(self.datalist[self.run],d,self.rebin.get(),\
-                option=self.bin_remove.get())
+                option=self.bin_remove.get(),label=self.label.get())
         
 # =========================================================================== #
 def on_entry_click(event,entry,text):

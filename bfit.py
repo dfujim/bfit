@@ -234,7 +234,7 @@ class bfit(object):
             pass
     
     # ======================================================================= #
-    def draw(self,data,asym_type,rebin=1,option=''):
+    def draw(self,data,asym_type,rebin=1,option='',label=''):
         """Draw the selected file"""
         
         # Settings
@@ -244,6 +244,10 @@ class bfit(object):
         # get draw setting 
         draw_style = self.draw_style
         plt.ion()
+        
+        # default label value
+        if label == '':
+            label = str(data.run)
         
         # make new window according to draw style and get axes
         if draw_style.get() == 'new':
@@ -262,9 +266,9 @@ class bfit(object):
             
             xlabel = 'Bin'
             plt.errorbar(x[idx_p],a.p[0][idx_p],a.p[1][idx_p],fmt='.',\
-                    label="Run %d ($+$)" % data.run)
+                    label=label+"($+$)")
             plt.errorbar(x[idx_n],a.n[0][idx_n],a.n[1][idx_n],fmt='.',\
-                    label="Run %d ($-$)" % data.run)
+                    label=label+"($-$)")
         
         # get asymmetry: other
         else:
@@ -279,15 +283,15 @@ class bfit(object):
             # plot split helicities
             if asym_type == 'h':
                 plt.errorbar(x,a.p[0],a.p[1],fmt='.',\
-                        label="Run %d ($+$)" % data.run)
+                        label=label+" ($+$)")
                 plt.errorbar(x,a.n[0],a.n[1],fmt='.',\
-                        label="Run %d ($-$)" % data.run)
+                        label=label+" ($+$)")
                 
             # plot comined helicities
             elif asym_type == 'c':
                 a = data.asym(rebin=rebin,omit=option)
                 plt.errorbar(x,a.c[0],a.c[1],fmt='.',\
-                        label="Run %d" % data.run)
+                        label=label)
                 
             # attempting to draw raw scans unlawfully
             elif asym_type == 'r':
