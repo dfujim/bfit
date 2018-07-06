@@ -261,7 +261,8 @@ class bfit(object):
         if 'label' not in drawargs.keys():
             label = str(data.run)
         else:
-            label = drawargs['label']
+            label = drawargs.pop('label',None)
+            
 
         # set drawing style arguments
         for k in self.style:
@@ -373,7 +374,10 @@ class bfit(object):
                 break
         
         # write to file
-        df.to_csv(filename)
+        try:
+            df.to_csv(filename)
+        except AttributeError:
+            pass
     
     # ======================================================================= #
     def help(self):

@@ -132,7 +132,7 @@ class fileviewer(object):
         # get data
         if not self.get_data():
             return
-        data = self.bfit.data[0]
+        data = self.data
         
         # get filename 
         filename = filedialog.asksaveasfilename(
