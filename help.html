@@ -299,6 +299,8 @@ Error message and password prompt
 
 <li>Installation</li>
 
+<li>Navigation</li>
+
 </ul>
 </p>
 
@@ -6238,13 +6240,13 @@ Error message and password prompt
 <div modified="20171215083840895" title="$:/state/tab-1749438307">
 <pre>$:/core/ui/ControlPanel/Appearance</pre>
 </div>
-<div modified="20161124220212705" title="$:/state/tab/sidebar--1835078512">
-<pre>$:/core/ui/SideBar/Recent</pre>
+<div modified="20180706200314475" title="$:/state/tab/sidebar--1835078512">
+<pre>$:/core/ui/SideBar/Open</pre>
 </div>
 <div modified="20171215084937325" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/EditToolbar</pre>
 </div>
-<div list="[[Help Index]] Hotkeys" title="$:/StoryList">
+<div list="[[Help Index]] [[Asymmetry Calculation Details]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div modified="20171215083831245" title="$:/temp/advancedsearch">
@@ -6654,10 +6656,11 @@ Rebinning:
 
 Multiscans are considered as a single scan with long integration time. Histogram bins are summed according to their frequency bin, errors are Poisson. Asymmetry is then calculated from the summed histograms. </pre>
 </div>
-<div created="20171215083659362" modified="20171215083743379" title="Help Index">
+<div created="20171215083659362" modified="20180706200346934" title="Help Index">
 <pre>&quot;&quot;&quot;
 [[Installation]]
 [[Hotkeys]]
+[[Navigation]]
 [[Asymmetry Calculation Details]]
 &quot;&quot;&quot;
 </pre>
@@ -6771,6 +6774,34 @@ alias bfit=/path_to_bfit/bfit.py
 ```
 
 You are now ready to run bit. Open a new shell and type ``bfit`` into the prompt. </pre>
+</div>
+<div created="20180706200413929" modified="20180706200741824" title="Navigation">
+<pre>! Menu bar: 
+
+* ''File''
+** Calculators for B0 in BNQR and B1 in BNMR
+** Export fetched data to csv file
+* ''Settings''
+** Set matplotlib defaults: global drawing style defaults
+** Set draw style: set instance line and marker styles
+** Set data directory. Defaults to environment variables `BNMR_ARCHIVE` and `BNQR_ARCHIVE`
+* ''Redraw Mode''
+** Set drawing mode. See help for details on hotkeys. 
+* ''Help''
+** Show this help wiki.
+
+---
+
+! Tabs:
+
+* ''File Details''
+** File inspector. Use this to quickly view the contents and parameters of a given run. Use `return` to fetch and `ctrl+return` to quickly draw. See [[hotkey details|Hotkeys]]. 
+* ''Fetch Data''
+** Fetch many data files for quick superposition and to set up fitting routines. Data fetched here will be fitted on the next tab. See [[hotkey details|Hotkeys]]. 
+* ''Fit Data''
+** Fit the fetched data, and set fitting parameters. 
+* ''View Fit Results''
+** View the fit parameters and draw as functions of each other.</pre>
 </div>
 
 </div>
