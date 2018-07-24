@@ -78,6 +78,8 @@ bfitter_1F(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
 
 ```
 
+See [curve_fit](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html) documentation for kwargs values. 
+
 Function parameter order on output
 
 | Mode | Parameter Order |
