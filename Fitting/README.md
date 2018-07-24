@@ -37,6 +37,8 @@ bfitter_pulsed(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs)
         fn:  function pointer to fitted function
 ```
 
+See [curve_fit](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html) documentation for kwargs values. 
+
 Function parameter order on output
 
 | Mode | Parameter Order |
