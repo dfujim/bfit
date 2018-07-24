@@ -51,7 +51,7 @@ for `ncomp > 1`, the above order repeats `ncomp` times. If `offset = True`, then
 
 ## Fitting Frequency Scans (1F)
 
-Simply `from bfit.fitting.continuous import import fscan`
+Simply `from bfit.fitting.continuous import fscan`
 
 ```text
 fscan(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
