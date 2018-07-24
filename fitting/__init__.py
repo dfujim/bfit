@@ -1,7 +1,7 @@
-from fitting.ffreq import ffreq
-from fitting.fpulsed import fpulsed
+from bfit.fitting.ffreq import ffreq
+from bfit.fitting.fpulsed import fpulsed
 
 try:
-    from fitting.integrator import PulsedFns
+    from bfit.fitting.integrator import PulsedFns
 except ImportError:
     pass
