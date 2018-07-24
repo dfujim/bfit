@@ -8,10 +8,10 @@ Stretched exponential fitting requires double exponential intergration provided 
 
 ## Fitting Pulsed Functions (SLR)
 
-Simply `import bfitter_pulsed` 
+`from bfit.fitting.pulsed import import slr` 
 
 ```text
-bfitter_pulsed(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs)
+slr(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs)
 
     Fit combined asymetry from pulsed beam SLR data: time scan.
 
@@ -51,10 +51,10 @@ for `ncomp > 1`, the above order repeats `ncomp` times. If `offset = True`, then
 
 ## Fitting Frequency Scans (1F)
 
-Simply `import bfitter_1F`
+Simply `from bfit.fitting.continuous import import fscan`
 
 ```text
-bfitter_1F(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
+fscan(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
 
     Fit combined asymetry from 1F run: frequency scan. 
 
