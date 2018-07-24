@@ -9,6 +9,8 @@
 # To build write: python setup_integrator.py build_ext --inplace
 # assuming the cython seup file is called setup_integrator.
 
+# python3 setup_integrator.py build_ext --inplace
+
 cimport cython
 import numpy as np
 cimport numpy as np
@@ -41,7 +43,7 @@ cdef class PulsedFns:
 
 # =========================================================================== #
     @cython.boundscheck(False)  # some speed up in exchange for instability
-    cpdef pulsed_exp(self,np.ndarray[double, ndim=1] time,double Lambda,
+    cpdef exp(self,np.ndarray[double, ndim=1] time,double Lambda,
                    double amp):
         """
             Pulsed exponential for an array of times. Efficient c-speed looping 
@@ -90,7 +92,7 @@ cdef class PulsedFns:
 
 # =========================================================================== #
     @cython.boundscheck(False)  # some speed up in exchange for instability
-    cpdef pulsed_str_exp(self,np.ndarray[double, ndim=1] time,double Lambda, 
+    cpdef str_exp(self,np.ndarray[double, ndim=1] time,double Lambda, 
                          double Beta, double amp):
         """
             Pulsed stretched exponential for an array of times. Efficient 
@@ -110,7 +112,7 @@ cdef class PulsedFns:
         cdef double out
         cdef int n = time.shape[0]
         cdef int i
-        cdef double t
+        cdef double t, x
         cdef np.ndarray[double, ndim=1] out_arr = np.zeros(n)
         cdef double prefac
         cdef double life = self.life
@@ -148,7 +150,7 @@ cdef class PulsedFns:
 
 # =========================================================================== #
     @cython.boundscheck(False)  # some speed up in exchange for instability
-    cpdef mixed_pulsed_str_exp(self,np.ndarray[double, ndim=1] time, 
+    cpdef mixed_str_exp(self,np.ndarray[double, ndim=1] time, 
                 double Lambda1, double Beta1, double Lambda2, double Beta2,
                 double alpha, double amp):
         """
