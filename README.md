@@ -3,12 +3,12 @@ Beta-NMR GUI for reading, drawing, fitting data.
 
 ## Dependencies and Compiling
 
-1. Clone the `bdata` repository and ensure this is on your `PYTHONPATH`. This has the bdata object and mudpy module which one needs to fetch bnmr data. 
-2. Compile the cython modules in `./Fitting/`. One can also use these to build their own fitting modules. 
+1. Clone the `bdata` repository somewhere onto your PYTHONPATH. This has the bdata object and mudpy module which one needs to fetch bnmr data. 
+2. Compile the cython integrator in `bfit/fitting/`. One can also use this to build their own fitting modules. This is done with  `python3 setup_integrator.py build_ext --inplace` from within the fitting directory. 
 
 ## Run Instructions
 
-Call `./bfit.py` or `python3 bfit.py`, or set up an alias to do so. 
+Call `python3 -m bfit` from the containing directory (the one above bfit/). 
 
 ## A Tour of the GUI
 
