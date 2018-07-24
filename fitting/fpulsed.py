@@ -2,7 +2,7 @@
 # Derek Fujimoto
 # June 2018
 
-from integrator import PulsedFns
+from fitting.integrator import PulsedFns
 from bdata import bdata
 from scipy.optimize import curve_fit
 import numpy as np
