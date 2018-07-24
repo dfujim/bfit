@@ -28,7 +28,7 @@ def fpulsed(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs):
         ncomp:          number of compenents. Ex: for exp+exp set ncomp=2. 
         probe:          string for probe species. Tested only for 8Li. 
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
-        
+        s
         Returns: par,cov,fn
             par: best fit parameters
             cov: covariance matrix
@@ -50,11 +50,11 @@ def fpulsed(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs):
     # Get fitting function 
     pulser = PulsedFns(life,pulse)
     if mode == 'strexp':
-        fn1 = pulser.pulsed_str_exp
+        fn1 = pulser.str_exp
     elif mode == 'mixed_strexp':
-        fn1 = pulser.mixed_pulsed_str_exp
+        fn1 = pulser.mixed_str_exp
     elif mode == 'exp':
-        fn1 = pulser.pulsed_exp
+        fn1 = pulser.exp
 
     # Make final function based on number of components
     ninputs = ninputs_dict[mode]
