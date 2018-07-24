@@ -11,7 +11,7 @@ import numpy as np
 ninputs_dict = {'exp':2,'strexp':3,'mixed_strexp':6}
 
 # ========================================================================== #
-def fit_SLR(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs):
+def fpulsed(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs):
     """
         Fit combined asymetry from pulsed beam SLR data: time scan. 
     

@@ -16,13 +16,13 @@ import matplotlib as mpl
 import webbrowser
 import subprocess
 
-from fileviewer_tab import fileviewer
-from fitviewer_tab import fitviewer
-from fetch_files_tab import fetch_files
-from fit_files_tab import fit_files
-from zahersCalculator import zahersCalculator
-from monikasCalculator import monikasCalculator
-from drawstyle_popup import drawstyle_popup
+from gui.fileviewer_tab import fileviewer
+from gui.fitviewer_tab import fitviewer
+from gui.fetch_files_tab import fetch_files
+from gui.fit_files_tab import fit_files
+from gui.zahersCalculator import zahersCalculator
+from gui.monikasCalculator import monikasCalculator
+from gui.drawstyle_popup import drawstyle_popup
 
 __doc__="""
     BNMR/BNQR data visualization and curve fitting.

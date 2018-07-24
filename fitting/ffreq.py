@@ -10,7 +10,7 @@ import numpy as np
 ninputs_dict = {'lor':3,'gaus':3}
 
 # ========================================================================== #
-def fit_1F(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
+def ffreq(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
     """
         Fit combined asymetry from 1F run: frequency scan. 
     
