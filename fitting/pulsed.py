@@ -28,7 +28,7 @@ def slr(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs):
         ncomp:          number of compenents. Ex: for exp+exp set ncomp=2. 
         probe:          string for probe species. Tested only for 8Li. 
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
-        s
+        
         Returns: par,cov,fn
             par: best fit parameters
             cov: covariance matrix
@@ -37,7 +37,7 @@ def slr(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs):
 
     # Check data input
     if type(data) == bdata:
-        xdata,(ydata,yerr) = data.asym('c',rebin=rebin)
+        xdata,ydata,yerr = data.asym('c',rebin=rebin)
         life = data.life[probe][0]
         pulse = data.ppg.dwelltime.mean*data.ppg.beam_on.mean/1000.
     else:
