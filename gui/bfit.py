@@ -459,6 +459,10 @@ class bfit(object):
                                                         os.path.basename(d))[0])
             os.chdir(pwd)
             
+            # repopuate fitter
+            self.fit_files.fitter = self.routine_mod.fitter()
+            self.fit_files.populate()
+            
     # ======================================================================= #
     def set_matplotlib(self): 
         """Edit matplotlib settings file, or give info on how to do so."""

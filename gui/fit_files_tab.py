@@ -105,18 +105,16 @@ class fit_files(object):
         # get run mode by looking at one of the data dictionary keys
         for key_zero in self.data.keys(): break
         
-        # if new run mode, reset fit function combobox options
-        try:
-            if self.mode != self.data[key_zero].mode:
-                
-                # set run mode 
-                self.mode = self.data[key_zero].mode 
-                self.fit_runmode_label['text'] = self.runmode_relabel[self.mode]
-                
-                # set run functions        
-                fn_titles = self.fitter.function_names[self.mode]
-                self.fit_function_title_box['values'] = fn_titles
-                self.fit_function_title.set(fn_titles[0])
+        # reset fit function combobox options
+        try:                
+            # set run mode 
+            self.mode = self.data[key_zero].mode 
+            self.fit_runmode_label['text'] = self.runmode_relabel[self.mode]
+            
+            # set run functions        
+            fn_titles = self.fitter.function_names[self.mode]
+            self.fit_function_title_box['values'] = fn_titles
+            self.fit_function_title.set(fn_titles[0])
                 
         except UnboundLocalError:
             self.fit_function_title_box['values'] = ()
