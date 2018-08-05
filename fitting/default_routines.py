@@ -98,10 +98,10 @@ class fitter(object):
             # fit slr data
             if mode == '20':    
                 par,cov,ftemp = fn(data=dat,rebin=doptions['rebin'],p0=p0,
-                                   bounds=bounds):
+                                   bounds=bounds)
             elif mode == '1f':    
                 par,cov,ftemp = fn(data=dat,omit=doptions['omit'],p0=p0,
-                                   bounds=bounds):
+                                   bounds=bounds)
             
             # collect results
             cov = np.sqrt(np.diag(cov))

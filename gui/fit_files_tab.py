@@ -45,7 +45,8 @@ class fit_files(object):
         self.file_tabs = {}
         self.bfit = bfit
         self.groups = []
-        
+        self.fitter = self.bfit.routine_mod.fitter()
+            
         # make top level frames
         top_fit_frame = ttk.Frame(fit_data_tab,pad=5)   # fn select, run mode
         mid_fit_frame = ttk.Frame(fit_data_tab,pad=5)   # notebook
@@ -112,8 +113,8 @@ class fit_files(object):
                 self.mode = self.data[key_zero].mode 
                 self.fit_runmode_label['text'] = self.runmode_relabel[self.mode]
                 
-                # set run functions
-                fn_titles = self.default_fit_functions[self.mode]
+                # set run functions        
+                fn_titles = self.fitter.function_names[self.mode]
                 self.fit_function_title_box['values'] = fn_titles
                 self.fit_function_title.set(fn_titles[0])
                 
@@ -219,3 +220,10 @@ class fitinputtab(object):
         # save
         self.fitframe = fitframe
         
+    # ======================================================================= #
+    def populate_param(self):
+        """Populate the list of parameters"""
+
+        
+
+

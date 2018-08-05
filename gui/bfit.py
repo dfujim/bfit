@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import webbrowser
 import subprocess
+import importlib
 
 from bfit.gui.fileviewer_tab import fileviewer
 from bfit.gui.fitviewer_tab import fitviewer
@@ -79,6 +80,7 @@ class bfit(object):
             draw_style: draw window types # stack, redraw, new
             root: tkinter root instance
             mainframe: main frame for the object
+            routine_mod: module with fitting routines
             
             notebook: contains all tabs for operations:
                 fileviewer
@@ -136,6 +138,9 @@ class bfit(object):
                       'alpha':1.,
                       'fillstyle':'full'}
         
+        # load default fitting routines
+        self.routine_mod = importlib.import_module(
+                                                'bfit.fitting.default_routines')
         # main frame
         mainframe = ttk.Frame(root,pad=5)
         mainframe.grid(column=0,row=0,sticky=(N,W,E,S))
@@ -167,6 +172,8 @@ class bfit(object):
                 command=self.set_matplotlib)
         menu_settings.add_command(label='Set drawing style',
                 command=self.set_draw_style)
+        menu_settings.add_command(label='Set fitting routines',
+                command=self.set_fit_routines)
         menu_settings.add_cascade(menu=menu_settings_dir,label='Data Directory')
         
         # Settings: data directory
@@ -430,6 +437,28 @@ class bfit(object):
             self.bnqr_data_dir = d
             os.environ[self.bnqr_archive_label] = d
         
+    # ======================================================================= #
+    def set_fit_routines(self):
+        """Set python module for fitting routines"""
+        
+        d = filedialog.askopenfilename(initialdir = "./",
+                title = "Select fitting routine module",
+                filetypes = (("python modules","*.py"),
+                             ("cython modules","*.pyx"),
+                             ("all files","*.*")))
+        
+        if type(d) == str:
+            
+            # get paths
+            path = os.path.abspath(d)
+            pwd = os.getcwd()
+            
+            # load the module
+            os.chdir(os.path.dirname(path))
+            self.routine_mod = importlib.import_module(os.path.splitext(
+                                                        os.path.basename(d))[0])
+            os.chdir(pwd)
+            
     # ======================================================================= #
     def set_matplotlib(self): 
         """Edit matplotlib settings file, or give info on how to do so."""

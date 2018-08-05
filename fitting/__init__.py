@@ -7,3 +7,6 @@ except ImportError:
           "'python3 setup_integrator.py build_ext --inplace'")
 else:
     from bfit.fitting.pulsed import slr
+
+
+from bfit.fitting.default_routines import fitter
