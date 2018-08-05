@@ -324,6 +324,7 @@ class bfit(object):
         plt.xlabel(xlabel)
         plt.ylabel("Asymmetry")
         plt.legend()
+        plt.tight_layout()
     
     # ======================================================================= #
     def draw_binder(self,*args):
