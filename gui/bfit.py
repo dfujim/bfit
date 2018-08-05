@@ -132,7 +132,9 @@ class bfit(object):
                       'marker':'.',
                       'markersize':mpl.rcParams['lines.markersize'],
                       'capsize':0.,
-                      'elinewidth':mpl.rcParams['lines.linewidth']}
+                      'elinewidth':mpl.rcParams['lines.linewidth'],
+                      'alpha':1.,
+                      'fillstyle':'full'}
         
         # main frame
         mainframe = ttk.Frame(root,pad=5)

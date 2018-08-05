@@ -65,7 +65,7 @@ class drawstyle_popup(object):
             
             val = t.get()
             
-            if 'width' in k or 'size'in k:
+            if type(self.parent.style[k]) == float:
                 val = float(val)
             
             self.parent.style[k] = val
