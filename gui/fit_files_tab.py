@@ -16,14 +16,18 @@ import matplotlib.pyplot as plt
 class fit_files(object):
     """
         Data fields:
-            runbook: notebook of fit inputs for runs
-            fit_function_title: title of fit function to use
-            n_component: number of fitting components
-            runmode: what type of run is this. 
-            runmode_label: display run mode 
             data: dictionary of bdata objects, keyed by run number. 
             file_tabs: dictionary of fitinputtab objects, keyed by runnumber 
+            fit_function_title: title of fit function to use
             fit_function_title_box: spinbox for fit function names
+            groups: group numbers from fetch tab
+            n_component: number of fitting components
+            runbook: notebook of fit inputs for runs
+            runmode: what type of run is this. 
+            runmode_label: display run mode 
+            
+            
+            
     """ 
     
     runmode_relabel = {'20':'SLR','1f':'1F','2e':'2e','1n':'Rb Cell Scan'}
@@ -40,6 +44,7 @@ class fit_files(object):
         # initialize
         self.file_tabs = {}
         self.bfit = bfit
+        self.groups = []
         
         # make top level frames
         top_fit_frame = ttk.Frame(fit_data_tab,pad=5)   # fn select, run mode
@@ -79,13 +84,12 @@ class fit_files(object):
         fit_runmode_label_frame.grid(column=1,row=0,sticky=(E,W))
         self.fit_runmode_label.grid(column=0,row=0,sticky=(E,W))
         
-        # MID FRAME
-        
+        # MID FRAME        
         self.runbook = ttk.Notebook(mid_fit_frame)
         self.runbook.grid(column=0,row=0)
         
     # ======================================================================= #
-    def populate(self):
+    def populate(self,*args):
         """
             Make tabs for setting fit input parameters. 
         """
@@ -93,13 +97,17 @@ class fit_files(object):
         # get data
         self.data = self.bfit.fetch_files.data
         
+        # get groups 
+        dl = self.bfit.fetch_files.data_lines
+        self.groups = [dl[k].group.get() for k in dl.keys()]
+        
         # get run mode by looking at one of the data dictionary keys
         for key_zero in self.data.keys(): break
         
         # if new run mode, reset fit function combobox options
         try:
             if self.mode != self.data[key_zero].mode:
-            
+                
                 # set run mode 
                 self.mode = self.data[key_zero].mode 
                 self.fit_runmode_label['text'] = self.runmode_relabel[self.mode]
@@ -108,6 +116,7 @@ class fit_files(object):
                 fn_titles = self.default_fit_functions[self.mode]
                 self.fit_function_title_box['values'] = fn_titles
                 self.fit_function_title.set(fn_titles[0])
+                
         except UnboundLocalError:
             self.fit_function_title_box['values'] = ()
             self.fit_function_title.set("")
@@ -120,19 +129,14 @@ class fit_files(object):
         
         # make fitinputtab objects, clean up old tabs
         del_list = []
-        for k in self.data.keys():
+        for g in self.groups:
             
-            # add to list of runs
-            if not k in self.file_tabs.keys():
-                self.file_tabs[k] = fitinputtab(self.bfit,self.file_tabs,
-                        self.runbook,self.data[k])
+            # add to list of groups
+            if not g in self.file_tabs.keys():
+                self.file_tabs[g] = fitinputtab(self.bfit,self.file_tabs,self.runbook,g)
                     
         # clean up old tabs
-        data_keys = self.data.keys()
-        del_list = []
-        for k in self.file_tabs.keys():
-            if not k in data_keys:
-                del_list.append(k)
+        del_list = [k for k in self.file_tabs.keys() if not k in self.groups]
         
         for k in del_list:
             del self.file_tabs[k]
@@ -145,16 +149,18 @@ class fit_files(object):
 # =========================================================================== #
 class fitinputtab(object):
     
+    n_runs_max = 5      # number of runs before scrollbar appears
+    
     # ======================================================================= #
-    def __init__(self,bfit,fetch_tabs,parent,bd):
+    def __init__(self,bfit,fetch_tabs,parent,group):
         """
             Inputs:
                 bfit: top level pointer
                 fetch_tabs: list of fitinputtab objects
                 fitframe: mainframe for this tab. 
-                bd: corresponding bdata object
+                group: number of data group to fit
                 mode: run mode from bdata object
-                run: run number from bdata object
+                runlist: list of run numbers to fit
                 field
                 field_text
                 bias
@@ -164,63 +170,52 @@ class fitinputtab(object):
         """
         
         # initialize
-        self.mode = bd.mode
-        self.run = bd.run
+        self.bfit = bfit
         self.parent = parent
-        self.year = bd.year
-        self.bd = bd
+        self.group = group
         
         # check state 
         self.check_state = BooleanVar()
         
-        # temperature
-        try:
-            self.temperature = int(np.round(bd.camp.smpl_read_A.mean))
-        except AttributeError:
-            self.temperature = -1
-            
-        # field
-        try:
-            if bd.area == 'BNMR':
-                self.field = np.around(bd.camp.b_field.mean,2)
-                self.field_text = "%.2f T"%self.field
-            else:
-                self.field = np.around(bd.camp.hh_current.mean,2)
-                self.field_text = "%.2f A"%self.field
-        except AttributeError:
-            self.field = -1
-            self.field_text = ' '*6
-        try:
-            if bd.area == 'BNMR':
-                self.bias = np.around(bd.epics.nmr_bias_p.mean,2)
-            else:
-                self.bias = np.around(bd.epics.nqr_bias.mean,2)/1000.
-                
-            if self.bias > 0:
-                self.bias_text = "%.2f kV"%self.bias
-            else:
-                self.bias_text = "% .2f kV"%self.bias
-        except AttributeError:
-            self.bias = -1
-            self.bias_text = ' '*7
-
+        # set data mode
+        dl = self.bfit.fetch_files.data_lines
+        self.mode = dl[list(dl.keys())[0]].mode
+        
     # ======================================================================= #
     def create(self):
         """Create graphics for this object"""
         
         fitframe = ttk.Frame(self.parent)
-        self.parent.add(fitframe,text=str(self.run))
+        self.parent.add(fitframe,text='Group %d' % self.group)
+        
+        # get list of runs with the group number
+        dl = self.bfit.fetch_files.data_lines
+        self.runlist = [dl[k].run for k in dl.keys() 
+                            if dl[k].group.get() == self.group]
         
         # Display run info label 
-        ttk.Label(fitframe,text="%d\t%s\t%s\t%3d K" % (self.year,
-                self.field_text,self.bias_text,self.temperature)).grid(column=0,
-                row=0,columnspan=5)
+        ttk.Label(fitframe,text="Run Numbers").grid(column=0,row=0,padx=5)
 
+        # List box for run viewing
+        rlist = StringVar(value=tuple(map(str,self.runlist)))
+        runbox = Listbox(fitframe,height=min(len(self.runlist),self.n_runs_max),
+                         width=10,listvariable=rlist,justify=CENTER)
+        runbox.grid(column=0,row=1)
+        
+        sbar = ttk.Scrollbar(fitframe, orient=VERTICAL, command=runbox.yview)
+        runbox.configure(yscrollcommand=sbar.set)
+        
+        if len(self.runlist) > self.n_runs_max:
+            sbar.grid(column=1,row=1,sticky=(N,S))
+        else:
+            ttk.Label(fitframe,text=" ").grid(column=1,row=1,padx=5)
+        
         # Parameter input labels
-        ttk.Label(fitframe,text='Initial Value').grid(column=1,row=1)
-        ttk.Label(fitframe,text='Bounds').grid(column=2,row=1)
-        ttk.Label(fitframe,text='Fixed').grid(column=3,row=1)
-        ttk.Label(fitframe,text='Shared').grid(column=4,row=1)
+        ttk.Label(fitframe,text='Parameter').grid(      column=2,row=0,padx=5)
+        ttk.Label(fitframe,text='Initial Value').grid(  column=3,row=0,padx=5)
+        ttk.Label(fitframe,text='Bounds').grid(         column=4,row=0,padx=5)
+        ttk.Label(fitframe,text='Fixed').grid(          column=5,row=0,padx=5)
         
         # save
         self.fitframe = fitframe
+        

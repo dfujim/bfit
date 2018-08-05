@@ -49,7 +49,7 @@ class fetch_files(object):
         self.check_state = BooleanVar()
         self.fetch_data_tab = fetch_data_tab
         
-        # Fetch Tab ---------------------------------------------------------
+        # Frame for specifying files -----------------------------------------
         fet_entry_frame = ttk.Labelframe(fetch_data_tab,text='Specify Files')
         self.year = StringVar()
         self.run = StringVar()
@@ -69,11 +69,11 @@ class fetch_files(object):
         entry_run.bind('<FocusOut>', on_focusout_fn)
         entry_run.config(foreground='grey')
         
-        # fetch and clear button
+        # fetch button
         fetch = ttk.Button(fet_entry_frame,text='Fetch',command=self.get_data)
         
         # grid and labels
-        fet_entry_frame.grid(column=0,row=0,sticky=(N,E))
+        fet_entry_frame.grid(column=0,row=0,sticky=(N,E,W))
         ttk.Label(fet_entry_frame,text="Year:").grid(column=0,row=0,\
                 sticky=(E))
         entry_year.grid(column=1,row=0,sticky=(E))
@@ -86,16 +86,19 @@ class fetch_files(object):
         for child in fet_entry_frame.winfo_children(): 
             child.grid_configure(padx=5, pady=5)
         
-        # detected run mode label 
+        # Frame for run mode -------------------------------------------------
         runmode_label_frame = ttk.Labelframe(fetch_data_tab,pad=(10,5,10,5),\
                 text='Run Mode',)
         
         self.runmode_label = ttk.Label(runmode_label_frame,text="",font='bold',justify=CENTER)
         
-        # bigright frame : hold everything on the right
+        # Frame to hold datalines
+        dataline_frame = ttk.Frame(fetch_data_tab,pad=5)
+        
+        # Frame to hold everything on the right ------------------------------
         bigright_frame = ttk.Frame(fetch_data_tab,pad=5)
         
-        # rightframe
+        # Frame for group set options ----------------------------------------
         right_frame = ttk.Labelframe(bigright_frame,\
                 text='Operations on Checked Items',pad=5)
         
@@ -132,12 +135,13 @@ class fetch_files(object):
         check_bin_remove_entry.config(foreground='grey')
                 
         # grid
-        runmode_label_frame.grid(column=1,row=0,sticky=(W,E))
-        self.runmode_label.grid(column=0,row=0,sticky=(W,E))
+        runmode_label_frame.grid(column=1,row=0,sticky=(N,W,E))
+        self.runmode_label.grid(column=0,row=0,sticky=(N,W,E))
         
         bigright_frame.grid(column=1,row=1,sticky=(E,N))
+        dataline_frame.grid(column=0,row=1,sticky=(E,W,S,N))
         
-        right_frame.grid(column=0,row=0,sticky=(N))
+        right_frame.grid(column=0,row=0,sticky=(N,E))
         check_all_box.grid(         column=0,row=0,sticky=(N))
         check_remove.grid(          column=1,row=2,sticky=(N))
         check_draw.grid(            column=0,row=2,sticky=(N))
@@ -173,6 +177,7 @@ class fetch_files(object):
         self.check_rebin_box = check_rebin_box
         self.check_bin_remove_entry = check_bin_remove_entry
         self.check_all_box = check_all_box
+        self.dataline_frame = dataline_frame
         
     # ======================================================================= #
     def check_all(self):
@@ -270,7 +275,11 @@ class fetch_files(object):
         for k in data.keys():
             if data[k].mode == run_types[0]:
                 self.data[k] = data[k]
-        self.runmode = run_types[0]
+        
+        try:
+            self.runmode = run_types[0]
+        except IndexError:
+            self.runmode = ''
         self.runmode_label['text'] = self.runmode_relabel[run_types[0]]
         
         keys_list = list(self.data.keys())
@@ -283,7 +292,7 @@ class fetch_files(object):
                 self.data_lines[r].grid(n)
             else:
                 self.data_lines[r] = dataline(self.bfit,self.data,\
-                        self.data_lines,self.fetch_data_tab,self.data[r],n)
+                        self.data_lines,self.dataline_frame,self.data[r],n)
             n+=1
         self.bfit.fit_files.populate()
         
@@ -389,6 +398,7 @@ class dataline(object):
         self.bin_remove = StringVar()
         self.label = StringVar()
         self.rebin = IntVar()
+        self.group = IntVar()
         self.check_state = BooleanVar()
         self.mode = bd.mode
         self.run = bd.run
@@ -438,8 +448,11 @@ class dataline(object):
         bias_label = ttk.Label(line_frame,text=bias_text,pad=5)
         bin_remove_entry = ttk.Entry(line_frame,textvariable=self.bin_remove,\
                 width=20)
+                
+        label_label = ttk.Label(line_frame,text="Label:",pad=5)
         label_entry = ttk.Entry(line_frame,textvariable=self.label,\
                 width=10)
+                
         remove_button = ttk.Button(line_frame,text='Remove',\
                 command=self.remove,pad=1)
         draw_button = ttk.Button(line_frame,text='Draw',command=self.draw,pad=1)
@@ -448,6 +461,10 @@ class dataline(object):
         rebin_box = Spinbox(line_frame,from_=1,to=100,width=3,\
                 textvariable=self.rebin)
                 
+        group_label = ttk.Label(line_frame,text="Group:",pad=5)
+        group_box = Spinbox(line_frame,from_=1,to=100,width=3,\
+                textvariable=self.group)
+                   
         self.check_state.set(False)
         check = ttk.Checkbutton(line_frame,text='',variable=self.check_state,\
                 onvalue=True,offvalue=False,pad=5)
@@ -474,6 +491,7 @@ class dataline(object):
                 
         # grid
         c = 1
+        check.grid(column=c,row=0,sticky=E); c+=1
         year_label.grid(column=c,row=0,sticky=E); c+=1
         run_label.grid(column=c,row=0,sticky=E); c+=1
         temp_label.grid(column=c,row=0,sticky=E); c+=1
@@ -484,8 +502,10 @@ class dataline(object):
         if self.mode == '20': 
             rebin_label.grid(column=c,row=0,sticky=E); c+=1
             rebin_box.grid(column=c,row=0,sticky=E); c+=1
+        label_label.grid(column=c,row=0,sticky=E); c+=1
         label_entry.grid(column=c,row=0,sticky=E); c+=1
-        check.grid(column=c,row=0,sticky=E); c+=1
+        group_label.grid(column=c,row=0,sticky=E); c+=1
+        group_box.grid(column=c,row=0,sticky=E); c+=1
         draw_button.grid(column=c,row=0,sticky=E); c+=1
         remove_button.grid(column=c,row=0,sticky=E); c+=1
         

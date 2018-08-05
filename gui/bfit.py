@@ -138,7 +138,7 @@ class bfit(object):
         
         # main frame
         mainframe = ttk.Frame(root,pad=5)
-        mainframe.grid(column=0,row=0,sticky=(N,W))
+        mainframe.grid(column=0,row=0,sticky=(N,W,E,S))
         mainframe.columnconfigure(0, weight=1)
         mainframe.rowconfigure(0, weight=1)
         
@@ -205,8 +205,8 @@ class bfit(object):
         notebook.add(fit_viewer_tab,text='View Fit Results',state=DISABLED)
         
         # gridding
-        notebook.grid(column=0,row=0)
-        noteframe.grid(column=0,row=0,sticky=(N,E))
+        notebook.grid(column=0,row=0,sticky=(N,E,W,S))
+        noteframe.grid(column=0,row=0,sticky=(N,E,W,S))
         noteframe.columnconfigure(0,weight=1)
         noteframe.rowconfigure(0,weight=1)
         
