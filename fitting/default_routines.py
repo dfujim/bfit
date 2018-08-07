@@ -20,6 +20,9 @@ class fitter(object):
                         'Lorentzian':('peak','width','height','baseline'),
                         'Gaussian'  :('mean','sigma','height','baseline'),}
 
+    # dictionary of initial parameters
+    par_values = {}
+
     epsilon = 1e-9  # for fixing parameters
 
     # ======================================================================= #
@@ -108,3 +111,42 @@ class fitter(object):
             parout[dat.run] = [keylist,par,cov]
         
         return parout
+
+    # ======================================================================= #
+    def gen_init_par(self,fname):
+        """Generate initial parameters for a given function.
+        
+            fname: name of function. Should be the same as the param_names keys
+            
+            Set and return dictionary of initial parameters,bounds,fixed boolean. 
+                {par:(init,bound_lo,bound_hi,fixed)}
+        """
+        
+        # set with constants (should update to something more intelligent later)
+        if fname == 'Exp':
+            self.par_values = {'amp':(0.5,0,np.inf,False),
+                               'T1':(2,0,np.inf,False),
+                               'baseline':(0.,-np.inf,np.inf,False),
+                               }
+        elif fname == 'Str Exp':
+            self.par_values = {'amp':(0.5,0,np.inf,False),
+                               'T1':(2,0,np.inf,False),
+                               'beta':(0.5,0,1,False),
+                               'baseline':(0.,-np.inf,np.inf,False),
+                                }
+        elif fname == 'Lorentzian':
+            self.par_values = {'peak':(41.26e6,0,np.inf,False),
+                                'width':(5e4,0,np.inf,False),
+                                'height':(0.01,-np.inf,np.inf,False),
+                                'baseline':(0.,-np.inf,np.inf,False)
+                                }
+        elif fname == 'Gaussian':
+            self.par_values = {'mean':(41.26e6,0,np.inf,False),
+                                'sigma':(5e4,0,np.inf,False),
+                                'height':(0.01,-np.inf,np.inf,False),
+                                'baseline':(0.,-np.inf,np.inf,False)
+                                }
+        else:
+            raise RuntimeError('Bad function name.')
+        
+        return self.par_values
