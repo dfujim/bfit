@@ -272,7 +272,6 @@ class bfit(object):
         else:
             label = drawargs.pop('label',None)
             
-
         # set drawing style arguments
         for k in self.style:
             if k not in drawargs.keys():
@@ -347,7 +346,7 @@ class bfit(object):
         elif idx == 1:        # data fetch_files
             self.fetch_files.draw_all()
         elif idx == 2:        # fit viewer
-            self.fitviewer.draw()
+            self.fit_files.draw_param()
         else:
             pass
                  
@@ -413,7 +412,7 @@ class bfit(object):
         elif idx == 1:        # data fetch_files
             self.fetch_files.return_binder()
         elif idx == 2:        # fit viewer
-            self.fitviewer.draw()
+            self.fit_files.do_fit()
         else:
             pass
     
