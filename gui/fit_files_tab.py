@@ -18,6 +18,7 @@ class fit_files(object):
         Data fields:
             data: dictionary of bdata objects, keyed by run number. 
             file_tabs: dictionary of fitinputtab objects, keyed by runnumber 
+            fitter: fitting object from self.bfit.routine_mod
             fit_function_title: title of fit function to use
             fit_function_title_box: spinbox for fit function names
             groups: group numbers from fetch tab
@@ -52,9 +53,9 @@ class fit_files(object):
         mid_fit_frame = ttk.Frame(fit_data_tab,pad=5)   # notebook
         bot_fit_frame = ttk.Frame(fit_data_tab,pad=5)   # set all
         
-        top_fit_frame.grid(column=0,row=0,sticky=(N,W))
-        mid_fit_frame.grid(column=0,row=1,sticky=(N,W))
-        bot_fit_frame.grid(column=0,row=2,sticky=(N,W))
+        top_fit_frame.grid(column=0,row=0,sticky=(N,W,E))
+        mid_fit_frame.grid(column=0,row=1,sticky=(N,W,E))
+        bot_fit_frame.grid(column=0,row=2,sticky=(N,W,E))
         
         # TOP FRAME 
         
@@ -64,6 +65,7 @@ class fit_files(object):
         self.fit_function_title.set("")
         self.fit_function_title_box = ttk.Combobox(fn_select_frame, 
                 textvariable=self.fit_function_title,state='readonly')
+        self.fit_function_title.trace('w', self.populate_param)
         
         self.n_component = IntVar()
         self.n_component.set(1)
@@ -132,7 +134,7 @@ class fit_files(object):
             
             # add to list of groups
             if not g in self.file_tabs.keys():
-                self.file_tabs[g] = fitinputtab(self.bfit,self.file_tabs,self.runbook,g)
+                self.file_tabs[g] = fitinputtab(self.bfit,self.runbook,g)
                     
         # clean up old tabs
         del_list = [k for k in self.file_tabs.keys() if not k in self.groups]
@@ -144,41 +146,50 @@ class fit_files(object):
         for k in self.file_tabs.keys():
             self.file_tabs[k].create()
             
+        # populate the list of parameters 
+        self.populate_param()
+    
+    # ======================================================================= #
+    def populate_param(self,*args):
+        """Populate the list of parameters"""
+        
+        for k in self.file_tabs.keys():
+            self.file_tabs[k].populate_param()
+            
 # =========================================================================== #
 # =========================================================================== #
 class fitinputtab(object):
+    """
+        Instance variables 
+        
+            bfit        pointer to top class
+            parent      pointer to parent object (frame)
+            group       fitting group number
+            parlabels   label objects, saved for later destruction
+            parentry    (StrVar,entry) objects saved for retrieval and destruction
+            runlist     list of run numbers to fit
+            fitframe    mainframe for this tab. 
+    """
+    
+    
     
     n_runs_max = 5      # number of runs before scrollbar appears
     
     # ======================================================================= #
-    def __init__(self,bfit,fetch_tabs,parent,group):
+    def __init__(self,bfit,parent,group):
         """
             Inputs:
                 bfit: top level pointer
-                fetch_tabs: list of fitinputtab objects
-                fitframe: mainframe for this tab. 
+                parent      pointer to parent object (frame)
                 group: number of data group to fit
-                mode: run mode from bdata object
-                runlist: list of run numbers to fit
-                field
-                field_text
-                bias
-                bias_text
-                temperature
-                
         """
         
         # initialize
         self.bfit = bfit
         self.parent = parent
         self.group = group
-        
-        # check state 
-        self.check_state = BooleanVar()
-        
-        # set data mode
-        dl = self.bfit.fetch_files.data_lines
-        self.mode = dl[list(dl.keys())[0]].mode
+        self.parlabels = []
+        self.parentry = {}
         
     # ======================================================================= #
     def create(self):
@@ -210,10 +221,12 @@ class fitinputtab(object):
             ttk.Label(fitframe,text=" ").grid(column=1,row=1,padx=5)
         
         # Parameter input labels
-        ttk.Label(fitframe,text='Parameter').grid(      column=2,row=0,padx=5)
-        ttk.Label(fitframe,text='Initial Value').grid(  column=3,row=0,padx=5)
-        ttk.Label(fitframe,text='Bounds').grid(         column=4,row=0,padx=5)
-        ttk.Label(fitframe,text='Fixed').grid(          column=5,row=0,padx=5)
+        c = 2
+        ttk.Label(fitframe,text='Parameter').grid(      column=c,row=0,padx=5); c+=1
+        ttk.Label(fitframe,text='Initial Value').grid(  column=c,row=0,padx=5); c+=1
+        ttk.Label(fitframe,text='Low Bound').grid(      column=c,row=0,padx=5); c+=1
+        ttk.Label(fitframe,text='High Bound').grid(     column=c,row=0,padx=5); c+=1
+        ttk.Label(fitframe,text='Fixed').grid(          column=c,row=0,padx=5); c+=1
         
         # save
         self.fitframe = fitframe
@@ -222,6 +235,44 @@ class fitinputtab(object):
     def populate_param(self):
         """Populate the list of parameters"""
 
+        # get pointer to fit files object
+        fit_files = self.bfit.fit_files
+        fitter = fit_files.fitter
+
+        # get list of parameters and initial values
+        try:
+            plist = fitter.param_names[fit_files.fit_function_title.get()]
+            values = fitter.gen_init_par(fit_files.fit_function_title.get())
+        except KeyError:
+            return
+        finally:
+            # clear old entries
+            for label in self.parlabels:
+                label.destroy()
+            for k in self.parentry.keys():
+                for p in self.parentry[k]:
+                    p[1].destroy()
         
-
-
+        # make parameter input fields ---------------------------------------
+        
+        # labels
+        c = 2
+        
+        self.parlabels = []     # track all labels and inputs
+        for i,p in enumerate(plist):
+            self.parlabels.append(ttk.Label(self.fitframe,text=p,justify=LEFT))
+            self.parlabels[-1].grid(column=c,row=1+i,padx=5,sticky=E)
+        
+        # values: initial parameters
+        r = 0
+        for p in plist:
+            c = 2
+            r += 1
+            self.parentry[p] = []
+            for i in range(len(values[list(values.keys())[0]])):
+                c += 1
+                value = StringVar()
+                entry = ttk.Entry(self.fitframe,textvariable=value,width=10)
+                entry.insert(0,str(values[p][i]))
+                entry.grid(column=c,row=r,padx=5,sticky=E)
+                self.parentry[p].append((value,entry))

@@ -449,6 +449,10 @@ class bfit(object):
         
         if type(d) == str:
             
+            # empty condition
+            if d == '':
+                return
+            
             # get paths
             path = os.path.abspath(d)
             pwd = os.getcwd()

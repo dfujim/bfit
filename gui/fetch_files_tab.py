@@ -56,10 +56,8 @@ class fetch_files(object):
         
         self.year.set(datetime.datetime.now().year)
         
-        entry_year = ttk.Entry(fet_entry_frame,\
-                textvariable=self.year,width=5)
-        entry_run = ttk.Entry(fet_entry_frame,\
-                textvariable=self.run,width=60)
+        entry_year = ttk.Entry(fet_entry_frame,textvariable=self.year,width=5)
+        entry_run = ttk.Entry(fet_entry_frame,textvariable=self.run,width=60)
         entry_run.insert(0,self.run_number_starter_line)
         entry_fn = partial(on_entry_click,text=self.run_number_starter_line,\
                             entry=entry_run)
