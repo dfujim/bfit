@@ -8,6 +8,9 @@ from functools import partial
 import numpy as np
 
 class fitter(object):
+
+    # needed to tell users what routine this is
+    __name__ = 'default'
     
     # Define possible fit functions for given run modes:
     function_names = {  '20':('Exp','Str Exp'),
@@ -42,7 +45,6 @@ class fitter(object):
                                     bound_lo,   # lower fitting bound
                                     bound_hi,   # upper fitting bound
                                     is_fixed,   # boolean, fix value?
-                                    is_shared,  # boolean, share globally?
                                    )
                               }
                 where doptions = {  'omit':str,     # bins to omit in 1F calcs
@@ -58,16 +60,16 @@ class fitter(object):
 
         # set fitting function
         if fn_name == 'Lorentzian':
-            fn =  partial(fscan,mode='lor',ncamp=ncomp)
+            fn =  partial(fscan,mode='lor',ncomp=ncomp)
             mode='1f'
         elif fn_name == 'Gaussian':
-            fn =  partial(fscan,mode='gaus',ncamp=ncomp)
+            fn =  partial(fscan,mode='gaus',ncomp=ncomp)
             mode='1f'
         elif fn_name == 'Exp':
-            fn =  partial(slr,mode='exp',ncamp=ncomp,offset=True)
+            fn =  partial(slr,mode='exp',ncomp=ncomp,offset=True)
             mode='20'
         elif fn_name == 'Str Exp':
-            fn =  partial(slr,mode='strexp',ncamp=ncomp,offset=True)
+            fn =  partial(slr,mode='strexp',ncomp=ncomp,offset=True)
             mode='20'
         else:
             raise RuntimeError('Fitting function not found.')
@@ -81,22 +83,23 @@ class fitter(object):
             doptions = data[2]
             
             # get initial parameters
-            keylist = list(pdict.keys())
-            keylist.sort()
+            keylist = self.param_names[fn_name]
             p0 = [pdict[k][0] for k in keylist]
             
             # get fitting bounds
-            bounds = []
+            bounds = [[],[]]
             for k in keylist:
                 
                 # if fixed, set bounds to p0 +/- epsilon
                 if pdict[k][3]:
                     p0i = pdict[k][0]
-                    bounds.append([p0i-self.epsilon,p0i+self.epsilon])
+                    bounds[0].append(p0i-self.epsilon)
+                    bounds[1].append(p0i+self.epsilon)
             
                 # else set to bounds 
                 else:
-                    bounds.append([pdict[k][1],pdict[k][2]])
+                    bounds[0].append(pdict[k][1])
+                    bounds[1].append(pdict[k][2])
             
             # fit slr data
             if mode == '20':    
@@ -113,7 +116,7 @@ class fitter(object):
         return parout
 
     # ======================================================================= #
-    def gen_init_par(self,fname):
+    def gen_init_par(self,fn_name):
         """Generate initial parameters for a given function.
         
             fname: name of function. Should be the same as the param_names keys
@@ -123,30 +126,38 @@ class fitter(object):
         """
         
         # set with constants (should update to something more intelligent later)
-        if fname == 'Exp':
+        if fn_name == 'Exp':
             self.par_values = {'amp':(0.5,0,np.inf,False),
                                'T1':(2,0,np.inf,False),
-                               'baseline':(0.,-np.inf,np.inf,False),
+                               'baseline':(0,-np.inf,np.inf,False),
                                }
-        elif fname == 'Str Exp':
+        elif fn_name == 'Str Exp':
             self.par_values = {'amp':(0.5,0,np.inf,False),
                                'T1':(2,0,np.inf,False),
                                'beta':(0.5,0,1,False),
-                               'baseline':(0.,-np.inf,np.inf,False),
+                               'baseline':(0,-np.inf,np.inf,False),
                                 }
-        elif fname == 'Lorentzian':
+        elif fn_name == 'Lorentzian':
             self.par_values = {'peak':(41.26e6,0,np.inf,False),
                                 'width':(5e4,0,np.inf,False),
                                 'height':(0.01,-np.inf,np.inf,False),
-                                'baseline':(0.,-np.inf,np.inf,False)
+                                'baseline':(0,-np.inf,np.inf,False)
                                 }
-        elif fname == 'Gaussian':
+        elif fn_name == 'Gaussian':
             self.par_values = {'mean':(41.26e6,0,np.inf,False),
                                 'sigma':(5e4,0,np.inf,False),
                                 'height':(0.01,-np.inf,np.inf,False),
-                                'baseline':(0.,-np.inf,np.inf,False)
+                                'baseline':(0,-np.inf,np.inf,False)
                                 }
         else:
             raise RuntimeError('Bad function name.')
         
         return self.par_values
+
+    # ======================================================================= #
+    def get_values(self,fn_name,x,par):
+        """
+            return points corresponding to fit values
+        """
+        
+    
