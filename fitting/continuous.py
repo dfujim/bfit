@@ -7,7 +7,7 @@ from scipy.optimize import curve_fit
 import numpy as np
 
 # number of input parameters (not detectable)
-ninputs_dict = {'lor':3,'gaus':3}
+ninputs_dict = {'lor':3,'gaus':3,'2lor_shpk':5}
 
 # ========================================================================== #
 def fscan(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
