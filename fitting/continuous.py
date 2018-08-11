@@ -80,7 +80,7 @@ def lor(freq,peak,width,amp):
 
 def lor2_shrpk(freq,peak,width1,amp1,width2,amp2):
     """Two Lorentzians with shared peak value"""
-    return -amp1*0.25*np.square(width1)/(np.square(freq-peak)+np.square(0.5*width1))+
+    return -amp1*0.25*np.square(width1)/(np.square(freq-peak)+np.square(0.5*width1))+\
             -amp2*0.25*np.square(width2)/(np.square(freq-peak)+np.square(0.5*width2))
 
 def gaus(freq,peak,width,amp):
