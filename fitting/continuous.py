@@ -19,7 +19,7 @@ def fscan(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
             ydata:  np array of yaxis data to fit.
             yerr:   np array of error in ydata.
             life:   probe lifetime in s.
-        mode:           one of "lor, gauss".
+        mode:           one of "lor, gauss, 2lor_shpk".
         omit:           string of space-separated bin ranges to omit
         ncomp:          number of compenents. Ex: for exp+exp set ncomp=2. 
         probe:          string for probe species. Tested only for 8Li. 
@@ -49,6 +49,8 @@ def fscan(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
         fn1 = lor
     elif mode == 'gaus':
         fn1 = gaus
+    elif mode == '2lor_shpk':
+        fn1 = lor2_shrpk
     
     # Make final function based on number of components
     ninputs = ninputs_dict[mode]
@@ -73,7 +75,13 @@ def fscan(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
 # ========================================================================== #
 # FITTING FUNCTIONS
 def lor(freq,peak,width,amp):
+    """Lorentzian"""
     return -amp*0.25*np.square(width)/(np.square(freq-peak)+np.square(0.5*width))
+
+def lor2_shrpk(freq,peak,width1,amp1,width2,amp2):
+    """Two Lorentzians with shared peak value"""
+    return -amp1*0.25*np.square(width1)/(np.square(freq-peak)+np.square(0.5*width1))+
+            -amp2*0.25*np.square(width2)/(np.square(freq-peak)+np.square(0.5*width2))
 
 def gaus(freq,peak,width,amp):
     return -amp*np.exp(-np.square((freq-peak)/(width))/2)
