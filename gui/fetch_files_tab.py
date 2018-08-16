@@ -112,10 +112,14 @@ class fetch_files(object):
                 textvariable=self.check_rebin)
         check_bin_remove_entry = ttk.Entry(right_frame,\
                 textvariable=self.check_bin_remove,width=20)
-        check_all_box = ttk.Checkbutton(right_frame,text='Toggle All Check States',\
-            variable=self.check_state,onvalue=True,offvalue=False,pad=5,\
-            command=self.check_all)
+        
+        check_all_box = ttk.Checkbutton(right_frame,
+                text='Force Check State',variable=self.check_state,
+                onvalue=True,offvalue=False,pad=5,command=self.check_all)
         self.check_state.set(False)
+                
+        check_toggle_button = ttk.Button(right_frame,\
+                text='Toggle All Check States',command=self.toggle_all,pad=5)
         
         # add grey to check_bin_remove_entry
         check_bin_remove_entry.insert(0,self.bin_remove_starter_line)
@@ -141,6 +145,7 @@ class fetch_files(object):
         
         right_frame.grid(column=0,row=0,sticky=(N,E))
         check_all_box.grid(         column=0,row=0,sticky=(N))
+        check_toggle_button.grid(   column=0,row=1,sticky=(N),pady=10)
         check_remove.grid(          column=1,row=2,sticky=(N))
         check_draw.grid(            column=0,row=2,sticky=(N))
         check_rebin_label.grid(     column=0,row=3)
@@ -150,6 +155,7 @@ class fetch_files(object):
         
         bigright_frame.grid(rowspan=20)
         check_all_box.grid(columnspan=2)
+        check_toggle_button.grid(columnspan=2)
         check_bin_remove_entry.grid(columnspan=2)
         check_set.grid(columnspan=2)
         
@@ -176,14 +182,14 @@ class fetch_files(object):
         self.check_bin_remove_entry = check_bin_remove_entry
         self.check_all_box = check_all_box
         self.dataline_frame = dataline_frame
-        
+    
     # ======================================================================= #
     def check_all(self):
-        """Toggle all tickboxes"""
+        """Force all tickboxes to be in a given state"""
         for k in self.data_lines.keys():
-            state = not self.data_lines[k].check_state.get()
+            state = self.check_state.get()
             self.data_lines[k].check_state.set(state)
-    
+        
     # ======================================================================= #
     def draw_all(self):
         
@@ -247,7 +253,7 @@ class fetch_files(object):
         for r in run_numbers:
             try:
                 data[r] = bdata(r,year=int(self.year.get()))
-            except RuntimeError:
+            except (RuntimeError,ValueError):
                 s.append("%d (%d)" % (r,int(self.year.get())))
 
         # print error message
@@ -382,6 +388,14 @@ class fetch_files(object):
         if len(run_numbers) > 50:
             raise RuntimeWarning("Too many files selected (max 50).")
         return run_numbers
+    
+    # ======================================================================= #
+    def toggle_all(self):
+        """Toggle all tickboxes"""
+        for k in self.data_lines.keys():
+            state = not self.data_lines[k].check_state.get()
+            self.data_lines[k].check_state.set(state)
+
         
 # =========================================================================== #
 # =========================================================================== #
