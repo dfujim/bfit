@@ -78,10 +78,22 @@ class fileviewer(object):
 
         # viewer frame -------------------------------------------------------
         view_frame = ttk.Frame(file_tab,borderwidth=2)
-        self.text = Text(view_frame,width=150,height=40,state='normal')
-        self.text.grid(column=0,row=0)
-        self.text.columnconfigure(0, weight=1)
-        self.text.rowconfigure(0, weight=1)
+        
+        self.text_nw = Text(view_frame,width=75,height=20,state='normal')
+        self.text_ne = Text(view_frame,width=75,height=20,state='normal')
+        self.text_sw = Text(view_frame,width=75,height=20,state='normal')
+        self.text_se = Text(view_frame,width=75,height=20,state='normal')
+        
+        ttk.Label(view_frame,text="Run Info").grid(column=0,row=0,sticky=N)
+        ttk.Label(view_frame,text="PPG Parameters").grid(column=1,row=0,sticky=N)
+        ttk.Label(view_frame,text="Camp").grid(column=0,row=2,sticky=N)
+        ttk.Label(view_frame,text="EPICS").grid(column=1,row=2,sticky=N)
+        
+        self.text_nw.grid(column=0,row=1,sticky=(N,W,E,S))
+        self.text_ne.grid(column=1,row=1,sticky=(N,W,E,S))
+        self.text_sw.grid(column=0,row=3,sticky=(N,W,E,S))
+        self.text_se.grid(column=1,row=3,sticky=(N,W,E,S))
+        
         view_frame.grid(column=0,row=1)
         
         # details frame: stuff at the bottom ----------------------------------
@@ -149,12 +161,9 @@ class fileviewer(object):
         
         # settings
         mode_dict = {"20":"SLR","1f":"1F","1n":"Rb Cell Scan",
-                    '2h':'Alpha Tagging','2s':'Spin Echo'}
+                    '2h':'Alpha Tagging','2s':'Spin Echo','2e':'2e'}
         
-        key_order = ['Area','Run Mode','Title','Experimenters','Sample',
-                    'Run Duration','Start','End']
-        
-        # fetch
+        # fetch data file
         try:
             year = int(self.year.get())
             run = int(self.runn.get())
@@ -170,7 +179,9 @@ class fileviewer(object):
         except RuntimeError:
             self.set_textbox_text(self.text,'File does not exist.')
             return False
-            
+        
+        # NE -----------------------------------------------------------------
+        
         # get data: headers
         mode = mode_dict[data.mode]
         try:
@@ -182,28 +193,37 @@ class fileviewer(object):
         mins,sec = divmod(data.duration, 60)
         duration = "%dm %ds" % (mins,sec)
         
-        data_dict =  {  "Area": data.area,
-                        "Run Mode": mode,
-                        "Title": data.title,
-                        "Experimenters": data.experimenter,
-                        "Sample": data.sample,
-                        "Run Duration": duration,
-                        "Start": data.start_date,
-                        "End": data.end_date}
+        # set dictionary
+        data_nw =  {"Area": data.area,
+                    "Run Mode": mode,
+                    "Title": data.title,
+                    "Experimenters": data.experimenter,
+                    "Sample": data.sample,
+                    "Run Duration": duration,
+                    "Start": data.start_date,
+                    "End": data.end_date}
         
+        # set key order 
+        key_order_nw = ['Area','Run Mode','Title','Experimenters','Sample',
+                        'Run Duration','Start','End']
+        
+        # SW -----------------------------------------------------------------
+        data_sw = {}
+        key_order_sw = []
+                        
         # get data: temperature and fields
         try:
             temp = data.camp.smpl_read_A.mean
             temp_stdv = data.camp.smpl_read_A.std
-            data_dict["Temperature"] = "%.2f +/- %.2f K" % (temp,temp_stdv)
-            key_order.append('Temperature')
+            data_sw["Temperature"] = "%.2f +/- %.2f K" % (temp,temp_stdv)
+            key_order_sw.append('Temperature')
         except AttributeError:
             pass
         
         try: 
             field = np.around(data.camp.b_field.mean,3)
-            data_dict['Magnetic Field'] = "%.3f T" % field
-            key_order.append('Magnetic Field')
+            data_sw['Magnetic Field'] = "%.3f T" % field
+            key_order_sw.append('Magnetic Field')
         except AttributeError:
             pass
             
@@ -213,16 +233,28 @@ class fileviewer(object):
             needle_read = np.around(data.camp.needle_read.mean,3)
             lift_set = np.around(data.camp.clift_set.mean,3)
             lift_read = np.around(data.camp.clift_read.mean,3)
-            data_dict['Needle Setpoint'] = "%.3f turns" % needle_set
-            data_dict['Needle Readback'] = "%.3f turns" % needle_read
-            data_dict['Cryo Lift Setpoint'] = "%.3f mm" % lift_set
-            data_dict['Cryo Lift Readback'] = "%.3f mm" % lift_read
-            key_order.append('Needle Setpoint')
-            key_order.append('Needle Readback')
-            key_order.append('Cryo Lift Setpoint')
-            key_order.append('Cryo Lift Readback')
+            data_sw['Needle Setpoint'] = "%.3f turns" % needle_set
+            data_sw['Needle Readback'] = "%.3f turns" % needle_read
+            data_sw['Cryo Lift Setpoint'] = "%.3f mm" % lift_set
+            data_sw['Cryo Lift Readback'] = "%.3f mm" % lift_read
+            key_order_sw.append('Needle Setpoint')
+            key_order_sw.append('Needle Readback')
+            key_order_sw.append('Cryo Lift Setpoint')
+            key_order_sw.append('Cryo Lift Readback')
         except AttributeError:
             pass
+            
+        # rf dac
+        if mode != 'SLR':
+            try: 
+                data_sw['rf_dac'] = "%d" % int(data.camp.rf_dac.mean)
+                key_order_sw.append('rf_dac')
+            except AttributeError:
+                pass
+            
+        # SE -----------------------------------------------------------------
+        data_se = {}
+        key_order_se = []
             
         # get data: biases 
         try:
@@ -231,14 +263,15 @@ class fileviewer(object):
             elif 'nmr_bias' in data.epics.keys():
                 bias =  data.epics.nmr_bias.mean
             
-            data_dict["Platform Bias"] = "%.3f kV" % np.around(bias,3)
-            key_order.append('Platform Bias')
+            data_se["Platform Bias"] = "%.3f kV" % np.around(bias,3)
+            key_order_se.append("Platform Bias")
+            
         except UnboundLocalError:
             pass
         
         try:
-            data_dict["BIAS15"] = "%.3f V" % np.around(data.epics.bias15.mean,3)
-            key_order.append('BIAS15')
+            data_se["BIAS15"] = "%.3f V" % np.around(data.epics.bias15.mean,3)
+            key_order_se.append('BIAS15')
         except AttributeError:
             pass
         
@@ -252,32 +285,36 @@ class fileviewer(object):
                 pass
             
         try:
-            data_dict["Initial Beam Energy"] = "%.3f keV" % \
+            data_se["Initial Beam Energy"] = "%.3f keV" % \
                     np.around(init_bias/1000.,3)
-            key_order.append('Initial Beam Energy')
+            key_order_se.append('Initial Beam Energy')
         except UnboundLocalError:
             pass
         
         # Get final beam energy
         try: 
-            data_dict['Beam Energy at Sample'] = "%.3f keV" % \
+            data_se['Implantation Energy'] = "%.3f keV" % \
                     np.around(data.beam_kev(),3)
-            key_order.append('Beam Energy at Sample')
+            key_order_se.append('Implantation Energy')
         except AttributeError:
             pass
+        
+        # NE -----------------------------------------------------------------
+        data_ne = {}
+        key_order_ne = []
         
         # get data: SLR data
         try:
             dwell = int(data.ppg.dwelltime.mean)
             beamon = int(data.ppg.beam_on.mean)
             beamoff = int(data.ppg.beam_off.mean)
-            data_dict['Dwell Time'] = "%d ms" % dwell
-            data_dict['Beam On Dwell Time'] = "%d dwelltimes" % beamon
-            data_dict['Beam Off Dwell Time'] = "%d dwelltimes" % beamoff
+            data_ne['Dwell Time'] = "%d ms" % dwell
+            data_ne['Beam On Dwell Time'] = "%d dwelltimes" % beamon
+            data_ne['Beam Off Dwell Time'] = "%d dwelltimes" % beamoff
             
-            key_order.append('Dwell Time')
-            key_order.append('Beam On Dwell Time')
-            key_order.append('Beam Off Dwell Time')
+            key_order_ne.append('Dwell Time')
+            key_order_ne.append('Beam On Dwell Time')
+            key_order_ne.append('Beam Off Dwell Time')
         except AttributeError:
             pass
         
@@ -288,13 +325,13 @@ class fileviewer(object):
                 rf_delay = int(data.ppg.rf_on_delay.mean)
                 freq = int(data.ppg.freq.mean)
                 
-                data_dict['RF On Duration'] = "%d dwelltimes" % rf_on
-                data_dict['RF On Delay'] = "%d Hz" % rf_delay
-                data_dict['Frequency'] = "%d Hz" % freq
+                data_ne['RF On Duration'] = "%d dwelltimes" % rf_on
+                data_ne['RF On Delay'] = "%d Hz" % rf_delay
+                data_ne['Frequency'] = "%d Hz" % freq
                 
-                key_order.append('RF On Duration')
-                key_order.append('RF On Delay')
-                key_order.append('Frequency')
+                key_order_ne.append('RF On Duration')
+                key_order_ne.append('RF On Delay')
+                key_order_ne.append('Frequency')
         except AttributeError:
             pass
         
@@ -303,41 +340,38 @@ class fileviewer(object):
             fmin = int(data.ppg.freq_start.mean)
             fmax = int(data.ppg.freq_stop.mean)
             df = int(data.ppg.freq_incr.mean)
-            data_dict['Frequency Range'] = "[%d,%d] Hz" % (fmin,fmax)
-            data_dict['Frequency Step'] = "%d Hz" % df
+            data_ne['Frequency Range'] = "[%d,%d] Hz" % (fmin,fmax)
+            data_ne['Frequency Step'] = "%d Hz" % df
             
-            key_order.append('Frequency Range')
-            key_order.append('Frequency Step')
+            key_order_ne.append('Frequency Range')
+            key_order_ne.append('Frequency Step')
         except AttributeError:
             pass
-
-        # rf dac
-        if mode != 'SLR':
-            try: 
-                data_dict['rf_dac'] = "%d" % int(data.camp.rf_dac.mean)
-                key_order.append('rf_dac')
-            except AttributeError:
-                pass
         
         # get Rb Cell specific data
         try:
             fmin = int(data.ppg.volt_start.mean)
             fmax = int(data.ppg.volt_stop.mean)
             df = int(data.ppg.volt_incr.mean)
-            data_dict['Voltage Range'] = "[%d,%d] V" % (fmin,fmax)
-            data_dict['Voltage Step'] = "%d V" % df
+            data_ne['Voltage Range'] = "[%d,%d] V" % (fmin,fmax)
+            data_ne['Voltage Step'] = "%d V" % df
             
-            key_order.append('Voltage Range')
-            key_order.append('Voltage Step')
+            key_order_ne.append('Voltage Range')
+            key_order_ne.append('Voltage Step')
         except AttributeError:
             pass
         
         # set viewer string
-        m = max(max(map(len, list(data_dict.keys()))) + 1,25)
-        s = '\n'.join([k.rjust(m) + ': ' + data_dict[k]
-                          for k in key_order])
+        def set_str(data_dict,key_order,txtbox):
         
-        self.set_textbox_text(self.text,s)
+            m = max(max(map(len, list(data_dict.keys()))) + 1,5)
+            s = '\n'.join([k.rjust(m) + ': ' + data_dict[k] for k in key_order])
+            self.set_textbox_text(txtbox,s)
+        
+        set_str(data_nw,key_order_nw,self.text_nw)
+        set_str(data_ne,key_order_ne,self.text_ne)
+        set_str(data_sw,key_order_sw,self.text_sw)
+        set_str(data_se,key_order_se,self.text_se)
         
         # set data field
         self.data = data
