@@ -112,7 +112,7 @@ class fetch_files(object):
                 textvariable=self.check_rebin)
         check_bin_remove_entry = ttk.Entry(right_frame,\
                 textvariable=self.check_bin_remove,width=20)
-        check_all_box = ttk.Checkbutton(right_frame,text='Check all',\
+        check_all_box = ttk.Checkbutton(right_frame,text='Toggle All Check States',\
             variable=self.check_state,onvalue=True,offvalue=False,pad=5,\
             command=self.check_all)
         self.check_state.set(False)
@@ -179,9 +179,9 @@ class fetch_files(object):
         
     # ======================================================================= #
     def check_all(self):
-        """Check all tickboxes"""
-        state = self.check_state.get()
+        """Toggle all tickboxes"""
         for k in self.data_lines.keys():
+            state = not self.data_lines[k].check_state.get()
             self.data_lines[k].check_state.set(state)
     
     # ======================================================================= #
@@ -212,6 +212,7 @@ class fetch_files(object):
         elif style == 'new':
             draw_lines()
         else:
+            messagebox.showerror(message="Draw style not recognized")
             raise ValueError("Draw style not recognized")
 
     # ======================================================================= #
@@ -242,11 +243,18 @@ class fetch_files(object):
         
         # get data
         data = {}
+        s = ['Failed to open run']
         for r in run_numbers:
             try:
                 data[r] = bdata(r,year=int(self.year.get()))
             except RuntimeError:
-                print("Failed to open run %d (%d)" % (r,int(self.year.get())))
+                s.append("%d (%d)" % (r,int(self.year.get())))
+
+        # print error message
+        if len(s)>1:
+            s = '\n'.join(s)
+            print(s)
+            messagebox.showinfo(message=s)
         
         # check that data is all the same runtype
         run_types = []
@@ -277,8 +285,9 @@ class fetch_files(object):
         try:
             self.runmode = run_types[0]
         except IndexError:
-            self.runmode = ''
-        self.runmode_label['text'] = self.runmode_relabel[run_types[0]]
+            messagebox.showerror(message='No valid runs detected.')
+            raise RuntimeError('No valid runs detected.')
+        self.runmode_label['text'] = self.runmode_relabel[self.runmode]
         
         keys_list = list(self.data.keys())
         keys_list.sort()
@@ -289,7 +298,7 @@ class fetch_files(object):
             if r in self.data_lines.keys():
                 self.data_lines[r].grid(n)
             else:
-                self.data_lines[r] = dataline(self.bfit,self.data,\
+                self.data_lines[r] = dataline(self.bfit,\
                         self.data_lines,self.dataline_frame,self.data[r],n)
             n+=1
         self.bfit.fit_files.populate()
@@ -384,7 +393,7 @@ class dataline(object):
     bin_remove_starter_line = '1 5 100-200 (omit bins)'
     
     # ======================================================================= #
-    def __init__(self,bfit,datalist,lines_list,fetch_tab_frame,bd,row):
+    def __init__(self,bfit,lines_list,fetch_tab_frame,bd,row):
         """
             Inputs:
                 fetch_tab_frame: parent in which to place line
@@ -403,7 +412,6 @@ class dataline(object):
         self.year = bd.year
         self.row = row
         self.bfit = bfit
-        self.datalist = datalist # fetch_files.data
         self.lines_list = lines_list
         
         # temperature
@@ -540,14 +548,19 @@ class dataline(object):
     # ======================================================================= #
     def draw(self):
         """Draw single data file."""
+        
+        # get new data file
+        data = bdata(self.run,year=self.year)
+        
+        # get data file run type
         d = self.bfit.fileviewer.asym_type.get()
         d = self.bfit.fileviewer.asym_dict[d]
         
         if self.bin_remove.get() == self.bin_remove_starter_line:
-            self.bfit.draw(self.datalist[self.run],d,self.rebin.get(),
+            self.bfit.draw(data,d,self.rebin.get(),
                 label=self.label.get())
         else:
-            self.bfit.draw(self.datalist[self.run],d,self.rebin.get(),\
+            self.bfit.draw(data,d,self.rebin.get(),\
                 option=self.bin_remove.get(),label=self.label.get())
         
 # =========================================================================== #
