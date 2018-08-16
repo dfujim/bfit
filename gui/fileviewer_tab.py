@@ -228,8 +228,8 @@ class fileviewer(object):
         try:
             if 'nqr_bias' in data.epics.keys():
                 bias =  data.epics.nqr_bias.mean/1000.
-            elif 'nmr_bias_p' in data.epics.keys():
-                bias =  data.epics.nmr_bias_p.mean
+            elif 'nmr_bias' in data.epics.keys():
+                bias =  data.epics.nmr_bias.mean
             
             data_dict["Platform Bias"] = "%.3f kV" % np.around(bias,3)
             key_order.append('Platform Bias')
@@ -244,10 +244,10 @@ class fileviewer(object):
         
         # get data: beam energy
         try: 
-            init_bias = data.epics.itw_bias.mean
+            init_bias = data.epics.target_bias.mean
         except AttributeError:
             try:
-                init_bias = data.epics.ite_bias.mean
+                init_bias = data.epics.target_bias.mean
             except AttributeError:
                 pass
             
