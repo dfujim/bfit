@@ -259,8 +259,8 @@ class bfit(object):
         """Draw the selected file"""
         
         # Settings
-        xlabel_dict={'20':"Time (s)",'1f':'Frequency (MHz)','1n':'Voltage (V)'}
-        x_tag={'20':"time_s",'1f':'freq','1n':'mV'}
+        xlabel_dict={'20':"Time (s)",'2h':"Time (s)",'1f':'Frequency (MHz)','1n':'Voltage (V)'}
+        x_tag={'20':"time_s",'2h':"time_s",'1f':'freq','1n':'mV'}
         
         # get draw setting 
         draw_style = self.draw_style
@@ -298,7 +298,7 @@ class bfit(object):
             plt.errorbar(x[idx_n],a.n[0][idx_n],a.n[1][idx_n],
                     label=label+"($-$)",**drawargs)
         
-        # get asymmetry: other
+        # get asymmetry: not raw scans
         else:
             a = data.asym(omit=option,rebin=rebin)
             x = a[x_tag[data.mode]]
@@ -311,17 +311,48 @@ class bfit(object):
             # plot split helicities
             if asym_type == 'h':
                 plt.errorbar(x,a.p[0],a.p[1],label=label+" ($+$)",**drawargs)
-                plt.errorbar(x,a.n[0],a.n[1],label=label+" ($+$)",**drawargs)
+                plt.errorbar(x,a.n[0],a.n[1],label=label+" ($-$)",**drawargs)
                 
             # plot comined helicities
             elif asym_type == 'c':
-                a = data.asym(rebin=rebin,omit=option)
-                plt.errorbar(x,a.c[0],a.c[1],label=label,**drawargs)
+                a = data.asym('c',rebin=rebin,omit=option)
+                plt.errorbar(*a,label=label,**drawargs)
                 
             # attempting to draw raw scans unlawfully
             elif asym_type == 'r':
                 return
                 
+            # draw alpha diffusion
+            elif asym_type == 'ad':
+                a = data.asym('adif',rebin=rebin)
+                plt.errorbar(*a,label=label,**drawargs)
+                plt.ylabel(r'$N_\alpha/N_\beta$')
+                
+            # draw alpha tagged runs
+            elif asym_type in ['at_c','at_h','nat_c','nat_h']:
+                
+                a = data.asym('atag',rebin=rebin)
+                t = a.time_s
+                
+                if asym_type == 'at_c':
+                    plt.errorbar(t,a.c_wiA[0],a.c_wiA[1],
+                                 label=label+r" $\alpha$",**drawargs)
+                
+                elif asym_type == 'nat_c':
+                    plt.errorbar(t,a.c_noA[0],a.c_noA[1],
+                                 label=label+r" !$\alpha$",**drawargs)
+                                 
+                elif asym_type == 'at_h':
+                    plt.errorbar(t,a.p_wiA[0],a.p_wiA[1],
+                                 label=label+r" $\alpha$ ($+$)",**drawargs)
+                    plt.errorbar(t,a.n_wiA[0],a.n_wiA[1],
+                                 label=label+r" $\alpha$ ($-$)",**drawargs)
+                
+                elif asym_type == 'nat_h':
+                    plt.errorbar(t,a.p_noA[0],a.p_noA[1],
+                                 label=label+r" !$\alpha$ ($+$)",**drawargs)
+                    plt.errorbar(t,a.n_noA[0],a.n_noA[1],
+                                 label=label+r" !$\alpha$ ($-$)",**drawargs)
             # unknown run type
             else:
                 raise RuntimeError("Unknown draw style")

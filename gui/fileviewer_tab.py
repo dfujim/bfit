@@ -33,8 +33,19 @@ class fileviewer(object):
             data: bdata object for drawing
     """
     
-    asym_dict = {"Combined Helicity":'c',"Split Helicity":'h',"Raw Scans":'r'}
-    asym_dict_keys = ("Combined Helicity","Split Helicity","Raw Scans (1F)")
+    asym_dict = {"Combined Helicity":'c',
+                 "Split Helicity":'h',
+                 "Raw Scans (1F)":'r',
+                 "Alpha Diffusion":'ad',
+                 "Tagged Alpha (Com)":"at_c",
+                 "Tagged Alpha (Spl)":"at_h",
+                 "Tagged !Alpha (Com)":"nat_c",
+                 "Tagged !Alpha (Spl)":"nat_h",
+                 }
+    asym_dict_keys = ("Combined Helicity","Split Helicity","Raw Scans (1F)",
+                      "Alpha Diffusion",
+                      "Tagged Alpha (Com)","Tagged Alpha (Spl)",
+                      "Tagged !Alpha (Com)","Tagged !Alpha (Spl)")
     default_asym_key = "Combined Helicity"
     default_export_filename = "%d_%d.csv" # year_run.csv
     
@@ -168,16 +179,25 @@ class fileviewer(object):
             year = int(self.year.get())
             run = int(self.runn.get())
         except ValueError:
-            self.set_textbox_text(self.text,'Input must be integer valued')
+            self.set_textbox_text(self.text_nw,'Input must be integer valued')
+            self.set_textbox_text(self.text_ne,'Input must be integer valued')
+            self.set_textbox_text(self.text_sw,'Input must be integer valued')
+            self.set_textbox_text(self.text_se,'Input must be integer valued')
             return False
         
         try: 
             data = bdata(run,year=year)
         except ValueError:
-            self.set_textbox_text(self.text,'File read failed')
+            self.set_textbox_text(self.text_nw,'File read failed')
+            self.set_textbox_text(self.text_ne,'File read failed')
+            self.set_textbox_text(self.text_sw,'File read failed')
+            self.set_textbox_text(self.text_se,'File read failed')
             return False
         except RuntimeError:
-            self.set_textbox_text(self.text,'File does not exist.')
+            self.set_textbox_text(self.text_nw,'File does not exist.')
+            self.set_textbox_text(self.text_ne,'File does not exist.')
+            self.set_textbox_text(self.text_sw,'File does not exist.')
+            self.set_textbox_text(self.text_se,'File does not exist.')
             return False
         
         # NE -----------------------------------------------------------------
