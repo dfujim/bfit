@@ -34,7 +34,7 @@ class fileviewer(object):
     """
     
     asym_dict = {"Combined Helicity":'c',"Split Helicity":'h',"Raw Scans":'r'}
-    asym_dict_keys = ("Combined Helicity","Split Helicity","Raw Scans")
+    asym_dict_keys = ("Combined Helicity","Split Helicity","Raw Scans (1F)")
     default_asym_key = "Combined Helicity"
     default_export_filename = "%d_%d.csv" # year_run.csv
     
@@ -194,21 +194,29 @@ class fileviewer(object):
         duration = "%dm %ds" % (mins,sec)
         
         # set dictionary
-        data_nw =  {"Area": data.area,
+        data_nw =  {"Run":str(data.run),
+                    "Area": data.area,
                     "Run Mode": mode,
                     "Title": data.title,
                     "Experimenters": data.experimenter,
                     "Sample": data.sample,
+                    "Orientation":data.orientation,
+                    "Experiment":str(data.exp),
                     "Run Duration": duration,
                     "Start": data.start_date,
-                    "End": data.end_date}
+                    "End": data.end_date,
+                    "":"",
+                    }
         
         # set key order 
-        key_order_nw = ['Area','Run Mode','Title','Experimenters','Sample',
-                        'Run Duration','Start','End']
+        key_order_nw = ['Run','Run Mode','Title','',
+                        'Start','End','Run Duration','',
+                        'Sample','Orientation','',
+                        'Experiment','Area','Experimenters',
+                        ]
         
         # SW -----------------------------------------------------------------
-        data_sw = {}
+        data_sw = {'':''}
         key_order_sw = []
                         
         # get data: temperature and fields
@@ -220,6 +228,28 @@ class fileviewer(object):
         except AttributeError:
             pass
         
+        try:
+            curr = data.camp.smpl_current
+            data_sw["Heater Current"] = "%.2f +/- %.2f A" % (curr.mean,curr.std)
+            key_order_sw.append('Heater Current')
+        except AttributeError:
+            pass
+        
+        try:
+            temp = data.camp.oven_readA.mean
+            temp_stdv = data.camp.oven_readA.std
+            data_sw['Oven Temperature'] = "%.2f +/- %.2f K" % (temp,temp_stdv)
+            key_order_sw.append('Oven Temperature')
+        except AttributeError:
+            pass
+        
+        try:
+            curr = data.camp.oven_current
+            data_sw['Oven Current'] = "%.2f +/- %.2f A" % (curr.mean,curr.std)
+            key_order_sw.append('Oven Current')
+        except AttributeError:
+            pass
+        
         try: 
             field = np.around(data.camp.b_field.mean,3)
             data_sw['Magnetic Field'] = "%.3f T" % field
@@ -227,19 +257,45 @@ class fileviewer(object):
         except AttributeError:
             pass
             
-        # get data: needle and cryolift position
-        try:
-            needle_set = np.around(data.camp.needle_set.mean,3)
-            needle_read = np.around(data.camp.needle_read.mean,3)
-            lift_set = np.around(data.camp.clift_set.mean,3)
-            lift_read = np.around(data.camp.clift_read.mean,3)
-            data_sw['Needle Setpoint'] = "%.3f turns" % needle_set
-            data_sw['Needle Readback'] = "%.3f turns" % needle_read
-            data_sw['Cryo Lift Setpoint'] = "%.3f mm" % lift_set
-            data_sw['Cryo Lift Readback'] = "%.3f mm" % lift_read
+        key_order_sw.append('')
+                
+        # cryo options
+        try: 
+            mass = data.camp.mass_read
+            data_sw['Mass Flow'] = "%.3f +\- %.3f" % (mass.mean,mass.std)
+            key_order_sw.append('Mass Flow')
+        except AttributeError:
+            pass
+    
+        try: 
+            cryo = data.camp.cryo_read
+            data_sw['CryoEx Mass Flow'] = "%.3f +\- %.3f" % (cryo.mean,cryo.std)
+            key_order_sw.append('CryoEx Mass Flow')
+        except AttributeError:
+            pass    
+            
+        try: 
+            data_sw['Needle Setpoint'] = "%.3f turns" % data.camp.needle_set.mean
             key_order_sw.append('Needle Setpoint')
+        except AttributeError:
+            pass    
+            
+        try: 
+            data_sw['Needle Readback'] = "%.3f turns" % data.camp.needle_pos.mean
             key_order_sw.append('Needle Readback')
+        except AttributeError:
+            pass    
+            
+        try:
+            lift_set = np.around(data.camp.clift_set.mean,3)
+            data_sw['Cryo Lift Setpoint'] = "%.3f mm" % lift_set
             key_order_sw.append('Cryo Lift Setpoint')
+        except AttributeError:
+            pass
+        
+        try:
+            lift_read = np.around(data.camp.clift_read.mean,3)
+            data_sw['Cryo Lift Readback'] = "%.3f mm" % lift_read
             key_order_sw.append('Cryo Lift Readback')
         except AttributeError:
             pass
@@ -252,8 +308,15 @@ class fileviewer(object):
             except AttributeError:
                 pass
             
+            try: 
+                data_sw['RF Amplifier Gain'] = "%.2f" % data.camp.rfamp_rfgain.mean
+                key_order_sw.append('RF Amplifier Gain')
+            except AttributeError:
+                pass    
+                
+                
         # SE -----------------------------------------------------------------
-        data_se = {}
+        data_se = {'':''}
         key_order_se = []
             
         # get data: biases 
@@ -285,87 +348,236 @@ class fileviewer(object):
                 pass
             
         try:
-            data_se["Initial Beam Energy"] = "%.3f keV" % \
-                    np.around(init_bias/1000.,3)
+            val = np.around(init_bias/1000.,3)
+            data_se["Initial Beam Energy"] = "%.3f keV" % val
             key_order_se.append('Initial Beam Energy')
         except UnboundLocalError:
             pass
         
         # Get final beam energy
         try: 
-            data_se['Implantation Energy'] = "%.3f keV" % \
-                    np.around(data.beam_kev(),3)
+            val = np.around(data.beam_kev(),3)
+            data_se['Implantation Energy'] = "%.3f keV" % val
             key_order_se.append('Implantation Energy')
         except AttributeError:
             pass
         
+        key_order_se.append('')
+        
+        # laser stuff
+        try: 
+            val = data.epics.las_pwr
+            data_se['Laser Power'] = "%.3f +\- %.3f A" % (val.mean,val.std)
+            key_order_se.append('Laser Power')
+        except AttributeError:
+            pass
+        
+        # magnet stuff
+        try: 
+            val = data.epics.hh_current.mean
+            data_se['Magnet Current'] = "%.3f A" % val
+            key_order_se.append('Magnet Current')
+        except AttributeError:
+            pass
+        
         # NE -----------------------------------------------------------------
-        data_ne = {}
+        data_ne = {'':''}
         key_order_ne = []
         
         # get data: SLR data
-        try:
-            dwell = int(data.ppg.dwelltime.mean)
-            beamon = int(data.ppg.beam_on.mean)
-            beamoff = int(data.ppg.beam_off.mean)
-            data_ne['Dwell Time'] = "%d ms" % dwell
-            data_ne['Beam On Dwell Time'] = "%d dwelltimes" % beamon
-            data_ne['Beam Off Dwell Time'] = "%d dwelltimes" % beamoff
+        if data.mode in ['20','2h']:
+            try:
+                dwell = int(data.ppg.dwelltime.mean)
+                data_ne['Dwell Time'] = "%d ms" % dwell
+                key_order_ne.append('Dwell Time')
+            except AttributeError:
+                pass
             
-            key_order_ne.append('Dwell Time')
-            key_order_ne.append('Beam On Dwell Time')
-            key_order_ne.append('Beam Off Dwell Time')
-        except AttributeError:
-            pass
-        
-        # get data: holeburning data
-        try:
-            if int(data.ppg.rf_enable.mean):
-                rf_on = int(data.ppg.rf_on.mean)
-                rf_delay = int(data.ppg.rf_on_delay.mean)
-                freq = int(data.ppg.freq.mean)
-                
-                data_ne['RF On Duration'] = "%d dwelltimes" % rf_on
-                data_ne['RF On Delay'] = "%d Hz" % rf_delay
-                data_ne['Frequency'] = "%d Hz" % freq
-                
-                key_order_ne.append('RF On Duration')
+            try:    
+                beam = int(data.ppg.prebeam.mean)            
+                data_ne['Number of Prebeam Dwelltimes'] = "%d dwelltimes" % beam
+                key_order_ne.append('Number of Prebeam Dwelltimes')
+            except AttributeError:
+                pass
+            
+            try:    
+                beam = int(data.ppg.beam_on.mean)            
+                data_ne['Number of Beam On Dwelltimes'] = "%d dwelltimes" % beam
+                key_order_ne.append('Number of Beam On Dwelltimes')
+            except AttributeError:
+                pass
+            
+            try: 
+                beam = int(data.ppg.beam_off.mean)
+                data_ne['Number of Beam Off Dwelltimes'] = "%d dwelltimes" % beam
+                key_order_ne.append('Number of Beam Off Dwelltimes')
+            except AttributeError:
+                pass
+            
+            try:    
+                rf = int(data.ppg.rf_on_delay.mean)
+                data_ne['RF On Delay'] = "%d dwelltimes" % rf
                 key_order_ne.append('RF On Delay')
-                key_order_ne.append('Frequency')
-        except AttributeError:
-            pass
+            except AttributeError:
+                pass
+            
+            try:    
+                rf = int(data.ppg.rf_on.mean)
+                data_ne['RF On Duration'] = "%d dwelltimes" % rf
+                key_order_ne.append('RF On Duration')
+            except AttributeError:
+                pass
+            
+            try:    
+                hel = bool(data.ppg.hel_enable.mean)
+                data_ne['Flip Helicity'] = str(hel)
+                key_order_ne.append('Flip Helicity')
+            except AttributeError:
+                pass
+            
+            try:    
+                hel = int(data.ppg.hel_sleep.mean)
+                data_ne['Helicity Flip Sleep'] = "%d ms" % hel
+                key_order_ne.append('Helicity Flip Sleep')
+            except AttributeError:
+                pass
         
+            key_order_ne.append('')
+            
+            try:
+                rf = bool(data.ppg.rf_enable.mean)
+                data_ne['RF Enable'] = str(rf)
+                key_order_ne.append('RF Enable')
+                
+                if rf:
+                    freq = int(data.ppg.freq.mean)    
+                    data_ne['Frequency'] = "%d Hz" % freq
+                    key_order_ne.append('Frequency')
+            except AttributeError:
+                pass
+            
         # get 1F specific data
-        try:
-            fmin = int(data.ppg.freq_start.mean)
-            fmax = int(data.ppg.freq_stop.mean)
-            df = int(data.ppg.freq_incr.mean)
-            data_ne['Frequency Range'] = "[%d,%d] Hz" % (fmin,fmax)
-            data_ne['Frequency Step'] = "%d Hz" % df
+        elif data.mode in ['1f']:
+            try:
+                val = int(data.ppg.dwelltime.mean)
+                data_ne['Bin Width'] = "%d ms" % val
+                key_order_ne.append('Bin Width')
+            except AttributeError:
+                pass
             
-            key_order_ne.append('Frequency Range')
-            key_order_ne.append('Frequency Step')
-        except AttributeError:
-            pass
-        
+            try:    
+                val = int(data.ppg.nbins.mean)
+                data_ne['Number of Bins'] = "%d" % val
+                key_order_ne.append('Number of Bins')
+            except AttributeError:
+                pass
+            
+            try:
+                val = bool(data.ppg.const_t_btwn_cycl.mean)
+                data_ne['Enable Const Time Between Cycles'] = str(val)
+                key_order_ne.append('Enable Const Time Between Cycles')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.freq_start.mean)
+                data_ne['Frequency Scan Start'] = '%d Hz' % val
+                key_order_ne.append('Frequency Scan Start')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.freq_stop.mean)
+                data_ne['Frequency Scan End'] = '%d Hz' % val
+                key_order_ne.append('Frequency Scan End')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.freq_incr.mean)
+                data_ne['Frequency Scan Increment'] = '%d Hz' % val
+                key_order_ne.append('Frequency Scan Increment')
+            except AttributeError:
+                pass
+            
+            try:
+                val = bool(data.ppg.hel_enable.mean)
+                data_ne['Flip Helicity'] = str(val)
+                key_order_ne.append('Flip Helicity')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.hel_sleep.mean)
+                data_ne['Helicity Flip Sleep'] = "%d ms" % val
+                key_order_ne.append('Helicity Flip Sleep')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.ncycles.mean)
+                data_ne['Number of Cycles per Scan Increment'] = '%d' % val
+                key_order_ne.append('Number of Cycles per Scan Increment')
+            except AttributeError:
+                pass
+            
         # get Rb Cell specific data
-        try:
-            fmin = int(data.ppg.volt_start.mean)
-            fmax = int(data.ppg.volt_stop.mean)
-            df = int(data.ppg.volt_incr.mean)
-            data_ne['Voltage Range'] = "[%d,%d] V" % (fmin,fmax)
-            data_ne['Voltage Step'] = "%d V" % df
+        elif data.mode in ['1n']:
             
-            key_order_ne.append('Voltage Range')
-            key_order_ne.append('Voltage Step')
-        except AttributeError:
-            pass
+            try:
+                dwell = int(data.ppg.dwelltime.mean)
+                data_ne['Bin Width'] = "%d ms" % dwell
+                key_order_ne.append('Bin Width')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.volt_start.mean)
+                data_ne['Start Rb Scan'] = '%d Volts' % val
+                key_order_ne.append('Start Rb Scan')
+            except AttributeError:
+                pass
+            
+            try:    
+                val = int(data.ppg.volt_stop.mean)
+                data_ne['Stop Rb Scan'] = '%d Volts' % val
+                key_order_ne.append('Stop Rb Scan')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.volt_incr.mean)
+                data_ne['Scan Increment'] = '%d Volts' % val
+                key_order_ne.append('Scan Increment')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.nbins.mean)
+                data_ne['Number of Bins'] = '%d' % val
+                key_order_ne.append('Number of Bins')
+            except AttributeError:
+                pass
+            
+            try:
+                val = bool(data.ppg.hel_enable.mean)
+                data_ne['Flip Helicity'] = str(val)
+                key_order_ne.append('Flip Helicity')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.hel_sleep.mean)
+                data_ne['Helicity Flip Sleep'] = "%d ms" % val
+                key_order_ne.append('Helicity Flip Sleep')
+            except AttributeError:
+                pass
         
         # set viewer string
         def set_str(data_dict,key_order,txtbox):
         
             m = max(max(map(len, list(data_dict.keys()))) + 1,5)
-            s = '\n'.join([k.rjust(m) + ': ' + data_dict[k] for k in key_order])
+            s = '\n'.join([k.rjust(m)+': ' + data_dict[k] for k in key_order])
             self.set_textbox_text(txtbox,s)
         
         set_str(data_nw,key_order_nw,self.text_nw)
