@@ -6248,7 +6248,7 @@ Error message and password prompt
 <div modified="20171215084937325" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/EditToolbar</pre>
 </div>
-<div list="[[Help Index]] [[Plugging in Fitting Routines]]" title="$:/StoryList">
+<div list="[[Help Index]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div modified="20171215083831245" title="$:/temp/advancedsearch">
@@ -6624,7 +6624,7 @@ At this point it is largely for experimentation by @zooko.
 <div modified="20171215084105748" title="$:/view">
 <pre>pop</pre>
 </div>
-<div created="20171215084952848" modified="20171215090231807" title="Asymmetry Calculation Details">
+<div created="20171215084952848" modified="20180820234114077" title="Asymmetry Calculation Details">
 <pre>! Variable Assignment
 
 In the following we shall treat only the BNMR case. For BNQR, simply associate ''F'' with ''R'' and ''B'' with ''L''. For the case of 1n runs (Rb cell scans), the neutral beam monitors are used, therefore associate ''F'' with ''NBMF'' and ''B'' with ''NBMB''
@@ -6641,6 +6641,16 @@ $$A_{(+,-)} = \frac{F_{(+,-)}-B_{(+,-)}}{F_{(+,-)}+B_{(+,-)}}$$
 
 Let $$r = \sqrt{\frac{B_+F_-}{F_+B_-}}$$ then $$A = \frac{r-1}{r+1}$$.
 
+!! Alpha Diffusion Ratio
+
+The ratio is the number of alpha counts divided by the number of beta counts, regardless of helicity: 
+
+$$\frac{N_\alpha}{N_\beta}$$
+
+For example, this would be computed by
+
+$$\frac{(AL0_+)+(AL0_-)}{(R_+)+(R_-)+(L_+)+(L_-)}$$
+
 ---
 
 ! 20 Mode 
@@ -6652,11 +6662,42 @@ Rebinning:
 * Returned time is average time over rebin range
 * Returned asym is weighted mean over the //n// rebinned measurements
 
+Note that the values for the times returned are that of the bin centers, not the leading edge. 
+
 ---
 
 ! 1F and 1N Scan Combination
 
-Multiscans are considered as a single scan with long integration time. Histogram bins are summed according to their frequency bin, errors are Poisson. Asymmetry is then calculated from the summed histograms. </pre>
+Multiscans are considered as a single scan with long integration time. Histogram bins are summed according to their frequency bin, errors are Poisson. Asymmetry is then calculated from the summed histograms. 
+
+---
+
+!Alpha Tagging
+
+Computations are as in the 20 mode, but counters for $$\beta$$ in coincidence with $$\alpha$$ are used separately from counters for $$\beta$$ in coincidence with $$!\alpha$$ (no $$\alpha$$ present), as well as the usual counters which do not take alpha tagging into consideration. 
+
+---
+
+! 2E Mode 
+
+2E mode measures as a function of frequency over time, so one can either plot the asymmetry as a function of time, or combine the times by some method. For the following, let's say we have times $$t_{-2},~t_{-1},~t_{0},~t_{+1},~t_{+2}$$
+
+!! Raw
+
+Asymmetries for each time bin as calculated as normal, for each of the time bins. 
+
+!! Difference Combined
+
+Working off of the raw asymmetry calculations we can combine asymmetries by taking the difference at the times $$t_{-1}$$ and $$t_{+1}$$.
+
+!! Slopes Combined
+
+Working off of the raw asymmetry calculations we can combine asymmetries in the following way: 
+
+# For each frequency bin of times $$t_{-1}$$ and $$t_{-2}$$ as well as $$t_{+1}$$ and $$t_{+2}$$, find the linear line of best fit. 
+# Project these onto $$t_{0}$$
+# Take the difference 
+</pre>
 </div>
 <div created="20171215083659362" modified="20180805223132635" title="Help Index">
 <pre>&quot;&quot;&quot;
@@ -6695,26 +6736,24 @@ Multiscans are considered as a single scan with long integration time. Histogram
 | ctrl+a || toggle check all |
 </pre>
 </div>
-<div created="20171215075709744" modified="20180626234053256" title="Installation">
-<pre>To install, one need to first acquire mudpy and bdata. 
-
-! mudpy and bdata Installation 
-
-* Download mudpy [ext[here|https://ms-code.phas.ubc.ca:2633/dfujim_public/bdata/releases]]. 
-* Extract the files using your distribution's archive manager, or via
-```bash
-unzip bdata.zip
-```
-* Navigate to bdata directory. 
+<div created="20171215075709744" modified="20180820231556139" title="Installation">
+<pre>To install, one need to first acquire mudpy and bdata:
 
 ```bash
-cd bdata
+pip install bdata
 ```
 
-* Compile
+bdata can be told where to fetch bnmr and bnqr data if it is stored locally. The format for data storage is to have the data files sorted by year, with each year getting it's own directory. One should set the location for the directory holding all of the directories corresponding to each year. Add the following to your ``${HOME}/.bashrc`` file:
 
 ```bash
-python3 setup_mudpy.py build_ext --inplace
+export BNMR_ARCHIVE=/path_to_bnmr_year_directories/
+export BNQR_ARCHIVE=/path_to_bnqr_year_directories/
+```
+
+We then need to compile the integrator for pulsed curve fitting (found in bfit/fitting):
+
+```bash
+python3 setup_integrator.py build_ext --inplace
 ```
 
 !! Dependencies 
@@ -6723,31 +6762,6 @@ You will need to have installed the following for the mudpy installation to work
 
 * python3. This has been tested on python3.5.2 only. 
 * Cython. This can be installed using pip
-
-```bash
-sudo -H pip install Cython
-```
-
-or 
-
-```
-sudo -H pip3 install Cython
-
-```
-
-One then should add mudpy to the python path. Add the following line to your ``${HOME}/.bashrc`` file. This will be found in your home directory. Append: 
-
-```bash
-export PYTHONPATH:${PYTHONPATH}:/path/bdata/
-```
-
-
-bdata can be told where to fetch bnmr and bnqr data if it is stored locally. The format for data storage is to have the data files sorted by year, with each year getting it's own directory. One should set the location for the directory holding all of the directories corresponding to each year. Add the following to your ``${HOME}/.bashrc`` file:
-
-```bash
-export BNMR_ARCHIVE=/path_to_bnmr_year_directories/
-export BNQR_ARCHIVE=/path_to_bnqr_year_directories/
-```
 
 ---
 
@@ -6764,21 +6778,22 @@ export BNQR_ARCHIVE=/path_to_bnqr_year_directories/
 
 If you are unconcerned with the exact version of the above, one can upgrade each by calling ``pip install --upgrade package_name`` where the package name is in brackets in the above.
 
-We also need the fitting functions to be on the python path. In your ``${HOME}/.bashrc`` add the line: 
+The native way to call bfit is to navigate to the directory containing the package and call
 
 ```bash
-export PYTHONPATH:${PYTHONPATH}:/path_to_bfit/Fitting
+python3 -m bfit
 ```
 
-For ease of use, one should add the bfit module as an alias. If ``${HOME}/.bash_aliases`` exists, add the following line there, or alternatively to your ``${HOME}/.bashrc`` file. Append: 
+But it may be useful to add the alias to your ``.bashrc`` file, and the containing folder for bfit to your python path:
 
 ```bash
-alias bfit=/path_to_bfit/bfit.py
+export PYTHONPATH=$PYTHONPATH:/path/
+alias bfit='python3 -m bfit'
 ```
 
 You are now ready to run bit. Open a new shell and type ``bfit`` into the prompt. </pre>
 </div>
-<div created="20180706200413929" modified="20180706200741824" title="Navigation">
+<div created="20180706200413929" modified="20180820231713532" title="Navigation">
 <pre>! Menu bar: 
 
 * ''File''
@@ -6787,6 +6802,7 @@ You are now ready to run bit. Open a new shell and type ``bfit`` into the prompt
 * ''Settings''
 ** Set matplotlib defaults: global drawing style defaults
 ** Set draw style: set instance line and marker styles
+** Set fitting routines: import the file used to set the fitting backend. Imported dynamically. 
 ** Set data directory. Defaults to environment variables `BNMR_ARCHIVE` and `BNQR_ARCHIVE`
 * ''Redraw Mode''
 ** Set drawing mode. See help for details on hotkeys. 
