@@ -323,8 +323,8 @@ class bfit(object):
                 
                 # make 3D axes
                 if type(plt.gcf()) == type(None):   plt.figure()
-                ax = plt.gcf().add_subplot(111,projection='3d')
-                
+                ax = plt.gcf().add_subplot(111,projection='3d',
+                                           label=str(len(plt.gcf().axes)))
                 
                 # get rid of bad draw options
                 try:                del drawargs['capsize']
