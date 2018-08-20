@@ -338,6 +338,7 @@ class fileviewer(object):
             
         # rf dac
         if mode != 'SLR':
+            key_order_sw.append('')
             try: 
                 data_sw['rf_dac'] = "%d" % int(data.camp.rf_dac.mean)
                 key_order_sw.append('rf_dac')
@@ -609,6 +610,89 @@ class fileviewer(object):
             except AttributeError:
                 pass
         
+        # get 2e mode specific data
+        elif data.mode in ['2e']:
+            
+            try:
+                val = int(data.ppg.rf_on_ms.mean)
+                data_ne['RF On Time'] = "%d ms" % val
+                key_order_ne.append('RF On Time')
+            except AttributeError:
+                pass
+                
+            try:
+                val = int(data.ppg.rf_on_delay.mean)
+                data_ne['Number of RF On Delays'] = "%d" % val
+                key_order_ne.append('Number of RF On Delays')
+            except AttributeError:
+                pass
+                
+            try:
+                val = int(data.ppg.beam_off_ms.mean)
+                data_ne['Beam Off Time'] = "%d ms" % val
+                key_order_ne.append('Beam Off Time')
+            except AttributeError:
+                pass
+                
+            try:
+                val = int(data.ppg.ndwell_post_on.mean)
+                data_ne['Number of post RF BeamOn Dwelltimes'] = "%d" % val
+                key_order_ne.append('Number of post RF BeamOn Dwelltimes')
+            except AttributeError:
+                pass
+                
+            try:
+                val = int(data.ppg.ndwell_per_f.mean)
+                data_ne['Number of Dwelltimes per Frequency'] = "%d" % val
+                key_order_ne.append('Number of Dwelltimes per Frequency')
+            except AttributeError:
+                pass
+                
+            try:
+                val = int(data.ppg.freq_start.mean)
+                data_ne['Frequency Scan Start'] = "%d Hz" % val
+                key_order_ne.append('Frequency Scan Start')
+            except AttributeError:
+                pass
+                
+            try:
+                val = int(data.ppg.freq_stop.mean)
+                data_ne['Frequency Scan Stop'] = "%d Hz" % val
+                key_order_ne.append('Frequency Scan Stop')
+            except AttributeError:
+                pass
+                
+            try:
+                val = int(data.ppg.freq_incr.mean)
+                data_ne['Frequency Scan Increment'] = "%d Hz" % val
+                key_order_ne.append('Frequency Scan Increment')
+            except AttributeError:
+                pass
+                
+            try:
+                val = bool(data.ppg.rand_freq_val.mean)
+                data_ne['Randomize Frequency Scan Increments'] = str(val)
+                key_order_ne.append('Randomize Frequency Scan Increments')
+            except AttributeError:
+                pass
+                
+            try:
+                val = bool(data.ppg.hel_enable.mean)
+                data_ne['Flip Helicity'] = str(val)
+                key_order_ne.append('Flip Helicity')
+            except AttributeError:
+                pass
+                
+            try:
+                val = bool(data.ppg.hel_enable.mean)
+                data_ne['Helicity Flip Sleep'] = "%d ms" % val
+                key_order_ne.append('Helicity Flip Sleep')
+            except AttributeError:
+                pass
+                
+            key_order_ne.append('')
+            
+        
         # set viewer string
         def set_str(data_dict,key_order,txtbox):
         
@@ -629,12 +713,9 @@ class fileviewer(object):
     # ======================================================================= #
     def set_textbox_text(self,textbox,text):
         """Set the text in a tkinter Text widget"""
-        
-        #~ textbox['state'] = 'normal'
         textbox.delete('1.0',END)
         textbox.insert('1.0',text)
-        #~ textbox['state'] = 'disabled'
-    
+        
     # ======================================================================= #
     def update(self):
         pass
