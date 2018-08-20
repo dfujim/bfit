@@ -8,6 +8,12 @@ from tkinter import ttk,filedialog,messagebox
 from bdata import bdata
 from scipy.optimize import curve_fit
 
+try:
+    from mpl_toolkits.mplot3d import Axes3D
+except ImportError as errmsg:
+    print('No 3D axes drawing available')
+    print(errmsg)
+
 import sys,os,datetime
 import numpy as np
 import pandas as pd
@@ -259,8 +265,16 @@ class bfit(object):
         """Draw the selected file"""
         
         # Settings
-        xlabel_dict={'20':"Time (s)",'2h':"Time (s)",'1f':'Frequency (MHz)','1n':'Voltage (V)'}
-        x_tag={'20':"time_s",'2h':"time_s",'1f':'freq','1n':'mV'}
+        xlabel_dict={'20':"Time (s)",
+                     '2h':"Time (s)",
+                     '2e':'Frequency (MHz)',
+                     '1f':'Frequency (MHz)',
+                     '1n':'Voltage (V)'}
+        x_tag={'20':"time_s",
+               '2h':"time_s",
+               '2e':"time",
+               '1f':'freq',
+               '1n':'mV'}
         
         # get draw setting 
         draw_style = self.draw_style
@@ -298,7 +312,81 @@ class bfit(object):
             plt.errorbar(x[idx_n],a.n[0][idx_n],a.n[1][idx_n],
                     label=label+"($-$)",**drawargs)
         
-        # get asymmetry: not raw scans
+        # do 2e mode
+        elif '2e' in asym_type:
+            
+            # get asym
+            a = data.asym()
+        
+            # draw
+            if asym_type in ["2e_rw_c","2e_rw_h"]:
+                
+                # make 3D axes
+                if type(plt.gcf()) == type(None):   plt.figure()
+                ax = plt.gcf().add_subplot(111,projection='3d')
+                
+                
+                # get rid of bad draw options
+                try:                del drawargs['capsize']
+                except KeyError:    pass
+                try:                del drawargs['elinewidth']
+                except KeyError:    pass
+                
+                # for every frequency there is a multiple of times
+                x = np.asarray([[t]*len(a.freq) for t in a.time])
+                x = np.hstack(x)
+                
+                # for every time there is a set of frequencies
+                y = np.asarray([a.freq for i in range(len(a.raw_c[0][0]))])*1e-6
+                y = np.hstack(y)
+                    
+                # draw combined asym
+                if asym_type == "2e_rw_c":
+                
+                    z = a.raw_c[0].transpose()
+                    z = np.hstack(z)
+                    ax.plot(x,y,z,label=label,**drawargs)
+                    
+                elif asym_type == "2e_rw_h":
+                
+                    z = a.raw_p[0].transpose()
+                    z = np.hstack(z)
+                    ax.plot(x,y,z,label=label+' ($+$)',**drawargs)
+
+                    z = a.raw_n[0].transpose()
+                    z = np.hstack(z)
+                    ax.plot(x,y,z,label=label+' ($-$)',**drawargs)
+                
+                # plot elements
+                ax.set_xlabel('Time (s)')
+                ax.set_ylabel('Frequency (MHz)')
+                ax.set_zlabel('Asymmetry')
+                ax.get_yaxis().get_major_formatter().set_useOffset(False)
+                ax.get_xaxis().set_ticks(a.time)
+            
+            else:
+                f = a.freq*1e-6 
+                if asym_type == '2e_sl_c':
+                    plt.errorbar(f,a.sl_c[0],a.sl_c[1],label=label,
+                                 **drawargs)
+                elif asym_type == '2e_di_c':
+                    plt.errorbar(f,a.dif_c[0],a.dif_c[1],label=label,
+                                 **drawargs)
+                elif asym_type == '2e_sl_h':
+                    plt.errorbar(f,a.sl_p[0],a.sl_p[1],
+                                 label=label+' ($+$)',**drawargs)
+                    plt.errorbar(f,a.sl_n[0],a.sl_n[1],
+                                 label=label+' ($-$)',**drawargs)
+                elif asym_type == '2e_di_h':
+                    plt.errorbar(f,a.dif_p[0],a.dif_p[1],
+                                 label=label+' ($+$)',**drawargs)
+                    plt.errorbar(f,a.dif_n[0],a.dif_n[1],
+                                 label=label+' ($-$)',**drawargs)
+                    
+                plt.xlabel(xlabel_dict[data.mode])
+                plt.ylabel("Asymmetry")
+            
+        # get asymmetry: not raw scans, not 2e
         else:
             a = data.asym(omit=option,rebin=rebin)
             x = a[x_tag[data.mode]]
@@ -358,10 +446,11 @@ class bfit(object):
                 raise RuntimeError("Unknown draw style")
                     
         # plot elements
-        plt.xlabel(xlabel)
-        plt.ylabel("Asymmetry")
-        plt.legend()
+        if data.mode != '2e':
+            plt.xlabel(xlabel)
+            plt.ylabel("Asymmetry")
         plt.tight_layout()
+        plt.legend()
     
     # ======================================================================= #
     def draw_binder(self,*args):

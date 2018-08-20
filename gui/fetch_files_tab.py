@@ -140,10 +140,10 @@ class fetch_files(object):
         runmode_label_frame.grid(column=1,row=0,sticky=(N,W,E))
         self.runmode_label.grid(column=0,row=0,sticky=(N,W,E))
         
-        bigright_frame.grid(column=1,row=1,sticky=(E,N))
+        bigright_frame.grid(column=1,row=1,sticky=(E,N,W))
         dataline_frame.grid(column=0,row=1,sticky=(E,W,S,N))
         
-        right_frame.grid(column=0,row=0,sticky=(N,E))
+        right_frame.grid(column=0,row=0,sticky=(N,E,W))
         check_all_box.grid(         column=0,row=0,sticky=(N))
         check_toggle_button.grid(   column=0,row=1,sticky=(N),pady=10)
         check_remove.grid(          column=1,row=2,sticky=(N))
@@ -168,7 +168,7 @@ class fetch_files(object):
                 pad=5)
         entry_asym_type = ttk.Combobox(style_frame,\
                 textvariable=self.bfit.fileviewer.asym_type,state='readonly',\
-                width=15)
+                width=25)
         entry_asym_type['values'] = self.bfit.fileviewer.asym_dict_keys
         
         style_frame.grid(column=0,row=1,sticky=(W,N))

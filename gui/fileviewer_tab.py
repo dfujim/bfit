@@ -33,19 +33,34 @@ class fileviewer(object):
             data: bdata object for drawing
     """
     
-    asym_dict = {"Combined Helicity":'c',
-                 "Split Helicity":'h',
-                 "Raw Scans (1F)":'r',
-                 "Alpha Diffusion":'ad',
-                 "Tagged Alpha (Com)":"at_c",
-                 "Tagged Alpha (Spl)":"at_h",
-                 "Tagged !Alpha (Com)":"nat_c",
-                 "Tagged !Alpha (Spl)":"nat_h",
+    asym_dict = {"Combined Helicity"        :'c',
+                 "Split Helicity"           :'h',
+                 "Raw Scans (Freq)"         :'r',
+                 "Combined Hel (2e raw)"    :'2e_rw_c',
+                 "Combined Hel (2e slopes)" :'2e_sl_c',
+                 "Combined Hel (2e diff)"   :'2e_di_c',
+                 "Split Hel (2e raw)"       :'2e_rw_h',
+                 "Split Hel (2e slopes)"    :'2e_sl_h',
+                 "Split Hel (2e diff)"      :'2e_di_h',
+                 "Alpha Diffusion"          :'ad',
+                 "Tagged Alpha (Com)"       :"at_c",
+                 "Tagged Alpha (Spl)"       :"at_h",
+                 "Tagged !Alpha (Com)"      :"nat_c",
+                 "Tagged !Alpha (Spl)"      :"nat_h",
                  }
-    asym_dict_keys = ("Combined Helicity","Split Helicity","Raw Scans (1F)",
+    asym_dict_keys = ("Combined Helicity",
+                      "Split Helicity","Raw Scans (1F)",
+                      "Combined Hel (2e raw)",
+                      "Combined Hel (2e slopes)",      
+                      "Combined Hel (2e diff)",
+                      "Split Hel (2e raw)",
+                      "Split Hel (2e slopes)",
+                      "Split Hel (2e diff)",  
                       "Alpha Diffusion",
-                      "Tagged Alpha (Com)","Tagged Alpha (Spl)",
-                      "Tagged !Alpha (Com)","Tagged !Alpha (Spl)")
+                      "Tagged Alpha (Com)",
+                      "Tagged Alpha (Spl)",
+                      "Tagged !Alpha (Com)",
+                      "Tagged !Alpha (Spl)")
     default_asym_key = "Combined Helicity"
     default_export_filename = "%d_%d.csv" # year_run.csv
     
@@ -123,7 +138,7 @@ class fileviewer(object):
         self.asym_type = StringVar()
         self.asym_type.set(self.default_asym_key)
         entry_asym_type = ttk.Combobox(details_frame,\
-                textvariable=self.asym_type,state='readonly',width=15)
+                textvariable=self.asym_type,state='readonly',width=25)
         entry_asym_type['values'] = self.asym_dict_keys
                 
         # gridding
@@ -171,8 +186,9 @@ class fileviewer(object):
         """
         
         # settings
-        mode_dict = {"20":"SLR","1f":"1F","1n":"Rb Cell Scan",
-                    '2h':'Alpha Tagging','2s':'Spin Echo','2e':'2e'}
+        mode_dict = {"20":"SLR","1f":"Frequency Scan","1n":"Rb Cell Scan",
+                    '2h':'SLR with Alpha Tracking','2s':'Spin Echo',
+                    '2e':'Randomized Frequency Scan'}
         
         # fetch data file
         try:
@@ -205,7 +221,7 @@ class fileviewer(object):
         # get data: headers
         mode = mode_dict[data.mode]
         try:
-            if data.ppg.rf_enable.mean:
+            if data.ppg.rf_enable.mean and data.mode == '20':
                 mode = "Hole Burning"
         except AttributeError:
             pass
@@ -216,7 +232,7 @@ class fileviewer(object):
         # set dictionary
         data_nw =  {"Run":str(data.run),
                     "Area": data.area,
-                    "Run Mode": mode,
+                    "Run Mode": "%s (%s)" % (mode,data.mode),
                     "Title": data.title,
                     "Experimenters": data.experimenter,
                     "Sample": data.sample,
