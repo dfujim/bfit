@@ -24,7 +24,6 @@ import subprocess
 import importlib
 
 from bfit.gui.fileviewer_tab import fileviewer
-from bfit.gui.fitviewer_tab import fitviewer
 from bfit.gui.fetch_files_tab import fetch_files
 from bfit.gui.fit_files_tab import fit_files
 from bfit.gui.zahersCalculator import zahersCalculator
@@ -90,7 +89,6 @@ class bfit(object):
             
             notebook: contains all tabs for operations:
                 fileviewer
-                fitviewer
                 fetch_files
                 fit_files
             
@@ -213,13 +211,11 @@ class bfit(object):
         file_viewer_tab = ttk.Frame(notebook)
         fetch_files_tab = ttk.Frame(notebook)
         fit_files_tab = ttk.Frame(notebook)
-        fit_viewer_tab = ttk.Frame(notebook)
         
         notebook.add(file_viewer_tab,text='File Details')
         notebook.add(fetch_files_tab,text='Fetch Data')
         notebook.add(fit_files_tab,text='Fit Data')
-        notebook.add(fit_viewer_tab,text='View Fit Results',state=DISABLED)
-        
+    
         # gridding
         notebook.grid(column=0,row=0,sticky=(N,E,W,S))
         noteframe.grid(column=0,row=0,sticky=(N,E,W,S))
@@ -230,7 +226,6 @@ class bfit(object):
         self.fileviewer = fileviewer(file_viewer_tab,self)
         self.fetch_files = fetch_files(fetch_files_tab,self)
         self.fit_files = fit_files(fit_files_tab,self)
-        self.fitviewer = fitviewer(fit_viewer_tab,self)
         
         # set instance variables ---------------------------------------------
         self.root = root
