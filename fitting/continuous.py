@@ -70,7 +70,10 @@ def fscan(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
     # Fit the function 
     par,cov = curve_fit(fitfn,xdata,ydata,sigma=yerr,**kwargs)
     
-    return (par,cov,fitfn)
+    # get chisquared
+    chi = np.sum(np.square((ydata-fitfn(xdata,*tuple(par)))/yerr))/(len(ydata)-1)
+    
+    return (par,cov,chi,fitfn)
     
 # ========================================================================== #
 # FITTING FUNCTIONS

@@ -101,17 +101,17 @@ class fitter(object):
                     bounds[0].append(pdict[k][1])
                     bounds[1].append(pdict[k][2])
             
-            # fit slr data
+            # fit data
             if mode == '20':    
-                par,cov,ftemp = fn(data=dat,rebin=doptions['rebin'],p0=p0,
+                par,cov,chi,ftemp = fn(data=dat,rebin=doptions['rebin'],p0=p0,
                                    bounds=bounds)
             elif mode == '1f':    
-                par,cov,ftemp = fn(data=dat,omit=doptions['omit'],p0=p0,
+                par,cov,chi,ftemp = fn(data=dat,omit=doptions['omit'],p0=p0,
                                    bounds=bounds)
             
             # collect results
             cov = np.sqrt(np.diag(cov))
-            parout[dat.run] = [keylist,par,cov]
+            parout[dat.run] = [keylist,par,cov,chi]
         
         return parout
 
@@ -127,27 +127,27 @@ class fitter(object):
         
         # set with constants (should update to something more intelligent later)
         if fn_name == 'Exp':
-            self.par_values = {'amp':(0.5,0,np.inf,False),
-                               'T1':(2,0,np.inf,False),
-                               'baseline':(0,-np.inf,np.inf,False),
+            self.par_values = {'amp':(0.5,0,np.inf),
+                               'T1':(2,0,np.inf),
+                               'baseline':(0,-np.inf,np.inf),
                                }
         elif fn_name == 'Str Exp':
-            self.par_values = {'amp':(0.5,0,np.inf,False),
-                               'T1':(2,0,np.inf,False),
-                               'beta':(0.5,0,1,False),
-                               'baseline':(0,-np.inf,np.inf,False),
+            self.par_values = {'amp':(0.5,0,np.inf),
+                               'T1':(2,0,np.inf),
+                               'beta':(0.5,0,1),
+                               'baseline':(0,-np.inf,np.inf),
                                 }
         elif fn_name == 'Lorentzian':
-            self.par_values = {'peak':(41.26e6,0,np.inf,False),
-                                'width':(5e4,0,np.inf,False),
-                                'height':(0.01,-np.inf,np.inf,False),
-                                'baseline':(0,-np.inf,np.inf,False)
+            self.par_values = {'peak':(41.26e6,0,np.inf),
+                                'width':(5e4,0,np.inf),
+                                'height':(0.01,-np.inf,np.inf),
+                                'baseline':(0,-np.inf,np.inf)
                                 }
         elif fn_name == 'Gaussian':
-            self.par_values = {'mean':(41.26e6,0,np.inf,False),
-                                'sigma':(5e4,0,np.inf,False),
-                                'height':(0.01,-np.inf,np.inf,False),
-                                'baseline':(0,-np.inf,np.inf,False)
+            self.par_values = {'mean':(41.26e6,0,np.inf),
+                                'sigma':(5e4,0,np.inf),
+                                'height':(0.01,-np.inf,np.inf),
+                                'baseline':(0,-np.inf,np.inf)
                                 }
         else:
             raise RuntimeError('Bad function name.')

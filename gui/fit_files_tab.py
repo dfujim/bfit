@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 class fit_files(object):
     """
         Data fields:
+            chi_threshold: if chi > thres, set color to red
             data: dictionary of bdata objects, keyed by run number. 
             file_tabs: dictionary of fitinputtab objects, keyed by runnumber 
             fitter: fitting object from self.bfit.routine_mod
@@ -38,6 +39,7 @@ class fit_files(object):
     default_fit_functions = {'20':('Exp','Str Exp'),
             '1f':('Lorentzian','Gaussian'),'1n':('Lorentzian','Gaussian')}
     mode = ""
+    chi_threshold = 2.5
 
     # define draw componeents in draw_param
     draw_components = ['Temperature','B0 Field', 'RF Level DAC', 'Platform Bias', 
@@ -249,8 +251,8 @@ class fit_files(object):
         data_list = []
         for g in self.groups:
             tab = self.file_tabs[g]
+            collist = tab.collist
             runlist = tab.runlist
-            
             
             for r in runlist:
                 
@@ -264,18 +266,18 @@ class fit_files(object):
                     # get entry values
                     pline = tab.parentry[parname]
                     line = []
-                    for i,p in enumerate(pline):
+                    for col in collist:
                         
                         # get number entries
-                        if i < 3:
+                        if col in ['p0','blo','bhi']:
                             try:
-                                line.append(float(p[0].get()))
+                                line.append(float(pline[col][0].get()))
                             except ValueError as errmsg:
                                 messagebox.showerror("Error",str(errmsg))
                         
                         # get "Fixed" entry
-                        else:
-                            line.append(p[0].get())
+                        elif col in ['fixed']:
+                            line.append(pline[col][0].get())
                     
                     # make dict
                     pdict[parname] = line
@@ -326,6 +328,10 @@ class fit_files(object):
             messagebox.showerror("Error",str(errmsg))
         else:
             fit_status_window.destroy()
+        
+        # display run results
+        for g in self.groups:
+            self.file_tabs[g].set_fit_results()
         
     #======================================================================== #
     def draw_fits(self,*args):
@@ -394,8 +400,8 @@ class fit_files(object):
                 err = [data[r].camp.rf_dac.std for r in runs]
             
             elif select == 'Platform Bias':
-                val = [data[r].epics.nmr_bias_p.mean for r in runs]
-                err = [data[r].epics.nmr_bias_p.std for r in runs]
+                val = [data[r].epics.nmr_bias.mean for r in runs]
+                err = [data[r].epics.nmr_bias.std for r in runs]
             
             elif select == 'Beam Energy':
                 val =  [data[r].beam_kev() for r in runs]
@@ -478,6 +484,7 @@ class fitinputtab(object):
             group       fitting group number
             parlabels   label objects, saved for later destruction
             parentry    {parname:(StrVar,entry)} objects saved for retrieval and destruction
+            runbox      listbox with run numbers: select which result to display
             runlist     list of run numbers to fit
             fitframe    mainframe for this tab. 
     """
@@ -485,6 +492,7 @@ class fitinputtab(object):
     
     
     n_runs_max = 5      # number of runs before scrollbar appears
+    collist = ['p0','blo','bhi','res','dres','chi','fixed']
     
     # ======================================================================= #
     def __init__(self,bfit,parent,group):
@@ -519,12 +527,15 @@ class fitinputtab(object):
 
         # List box for run viewing
         rlist = StringVar(value=tuple(map(str,self.runlist)))
-        runbox = Listbox(fitframe,height=min(len(self.runlist),self.n_runs_max),
-                         width=10,listvariable=rlist,justify=CENTER)
-        runbox.grid(column=0,row=1,rowspan=10)
+        self.runbox = Listbox(fitframe,height=min(len(self.runlist),self.n_runs_max),
+                         width=10,listvariable=rlist,justify=CENTER,
+                        selectmode=BROWSE)
+        self.runbox.activate(0)
+        self.runbox.bind('<<ListboxSelect>>',self.set_fit_results)
+        self.runbox.grid(column=0,row=1,rowspan=10)
         
-        sbar = ttk.Scrollbar(fitframe, orient=VERTICAL, command=runbox.yview)
-        runbox.configure(yscrollcommand=sbar.set)
+        sbar = ttk.Scrollbar(fitframe,orient=VERTICAL,command=self.runbox.yview)
+        self.runbox.configure(yscrollcommand=sbar.set)
         
         if len(self.runlist) > self.n_runs_max:
             sbar.grid(column=1,row=1,sticky=(N,S),rowspan=10)
@@ -537,6 +548,9 @@ class fitinputtab(object):
         ttk.Label(fitframe,text='Initial Value').grid(  column=c,row=0,padx=5); c+=1
         ttk.Label(fitframe,text='Low Bound').grid(      column=c,row=0,padx=5); c+=1
         ttk.Label(fitframe,text='High Bound').grid(     column=c,row=0,padx=5); c+=1
+        ttk.Label(fitframe,text='Result').grid(         column=c,row=0,padx=5); c+=1
+        ttk.Label(fitframe,text='Result Error').grid(   column=c,row=0,padx=5); c+=1
+        ttk.Label(fitframe,text='ChiSq').grid(          column=c,row=0,padx=5); c+=1
         ttk.Label(fitframe,text='Fixed').grid(          column=c,row=0,padx=5); c+=1
         
         # save
@@ -562,7 +576,7 @@ class fitinputtab(object):
                 label.destroy()
             for k in self.parentry.keys():
                 for p in self.parentry[k]:
-                    p[1].destroy()
+                    self.parentry[k][p][1].destroy()
         
         # make parameter input fields ---------------------------------------
         
@@ -579,21 +593,68 @@ class fitinputtab(object):
         for p in plist:
             c = 2
             r += 1
-            self.parentry[p] = []
-            for i in range(len(values[list(values.keys())[0]])-1):
+            self.parentry[p] = {}
+            for i in range(3):
                 c += 1
                 value = StringVar()
                 entry = ttk.Entry(self.fitframe,textvariable=value,width=10)
                 entry.insert(0,str(values[p][i]))
                 entry.grid(column=c,row=r,padx=5,sticky=E)
-                self.parentry[p].append((value,entry))
+                self.parentry[p][self.collist[i]] = (value,entry)
+            
+            # do results
+            c += 1
+            value_p = StringVar()
+            par = ttk.Entry(self.fitframe,textvariable=value_p,width=10)
+            par['state'] = 'readonly'
+            par['foreground'] = 'black'
+            
+            value_dp = StringVar()
+            dpar = ttk.Entry(self.fitframe,textvariable=value_dp,width=10)
+            dpar['state'] = 'readonly'
+            dpar['foreground'] = 'black'
+            
+            value_chi = StringVar()
+            chi = ttk.Entry(self.fitframe,textvariable=value_chi,width=10)
+            chi['state'] = 'readonly'
+            chi['foreground'] = 'black'
+                                     
+            par. grid(column=c,row=r,padx=5,sticky=E); c += 1
+            dpar.grid(column=c,row=r,padx=5,sticky=E); c += 1
+            chi. grid(column=c,row=r,padx=5,sticky=E); c += 1
+            
+            self.parentry[p][self.collist[3]] = (value_p,par)
+            self.parentry[p][self.collist[4]] = (value_dp,dpar)
+            self.parentry[p][self.collist[5]] = (value_chi,chi)
             
             # do fixed box
-            c += 1
             value = BooleanVar()
             entry = ttk.Checkbutton(self.fitframe,text='',\
                                      variable=value,onvalue=True,offvalue=False)
             entry.grid(column=c,row=r,padx=5,sticky=E)
-            self.parentry[p].append((value,entry))
+            self.parentry[p][self.collist[6]] = (value,entry)
             
+    # ======================================================================= #
+    def set_fit_results(self,*args):
+        """Show fit results"""
         
+        # Set up variables
+        out = self.bfit.fit_files.fit_output
+        displays = self.parentry
+        
+        # get run number of selected run
+        try:
+            line = self.runbox.curselection()[0]
+        except IndexError:
+            line = 0 
+        run = self.runlist[line]
+        out = out[run]
+        chi = out[3]
+        
+        # display
+        for name,val,err in zip(*(out[:3])):
+            disp = displays[name]
+            disp['res'][0].set(str(np.around(val,self.bfit.rounding)))
+            disp['dres'][0].set(str(np.around(err,self.bfit.rounding)))
+            disp['chi'][0].set(str(np.around(chi,self.bfit.rounding)))
+         

@@ -95,12 +95,15 @@ class bfit(object):
                 fit_files
             
             update_period: update spacing in s. 
+            rounding: number of decimal places to round results to in display
+    
             
     """
     probe_species = "8Li" # unused
     bnmr_archive_label = "BNMR_ARCHIVE"
     bnqr_archive_label = "BNQR_ARCHIVE"
     update_period = 5
+    rounding = 3       # number of decimal places to round results to in display
     
     try: 
         bnmr_data_dir = os.environ[bnmr_archive_label]
