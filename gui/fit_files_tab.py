@@ -332,6 +332,7 @@ class fit_files(object):
         # display run results
         for g in self.groups:
             self.file_tabs[g].set_fit_results()
+            self.file_tabs[g].set_run_color()
         
     #======================================================================== #
     def draw_fits(self,*args):
@@ -658,3 +659,21 @@ class fitinputtab(object):
             disp['dres'][0].set(str(np.around(err,self.bfit.rounding)))
             disp['chi'][0].set(str(np.around(chi,self.bfit.rounding)))
          
+    # ======================================================================= #
+    def set_run_color(self):
+        """On fit, set the color of the line in the run number select."""
+
+        runlist = map(int,self.runbox.get(0,self.runbox.size()))
+        out = self.bfit.fit_files.fit_output
+        
+        for i,r in enumerate(runlist):
+            if out[r][3] > self.bfit.fit_files.chi_threshold:
+                self.runbox.itemconfig(i, {'bg':'red'})
+            else:
+                self.runbox.itemconfig(i, {'bg':'white'})
+
+        
+            
+            
+            
+            
