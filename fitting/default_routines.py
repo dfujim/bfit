@@ -25,13 +25,13 @@ class fitter(object):
 
     # dictionary of initial parameters
     par_values = {}
-
+    fn_list = {}
     epsilon = 1e-9  # for fixing parameters
 
     # ======================================================================= #
     def __init__(self):
         pass
-    
+        
     # ======================================================================= #
     def __call__(self,fn_name,ncomp,data_list):
         """
@@ -57,22 +57,8 @@ class fitter(object):
 
         # initialize output
         parout = {}
+        fn = self.get_fn(fn_name,ncomp)
 
-        # set fitting function
-        if fn_name == 'Lorentzian':
-            fn =  partial(fscan,mode='lor',ncomp=ncomp)
-            mode='1f'
-        elif fn_name == 'Gaussian':
-            fn =  partial(fscan,mode='gaus',ncomp=ncomp)
-            mode='1f'
-        elif fn_name == 'Exp':
-            fn =  partial(slr,mode='exp',ncomp=ncomp,offset=True)
-            mode='20'
-        elif fn_name == 'Str Exp':
-            fn =  partial(slr,mode='strexp',ncomp=ncomp,offset=True)
-            mode='20'
-        else:
-            raise RuntimeError('Fitting function not found.')
         
         # fit each function 
         for data in data_list:
@@ -102,13 +88,16 @@ class fitter(object):
                     bounds[1].append(pdict[k][2])
             
             # fit data
-            if mode == '20':    
+            if self.mode == '20':    
                 par,cov,chi,ftemp = fn(data=dat,rebin=doptions['rebin'],p0=p0,
                                    bounds=bounds)
-            elif mode == '1f':    
+                self.fn_list[dat.run] = ftemp
+            
+            elif self.mode == '1f':    
                 par,cov,chi,ftemp = fn(data=dat,omit=doptions['omit'],p0=p0,
                                    bounds=bounds)
-            
+                self.fn_list[dat.run] = ftemp
+                
             # collect results
             cov = np.sqrt(np.diag(cov))
             parout[dat.run] = [keylist,par,cov,chi]
@@ -155,9 +144,23 @@ class fitter(object):
         return self.par_values
 
     # ======================================================================= #
-    def get_values(self,fn_name,x,par):
-        """
-            return points corresponding to fit values
-        """
+    def get_fn(self,fn_name,ncomp):
         
+        # set fitting function
+        if fn_name == 'Lorentzian':
+            fn =  partial(fscan,mode='lor',ncomp=ncomp)
+            self.mode='1f'
+        elif fn_name == 'Gaussian':
+            fn =  partial(fscan,mode='gaus',ncomp=ncomp)
+            self.mode='1f'
+        elif fn_name == 'Exp':
+            fn =  partial(slr,mode='exp',ncomp=ncomp,offset=True)
+            self.mode='20'
+        elif fn_name == 'Str Exp':
+            fn =  partial(slr,mode='strexp',ncomp=ncomp,offset=True)
+            self.mode='20'
+        else:
+            raise RuntimeError('Fitting function not found.')
+    
+        return fn
     

@@ -18,7 +18,7 @@ class fit_files(object):
         Data fields:
             chi_threshold: if chi > thres, set color to red
             data: dictionary of bdata objects, keyed by run number. 
-            file_tabs: dictionary of fitinputtab objects, keyed by runnumber 
+            file_tabs: dictionary of fitinputtab objects, keyed by group number 
             fitter: fitting object from self.bfit.routine_mod
             fit_function_title: title of fit function to use
             fit_function_title_box: spinbox for fit function names
@@ -39,7 +39,7 @@ class fit_files(object):
     default_fit_functions = {'20':('Exp','Str Exp'),
             '1f':('Lorentzian','Gaussian'),'1n':('Lorentzian','Gaussian')}
     mode = ""
-    chi_threshold = 2.5
+    chi_threshold = 1.5
 
     # define draw componeents in draw_param
     draw_components = ['Temperature','B0 Field', 'RF Level DAC', 'Platform Bias', 
@@ -334,17 +334,33 @@ class fit_files(object):
             self.file_tabs[g].set_fit_results()
             self.file_tabs[g].set_run_color()
         
+        # draw fit results
+        self.draw_fits()
+        
     #======================================================================== #
     def draw_fits(self,*args):
         
         data = self.data
         fit_out = self.fit_output
-        fit
+        fn_name = self.fit_function_title.get()
+        ncomp = self.n_component.get()
         
         # condense drawing into a funtion
-        def draw_single():
-            # draw the thing here #######################################################################
-            pass
+        def draw_single(run):
+            
+            # get data and fit parameters
+            dat = data[run]
+            out = fit_out[run]
+            fn = self.fitter.fn_list[run]
+            
+            a = dat.asym('c')
+            plt.errorbar(*a)################################################################## Fix this\
+            fitx = np.arange(500)/500.*(max(a[0])-min(a[0]))+min(a[0])
+            plt.plot(fitx,fn(fitx,*(out[1])))
+            plt.show()
+            plt.draw()
+            
+            raise Exception("FIX THIS FITTING DRAWING")
                 
         # get draw style
         style = self.bfit.draw_style.get()
@@ -352,18 +368,23 @@ class fit_files(object):
         # make new figure, draw stacked
         if style == 'stack':
             plt.figure()
-            draw_single()
+            for r in fit_out.keys():
+                draw_single(r)
             
         # overdraw in current figure, stacked
         elif style == 'redraw':
             plt.clf()
             self.bfit.draw_style.set('stack')
-            draw_single()
+            for r in fit_out.keys():
+                draw_single(r)
             self.bfit.draw_style.set('redraw')
             
         # make new figure, draw single
         elif style == 'new':
-            draw_single()
+            for r in fit_out.keys():
+                plt.figure()
+                draw_single(r)
+            
         else:
             raise ValueError("Draw style not recognized")
         
