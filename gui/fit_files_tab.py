@@ -25,9 +25,9 @@ class fit_files(object):
             fit_input:  fitting input values = (fn_name,ncomp,data_list)
             fit_output: fitting results, output of fitter
             groups: group numbers from fetch tab
+            mode: what type of run is this. 
             n_component: number of fitting components
             runbook: notebook of fit inputs for runs
-            runmode: what type of run is this. 
             runmode_label: display run mode 
             xaxis: StringVar() for parameter to draw on x axis
             yaxis: StringVar() for parameter to draw on y axis
@@ -39,7 +39,8 @@ class fit_files(object):
     default_fit_functions = {'20':('Exp','Str Exp'),
             '1f':('Lorentzian','Gaussian'),'1n':('Lorentzian','Gaussian')}
     mode = ""
-    chi_threshold = 1.5
+    chi_threshold = 1.5 # threshold for red highlight on bad fits 
+    n_fitx_pts = 500    # number of points to draw in fitted curves
 
     # define draw componeents in draw_param
     draw_components = ['Temperature','B0 Field', 'RF Level DAC', 'Platform Bias', 
@@ -309,13 +310,22 @@ class fit_files(object):
         fit_status_window = Toplevel(self.bfit.root)
         fit_status_window.lift()
         fit_status_window.resizable(FALSE,FALSE)
-        ttk.Label(fit_status_window,text="Please Wait",pad=5).grid(column=0,
+        ttk.Label(fit_status_window,text="Please Wait",pad=20).grid(column=0,
                                                     row=0,sticky=(N,S,E,W))
         fit_status_window.update_idletasks()
+        self.bfit.root.update_idletasks()
+        
         width = fit_status_window.winfo_reqwidth()
         height = fit_status_window.winfo_reqheight()
-        x = (self.bfit.root.winfo_screenwidth() / 2) - (width / 2)
-        y = (fit_status_window.winfo_screenheight() / 3) - (height / 2)
+        
+        rt_x = self.bfit.root.winfo_x()
+        rt_y = self.bfit.root.winfo_y()
+        rt_w = self.bfit.root.winfo_width()
+        rt_h = self.bfit.root.winfo_height()
+        
+        x = rt_x + rt_w/2 - (width/2)
+        y = rt_y + rt_h/3 - (width/2)
+        
         fit_status_window.geometry('{}x{}+{}+{}'.format(width, height, int(x), int(y)))
         fit_status_window.update_idletasks()
         
@@ -334,59 +344,67 @@ class fit_files(object):
             self.file_tabs[g].set_fit_results()
             self.file_tabs[g].set_run_color()
         
+        # enable draw buttons on fetch files tab
+        for r in runlist:
+            self.bfit.fetch_files.data_lines[r].draw_fit_button['state'] = 'normal'
+        
         # draw fit results
-        self.draw_fits()
+        self.bfit.fetch_files.draw_all(ignore_check=True)
+        self.bfit.fetch_files.draw_all_fits(ignore_check=True)
         
     #======================================================================== #
-    def draw_fits(self,*args):
+    def draw_fit(self,run,**drawargs):
+        """Draw fit and data for a single run"""
         
-        data = self.data
-        fit_out = self.fit_output
-        fn_name = self.fit_function_title.get()
-        ncomp = self.n_component.get()
-        
-        # condense drawing into a funtion
-        def draw_single(run):
-            
-            # get data and fit parameters
-            dat = data[run]
-            out = fit_out[run]
-            fn = self.fitter.fn_list[run]
-            
-            a = dat.asym('c')
-            plt.errorbar(*a)################################################################## Fix this\
-            fitx = np.arange(500)/500.*(max(a[0])-min(a[0]))+min(a[0])
-            plt.plot(fitx,fn(fitx,*(out[1])))
-            plt.show()
-            plt.draw()
-            
-            raise Exception("FIX THIS FITTING DRAWING")
+        # Settings
+        xlabel_dict={'20':"Time (s)",
+                     '2h':"Time (s)",
+                     '2e':'Frequency (MHz)',
+                     '1f':'Frequency (MHz)',
+                     '1n':'Voltage (V)'}
+                     
+        # get data and fit results
+        data = self.data[run]
+        fit_out = self.fit_output[run]
+        fn = self.fitter.fn_list[run]
                 
         # get draw style
         style = self.bfit.draw_style.get()
         
-        # make new figure, draw stacked
-        if style == 'stack':
+        # set drawing style
+        if style == 'new':
             plt.figure()
-            for r in fit_out.keys():
-                draw_single(r)
-            
-        # overdraw in current figure, stacked
         elif style == 'redraw':
             plt.clf()
-            self.bfit.draw_style.set('stack')
-            for r in fit_out.keys():
-                draw_single(r)
-            self.bfit.draw_style.set('redraw')
             
-        # make new figure, draw single
-        elif style == 'new':
-            for r in fit_out.keys():
-                plt.figure()
-                draw_single(r)
-            
-        else:
-            raise ValueError("Draw style not recognized")
+        # set drawing style arguments
+        for k in self.bfit.style:
+            if k not in drawargs.keys() \
+                    and 'marker' not in k \
+                    and k not in ['elinewidth','capsize']:
+                drawargs[k] = self.bfit.style[k]
+        
+        # linestyle reset
+        if drawargs['linestyle'] == 'None': 
+            drawargs['linestyle'] = '-'
+        
+        # label reset
+        if 'label' not in drawargs.keys():
+            drawargs['label'] = self.bfit.fetch_files.data_lines[run].label.get()
+        
+        # draw
+        t,a,da = data.asym('c')
+        fitx = np.arange(self.n_fitx_pts)/float(self.n_fitx_pts)*\
+                                                    (max(t)-min(t))+min(t)
+        plt.plot(fitx,fn(fitx,*(fit_out[1])),**drawargs)
+        
+        # plot elements
+        plt.ylabel('Asymmetry')
+        plt.xlabel(xlabel_dict[self.mode])
+        
+        # show
+        plt.tight_layout()
+        plt.legend()
         
     # ======================================================================= #
     def draw_param(self,*args):

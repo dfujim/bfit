@@ -189,7 +189,7 @@ class bfit(object):
         
         # Draw style
         self.draw_style = StringVar()
-        self.draw_style.set("new")
+        self.draw_style.set("stack")
         
         menu_draw = Menu(menubar)
         menubar.add_cascade(menu=menu_draw,label='Redraw Mode')

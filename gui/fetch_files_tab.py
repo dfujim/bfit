@@ -104,6 +104,8 @@ class fetch_files(object):
                 command=self.remove_all,pad=5)
         check_draw = ttk.Button(right_frame,text='Draw',\
                 command=self.draw_all,pad=5)
+        check_draw_fits = ttk.Button(right_frame,text='Draw Fits',\
+                command=self.draw_all_fits,pad=5)
         
         check_set = ttk.Button(right_frame,text='Set',\
                 command=self.set_all)
@@ -146,8 +148,9 @@ class fetch_files(object):
         right_frame.grid(column=0,row=0,sticky=(N,E,W))
         check_all_box.grid(         column=0,row=0,sticky=(N))
         check_toggle_button.grid(   column=0,row=1,sticky=(N),pady=10)
-        check_remove.grid(          column=1,row=2,sticky=(N))
         check_draw.grid(            column=0,row=2,sticky=(N))
+        check_draw_fits.grid(       column=1,row=2,sticky=(N))
+        check_remove.grid(          column=2,row=2,sticky=(N))
         check_rebin_label.grid(     column=0,row=3)
         check_rebin_box.grid(       column=1,row=3)
         check_bin_remove_entry.grid(column=0,row=4,sticky=(N))
@@ -191,12 +194,12 @@ class fetch_files(object):
             self.data_lines[k].check_state.set(state)
         
     # ======================================================================= #
-    def draw_all(self):
+    def draw_all(self,ignore_check=False):
         
         # condense drawing into a funtion
         def draw_lines():
             for r in self.data_lines.keys():
-                if self.data_lines[r].check_state.get():
+                if self.data_lines[r].check_state.get() or ignore_check:
                     self.data_lines[r].draw()
                 
         # get draw style
@@ -204,7 +207,6 @@ class fetch_files(object):
         
         # make new figure, draw stacked
         if style == 'stack':
-            plt.figure()
             draw_lines()
             
         # overdraw in current figure, stacked
@@ -216,7 +218,47 @@ class fetch_files(object):
             
         # make new figure, draw single
         elif style == 'new':
+            plt.figure()
+            self.bfit.draw_style.set('stack')
             draw_lines()
+            self.bfit.draw_style.set('new')
+        else:
+            messagebox.showerror(message="Draw style not recognized")
+            raise ValueError("Draw style not recognized")
+
+    # ======================================================================= #
+    def draw_all_fits(self,ignore_check=False):
+        
+        # condense drawing into a funtion
+        def draw_lines():
+            for r in self.data_lines.keys():
+                line = self.data_lines[r] 
+                if line.check_state.get() or ignore_check:
+                    try:
+                        self.bfit.fit_files.draw_fit(r,label=line.label.get())
+                    except KeyError:
+                        pass
+                
+        # get draw style
+        style = self.bfit.draw_style.get()
+        
+        # make new figure, draw stacked
+        if style == 'new':
+            plt.figure()
+            self.bfit.draw_style.set('stack')
+            draw_lines()
+            self.bfit.draw_style.set('new')
+            
+        elif style == 'stack':
+            draw_lines()
+            
+        # overdraw in current figure, stacked
+        elif style == 'redraw':
+            plt.clf()
+            self.bfit.draw_style.set('stack')
+            draw_lines()
+            self.bfit.draw_style.set('redraw')
+            
         else:
             messagebox.showerror(message="Draw style not recognized")
             raise ValueError("Draw style not recognized")
@@ -476,6 +518,9 @@ class dataline(object):
         remove_button = ttk.Button(line_frame,text='Remove',\
                 command=self.remove,pad=1)
         draw_button = ttk.Button(line_frame,text='Draw',command=self.draw,pad=1)
+        self.draw_fit_button = ttk.Button(line_frame,text='Draw Fit',
+                command= lambda : self.bfit.fit_files.draw_fit(run=self.run),
+                pad=1,state=DISABLED)
         
         rebin_label = ttk.Label(line_frame,text="Rebin:",pad=5)
         rebin_box = Spinbox(line_frame,from_=1,to=100,width=3,\
@@ -527,6 +572,7 @@ class dataline(object):
         group_label.grid(column=c,row=0,sticky=E); c+=1
         group_box.grid(column=c,row=0,sticky=E); c+=1
         draw_button.grid(column=c,row=0,sticky=E); c+=1
+        self.draw_fit_button.grid(column=c,row=0,sticky=E); c+=1
         remove_button.grid(column=c,row=0,sticky=E); c+=1
         
         # passing
