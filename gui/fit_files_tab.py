@@ -350,8 +350,15 @@ class fit_files(object):
         
         # draw fit results
         self.bfit.fetch_files.draw_all(ignore_check=True)
-        self.bfit.fetch_files.draw_all_fits(ignore_check=True)
         
+        style = self.bfit.draw_style.get()
+        
+        if style in ['redraw','new']:
+            self.bfit.draw_style.set('stack')
+        
+        self.bfit.fetch_files.draw_all_fits(ignore_check=True)
+        self.bfit.draw_style.set(style)
+            
     #======================================================================== #
     def draw_fit(self,run,**drawargs):
         """Draw fit and data for a single run"""
