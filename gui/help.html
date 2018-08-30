@@ -6248,7 +6248,7 @@ Error message and password prompt
 <div modified="20171215084937325" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/EditToolbar</pre>
 </div>
-<div list="[[Help Index]]" title="$:/StoryList">
+<div list="[[Help Index]] Installation Navigation" title="$:/StoryList">
 <pre></pre>
 </div>
 <div modified="20171215083831245" title="$:/temp/advancedsearch">
@@ -6709,7 +6709,7 @@ Working off of the raw asymmetry calculations we can combine asymmetries in the 
 &quot;&quot;&quot;
 </pre>
 </div>
-<div created="20171215082810696" modified="20180626234231887" title="Hotkeys">
+<div created="20171215082810696" modified="20180830212549820" title="Hotkeys">
 <pre>Hotkey assignment varies depending on the tab shown. Global hotkeys are constant. 
 
 ! Global hotkeys
@@ -6718,6 +6718,9 @@ Working off of the raw asymmetry calculations we can combine asymmetries in the 
 | ctrl+n | set draw mode &quot;new&quot; |
 | ctrl+s | set draw mode &quot;stack&quot; |
 | ctrl+r | set draw mode &quot;redraw&quot; |
+| ctrl+1 | switch to file viewer tab |
+| ctrl+2 | switch to fetch data tab |
+| ctrl+3 | switch to fit data tab |
 
 ! File Details Tab
 
@@ -6734,7 +6737,11 @@ Working off of the raw asymmetry calculations we can combine asymmetries in the 
 | ctrl+return || draw file |
 | shift+return || draw file |
 | ctrl+a || toggle check all |
-</pre>
+
+! Fit Data Tab
+| !Command | !Effect |
+| return | fit data |
+| ctrl+return | draw fit parameters |</pre>
 </div>
 <div created="20171215075709744" modified="20180820231556139" title="Installation">
 <pre>To install, one need to first acquire mudpy and bdata:
@@ -6793,19 +6800,23 @@ alias bfit='python3 -m bfit'
 
 You are now ready to run bit. Open a new shell and type ``bfit`` into the prompt. </pre>
 </div>
-<div created="20180706200413929" modified="20180820231713532" title="Navigation">
+<div created="20180706200413929" modified="20180830213020181" title="Navigation">
 <pre>! Menu bar: 
 
 * ''File''
 ** Calculators for B0 in BNQR and B1 in BNMR
 ** Export fetched data to csv file
 * ''Settings''
+** Set data directory. Defaults to environment variables `BNMR_ARCHIVE` and `BNQR_ARCHIVE`
 ** Set matplotlib defaults: global drawing style defaults
 ** Set draw style: set instance line and marker styles
 ** Set fitting routines: import the file used to set the fitting backend. Imported dynamically. 
-** Set data directory. Defaults to environment variables `BNMR_ARCHIVE` and `BNQR_ARCHIVE`
+** Set redraw period: fix how often the data is refreshed in the file details tab. 
+
 * ''Redraw Mode''
-** Set drawing mode. See help for details on hotkeys. 
+** New: Make a new window for each object or sets of objects drawn
+** Stack: Draw new objects or sets of objects in the existing window, superimposed on previously drawn objects
+** Redraw: Draw new objects or sets of objects in the existing window, first clearing previously drawn objects
 * ''Help''
 ** Show this help wiki.
 
@@ -6818,11 +6829,9 @@ You are now ready to run bit. Open a new shell and type ``bfit`` into the prompt
 * ''Fetch Data''
 ** Fetch many data files for quick superposition and to set up fitting routines. Data fetched here will be fitted on the next tab. See [[hotkey details|Hotkeys]]. 
 * ''Fit Data''
-** Fit the fetched data, and set fitting parameters. 
-* ''View Fit Results''
-** View the fit parameters and draw as functions of each other.</pre>
+** Fit the fetched data, set fitting parameters, view fit results, plot fit parameters. </pre>
 </div>
-<div created="20180805223140058" modified="20180805223625504" title="Plugging in Fitting Routines">
+<div created="20180805223140058" modified="20180830212314524" title="Plugging in Fitting Routines">
 <pre>`bfit` allows for users to build their own fitting modules. The module must follow the below template, but otherwise developers may use their plugin to link to any fitting procedure they wish. Note the expected input/output of the `__call__` function.  
 
 
@@ -6832,22 +6841,25 @@ In the following example, the class name, function names, and the dictionaries &
 
 ```python
 class fitter(object):
+
+    # needed to tell users what routine this is
+    __name__ = 'default'
     
     # Define possible fit functions for given run modes:
-    function_names = {  '20':('Exp','Str Exp'),
-                        '1f':('Lorentzian','Gaussian'),
-                        '1n':('Lorentzian','Gaussian')}
+    function_names = {  '20':('Exp','Str Exp')}
      
     # Define names of fit parameters:
     param_names = {     'Exp'       :('amp','T1','baseline'),
-                        'Str Exp'   :('amp','T1','beta','baseline'),
-                        'Lorentzian':('peak','width','height','baseline'),
-                        'Gaussian'  :('mean','sigma','height','baseline'),}
+                        'Str Exp'   :('amp','T1','beta','baseline')}
 
+    # dictionary of initial parameters
+    par_values = {}
+    fn_list = {}
+    
     # ======================================================================= #
     def __init__(self):
         pass
-    
+        
     # ======================================================================= #
     def __call__(self,fn_name,ncomp,data_list):
         &quot;&quot;&quot;
@@ -6861,7 +6873,6 @@ class fitter(object):
                                     bound_lo,   # lower fitting bound
                                     bound_hi,   # upper fitting bound
                                     is_fixed,   # boolean, fix value?
-                                    is_shared,  # boolean, share globally?
                                    )
                               }
                 where doptions = {  'omit':str,     # bins to omit in 1F calcs
@@ -6871,8 +6882,33 @@ class fitter(object):
                                             
             returns dictionary of {run: [[par_names],[par_values],[par_errors]]}
         &quot;&quot;&quot;
+        
+        # do some stuff
+    
+    # ======================================================================= #
+    def gen_init_par(self,fn_name):
+        &quot;&quot;&quot;Generate initial parameters for a given function.
+        
+            fname: name of function. Should be the same as the param_names keys
+            
+            Set and return dictionary of initial parameters,bounds,fixed boolean. 
+                {par:(init,bound_lo,bound_hi,fixed)}
+        &quot;&quot;&quot;
+        
+        # do some stuff
 
-        # do some stuff... 
+    # ======================================================================= #
+    def get_fn(self,fn_name,ncomp):
+        &quot;&quot;&quot;
+            Get the fitting function used.
+            
+                fn_name: string of the function name users will select. 
+                ncomp: number of components
+            
+            Returns python function(x,*pars)
+        &quot;&quot;&quot;
+        
+        # do some stuff
 ```</pre>
 </div>
 
