@@ -104,7 +104,7 @@ class fetch_files(object):
         
         check_remove = ttk.Button(right_frame,text='Remove',\
                 command=self.remove_all,pad=5)
-        check_draw = ttk.Button(right_frame,text='Draw',\
+        check_draw = ttk.Button(right_frame,text='Draw Data',\
                 command=self.draw_all,pad=5)
         check_draw_fits = ttk.Button(right_frame,text='Draw Fits',\
                 command=self.draw_all_fits,pad=5)
@@ -148,18 +148,20 @@ class fetch_files(object):
         dataline_frame.grid(column=0,row=1,sticky=(E,W,S,N))
         
         right_frame.grid(column=0,row=0,sticky=(N,E,W))
-        check_all_box.grid(         column=0,row=0,sticky=(N))
-        check_toggle_button.grid(   column=0,row=1,sticky=(N),pady=10)
-        check_draw.grid(            column=0,row=2,sticky=(N))
-        check_draw_fits.grid(       column=1,row=2,sticky=(N))
-        check_remove.grid(          column=2,row=2,sticky=(N))
-        check_rebin_label.grid(     column=0,row=3)
-        check_rebin_box.grid(       column=1,row=3)
-        check_bin_remove_entry.grid(column=0,row=4,sticky=(N))
-        check_set.grid(             column=0,row=5,sticky=(N))
+        r = 0
+        check_all_box.grid(         column=0,row=r,sticky=(N)); r+= 1
+        check_toggle_button.grid(   column=0,row=r,sticky=(N),pady=10); r+= 1
+        check_draw.grid(            column=0,row=r,sticky=(N))
+        check_draw_fits.grid(       column=1,row=r,sticky=(N)); r+= 1
+        check_remove.grid(          column=0,row=r,sticky=(N,E,W)); r+= 1
+        check_rebin_label.grid(     column=0,row=r)
+        check_rebin_box.grid(       column=1,row=r); r+= 1
+        check_bin_remove_entry.grid(column=0,row=r,sticky=(N)); r+= 1
+        check_set.grid(             column=0,row=r,sticky=(N))
         
         bigright_frame.grid(rowspan=20)
         check_all_box.grid(columnspan=2)
+        check_remove.grid(columnspan=2)
         check_toggle_button.grid(columnspan=2)
         check_bin_remove_entry.grid(columnspan=2)
         check_set.grid(columnspan=2)
@@ -173,7 +175,7 @@ class fetch_files(object):
                 pad=5)
         entry_asym_type = ttk.Combobox(style_frame,\
                 textvariable=self.bfit.fileviewer.asym_type,state='readonly',\
-                width=25)
+                width=20)
         entry_asym_type['values'] = self.bfit.fileviewer.asym_dict_keys
         
         style_frame.grid(column=0,row=1,sticky=(W,N))
