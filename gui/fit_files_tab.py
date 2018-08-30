@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from functools import partial
 from bdata import bdata
+from bfit.gui.zahersCalculator import current2field
 import datetime
 import matplotlib.pyplot as plt
 
@@ -43,9 +44,9 @@ class fit_files(object):
     n_fitx_pts = 500    # number of points to draw in fitted curves
 
     # define draw componeents in draw_param
-    draw_components = ['Temperature','B0 Field', 'RF Level DAC', 'Platform Bias', 
-                       'Beam Energy', 'Run Duration','Run Number','Sample', 
-                       'Start Time']
+    draw_components = ['Temperature (K)','B0 Field (T)', 'RF Level DAC', 
+                       'Platform Bias (kV)', 'Implantation  Energy (keV)', 
+                       'Run Duration (s)', 'Run Number','Sample', 'Start Time']
 
     # ======================================================================= #
     def __init__(self,fit_data_tab,bfit):
@@ -359,7 +360,7 @@ class fit_files(object):
         self.bfit.fetch_files.draw_all_fits(ignore_check=True)
         self.bfit.draw_style.set(style)
             
-    #======================================================================== #
+    # ======================================================================= #
     def draw_fit(self,run,**drawargs):
         """Draw fit and data for a single run"""
         
@@ -423,64 +424,10 @@ class fit_files(object):
         xdraw = self.xaxis.get()
         ydraw = self.yaxis.get()
         
-        # get data dictionary
-        data = self.data
-        runs = list(data.keys())
-        
-        # output parameters 
-        parout = self.fit_output
-        
-        # get values to draw
-        def get_values(select):
-            
-            # Data file options
-            if select == 'Temperature':
-                val = [data[r].camp.smpl_read_A.mean for r in runs]
-                err = [data[r].camp.smpl_read_A.std for r in runs]
-            
-            elif select == 'B0 Field':
-                val = [data[r].camp.b_field.mean for r in runs]
-                err = [data[r].camp.b_field.std for r in runs]
-            
-            elif select == 'RF Level DAC':
-                val = [data[r].camp.rf_dac.mean for r in runs]
-                err = [data[r].camp.rf_dac.std for r in runs]
-            
-            elif select == 'Platform Bias':
-                val = [data[r].epics.nmr_bias.mean for r in runs]
-                err = [data[r].epics.nmr_bias.std for r in runs]
-            
-            elif select == 'Beam Energy':
-                val =  [data[r].beam_kev() for r in runs]
-                err =  [0 for r in runs]
-            
-            elif select == 'Run Duration':
-                val = [data[r].duration for r in runs]
-                err = [0 for r in runs]
-            
-            elif select == 'Run Number':
-                val = [data[r].run for r in runs]
-                err = [0 for r in runs]
-            
-            elif select == 'Sample':
-                val = [data[r].sample for r in runs]
-                err = [0 for r in runs]
-                
-            elif select == 'Start Time':
-                val = [data[r].start_date for r in runs]
-                err = [0 for r in runs]
-            
-            # fitted parameter options
-            elif select in self.fitter.param_names[self.fit_function_title.get()]:
-                val = [parout[r][1][parout[r][0].index(select)] for r in runs]
-                err = [parout[r][2][parout[r][0].index(select)] for r in runs]
-            
-            return (val,err)
-        
         # get plottable data
         try:
-            xvals, xerrs = get_values(xdraw)
-            yvals, yerrs = get_values(ydraw)
+            xvals, xerrs = self.get_values(xdraw)
+            yvals, yerrs = self.get_values(ydraw)
         except UnboundLocalError:
             messagebox.showerror("Error",'Select two input parameters')
             return
@@ -518,7 +465,69 @@ class fit_files(object):
         
     # ======================================================================= #
     def export_param(self):
-        pass
+        
+        val = {v:self.get_values(v) for v in self.xaxis_combobox['values']}
+        print(val)
+        
+    
+     # ======================================================================= #
+    def get_values(self,select):
+        """ Get plottable values"""
+        data = self.data
+        runs = list(data.keys())
+        parout = self.fit_output
+    
+        # Data file options
+        if select == 'Temperature (K)':
+            val = [data[r].camp.smpl_read_A.mean for r in runs]
+            err = [data[r].camp.smpl_read_A.std for r in runs]
+        
+        elif select == 'B0 Field (T)':
+            try:
+                val = [data[r].camp.b_field.mean for r in runs]
+                err = [data[r].camp.b_field.std for r in runs]
+            except AttributeError:
+                val = [current2field(data[r].epics.hh_current.mean)/1e4 for r in runs]
+                err = [current2field(data[r].epics.hh_current.std)/1e4 for r in runs]
+        
+        elif select == 'RF Level DAC':
+            val = [data[r].camp.rf_dac.mean for r in runs]
+            err = [data[r].camp.rf_dac.std for r in runs]
+        
+        elif select == 'Platform Bias (kV)':
+            try:
+                val = [data[r].epics.nmr_bias.mean for r in runs]
+                err = [data[r].epics.nmr_bias.std for r in runs]
+            except AttributeError:
+                val = [data[r].epics.nqr_bias.mean/1000. for r in runs]
+                err = [data[r].epics.nqr_bias.std/1000. for r in runs]
+                
+        elif select == 'Implantation Energy (keV)':
+            val =  [data[r].beam_kev() for r in runs]
+            err =  [0 for r in runs]
+        
+        elif select == 'Run Duration (s)':
+            val = [data[r].duration for r in runs]
+            err = [0 for r in runs]
+        
+        elif select == 'Run Number':
+            val = [data[r].run for r in runs]
+            err = [0 for r in runs]
+        
+        elif select == 'Sample':
+            val = [data[r].sample for r in runs]
+            err = [0 for r in runs]
+            
+        elif select == 'Start Time':
+            val = [data[r].start_date for r in runs]
+            err = [0 for r in runs]
+        
+        # fitted parameter options
+        elif select in self.fitter.param_names[self.fit_function_title.get()]:
+            val = [parout[r][1][parout[r][0].index(select)] for r in runs]
+            err = [parout[r][2][parout[r][0].index(select)] for r in runs]
+        
+        return (val,err)
         
 # =========================================================================== #
 # =========================================================================== #
