@@ -132,6 +132,10 @@ class bfit(object):
         root.bind('<Control-Key-r>',self.set_style_redraw)
         root.bind('<Control-Key-a>',self.set_check_all)
         
+        root.bind('<Control-Key-1>',lambda x: self.set_focus_tab(idn=0))
+        root.bind('<Control-Key-2>',lambda x: self.set_focus_tab(idn=1))
+        root.bind('<Control-Key-3>',lambda x: self.set_focus_tab(idn=2))
+        
         # event bindings
         root.protocol("WM_DELETE_WINDOW",self.on_closing)
         
@@ -618,7 +622,8 @@ class bfit(object):
     def set_style_new(self,x):      self.draw_style.set('new')
     def set_style_stack(self,x):    self.draw_style.set('stack')
     def set_style_redraw(self,x):   self.draw_style.set('redraw')
-    
+    def set_focus_tab(self,idn,*a): self.notebook.select(idn)
+        
 # =========================================================================== #
 if __name__ == "__main__":
     bfit()
