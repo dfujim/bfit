@@ -74,7 +74,7 @@ class zahersCalculator(object):
         if focus_id == str(self.entry_field):        
             try:
                 field = float(self.field.get()) 
-                self.current.set("%.4f" % np.around((field-0.175)/2.2131,4))
+                self.current.set("%.4f" % np.around(field2current(field),4))
             except ValueError:
                 self.current.set('Error')
             
@@ -82,9 +82,11 @@ class zahersCalculator(object):
         elif focus_id == str(self.entry_current):        
             try:
                 current = float(self.current.get()) 
-                self.field.set("%.4f" % np.around(current*2.2131+0.175,4))
+                self.field.set("%.4f" % np.around(current2field(current),4))
             except ValueError:
                 self.field.set('Error')
             
-
+# ======================================================================= #
+def current2field(current):    return current*2.2131+0.175
+def field2current(field):      return (field-0.175)/2.2131
 
