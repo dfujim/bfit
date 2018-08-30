@@ -258,7 +258,7 @@ class bfit(object):
         elif idx == 1:        # data fetch_files
             self.fetch_files.export()
         elif idx == 2:        # fit viewer
-            pass
+            self.fit_files.export()
         else:
             pass
     

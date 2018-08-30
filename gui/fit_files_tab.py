@@ -6,11 +6,15 @@ from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 import numpy as np
 import pandas as pd
-from functools import partial
-from bdata import bdata
-from bfit.gui.zahersCalculator import current2field
-import datetime
 import matplotlib.pyplot as plt
+import datetime, os
+
+from functools import partial
+from bfit.gui.zahersCalculator import current2field
+from bdata import bdata
+
+
+
 
 # =========================================================================== #
 # =========================================================================== #
@@ -45,14 +49,11 @@ class fit_files(object):
 
     # define draw componeents in draw_param
     draw_components = ['Temperature (K)','B0 Field (T)', 'RF Level DAC', 
-                       'Platform Bias (kV)', 'Implantation  Energy (keV)', 
+                       'Platform Bias (kV)', 'Impl. Energy (keV)', 
                        'Run Duration (s)', 'Run Number','Sample', 'Start Time']
 
     # ======================================================================= #
     def __init__(self,fit_data_tab,bfit):
-        
-        # Key binding
-        #~ fit_data_tab.bind('<FocusIn>',self.populate)   ################################ REBIND!
         
         # initialize
         self.file_tabs = {}
@@ -128,7 +129,7 @@ class fit_files(object):
         
         # draw and export buttons
         draw_button = ttk.Button(right_frame,text='Draw',command=self.draw_param)
-        export_button = ttk.Button(right_frame,text='Export',command=self.export_param)
+        export_button = ttk.Button(right_frame,text='Export',command=self.export)
         
         #~ draw_button.bind('<Return>',self.draw_param)   ################################ REBIND!
         
@@ -464,17 +465,33 @@ class fit_files(object):
         plt.tight_layout()
         
     # ======================================================================= #
-    def export_param(self):
+    def export(self):
         
-        val = {v:self.get_values(v) for v in self.xaxis_combobox['values']}
-        print(val)
+        # get values and errors
+        val = {}
+        for v in self.xaxis_combobox['values']:
+            v2 = self.get_values(v) 
+            val[v] = v2[0]
+            val['Error '+v] = v2[1]
         
-    
+        # make data frame for output
+        df = pd.DataFrame(val)
+        df.set_index('Run Number',inplace=True)
+        
+        # get file name
+        filename = filedialog.asksaveasfilename()
+        
+        # check extension 
+        if os.path.splitext(filename)[1] == '':
+            filename += '.csv'
+        df.to_csv(filename)
+        
      # ======================================================================= #
     def get_values(self,select):
         """ Get plottable values"""
         data = self.data
         runs = list(data.keys())
+        runs.sort()
         parout = self.fit_output
     
         # Data file options
@@ -502,7 +519,7 @@ class fit_files(object):
                 val = [data[r].epics.nqr_bias.mean/1000. for r in runs]
                 err = [data[r].epics.nqr_bias.std/1000. for r in runs]
                 
-        elif select == 'Implantation Energy (keV)':
+        elif select == 'Impl. Energy (keV)':
             val =  [data[r].beam_kev() for r in runs]
             err =  [0 for r in runs]
         
@@ -524,8 +541,16 @@ class fit_files(object):
         
         # fitted parameter options
         elif select in self.fitter.param_names[self.fit_function_title.get()]:
-            val = [parout[r][1][parout[r][0].index(select)] for r in runs]
-            err = [parout[r][2][parout[r][0].index(select)] for r in runs]
+            val = []
+            err = []
+            
+            for r in runs:
+                try:
+                    val.append(parout[r][1][parout[r][0].index(select)])
+                    err.append(parout[r][2][parout[r][0].index(select)])
+                except KeyError:
+                    val.append(np.nan)
+                    err.append(np.nan)
         
         return (val,err)
         
@@ -544,8 +569,6 @@ class fitinputtab(object):
             runlist     list of run numbers to fit
             fitframe    mainframe for this tab. 
     """
-    
-    
     
     n_runs_max = 5      # number of runs before scrollbar appears
     collist = ['p0','blo','bhi','res','dres','chi','fixed']
