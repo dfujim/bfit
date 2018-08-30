@@ -396,7 +396,7 @@ class fit_files(object):
         t,a,da = data.asym('c')
         fitx = np.arange(self.n_fitx_pts)/float(self.n_fitx_pts)*\
                                                     (max(t)-min(t))+min(t)
-        plt.plot(fitx,fn(fitx,*(fit_out[1])),**drawargs)
+        plt.plot(fitx,fn(fitx,*(fit_out[1])),zorder=10,**drawargs)
         
         # plot elements
         plt.ylabel('Asymmetry')
