@@ -21,15 +21,17 @@ __doc__="""
 class fetch_files(object):
     """
         Data fields:
+            check_rebin: IntVar for handling rebin aspect of checkall
+            check_bin_remove: StringVar for handing omission of 1F data
+            check_state: BooleanVar for handling check all
             year: StringVar of year to fetch runs from 
             run: StringVar input to fetch runs.
             data: dictionary of bdata obj, keyed by run number
             bfit: pointer to parent class
             data_lines: dictionary of dataline obj, keyed by run number
             fet_entry_frame: frame of fetch tab
-            check_rebin: IntVar for handling rebin aspect of checkall
-            check_bin_remove: StringVar for handing omission of 1F data
-            check_state: BooleanVar for handling check all
+            runmode_label: display run mode
+            runmode: display run mode string
     """
     
     runmode_relabel = {'20':'SLR','1f':'1F','2e':'2e','1n':'Rb Cell Scan'}
@@ -444,6 +446,22 @@ class fetch_files(object):
 class dataline(object):
     """
         A line of objects to display run properties and remove bins and whatnot.
+        
+        bfit:           pointer to root 
+        bin_remove:     StringVar for specifying which bins to remove in 1f runs
+        bin_remove_entry: Entry object for bin remove 
+        check_state:    BooleanVar for specifying check state
+        group:          IntVar for fitting group ID
+        label:          StringVar for labelling runs in legends
+        line_frame:     Frame that object is placed in
+        lines_list:     list of datalines
+        mode:           bdata run mode
+        rebin:          IntVar for SLR rebin
+        row:            position in list
+        run:            bdata run number
+        year:           bdata year
+        
+        
     """
         
     bin_remove_starter_line = '1 5 100-200 (omit bins)'
@@ -600,10 +618,16 @@ class dataline(object):
         self.line_frame.destroy()
         
         # get rid of data
-        del self.datalist[self.run]
+        del self.bfit.fetch_files.data[self.run]
         del self.lines_list[self.run]
         
+        # repopulate fit files tab
         self.bfit.fit_files.populate()
+        
+        # remove data from storage
+        if len(self.lines_list) == 0:
+            ff = self.bfit.fetch_files
+            ff.runmode_label['text'] = ''
                 
     # ======================================================================= #
     def draw(self):
