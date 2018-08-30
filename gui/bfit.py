@@ -23,6 +23,7 @@ import webbrowser
 import subprocess
 import importlib
 
+from bfit import __version__
 from bfit.gui.fileviewer_tab import fileviewer
 from bfit.gui.fetch_files_tab import fetch_files
 from bfit.gui.fit_files_tab import fit_files
@@ -101,7 +102,7 @@ class bfit(object):
     probe_species = "8Li" # unused
     bnmr_archive_label = "BNMR_ARCHIVE"
     bnqr_archive_label = "BNQR_ARCHIVE"
-    update_period = 5
+    update_period = 10  # s
     rounding = 3       # number of decimal places to round results to in display
     
     try: 
@@ -116,7 +117,8 @@ class bfit(object):
         
         # root 
         root = Tk()
-        root.title("BFIT - BNMR/BNQR Data Fitting and Visualization")
+        root.title("BFIT - BNMR/BNQR Data Fitting and Visualization "+\
+                   "(version %s)" % __version__)
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
         
