@@ -9,6 +9,7 @@ import sys,os,datetime,time
 from bdata import bdata
 import matplotlib.pyplot as plt
 from multiprocessing import Process, Pipe
+from bfit.gui.zahersCalculator import current2field
 
 __doc__ = """
     View file contents tab.
@@ -414,6 +415,10 @@ class fileviewer(object):
             val = data.epics.hh_current.mean
             data_se['Magnet Current'] = "%.3f A" % val
             key_order_se.append('Magnet Current')
+            
+            val = current2field(val)
+            data_se['Magnetic Field'] = "%.3f Gauss" % val
+            key_order_se.append('Magnetic Field')
         except AttributeError:
             pass
         
