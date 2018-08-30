@@ -145,6 +145,15 @@ class fitter(object):
 
     # ======================================================================= #
     def get_fn(self,fn_name,ncomp):
+        """
+            Get the fitting function used.
+            
+                fn_name: string of the function name users will select. 
+                ncomp: number of components
+            
+            Returns python function(x,*pars)
+        """
+        
         
         # set fitting function
         if fn_name == 'Lorentzian':
