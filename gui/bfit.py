@@ -29,6 +29,7 @@ from bfit.gui.fit_files_tab import fit_files
 from bfit.gui.zahersCalculator import zahersCalculator
 from bfit.gui.monikasCalculator import monikasCalculator
 from bfit.gui.drawstyle_popup import drawstyle_popup
+from bfit.gui.redraw_period_popup import redraw_period_popup
 
 __doc__="""
     BNMR/BNQR data visualization and curve fitting.
@@ -179,13 +180,15 @@ class bfit(object):
         menu_settings_dir = Menu(menu_settings)
         
         # Settings cascade commands
-        menu_settings.add_command(label="Set matplotlib defaults",\
+        menu_settings.add_cascade(menu=menu_settings_dir,label='Set data directory')
+        menu_settings.add_command(label="Set matplotlib global defaults",\
                 command=self.set_matplotlib)
         menu_settings.add_command(label='Set drawing style',
                 command=self.set_draw_style)
         menu_settings.add_command(label='Set fitting routines',
                 command=self.set_fit_routines)
-        menu_settings.add_cascade(menu=menu_settings_dir,label='Data Directory')
+        menu_settings.add_command(label='Set redraw period',
+                command=self.set_redraw_period)
         
         # Settings: data directory
         menu_settings_dir.add_command(label="BNMR",command=self.set_bnmr_dir)
@@ -623,6 +626,9 @@ class bfit(object):
     def set_style_stack(self,x):    self.draw_style.set('stack')
     def set_style_redraw(self,x):   self.draw_style.set('redraw')
     def set_focus_tab(self,idn,*a): self.notebook.select(idn)
+    def set_redraw_period(self,*a): redraw_period_popup(self)
+        
+        
         
 # =========================================================================== #
 if __name__ == "__main__":

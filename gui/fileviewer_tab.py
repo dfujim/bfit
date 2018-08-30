@@ -132,8 +132,8 @@ class fileviewer(object):
         self.is_updating = BooleanVar()
         self.is_updating.set(False)
         update_box = Checkbutton(details_frame,text='Periodic Redraw',
-                command=self.update,variable=self.is_updating,onvalue=True,
-                offvalue=False,state=DISABLED)
+                command=self.do_update,variable=self.is_updating,onvalue=True,
+                offvalue=False)
 
         # asymmetry type combobox
         self.asym_type = StringVar()
@@ -722,7 +722,14 @@ class fileviewer(object):
         textbox.insert('1.0',text)
         
     # ======================================================================= #
-    def update(self):
-        pass
+    def do_update(self):
+        
+        self.draw()
+        print('\rLast update:',str(datetime.datetime.now()).split('.')[0],
+              end='',flush=True)
+        
+        if self.is_updating.get():
+            self.bfit.root.after(self.bfit.update_period*1000,self.do_update)
+        
 # =========================================================================== #
 
