@@ -21,6 +21,10 @@ class drawstyle_popup(object):
         self.win.title('Set Marker and Line Styles')
         frame = ttk.Frame(self.win,relief='sunken',pad=5)
         
+        # Key bindings
+        self.win.bind('<Return>',self.set)             
+        self.win.bind('<KP_Enter>',self.set)
+        
         # initialize 
         self.entry_list = []
         self.label_list = []
@@ -59,7 +63,7 @@ class drawstyle_popup(object):
                         'Line2D.html#matplotlib.lines.Line2D')
 
     # ====================================================================== #
-    def set(self):
+    def set(self,*args):
         """Set entered values"""
         for k,t in zip(self.key_list,self.text_list):
             
