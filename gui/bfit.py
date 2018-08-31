@@ -31,6 +31,7 @@ from bfit.gui.zahersCalculator import zahersCalculator
 from bfit.gui.monikasCalculator import monikasCalculator
 from bfit.gui.drawstyle_popup import drawstyle_popup
 from bfit.gui.redraw_period_popup import redraw_period_popup
+from bfit.gui.set_histograms_popup import set_histograms_popup
 
 __doc__="""
     BNMR/BNQR data visualization and curve fitting.
@@ -96,7 +97,7 @@ class bfit(object):
             
             update_period: update spacing in s. 
             rounding: number of decimal places to round results to in display
-    
+            hist_select: histogram selection for asym calcs (blank for defaults)
             
     """
     probe_species = "8Li" # unused
@@ -104,6 +105,7 @@ class bfit(object):
     bnqr_archive_label = "BNQR_ARCHIVE"
     update_period = 10  # s
     rounding = 3       # number of decimal places to round results to in display
+    hist_select = ''    # histogram selection for asym calculations
     
     try: 
         bnmr_data_dir = os.environ[bnmr_archive_label]
@@ -191,6 +193,8 @@ class bfit(object):
                 command=self.set_fit_routines)
         menu_settings.add_command(label='Set redraw period',
                 command=self.set_redraw_period)
+        menu_settings.add_command(label='Set histograms',
+                command=self.set_histograms)
         
         # Settings: data directory
         menu_settings_dir.add_command(label="BNMR",command=self.set_bnmr_dir)
@@ -308,7 +312,7 @@ class bfit(object):
         
         # get asymmetry: raw scans
         if asym_type == 'r' and data.mode in ['1f','1n']:
-            a = data.asym('raw',omit=option)
+            a = data.asym('raw',omit=option,hist_select=self.hist_select)
             x = np.arange(len(a.p[0]))
             idx_p = a.p[0]!=0
             idx_n = a.n[0]!=0
@@ -323,7 +327,7 @@ class bfit(object):
         elif '2e' in asym_type:
             
             # get asym
-            a = data.asym()
+            a = data.asym(hist_select=self.hist_select)
         
             # draw
             if asym_type in ["2e_rw_c","2e_rw_h"]:
@@ -395,7 +399,7 @@ class bfit(object):
             
         # get asymmetry: not raw scans, not 2e
         else:
-            a = data.asym(omit=option,rebin=rebin)
+            a = data.asym(omit=option,rebin=rebin,hist_select=self.hist_select)
             x = a[x_tag[data.mode]]
             xlabel = xlabel_dict[data.mode]
             
@@ -410,7 +414,7 @@ class bfit(object):
                 
             # plot comined helicities
             elif asym_type == 'c':
-                a = data.asym('c',rebin=rebin,omit=option)
+                a = data.asym('c',rebin=rebin,omit=option,hist_select=self.hist_select)
                 plt.errorbar(*a,label=label,**drawargs)
                 
             # attempting to draw raw scans unlawfully
@@ -419,14 +423,14 @@ class bfit(object):
                 
             # draw alpha diffusion
             elif asym_type == 'ad':
-                a = data.asym('adif',rebin=rebin)
+                a = data.asym('adif',rebin=rebin,hist_select=self.hist_select)
                 plt.errorbar(*a,label=label,**drawargs)
                 plt.ylabel(r'$N_\alpha/N_\beta$')
                 
             # draw alpha tagged runs
             elif asym_type in ['at_c','at_h','nat_c','nat_h']:
                 
-                a = data.asym('atag',rebin=rebin)
+                a = data.asym('atag',rebin=rebin,hist_select=self.hist_select)
                 t = a.time_s
                 
                 if asym_type == 'at_c':
@@ -489,7 +493,7 @@ class bfit(object):
         index_list = ['time_s','freq_Hz','voltage_mV'] 
         
         # get asymmetry
-        asym = data.asym()
+        asym = data.asym(hist_select=self.hist_select)
         
         # get new keys
         asym_out = {}
@@ -629,8 +633,7 @@ class bfit(object):
     def set_style_redraw(self,x):   self.draw_style.set('redraw')
     def set_focus_tab(self,idn,*a): self.notebook.select(idn)
     def set_redraw_period(self,*a): redraw_period_popup(self)
-        
-        
+    def set_histograms(self,*a):    set_histograms_popup(self)
         
 # =========================================================================== #
 if __name__ == "__main__":

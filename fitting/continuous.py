@@ -10,7 +10,7 @@ import numpy as np
 ninputs_dict = {'lor':3,'gaus':3,'2lor_shpk':5}
 
 # ========================================================================== #
-def fscan(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
+def fscan(data,mode,omit='',ncomp=1,probe='8Li',hist_select='',**kwargs):
     """
         Fit combined asymetry from 1F run: frequency scan. 
     
@@ -23,6 +23,7 @@ def fscan(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
         omit:           string of space-separated bin ranges to omit
         ncomp:          number of compenents. Ex: for exp+exp set ncomp=2. 
         probe:          string for probe species. Tested only for 8Li. 
+        hist_select:    string for selecting histograms to use in asym calc
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
         Returns: par,cov,fn
@@ -35,7 +36,7 @@ def fscan(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
 
     # Check data input
     if type(data) == bdata:
-        xdata,ydata,yerr = data.asym('c',omit=omit)
+        xdata,ydata,yerr = data.asym('c',omit=omit,hist_select=hist_select)
         life = data.life[probe][0]
     else:
         xdata,ydata,yerr,life = data

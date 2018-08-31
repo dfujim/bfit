@@ -90,12 +90,12 @@ class fitter(object):
             # fit data
             if self.mode == '20':    
                 par,cov,chi,ftemp = fn(data=dat,rebin=doptions['rebin'],p0=p0,
-                                   bounds=bounds)
+                                   bounds=bounds,hist_select=self.hist_select)
                 self.fn_list[dat.run] = ftemp
             
             elif self.mode == '1f':    
                 par,cov,chi,ftemp = fn(data=dat,omit=doptions['omit'],p0=p0,
-                                   bounds=bounds)
+                                   bounds=bounds,hist_select=self.hist_select)
                 self.fn_list[dat.run] = ftemp
                 
             # collect results

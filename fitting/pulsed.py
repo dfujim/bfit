@@ -11,7 +11,7 @@ import numpy as np
 ninputs_dict = {'exp':2,'strexp':3,'mixed_strexp':6}
 
 # ========================================================================== #
-def slr(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs):
+def slr(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',hist_select='',**kwargs):
     """
         Fit combined asymetry from pulsed beam SLR data: time scan. 
     
@@ -27,6 +27,7 @@ def slr(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs):
                             ensure that p0[-1] = offset, if specified. 
         ncomp:          number of compenents. Ex: for exp+exp set ncomp=2. 
         probe:          string for probe species. Tested only for 8Li. 
+        hist_select:    string for selecting histograms to use in asym calc
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
         Returns: par,cov,fn
@@ -37,7 +38,7 @@ def slr(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs):
 
     # Check data input
     if type(data) == bdata:
-        xdata,ydata,yerr = data.asym('c',rebin=rebin)
+        xdata,ydata,yerr = data.asym('c',rebin=rebin,hist_select=hist_select)
         life = data.life[probe][0]
         pulse = data.ppg.dwelltime.mean*data.ppg.beam_on.mean/1000.
     else:
