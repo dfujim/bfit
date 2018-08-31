@@ -85,7 +85,7 @@ class fit_files(object):
         self.n_component = IntVar()
         self.n_component.set(1)
         n_component_box = Spinbox(fn_select_frame,from_=1,to=20, 
-                textvariable=self.n_component,width=5)
+                textvariable=self.n_component,width=5,command=self.populate_param)
         
         # fit button
         fit_button = ttk.Button(fn_select_frame,text='Fit',command=self.do_fit,\
@@ -128,8 +128,9 @@ class fit_files(object):
         # RIGHT FRAME
         
         # draw and export buttons
-        draw_button = ttk.Button(right_frame,text='Draw',command=self.draw_param)
-        export_button = ttk.Button(right_frame,text='Export',command=self.export)
+        button_frame = ttk.Frame(right_frame)
+        draw_button = ttk.Button(button_frame,text='Draw',command=self.draw_param)
+        export_button = ttk.Button(button_frame,text='Export',command=self.export)
         
         #~ draw_button.bind('<Return>',self.draw_param)   ################################ REBIND!
         
@@ -149,6 +150,7 @@ class fit_files(object):
                                       state='readonly',width=15)
         
         # gridding
+        button_frame.grid(column=0,row=0,columnspan=2)
         draw_button.grid(column=0,row=0,padx=5,pady=5)
         export_button.grid(column=1,row=0,padx=5,pady=5)
         
@@ -642,11 +644,13 @@ class fitinputtab(object):
         # get pointer to fit files object
         fit_files = self.bfit.fit_files
         fitter = fit_files.fitter
+        ncomp = fit_files.n_component.get()
+        fn_title = fit_files.fit_function_title.get()
 
         # get list of parameters and initial values
         try:
-            plist = fitter.param_names[fit_files.fit_function_title.get()]
-            values = fitter.gen_init_par(fit_files.fit_function_title.get())
+            plist = fitter.gen_param_names(fn_title,ncomp)
+            values = fitter.gen_init_par(fn_title,ncomp)
         except KeyError:
             return
         finally:
@@ -726,6 +730,8 @@ class fitinputtab(object):
             line = self.runbox.curselection()[0]
         except IndexError:
             line = 0 
+            self.runbox.select_set(0)
+            self.runbox.event_generate("<<ListboxSelect>>")
         run = self.runlist[line]
         out = out[run]
         chi = out[3]

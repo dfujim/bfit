@@ -69,7 +69,7 @@ class fitter(object):
             doptions = data[2]
             
             # get initial parameters
-            keylist = self.param_names[fn_name]
+            keylist = self.gen_param_names(fn_name,ncomp)
             p0 = [pdict[k][0] for k in keylist]
             
             # get fitting bounds
@@ -105,7 +105,28 @@ class fitter(object):
         return parout
 
     # ======================================================================= #
-    def gen_init_par(self,fn_name):
+    def gen_param_names(self,fn_name,ncomp):
+        """Make a list of the parameter names based on the number of components.
+        """
+        
+        # get names
+        names_orig = self.param_names[fn_name]
+        
+        # special case of one component
+        if ncomp == 1: 
+            return names_orig
+        
+        # multicomponent: make copies of everything other than the baselines
+        names = []
+        for c in range(ncomp): 
+            for n in names_orig[:-1]:
+                names.append(n+'_%d' % c)
+        names.append(names_orig[-1])
+        
+        return tuple(names)
+        
+    # ======================================================================= #
+    def gen_init_par(self,fn_name,ncomp):
         """Generate initial parameters for a given function.
         
             fname: name of function. Should be the same as the param_names keys
@@ -116,30 +137,41 @@ class fitter(object):
         
         # set with constants (should update to something more intelligent later)
         if fn_name == 'Exp':
-            self.par_values = {'amp':(0.5,0,np.inf),
+            par_values = {'amp':(0.5,0,np.inf),
                                'T1':(2,0,np.inf),
                                'baseline':(0,-np.inf,np.inf),
                                }
         elif fn_name == 'Str Exp':
-            self.par_values = {'amp':(0.5,0,np.inf),
+            par_values = {'amp':(0.5,0,np.inf),
                                'T1':(2,0,np.inf),
                                'beta':(0.5,0,1),
                                'baseline':(0,-np.inf,np.inf),
                                 }
         elif fn_name == 'Lorentzian':
-            self.par_values = {'peak':(41.26e6,0,np.inf),
+            par_values = {'peak':(41.26e6,0,np.inf),
                                 'width':(5e4,0,np.inf),
                                 'height':(0.01,-np.inf,np.inf),
                                 'baseline':(0,-np.inf,np.inf)
                                 }
         elif fn_name == 'Gaussian':
-            self.par_values = {'mean':(41.26e6,0,np.inf),
+            par_values = {'mean':(41.26e6,0,np.inf),
                                 'sigma':(5e4,0,np.inf),
                                 'height':(0.01,-np.inf,np.inf),
                                 'baseline':(0,-np.inf,np.inf)
                                 }
         else:
             raise RuntimeError('Bad function name.')
+        
+        # do multicomponent
+        if ncomp == 1: 
+            self.par_values = par_values
+        else:
+            for c in range(ncomp): 
+                for n in par_values.keys():
+                    if 'baseline' not in n:
+                        self.par_values[n+'_%d' % c] = par_values[n]
+                    else:
+                        self.par_values[n] = par_values[n]
         
         return self.par_values
 
