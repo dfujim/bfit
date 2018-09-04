@@ -335,11 +335,13 @@ class fit_files(object):
         
         # do fit then kill window
         try:
-            self.fit_output = fitter(fn_name=fn_name,ncomp=ncomp,data_list=data_list)
+            self.fit_output = fitter(fn_name=fn_name,ncomp=ncomp,
+                                     data_list=data_list,
+                                     hist_select=self.bfit.hist_select)
         except Exception as errmsg:
-            print(errmsg)
             fit_status_window.destroy()
             messagebox.showerror("Error",str(errmsg))
+            raise errmsg
         else:
             fit_status_window.destroy()
         

@@ -33,13 +33,14 @@ class fitter(object):
         pass
         
     # ======================================================================= #
-    def __call__(self,fn_name,ncomp,data_list):
+    def __call__(self,fn_name,ncomp,data_list,hist_select):
         """
             Fitting controller. 
             
             fn_name: name of function to fit
             ncomp : number of components to incude (2 = biexp, for example)
             data_list: list of [[bdata object,pdict,doptions],]
+            hist_select: string for selection of histograms
             
                 where pdict = {par:(init val,   # initial guess
                                     bound_lo,   # lower fitting bound
@@ -90,12 +91,12 @@ class fitter(object):
             # fit data
             if self.mode == '20':    
                 par,cov,chi,ftemp = fn(data=dat,rebin=doptions['rebin'],p0=p0,
-                                   bounds=bounds,hist_select=self.hist_select)
+                                   bounds=bounds,hist_select=hist_select)
                 self.fn_list[dat.run] = ftemp
             
             elif self.mode == '1f':    
                 par,cov,chi,ftemp = fn(data=dat,omit=doptions['omit'],p0=p0,
-                                   bounds=bounds,hist_select=self.hist_select)
+                                   bounds=bounds,hist_select=hist_select)
                 self.fn_list[dat.run] = ftemp
                 
             # collect results
