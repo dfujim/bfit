@@ -84,6 +84,7 @@ class bfit(object):
         Build the mainframe and set up the runloop for the tkinter GUI. 
         
         Data Fields:
+            asym_dict_keys: asym calc and draw types
             data: list of bdata objects for drawing/fitting
             draw_style: draw window types # stack, redraw, new
             root: tkinter root instance
@@ -106,6 +107,17 @@ class bfit(object):
     update_period = 10  # s
     rounding = 3       # number of decimal places to round results to in display
     hist_select = ''    # histogram selection for asym calculations
+    
+    asym_dict_keys = {'20':("Combined Helicity","Split Helicity"),
+                      '1f':("Combined Helicity","Split Helicity","Raw Scans"),
+                      '1n':("Combined Helicity","Split Helicity","Raw Scans"),
+                      '2e':("Combined Hel Raw","Combined Hel Slopes",      
+                            "Combined Hel Diff","Split Hel Raw",
+                            "Split Hel Slopes","Split Hel Diff"),
+                      '2h':("Combined Helicity","Split Helicity",
+                            "Alpha Diffusion",
+                            "Combined Hel (Alpha Tag)","Split Hel (Alpha Tag)",
+                            "Combined Hel (!Alpha Tag)","Split Hel (!Alpha Tag)")}
     
     try: 
         bnmr_data_dir = os.environ[bnmr_archive_label]
@@ -228,6 +240,10 @@ class bfit(object):
         notebook.add(file_viewer_tab,text='File Details')
         notebook.add(fetch_files_tab,text='Fetch Data')
         notebook.add(fit_files_tab,text='Fit Data')
+        
+        # set drawing styles
+        notebook.bind("<<NotebookTabChanged>>",
+            lambda event: self.set_tab_change(event.widget.index("current")))
     
         # gridding
         notebook.grid(column=0,row=0,sticky=(N,E,W,S))
@@ -634,6 +650,44 @@ class bfit(object):
     def set_focus_tab(self,idn,*a): self.notebook.select(idn)
     def set_redraw_period(self,*a): redraw_period_popup(self)
     def set_histograms(self,*a):    set_histograms_popup(self)
+    def set_tab_change(self,tab_id):
+        
+        # fileviewer
+        if tab_id == 0:
+            try:
+                self.set_asym_calc_mode_box(self.fileviewer.data.mode)
+            except AttributeError:
+                pass
+            
+        # fetch files
+        elif tab_id == 1:
+            try:
+                k = list(self.fetch_files.data.keys())[0]
+            except IndexError:
+                pass
+            else:   
+                self.set_asym_calc_mode_box(self.fetch_files.data[k].mode)
+            
+        # fit files
+        elif tab_id == 2:
+            pass
+     
+    # ======================================================================= #
+    def set_asym_calc_mode_box(self,mode,*args):
+        """Set asym combobox values. Asymmetry calculation and draw modes."""
+        
+        fv = self.fileviewer
+    
+        # selection: switch if run mode not possible
+        modes = self.asym_dict_keys[mode]
+        if fv.asym_type.get() not in modes:
+            fv.asym_type.set(modes[0])
+    
+        # fileviewer
+        fv.entry_asym_type['values'] = self.asym_dict_keys[mode]
+    
+        # fetch files
+        self.fetch_files.entry_asym_type['values'] = self.asym_dict_keys[mode]
         
 # =========================================================================== #
 if __name__ == "__main__":

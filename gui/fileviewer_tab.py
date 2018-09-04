@@ -26,6 +26,7 @@ class fileviewer(object):
         Data fields:
             year: year of exp
             runn: run number
+            entry_asym_type: combobox for asym calculations
             text: Text widget for displaying run information
             bfit: bfit object
             fig_list: list of figures
@@ -36,33 +37,19 @@ class fileviewer(object):
     
     asym_dict = {"Combined Helicity"        :'c',
                  "Split Helicity"           :'h',
-                 "Raw Scans (Freq)"         :'r',
-                 "Combined Hel (2e raw)"    :'2e_rw_c',
-                 "Combined Hel (2e slopes)" :'2e_sl_c',
-                 "Combined Hel (2e diff)"   :'2e_di_c',
-                 "Split Hel (2e raw)"       :'2e_rw_h',
-                 "Split Hel (2e slopes)"    :'2e_sl_h',
-                 "Split Hel (2e diff)"      :'2e_di_h',
+                 "Raw Scans"                :'r',
+                 "Combined Hel Raw"         :'2e_rw_c',
+                 "Combined Hel Slopes"      :'2e_sl_c',
+                 "Combined Hel Diff"        :'2e_di_c',
+                 "Split Hel Raw"            :'2e_rw_h',
+                 "Split Hel Slopes"         :'2e_sl_h',
+                 "Split Hel Diff"           :'2e_di_h',
                  "Alpha Diffusion"          :'ad',
-                 "Tagged Alpha (Com)"       :"at_c",
-                 "Tagged Alpha (Spl)"       :"at_h",
-                 "Tagged !Alpha (Com)"      :"nat_c",
-                 "Tagged !Alpha (Spl)"      :"nat_h",
+                 "Combined Hel (Alpha Tag)" :"at_c",
+                 "Split Hel (Alpha Tag)"    :"at_h",
+                 "Combined Hel (!Alpha Tag)":"nat_c",
+                 "Split Hel (!Alpha Tag)"   :"nat_h",
                  }
-    asym_dict_keys = ("Combined Helicity",
-                      "Split Helicity","Raw Scans (1F)",
-                      "Combined Hel (2e raw)",
-                      "Combined Hel (2e slopes)",      
-                      "Combined Hel (2e diff)",
-                      "Split Hel (2e raw)",
-                      "Split Hel (2e slopes)",
-                      "Split Hel (2e diff)",  
-                      "Alpha Diffusion",
-                      "Tagged Alpha (Com)",
-                      "Tagged Alpha (Spl)",
-                      "Tagged !Alpha (Com)",
-                      "Tagged !Alpha (Spl)")
-    default_asym_key = "Combined Helicity"
     default_export_filename = "%d_%d.csv" # year_run.csv
     
     # ======================================================================= #
@@ -137,15 +124,15 @@ class fileviewer(object):
 
         # asymmetry type combobox
         self.asym_type = StringVar()
-        self.asym_type.set(self.default_asym_key)
-        entry_asym_type = ttk.Combobox(details_frame,\
+        self.asym_type.set('')
+        self.entry_asym_type = ttk.Combobox(details_frame,\
                 textvariable=self.asym_type,state='readonly',width=25)
-        entry_asym_type['values'] = self.asym_dict_keys
+        self.entry_asym_type['values'] = ()
                 
         # gridding
         ttk.Label(details_frame,text="Rebin:").grid(column=0,row=0,sticky=E)
         entry_rebin.grid(column=1,row=0,sticky=E)
-        entry_asym_type.grid(column=2,row=0,sticky=E)
+        self.entry_asym_type.grid(column=2,row=0,sticky=E)
         update_box.grid(column=3,row=0,sticky=E)
         details_frame.grid(column=0,row=2,sticky=N)
         
@@ -163,7 +150,7 @@ class fileviewer(object):
         if self.get_data():
             self.bfit.draw(self.data,\
                     self.asym_dict[self.asym_type.get()],rebin=self.rebin.get())
-    
+            
     # ======================================================================= #
     def export(self):
         """Export data as csv"""
@@ -216,6 +203,9 @@ class fileviewer(object):
             self.set_textbox_text(self.text_sw,'File does not exist.')
             self.set_textbox_text(self.text_se,'File does not exist.')
             return False
+        
+        # set draw parameters
+        self.bfit.set_asym_calc_mode_box(data.mode)
         
         # NE -----------------------------------------------------------------
         

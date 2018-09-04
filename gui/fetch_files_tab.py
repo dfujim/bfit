@@ -21,9 +21,11 @@ __doc__="""
 class fetch_files(object):
     """
         Data fields:
+            
             check_rebin: IntVar for handling rebin aspect of checkall
             check_bin_remove: StringVar for handing omission of 1F data
             check_state: BooleanVar for handling check all
+            entry_asym_type: combobox for asym calc and draw type
             year: StringVar of year to fetch runs from 
             run: StringVar input to fetch runs.
             data: dictionary of bdata obj, keyed by run number
@@ -173,14 +175,14 @@ class fetch_files(object):
         # drawing style
         style_frame = ttk.Labelframe(bigright_frame,text='Drawing Quantity',\
                 pad=5)
-        entry_asym_type = ttk.Combobox(style_frame,\
+        self.entry_asym_type = ttk.Combobox(style_frame,\
                 textvariable=self.bfit.fileviewer.asym_type,state='readonly',\
                 width=20)
-        entry_asym_type['values'] = self.bfit.fileviewer.asym_dict_keys
+        self.entry_asym_type['values'] = ()
         
         style_frame.grid(column=0,row=1,sticky=(W,N))
-        entry_asym_type.grid(column=0,row=0,sticky=(N))
-        entry_asym_type.grid_configure(padx=24)
+        self.entry_asym_type.grid(column=0,row=0,sticky=(N))
+        self.entry_asym_type.grid_configure(padx=24)
         
         # passing
         self.entry_run = entry_run
@@ -340,6 +342,7 @@ class fetch_files(object):
             messagebox.showerror(message='No valid runs detected.')
             raise RuntimeError('No valid runs detected.')
         self.runmode_label['text'] = self.runmode_relabel[self.runmode]
+        self.bfit.set_asym_calc_mode_box(self.runmode)
         
         keys_list = list(self.data.keys())
         keys_list.sort()
