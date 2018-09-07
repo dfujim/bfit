@@ -136,6 +136,13 @@ class bfit(object):
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
         
+        # icon
+        try:
+            img = PhotoImage(file=os.path.dirname(__file__)+'/../images/icon.gif')
+            root.tk.call('wm', 'iconphoto', root._w, img)
+        except Exception as err:
+            print(err)
+            
         # key bindings
         root.bind('<Return>',self.return_binder)             
         root.bind('<KP_Enter>',self.return_binder)
