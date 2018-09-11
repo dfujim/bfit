@@ -1,7 +1,7 @@
 import setuptools
 from distutils.core import Extension
 from Cython.Build import cythonize
-import numpy
+import numpy,os
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -36,4 +36,13 @@ setuptools.setup(
     include_package_data=True,
     ext_modules = cythonize([ext],include_path = [numpy.get_include()]),
 )
+
+try:
+    print("")
+    print('BNMR_ARCHVE =', os.environ['BNMR_ARCHIVE'])
+    print('BNQR_ARCHVE =', os.environ['BNQR_ARCHIVE'],end='\n\n')
+except KeyError:
+    print("Add environment variables BNMR_ARCHIVE and BNQR_ARCHIVE which "+\
+          "point to the msr data file locations (ex: /data/bnmr/ which "+\
+          "contains directories for each year).",end='\n\n')
 
