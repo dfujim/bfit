@@ -1,0 +1,13 @@
+include README.md
+include LICENSE
+include bfit/*.py
+
+include bfit/fitting/*.py
+include bfit/fitting/*.pyx
+include bfit/fitting/README.md
+include bfit/fitting/FastNumericalIntegration_src/*
+
+include bfit/gui/*.py
+include bfit/gui/help.html
+
+recursive-include bfit/images *.gif
