@@ -1,11 +1,6 @@
 # bfit
 Beta-NMR GUI for reading, drawing, fitting data. 
 
-## Dependencies and Compiling
-
-1. bdata: can be installed with `pip install bdata` 
-2. Compile the cython integrator in `bfit/fitting/`. One can also use this to build their own fitting modules. This is done with  `python3 setup_integrator.py build_ext --inplace` from within the fitting directory. 
-
 ## Run Instructions
 
 Call `python3 -m bfit` from the containing directory (the one above bfit/). 
