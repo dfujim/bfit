@@ -293,7 +293,10 @@ class fit_files(object):
                 doptions['group'] = g
                 
                 if self.mode == '1f':
-                    doptions['omit'] = self.bfit.fetch_files.data_lines[r].bin_remove.get()
+                    dline = self.bfit.fetch_files.data_lines[r]
+                    doptions['omit'] = dline.bin_remove.get()
+                    if doptions['omit'] == dline.bin_remove_starter_line: 
+                        doptions['omit'] = ''
                     
                 elif self.mode == '20':
                     pass
