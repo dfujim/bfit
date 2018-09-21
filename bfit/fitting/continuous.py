@@ -41,6 +41,12 @@ def fscan(data,mode,omit='',ncomp=1,probe='8Li',hist_select='',**kwargs):
     else:
         xdata,ydata,yerr,life = data
     
+    # check for values with error == 0. Omit these values. 
+    tag = yerr != 0
+    xdata = xdata[tag]
+    ydata = ydata[tag]
+    yerr = yerr[tag]
+    
     # check ncomponents
     if ncomp < 1:
         raise RuntimeError('ncomp needs to be >= 1')
