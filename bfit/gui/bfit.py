@@ -122,9 +122,16 @@ class bfit(object):
     try: 
         bnmr_data_dir = os.environ[bnmr_archive_label]
         bnqr_data_dir = os.environ[bnqr_archive_label]
-    except AttributeError:
+    except(AttributeError,KeyError):
         bnmr_data_dir = os.getcwd()
         bnqr_data_dir = os.getcwd()
+        
+        messagebox.showwarning("Set Environment Variables", 
+            "Environment variables "+\
+            "\n\nBNMR_ARCHIVE\n\nand\n\nBNQR_ARCHIVE\n\nnot found. "+\
+            "\n\nSet these such that "+\
+            "the data can be accessed in a manner such as "+\
+            "\n\n$BNMR_ARCHIVE/year/datafile.msr")
         
     # ======================================================================= #
     def __init__(self):
