@@ -3,7 +3,7 @@ Beta-NMR GUI for reading, drawing, fitting data.
 
 ## Run Instructions
 
-Call `python3 -m bfit` from the containing directory (the one above bfit/). 
+To run, call `python3 -m bfit`
 
 ## Setup after Install
 
@@ -24,13 +24,18 @@ In this example, you would set `BNQR_ARCHIVE=/path/bnqr/` to the directory conta
 ### Menu bar: 
 
 * **File**
-    * Calculators for B0 in BNQR and B1 in BNMR
-    * Export fetche data to csv file
+    * Calculator for B0 in BNQR 
+    * Calculator for B1 in BNMR
+    * Export fetched data asymmetries to csv file
 * **Settings**
-    * Set matplotlib defaults: drawing styles
     * Set data directory. Defaults to environment variables `BNMR_ARCHIVE` and `BNQR_ARCHIVE`
+    * Set matplotlib drawing defaults
+    * Set other drawing defaults: markers, lines, etc. 
+    * Dynamically load user-written fitting routines. 
+    * Set auto update redraw period. 
+    * Set names of histograms used in asymmetry calculations.
 * **Redraw Mode**
-    * Set drawing mode. See help for details on hotkeys. 
+    * Set drawing mode.
 * **Help**
     * Show help wiki.
 
@@ -39,8 +44,7 @@ In this example, you would set `BNQR_ARCHIVE=/path/bnqr/` to the directory conta
 * **File Details**
     * File inspector. Use this to quickly view the contents and parameters of a given run. Use `return` to fetch and `ctrl+return` to quickly draw. 
 * **Fetch Data**
-    * Fetch many data files for quick superposition and to set up fitting routines. Data fetched here will be fitted on the next tab. See help for hotkey details. 
+    * Fetch many data files for quick superposition and to set up fitting routines. Data fetched here will be fitted on the next tab. 
 * **Fit Data**
     * Fit the fetched data, and set fitting parameters. 
-* **View Fit Results**
     * View the fit parameters and draw as functions of each other. 
