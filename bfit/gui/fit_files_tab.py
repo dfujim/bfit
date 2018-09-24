@@ -7,7 +7,7 @@ from tkinter import ttk, messagebox, filedialog
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import datetime, os
+import datetime, os, traceback
 
 from functools import partial
 from bfit.gui.zahersCalculator import current2field
@@ -31,7 +31,7 @@ class fit_files(object):
             fit_output: fitting results, output of fitter
             groups: group numbers from fetch tab
             mode: what type of run is this. 
-            n_component: number of fitting components
+            n_component: number of fitting components (IntVar)
             runbook: notebook of fit inputs for runs
             runmode_label: display run mode 
             xaxis: StringVar() for parameter to draw on x axis
@@ -231,7 +231,9 @@ class fit_files(object):
         lst.sort()
         
         try:
-            parlst = [p for p in self.fitter.param_names[self.fit_function_title.get()]]
+            parlst = [p for p in self.fitter.gen_param_names(
+                                                self.fit_function_title.get(),
+                                                self.n_component.get())]
         except KeyError:
             self.xaxis_combobox['values'] = []
             self.yaxis_combobox['values'] = []
@@ -370,7 +372,7 @@ class fit_files(object):
             
     # ======================================================================= #
     def draw_fit(self,run,**drawargs):
-        """Draw fit and data for a single run"""
+        """Draw fit for a single run"""
         
         # Settings
         xlabel_dict={'20':"Time (s)",
@@ -412,7 +414,12 @@ class fit_files(object):
         t,a,da = data.asym('c')
         fitx = np.arange(self.n_fitx_pts)/float(self.n_fitx_pts)*\
                                                     (max(t)-min(t))+min(t)
-        plt.plot(fitx,fn(fitx,*(fit_out[1])),zorder=10,**drawargs)
+        
+        if   data.mode == '1f': fitxx = fitx*self.bfit.freq_unit_conv
+        elif data.mode == '1n': fitxx = fitx*self.bfit.volt_unit_conv
+        else:                   fitxx = fitx
+    
+        plt.plot(fitxx,fn(fitx,*(fit_out[1])),zorder=10,**drawargs)
         
         # plot elements
         plt.ylabel('Asymmetry')
@@ -436,12 +443,13 @@ class fit_files(object):
         try:
             xvals, xerrs = self.get_values(xdraw)
             yvals, yerrs = self.get_values(ydraw)
-        except UnboundLocalError:
+        except UnboundLocalError as err:
             messagebox.showerror("Error",'Select two input parameters')
-            return
-        except KeyError:
-            messagebox.showerror("Error",'Refit data')
-            return
+            raise err
+        except (KeyError,AttributeError) as err:
+            messagebox.showerror("Error",
+                    'Drawing parameter "%s" or "%s" not found' % (xdraw,ydraw))
+            raise err
             
         # get draw style
         style = self.bfit.draw_style.get()
@@ -477,9 +485,13 @@ class fit_files(object):
         # get values and errors
         val = {}
         for v in self.xaxis_combobox['values']:
-            v2 = self.get_values(v) 
-            val[v] = v2[0]
-            val['Error '+v] = v2[1]
+            try:
+                v2 = self.get_values(v) 
+            except AttributeError: 
+                traceback.print_exc()
+            else:
+                val[v] = v2[0]
+                val['Error '+v] = v2[1]
         
         # make data frame for output
         df = pd.DataFrame(val)
@@ -547,7 +559,8 @@ class fit_files(object):
             err = [0 for r in runs]
         
         # fitted parameter options
-        elif select in self.fitter.param_names[self.fit_function_title.get()]:
+        elif select in self.fitter.gen_param_names(self.fit_function_title.get(),
+                                                   self.n_component.get()):
             val = []
             err = []
             
@@ -744,9 +757,10 @@ class fitinputtab(object):
         # display
         for name,val,err in zip(*(out[:3])):
             disp = displays[name]
-            disp['res'][0].set(str(np.around(val,self.bfit.rounding)))
-            disp['dres'][0].set(str(np.around(err,self.bfit.rounding)))
-            disp['chi'][0].set(str(np.around(chi,self.bfit.rounding)))
+            showstr = "%"+".%dg" % self.bfit.rounding
+            disp['res'][0].set(showstr % val)
+            disp['dres'][0].set(showstr % err)
+            disp['chi'][0].set(showstr % chi)
          
     # ======================================================================= #
     def set_run_color(self):

@@ -99,7 +99,8 @@ class bfit(object):
             update_period: update spacing in s. 
             rounding: number of decimal places to round results to in display
             hist_select: histogram selection for asym calcs (blank for defaults)
-            
+            freq_unit_conv: conversion rate from original to display units
+            volt_unit_conv: conversion rate from original to display units
     """
     probe_species = "8Li" # unused
     bnmr_archive_label = "BNMR_ARCHIVE"
@@ -107,6 +108,8 @@ class bfit(object):
     update_period = 10  # s
     rounding = 3       # number of decimal places to round results to in display
     hist_select = ''    # histogram selection for asym calculations
+    freq_unit_conv = 1.e-6   # conversion rate from original to display units
+    volt_unit_conv = 1.e-3   # conversion rate from original to display units
     
     asym_dict_keys = {'20':("Combined Helicity","Split Helicity"),
                       '1f':("Combined Helicity","Split Helicity","Raw Scans"),
@@ -434,8 +437,8 @@ class bfit(object):
             xlabel = xlabel_dict[data.mode]
             
             # unit conversions
-            if data.mode == '1n': x /= 1e3
-            if data.mode == '1f': x /= 1e6
+            if   data.mode == '1n': x *= self.volt_unit_conv
+            elif data.mode == '1f': x *= self.freq_unit_conv
             
             # plot split helicities
             if asym_type == 'h':
@@ -444,8 +447,7 @@ class bfit(object):
                 
             # plot comined helicities
             elif asym_type == 'c':
-                a = data.asym('c',rebin=rebin,omit=option,hist_select=self.hist_select)
-                plt.errorbar(*a,label=label,**drawargs)
+                plt.errorbar(x,a.c[0],a.c[1],label=label,**drawargs)
                 
             # attempting to draw raw scans unlawfully
             elif asym_type == 'r':
