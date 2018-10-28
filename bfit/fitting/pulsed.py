@@ -30,9 +30,10 @@ def slr(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',hist_select='',**kwar
         hist_select:    string for selecting histograms to use in asym calc
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
-        Returns: par,cov,fn
+        Returns: par,cov,chi,fn
             par: best fit parameters
             cov: covariance matrix
+            chi: chisquared
             fn:  function pointer to fitted function
     """
 
