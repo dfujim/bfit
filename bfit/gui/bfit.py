@@ -336,11 +336,16 @@ class bfit(object):
                 drawargs[k] = self.style[k]
         
         # make new window according to draw style and get axes
+        ax = plt.gca()
         if draw_style.get() == 'new':
             plt.figure()
         elif draw_style.get() == 'redraw':
+            ylim = ax.get_ylim()
+            xlim = ax.get_xlim()
             plt.clf()
-        ax = plt.gca()
+            plt.ylim(*ylim)
+            plt.xlim(*xlim)
+            
         ax.get_xaxis().get_major_formatter().set_useOffset(False)
         
         # get asymmetry: raw scans
