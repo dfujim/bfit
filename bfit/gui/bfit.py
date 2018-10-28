@@ -350,13 +350,16 @@ class bfit(object):
         if draw_style.get() == 'new':
             plt.figure()
         elif draw_style.get() == 'redraw':
-            ylim = ax.get_ylim()
-            xlim = ax.get_xlim()
-            plt.clf()
-            plt.ylim(*ylim)
-            plt.xlim(*xlim)
-            # navigation stack: plt.gcf().canvas.toolbar._nav_stack
             
+            # get index of label in run
+            try:
+                idx = [ell.get_label() for ell in ax.containers].index(label)
+            except ValueError as err:
+                print('Label %s is not in list of plotted data.' % label)
+            else:
+                del ax.lines[idx]              # clear lines 
+                del ax.collections[idx]        # clear errorbar object 
+                del ax.containers[idx]         # clear errorbar object
             
         ax.get_xaxis().get_major_formatter().set_useOffset(False)
         
