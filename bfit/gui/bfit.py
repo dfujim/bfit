@@ -31,6 +31,7 @@ from bfit.gui.zahersCalculator import zahersCalculator
 from bfit.gui.monikasCalculator import monikasCalculator
 from bfit.gui.drawstyle_popup import drawstyle_popup
 from bfit.gui.redraw_period_popup import redraw_period_popup
+from bfit.gui.set_ppm_reference_popup import set_ppm_reference_popup
 from bfit.gui.set_histograms_popup import set_histograms_popup
 
 __doc__="""
@@ -106,6 +107,7 @@ class bfit(object):
     bnmr_archive_label = "BNMR_ARCHIVE"
     bnqr_archive_label = "BNQR_ARCHIVE"
     update_period = 10  # s
+    ppm_reference = 41270000 # Hz
     rounding = 3       # number of decimal places to round results to in display
     hist_select = ''    # histogram selection for asym calculations
     freq_unit_conv = 1.e-6   # conversion rate from original to display units
@@ -222,6 +224,8 @@ class bfit(object):
                 command=self.set_fit_routines)
         menu_settings.add_command(label='Set redraw period',
                 command=self.set_redraw_period)
+        menu_settings.add_command(label='Set PPM Reference Frequecy',
+                command=self.set_ppm_reference)
         menu_settings.add_command(label='Set histograms',
                 command=self.set_histograms)
         
@@ -232,15 +236,21 @@ class bfit(object):
         # Draw style
         self.draw_style = StringVar()
         self.draw_style.set("stack")
+        self.draw_ppm = BooleanVar()
+        self.draw_ppm.set(False)
         
         menu_draw = Menu(menubar)
-        menubar.add_cascade(menu=menu_draw,label='Redraw Mode')
+        menubar.add_cascade(menu=menu_draw,label='Draw Mode')
         menu_draw.add_radiobutton(label="Draw in new window",\
                 variable=self.draw_style,value='new',underline=8)
         menu_draw.add_radiobutton(label="Stack in existing window",\
                 variable=self.draw_style,value='stack',underline=0)
         menu_draw.add_radiobutton(label="Redraw in existing window",\
                 variable=self.draw_style,value='redraw',underline=0)
+        
+        menu_draw.add_separator()
+        menu_draw.add_checkbutton(label="Draw 1f as PPM Shift",\
+                variable=self.draw_ppm,underline=0)
         
         # Help
         menu_help = Menu(menubar)
@@ -445,8 +455,13 @@ class bfit(object):
             
             # unit conversions
             if   data.mode == '1n': x *= self.volt_unit_conv
-            elif data.mode == '1f': x *= self.freq_unit_conv
-            
+            elif data.mode == '1f': 
+                if self.draw_ppm.get():
+                    x = 1e6*(x-self.ppm_reference)/self.ppm_reference
+                    xlabel = 'Frequency Shift (PPM)'
+                else: 
+                    x *= self.freq_unit_conv
+                    
             # plot split helicities
             if asym_type == 'h':
                 plt.errorbar(x,a.p[0],a.p[1],label=label+" ($+$)",**drawargs)
@@ -672,6 +687,7 @@ class bfit(object):
     def set_style_redraw(self,x):   self.draw_style.set('redraw')
     def set_focus_tab(self,idn,*a): self.notebook.select(idn)
     def set_redraw_period(self,*a): redraw_period_popup(self)
+    def set_ppm_reference(self,*a): set_ppm_reference_popup(self)
     def set_histograms(self,*a):    set_histograms_popup(self)
     def set_tab_change(self,tab_id):
         
