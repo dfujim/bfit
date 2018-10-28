@@ -345,6 +345,8 @@ class bfit(object):
             plt.clf()
             plt.ylim(*ylim)
             plt.xlim(*xlim)
+            # navigation stack: plt.gcf().canvas.toolbar._nav_stack
+            
             
         ax.get_xaxis().get_major_formatter().set_useOffset(False)
         

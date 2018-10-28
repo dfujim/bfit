@@ -393,7 +393,11 @@ class fit_files(object):
         if style == 'new':
             plt.figure()
         elif style == 'redraw':
+            ylim = ax.get_ylim()
+            xlim = ax.get_xlim()
             plt.clf()
+            plt.ylim(*ylim)
+            plt.xlim(*xlim)
             
         # set drawing style arguments
         for k in self.bfit.style:
