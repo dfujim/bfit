@@ -324,6 +324,8 @@ class bfit(object):
                      '2e':'Frequency (MHz)',
                      '1f':'Frequency (MHz)',
                      '1n':'Voltage (V)'}
+        ylabel_dict={'ad':r'$N_\alpha/N_\beta$', # otherwise, label as Asymmetry
+                    }
         x_tag={'20':"time_s",
                '2h':"time_s",
                '2e':"time",
@@ -523,7 +525,12 @@ class bfit(object):
         # plot elements
         if data.mode != '2e':
             plt.xlabel(xlabel)
-            plt.ylabel("Asymmetry")
+            
+            if asym_type in ylabel_dict.keys():
+                plt.ylabel(ylabel_dict[asym_type])
+            else:
+                plt.ylabel("Asymmetry")
+                
         plt.tight_layout()
         plt.legend()
     
