@@ -714,11 +714,10 @@ class fileviewer(object):
     # ======================================================================= #
     def do_update(self):
         
-        self.draw()
-        print('\rLast update:',str(datetime.datetime.now()).split('.')[0],
-              end='',flush=True)
-        
         if self.is_updating.get():
+            self.draw()
+            print('\rLast update:',str(datetime.datetime.now()).split('.')[0],
+                  end='',flush=True)
             self.bfit.root.after(self.bfit.update_period*1000,self.do_update)
         
 # =========================================================================== #
