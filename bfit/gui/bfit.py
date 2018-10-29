@@ -345,13 +345,14 @@ class bfit(object):
             if k not in drawargs.keys():
                 drawargs[k] = self.style[k]
         
-        # make new window according to draw style and get axes
         ax = plt.gca()
+        
+        # make new window
         if draw_style.get() == 'new':
             plt.figure()
-        elif draw_style.get() == 'redraw':
             
-            # get index of label in run
+        # get index of label in run and delete that run
+        elif draw_style.get() == 'stack':
             try:
                 idx = [ell.get_label() for ell in ax.containers].index(label)
             except ValueError as err:
@@ -360,6 +361,12 @@ class bfit(object):
                 del ax.lines[idx]              # clear lines 
                 del ax.collections[idx]        # clear errorbar object 
                 del ax.containers[idx]         # clear errorbar object
+        
+        # delete all runs
+        elif draw_style.get() == 'redraw':
+            del ax.lines[:]              # clear lines 
+            del ax.collections[:]        # clear errorbar object 
+            del ax.containers[:]         # clear errorbar object
             
         ax.get_xaxis().get_major_formatter().set_useOffset(False)
         
