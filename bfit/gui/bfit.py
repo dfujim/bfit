@@ -577,7 +577,8 @@ class bfit(object):
             
             # plot comined helicities
             elif asym_type == 'c':
-                plt.errorbar(x,a.c[0],a.c[1],label=label,**drawargs)
+                tag = a.c[0]!=0 # remove zero asym
+                plt.errorbar(x[tag],a.c[0][tag],a.c[1][tag],label=label,**drawargs)
                 
             # attempting to draw raw scans unlawfully
             elif asym_type == 'r':
