@@ -113,13 +113,17 @@ class bfit(object):
     freq_unit_conv = 1.e-6   # conversion rate from original to display units
     volt_unit_conv = 1.e-3   # conversion rate from original to display units
     
-    asym_dict_keys = {'20':("Combined Helicity","Split Helicity"),
-                      '1f':("Combined Helicity","Split Helicity","Raw Scans"),
-                      '1n':("Combined Helicity","Split Helicity","Raw Scans"),
+    asym_dict_keys = {'20':("Combined Helicity","Split Helicity",
+                            "Matched Helicity"),
+                      '1f':("Combined Helicity","Split Helicity","Raw Scans",
+                            "Shifted Helicity"),
+                      '1n':("Combined Helicity","Split Helicity","Raw Scans",
+                            "Matched Peak Finding"),
                       '2e':("Combined Hel Raw","Combined Hel Slopes",      
                             "Combined Hel Diff","Split Hel Raw",
                             "Split Hel Slopes","Split Hel Diff"),
                       '2h':("Combined Helicity","Split Helicity",
+                            "Matched Helicity",
                             "Alpha Diffusion",
                             "Combined Hel (Alpha Tag)","Split Hel (Alpha Tag)",
                             "Combined Hel (!Alpha Tag)","Split Hel (!Alpha Tag)")}
@@ -325,7 +329,7 @@ class bfit(object):
                      '1f':'Frequency (MHz)',
                      '1n':'Voltage (V)'}
         ylabel_dict={'ad':r'$N_\alpha/N_\beta$', # otherwise, label as Asymmetry
-                    }
+                     'hs':r'Asym-Asym($\nu_{min}$)'}
         x_tag={'20':"time_s",
                '2h':"time_s",
                '2e':"time",
@@ -476,9 +480,101 @@ class bfit(object):
                     
             # plot split helicities
             if asym_type == 'h':
-                plt.errorbar(x,a.p[0],a.p[1],label=label+" ($+$)",**drawargs)
-                plt.errorbar(x,a.n[0],a.n[1],label=label+" ($-$)",**drawargs)
                 
+                # remove zero asym
+                ap = a.p[0]
+                an = a.n[0]
+                tag_p = ap!=0
+                tag_n = an!=0
+                tag_cmb = tag_p*tag_n
+                
+                # get average
+                avg = np.mean(ap[tag_cmb]+an[tag_cmb])/2
+                
+                # draw
+                plt.errorbar(x[tag_p],ap[tag_p],a.p[1][tag_p],label=label+" ($+$)",**drawargs)
+                plt.errorbar(x[tag_n],an[tag_n],a.n[1][tag_n],label=label+" ($-$)",**drawargs)
+                plt.axhline(avg,color='k',linestyle='--')
+                
+            # plot split helicities, shifted by baseline
+            elif asym_type == 'hs':
+                
+                # remove zero asym
+                ap = a.p[0]
+                an = a.n[0]
+                tag_p = ap!=0
+                tag_n = an!=0
+                ap = ap[tag_p]
+                an = an[tag_n]
+                
+                # subtract first value
+                loc = np.where(x==min(x))[0][0]
+                ap -= ap[loc]
+                an -= an[loc]
+                
+                plt.errorbar(x[tag_p],ap,a.p[1][tag_p],
+                        label=label+" ($+$)",**drawargs)
+                plt.errorbar(x[tag_n],an,a.n[1][tag_n],
+                        label=label+" ($-$)",**drawargs)
+            
+            # plot split helicities, flipped about the average
+            elif asym_type == 'hm':
+                
+                # remove zero asym
+                ap = a.p[0]
+                an = a.n[0]
+                tag_p = ap!=0
+                tag_n = an!=0
+                tag_cmb = tag_p*tag_n
+            
+                avg = np.mean(ap[tag_cmb]+an[tag_cmb])/2
+                
+                plt.errorbar(x[tag_p],a.p[0][tag_p],a.p[1][tag_p],
+                        label=label+" ($+$)",**drawargs)
+                plt.errorbar(x[tag_n],2*avg-a.n[0][tag_n],a.n[1][tag_n],
+                        label=label+" ($-$)",**drawargs)
+                plt.axhline(avg,color='k',linestyle='--')
+            
+            # plot split helicities, flipped about the average, find the largest 
+            elif asym_type == 'hp':
+                
+                # remove zero asym
+                ap = a.p[0]
+                an = a.n[0]
+                tag_p = ap!=0
+                tag_n = an!=0
+                tag_cmb = tag_p*tag_n
+                avg = np.mean(ap[tag_cmb]+an[tag_cmb])/2
+                ap = ap[tag_p]
+                an = an[tag_n]
+                
+                # get flipped asymmetries
+                if np.mean(an) < avg:
+                    an = 2*avg-an
+                if np.mean(ap) < avg:
+                    ap = 2*avg-ap
+                
+                # get largest asymmetry
+                largest_p = max(ap)
+                largest_n = max(an)
+                
+                if largest_p > largest_n:
+                    largest = largest_p
+                    vmax = x[np.where(ap==largest)[0][0]]
+                else:
+                    largest = largest_n
+                    vmax = x[np.where(an==largest)[0][0]]
+                
+                # print
+                print('Max asymmetry is %f at V = %f V' % (largest,vmax))
+                
+                # draw    
+                plt.errorbar(x[tag_p],ap,a.p[1][tag_p],label=label+" ($+$)",**drawargs)
+                plt.errorbar(x[tag_n],an,a.n[1][tag_n],label=label+" ($-$)",**drawargs)
+                plt.axhline(largest,color='k',linestyle='--')
+                plt.axvline(vmax,color='k',linestyle='--')
+                plt.text(vmax+0.5,largest+0.0001,'%g V' % vmax)
+            
             # plot comined helicities
             elif asym_type == 'c':
                 plt.errorbar(x,a.c[0],a.c[1],label=label,**drawargs)

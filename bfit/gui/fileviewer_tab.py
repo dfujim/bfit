@@ -37,6 +37,9 @@ class fileviewer(object):
     
     asym_dict = {"Combined Helicity"        :'c',
                  "Split Helicity"           :'h',
+                 "Matched Helicity"         :'hm',
+                 "Shifted Helicity"         :'hs',
+                 "Matched Peak Finding"     :'hp',
                  "Raw Scans"                :'r',
                  "Combined Hel Raw"         :'2e_rw_c',
                  "Combined Hel Slopes"      :'2e_sl_c',
