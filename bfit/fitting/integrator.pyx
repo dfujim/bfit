@@ -115,33 +115,31 @@ cdef class PulsedFns:
         cdef double t, x
         cdef np.ndarray[double, ndim=1] out_arr = np.zeros(n)
         cdef double prefac
+        cdef double prefac_post
         cdef double life = self.life
         cdef double pulse_len = self.pulse_len
+        
+        prefac_post = life*(1.-exp(-pulse_len/life))
         
         # Calculate pulsed str. exponential
         for i in range(n):    
             
             # get some useful values: time, normalization
             t = time[i]
-            prefac = life*(1.-exp(-t/life))
-        
-            # prefactor special case
-            if prefac == 0:
-                out_arr[i] = np.inf
-                continue
-            
+                
             # make integrator
             intr = new Integrator(life)
             
             # during pulse
             if t<pulse_len:
+                prefac = life*(1.-exp(-t/life))
                 x = intr.StrExp(t,t,Lambda,Beta)
                 out = amp*x/prefac
             
             # after pulse
             else:
                 x = intr.StrExp(t,pulse_len,Lambda,Beta)
-                out = amp/prefac*x*exp((t-pulse_len)/life)
+                out = amp*x*exp((t-pulse_len)/life)/prefac_post
             
             # save result
             out_arr[i] = out
@@ -175,26 +173,24 @@ cdef class PulsedFns:
         cdef double t
         cdef np.ndarray[double, ndim=1] out_arr = np.zeros(n)
         cdef double prefac
+        cdef double prefac_post
         cdef double life = self.life
         cdef double pulse_len = self.pulse_len
+        
+        prefac_post = life*(1.-exp(-pulse_len/life))
         
         # Calculate pulsed str. exponential
         for i in range(n):    
             
             # get some useful values: time, normalization
             t = time[i]
-            prefac = life*(1.-exp(-t/life))
-        
-            # prefactor special case
-            if prefac == 0:
-                out_arr[i] = np.inf
-                continue
             
             # make integrator
             intr = new Integrator(life)
             
             # during pulse
             if t<pulse_len:
+                prefac = life*(1.-exp(-t/life))
                 x = intr.MixedStrExp(t,t,Lambda1,Beta1,Lambda2,Beta2,alpha)
                 out = amp*x/prefac
             
@@ -202,7 +198,7 @@ cdef class PulsedFns:
             else:
                 x = intr.MixedStrExp(t,pulse_len,Lambda1,Beta1,Lambda2,Beta2,
                                      alpha)
-                out = amp/prefac*x*exp((t-pulse_len)/life)
+                out = amp/prefac_post*x*exp((t-pulse_len)/life)
             
             # save result
             out_arr[i] = out
