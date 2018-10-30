@@ -132,8 +132,6 @@ class fit_files(object):
         draw_button = ttk.Button(button_frame,text='Draw',command=self.draw_param)
         export_button = ttk.Button(button_frame,text='Export',command=self.export)
         
-        #~ draw_button.bind('<Return>',self.draw_param)   ################################ REBIND!
-        
         # menus for x and y values
         ttk.Label(right_frame,text="x axis:").grid(column=0,row=1)
         ttk.Label(right_frame,text="y axis:").grid(column=0,row=2)
@@ -389,9 +387,26 @@ class fit_files(object):
         # get draw style
         style = self.bfit.draw_style.get()
         
+        # label reset
+        if 'label' not in drawargs.keys():
+            drawargs['label'] = self.bfit.fetch_files.data_lines[run].label.get()+'_fit'
+        elif 'fit' not in drawargs['label']:
+            drawargs['label'] += ' (fit)'
+        label = drawargs['label']
+        
         # set drawing style
         if style == 'new':
             plt.figure()
+        if style == 'stack':
+            
+            ax = plt.gca()
+            try:
+                idx = [ell.get_label() for ell in ax.lines].index(label)
+            except ValueError as err:
+                print('Label %s is not in list of plotted fits.' % label)
+            else:
+                del ax.lines[idx]              # clear lines 
+                
         elif style == 'redraw':
             ylim = ax.get_ylim()
             xlim = ax.get_xlim()
@@ -409,10 +424,6 @@ class fit_files(object):
         # linestyle reset
         if drawargs['linestyle'] == 'None': 
             drawargs['linestyle'] = '-'
-        
-        # label reset
-        if 'label' not in drawargs.keys():
-            drawargs['label'] = self.bfit.fetch_files.data_lines[run].label.get()
         
         # draw
         t,a,da = data.asym('c')
@@ -509,7 +520,7 @@ class fit_files(object):
             filename += '.csv'
         df.to_csv(filename)
         
-     # ======================================================================= #
+    # ======================================================================= #
     def get_values(self,select):
         """ Get plottable values"""
         data = self.data
@@ -577,7 +588,7 @@ class fit_files(object):
                     err.append(np.nan)
         
         return (val,err)
-        
+    
 # =========================================================================== #
 # =========================================================================== #
 class fitinputtab(object):
@@ -672,7 +683,7 @@ class fitinputtab(object):
         # get list of parameters and initial values
         try:
             plist = fitter.gen_param_names(fn_title,ncomp)
-            values = fitter.gen_init_par(fn_title,ncomp)
+            values = fitter.gen_init_par(fn_title,ncomp,self.bfit.fit_files.data[self.runlist[0]])
         except KeyError:
             return
         finally:
@@ -755,7 +766,11 @@ class fitinputtab(object):
             self.runbox.select_set(0)
             self.runbox.event_generate("<<ListboxSelect>>")
         run = self.runlist[line]
-        out = out[run]
+        
+        try:
+            out = out[run]
+        except KeyError:
+            return
         chi = out[3]
         
         # display

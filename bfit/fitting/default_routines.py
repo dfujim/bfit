@@ -18,8 +18,8 @@ class fitter(object):
                         '1n':('Lorentzian','Gaussian')}
      
     # Define names of fit parameters:
-    param_names = {     'Exp'       :('amp','T1','baseline'),
-                        'Str Exp'   :('amp','T1','beta','baseline'),
+    param_names = {     'Exp'       :('1/T1','amp','baseline'),
+                        'Str Exp'   :('1/T1','beta','amp','baseline'),
                         'Lorentzian':('peak','width','height','baseline'),
                         'Gaussian'  :('mean','sigma','height','baseline'),}
 
@@ -127,55 +127,82 @@ class fitter(object):
         return tuple(names)
         
     # ======================================================================= #
-    def gen_init_par(self,fn_name,ncomp):
+    def gen_init_par(self,fn_name,ncomp,bdataobj):
         """Generate initial parameters for a given function.
         
             fname: name of function. Should be the same as the param_names keys
+            ncomp: number of components
+            bdataobj: a bdata object representative of the fitting group. 
             
-            Set and return dictionary of initial parameters,bounds,fixed boolean. 
-                {par:(init,bound_lo,bound_hi,fixed)}
+            Set and return dictionary of initial parameters. 
+                {par_name:par_value}
         """
         
-        # set with constants (should update to something more intelligent later)
-        if fn_name == 'Exp':
-            par_values = {'amp':(0.5,0,np.inf),
-                               'T1':(2,0,np.inf),
-                               'baseline':(0,-np.inf,np.inf),
-                               }
-        elif fn_name == 'Str Exp':
-            par_values = {'amp':(0.5,0,np.inf),
-                               'T1':(2,0,np.inf),
-                               'beta':(0.5,0,1),
-                               'baseline':(0,-np.inf,np.inf),
-                                }
-        elif fn_name == 'Lorentzian':
-            par_values = {'peak':(41.26e6,0,np.inf),
-                                'width':(5e4,0,np.inf),
-                                'height':(0.01,-np.inf,np.inf),
-                                'baseline':(0,-np.inf,np.inf)
-                                }
-        elif fn_name == 'Gaussian':
-            par_values = {'mean':(41.26e6,0,np.inf),
-                                'sigma':(5e4,0,np.inf),
-                                'height':(0.01,-np.inf,np.inf),
-                                'baseline':(0,-np.inf,np.inf)
-                                }
+        # set pulsed exp fit initial parameters
+        if fn_name in ['Exp','Str Exp']:
+            t,a,da = bdataobj.asym('c')
+            
+            # ampltitude average of first 5 bins
+            amp = abs(np.mean(a[0:5])/ncomp)
+            
+            # T1: time after beam off to reach 1/e
+            idx = int(bdataobj.ppg.beam_on.mean)
+            beam_duration = t[idx]
+            amp_beamoff = a[idx]
+            target = amp_beamoff/np.exp(1)
+            
+            t_target = t[np.sum(a>target)]
+            T1 = t_target-beam_duration
+            
+            # baseline: average of last 25% of runs
+            base = np.mean(a[int(len(a)*0.75):])
+            
+            # set values
+            par_values = {'amp':(amp,0,np.inf,False),
+                          '1/T1':(T1,0,np.inf,False),
+                          'baseline':(base,-np.inf,np.inf,False),
+                          'beta':(0.5,0,1,False)}
+                         
+        # set time integrated fit initial parameters
+        elif fn_name in ['Lorentzian','Gaussian']:
+            
+            f,a,da = bdataobj.asym('c')
+            
+            # get peak asym value
+            amin = min(a[a>0])
+            
+            peak = f[np.where(a==amin)[0][0]]
+            base = np.mean(a[:5])
+            height = abs(amin-base)
+            width = 2*abs(peak-f[np.where(a<amin+height/2)[0][0]])
+            
+            # set values
+            if fn_name == 'Lorentzian':
+                par_values = {'peak':(peak,min(f),max(f),False),
+                              'width':(width,0,np.inf,False),
+                              'height':(height,0,np.inf,False),
+                              'baseline':(base,-np.inf,np.inf,False)
+                             }
+            elif fn_name == 'Gaussian':
+                par_values = {'peak':(peak,min(f),max(f),False),
+                              'sigma':(width,0,np.inf,False),
+                              'height':(height,0,np.inf,False),
+                              'baseline':(base,-np.inf,np.inf,False)
+                              }
         else:
             raise RuntimeError('Bad function name.')
         
         # do multicomponent
-        if ncomp == 1: 
-            self.par_values = par_values
-        else:
+        if ncomp > 1: 
             for c in range(ncomp): 
                 for n in par_values.keys():
                     if 'baseline' not in n:
-                        self.par_values[n+'_%d' % c] = par_values[n]
+                        par_values[n+'_%d' % c] = par_values[n]
                     else:
-                        self.par_values[n] = par_values[n]
+                        par_values[n] = par_values[n]
         
-        return self.par_values
-
+        return par_values
+        
     # ======================================================================= #
     def get_fn(self,fn_name,ncomp):
         """
