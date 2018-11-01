@@ -405,7 +405,7 @@ class fit_files(object):
             try:
                 idx = [ell.get_label() for ell in ax.lines].index(label)
             except ValueError as err:
-                print('Label %s is not in list of plotted fits.' % label)
+                pass
             else:
                 del ax.lines[idx]              # clear lines 
                 
@@ -723,7 +723,7 @@ class fitinputtab(object):
             # do results
             c += 1
             value_p = StringVar()
-            par = ttk.Entry(self.fitframe,textvariable=value_p,width=10)
+            par = ttk.Entry(self.fitframe,textvariable=value_p,width=15)
             par['state'] = 'readonly'
             par['foreground'] = 'black'
             
@@ -733,7 +733,7 @@ class fitinputtab(object):
             dpar['foreground'] = 'black'
             
             value_chi = StringVar()
-            chi = ttk.Entry(self.fitframe,textvariable=value_chi,width=10)
+            chi = ttk.Entry(self.fitframe,textvariable=value_chi,width=5)
             chi['state'] = 'readonly'
             chi['foreground'] = 'black'
                                      
@@ -778,7 +778,7 @@ class fitinputtab(object):
         # display
         for name,val,err in zip(*(out[:3])):
             disp = displays[name]
-            showstr = "%"+".%dg" % self.bfit.rounding
+            showstr = "%"+".%df" % self.bfit.rounding
             disp['res'][0].set(showstr % val)
             disp['dres'][0].set(showstr % err)
             disp['chi'][0].set(showstr % chi)

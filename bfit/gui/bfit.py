@@ -362,7 +362,7 @@ class bfit(object):
             try:
                 idx = [ell.get_label() for ell in ax.containers].index(label)
             except ValueError as err:
-                print('Label %s is not in list of plotted data.' % label)
+                pass
             else:
                 del ax.lines[idx]              # clear lines 
                 del ax.collections[idx]        # clear errorbar object 
