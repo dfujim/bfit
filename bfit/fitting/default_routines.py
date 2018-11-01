@@ -194,15 +194,18 @@ class fitter(object):
             raise RuntimeError('Bad function name.')
         
         # do multicomponent
+        par_values2 = {}
         if ncomp > 1: 
             for c in range(ncomp): 
                 for n in par_values.keys():
                     if 'baseline' not in n:
-                        par_values[n+'_%d' % c] = par_values[n]
+                        par_values2[n+'_%d' % c] = par_values[n]
                     else:
-                        par_values[n] = par_values[n]
-        
-        return par_values
+                        par_values2[n] = par_values[n]
+        else:
+            par_values2 = par_values
+            
+        return par_values2
         
     # ======================================================================= #
     def get_fn(self,fn_name,ncomp):
