@@ -36,7 +36,11 @@ class fetch_files(object):
             runmode: display run mode string
     """
     
-    runmode_relabel = {'20':'SLR','1f':'1F','2e':'2e','1n':'Rb Cell Scan'}
+    runmode_relabel = {'20':'Spin-Lattice Relaxation (20)',
+                       '1f':'Frequency Scan (1f)',
+                       '2e':'Randomized Frequency (2e)',
+                       '1n':'Rb Cell Scan (1n)',
+                       '2h':'Alpha Tagging/Diffusion (2h)'}
     run_number_starter_line = '40001 40005-40010 (run numbers)'
     bin_remove_starter_line = '1 5 100-200 (omit bins)'
     
@@ -587,7 +591,7 @@ class dataline(object):
         bias_label.grid(column=c,row=0,sticky=E); c+=1
         if self.mode in ['1f','1n']: 
             bin_remove_entry.grid(column=c,row=0,sticky=E); c+=1
-        if self.mode == '20': 
+        if self.mode in ['20','2h']: 
             rebin_label.grid(column=c,row=0,sticky=E); c+=1
             rebin_box.grid(column=c,row=0,sticky=E); c+=1
         label_label.grid(column=c,row=0,sticky=E); c+=1

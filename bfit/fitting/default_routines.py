@@ -14,6 +14,7 @@ class fitter(object):
     
     # Define possible fit functions for given run modes:
     function_names = {  '20':('Exp','Str Exp'),
+                        '2h':('Exp','Str Exp'),
                         '1f':('Lorentzian','Gaussian'),
                         '1n':('Lorentzian','Gaussian')}
      

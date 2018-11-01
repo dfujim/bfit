@@ -40,8 +40,7 @@ class fit_files(object):
             yaxis_combobox: box for choosing y axis draw parameter
     """ 
     
-    runmode_relabel = {'20':'SLR','1f':'1F','2e':'2e','1n':'Rb Cell Scan'}
-    default_fit_functions = {'20':('Exp','Str Exp'),
+    default_fit_functions = {'20':('Exp','Str Exp'),'2h':('Exp','Str Exp'),
             '1f':('Lorentzian','Gaussian'),'1n':('Lorentzian','Gaussian')}
     mode = ""
     chi_threshold = 1.5 # threshold for red highlight on bad fits 
@@ -175,7 +174,7 @@ class fit_files(object):
         try:                
             # set run mode 
             self.mode = self.data[key_zero].mode 
-            self.fit_runmode_label['text'] = self.runmode_relabel[self.mode]
+            self.fit_runmode_label['text'] = self.bfit.fetch_files.runmode_relabel[self.mode]
             
             # set routine
             self.fit_routine_label['text'] = self.fitter.__name__
@@ -299,6 +298,9 @@ class fit_files(object):
                         doptions['omit'] = ''
                     
                 elif self.mode == '20':
+                    pass
+                    
+                elif self.mode == '2h':
                     pass
                     
                 elif self.mode == '2e':
