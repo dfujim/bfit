@@ -609,6 +609,7 @@ class fitinputtab(object):
     
     n_runs_max = 5      # number of runs before scrollbar appears
     collist = ['p0','blo','bhi','res','dres','chi','fixed']
+    init_param = {}     # initial parameters
     
     # ======================================================================= #
     def __init__(self,bfit,parent,group):
@@ -648,6 +649,7 @@ class fitinputtab(object):
                         selectmode=BROWSE)
         self.runbox.activate(0)
         self.runbox.bind('<<ListboxSelect>>',self.set_fit_results)
+        self.runbox.bind('<<ListboxSelect>>',self.set_init_param)
         self.runbox.grid(column=0,row=1,rowspan=10)
         
         sbar = ttk.Scrollbar(fitframe,orient=VERTICAL,command=self.runbox.yview)
@@ -685,7 +687,11 @@ class fitinputtab(object):
         # get list of parameters and initial values
         try:
             plist = fitter.gen_param_names(fn_title,ncomp)
-            values = fitter.gen_init_par(fn_title,ncomp,self.bfit.fit_files.data[self.runlist[0]])
+            
+            for i in range(self.runbox.size()):
+                run = self.runlist[i]
+                values = fitter.gen_init_par(fn_title,ncomp,self.bfit.fit_files.data[run])
+                self.init_param[run] = values
         except KeyError:
             return
         finally:
@@ -751,7 +757,30 @@ class fitinputtab(object):
                                      variable=value,onvalue=True,offvalue=False)
             entry.grid(column=c,row=r,padx=5,sticky=E)
             self.parentry[p][self.collist[6]] = (value,entry)
+        
+        # set parameters
+        self.set_init_param()
+        
             
+    # ======================================================================= #
+    def set_init_param(self,*args):
+        """Set initial parameters in display to that of selected run"""
+        
+        # get run number of selected run
+        try:
+            line = self.runbox.curselection()[0]
+        except IndexError:
+            line = 0 
+            self.runbox.select_set(0)
+            # ~ self.runbox.event_generate("<<ListboxSelect>>")
+        run = self.runlist[line]
+        
+        par = self.init_param[run]
+        
+        for p in self.parentry.keys():
+            self.parentry[p][self.collist[0]][0].set(
+                        ("%"+".%df" % self.bfit.rounding) % par[p][0])
+    
     # ======================================================================= #
     def set_fit_results(self,*args):
         """Show fit results"""
@@ -766,7 +795,7 @@ class fitinputtab(object):
         except IndexError:
             line = 0 
             self.runbox.select_set(0)
-            self.runbox.event_generate("<<ListboxSelect>>")
+            # ~ self.runbox.event_generate("<<ListboxSelect>>")
         run = self.runlist[line]
         
         try:
