@@ -69,10 +69,10 @@ class fitdata(object):
             self.fitpar[k] = {}
         
         # set temperature 
-        if self.mode in ['2h']:
-            self.temperature = self.bd.camp.oven_readC.mean
-        else:
+        try:
             self.temperature = self.bd.camp.smpl_read_A.mean
+        except AttributeError:
+            self.temperature = self.bd.camp.oven_readC.mean
             
         # field
         try:
