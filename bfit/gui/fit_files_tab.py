@@ -368,7 +368,7 @@ class fit_files(object):
             
         # display run results
         for g in self.groups:
-            self.file_tabs[g].set_fit_results()
+            self.file_tabs[g].set_display()
             self.file_tabs[g].set_run_color()
         
         # enable draw buttons on fetch files tab
@@ -669,8 +669,7 @@ class fitinputtab(object):
                          width=10,listvariable=rlist,justify=CENTER,
                         selectmode=BROWSE)
         self.runbox.activate(0)
-        self.runbox.bind('<<ListboxSelect>>',self.set_fit_results)
-        self.runbox.bind('<<ListboxSelect>>',self.set_init_param)
+        self.runbox.bind('<<ListboxSelect>>',self.set_display)
         self.runbox.grid(column=0,row=1,rowspan=10)
         
         sbar = ttk.Scrollbar(fitframe,orient=VERTICAL,command=self.runbox.yview)
@@ -795,11 +794,13 @@ class fitinputtab(object):
             self.parentry[p][self.collist[6]] = (value,entry)
         
         # set parameters
-        self.set_init_param()
+        self.set_display()
         
     # ======================================================================= #
-    def set_init_param(self,*args):
-        """Set initial parameters in display to that of selected run"""
+    def set_display(self,*args):
+        """Set initial parameters and fit results in display to that of selected run"""
+        
+        # INITIAL PARAMETERS
         
         # get data that is currently there
         run = self.runlist[self.selected]
@@ -832,9 +833,8 @@ class fitinputtab(object):
                 fitdat_new.fitpar['fixed'][p] = False
                 self.parentry[p]['fixed'][0].set(False)
     
-    # ======================================================================= #
-    def set_fit_results(self,*args):
-        """Show fit results"""
+        
+        # FIT RESULTS    
         
         # Set up variables
         displays = self.parentry
@@ -846,12 +846,14 @@ class fitinputtab(object):
             data = self.data[run]
         except KeyError:
             return
-        chi = data.chi
+            
+        try:
+            chi = data.chi
+        except AttributeError:
+            return 
         
         # display
         for parname in data.fitpar['res'].keys():
-        
-        # ~ for name,val,err in zip(*(out[:3])):
             disp = displays[parname]
             showstr = "%"+".%df" % self.bfit.rounding
             disp['res'][0].set(showstr % data.fitpar['res'][parname])
