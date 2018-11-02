@@ -33,6 +33,7 @@ from bfit.gui.drawstyle_popup import drawstyle_popup
 from bfit.gui.redraw_period_popup import redraw_period_popup
 from bfit.gui.set_ppm_reference_popup import set_ppm_reference_popup
 from bfit.gui.set_histograms_popup import set_histograms_popup
+from bfit.gui.fitdata import fitdata
 
 __doc__="""
     BNMR/BNQR data visualization and curve fitting.
@@ -86,7 +87,7 @@ class bfit(object):
         
         Data Fields:
             asym_dict_keys: asym calc and draw types
-            data: list of bdata objects for drawing/fitting
+            data: dict of fitdata objects for drawing/fitting, keyed by run #
             draw_style: draw window types # stack, redraw, new
             root: tkinter root instance
             mainframe: main frame for the object
@@ -101,6 +102,7 @@ class bfit(object):
             rounding: number of decimal places to round results to in display
             hist_select: histogram selection for asym calcs (blank for defaults)
             freq_unit_conv: conversion rate from original to display units
+            ppm_reference: reference freq in Hz for ppm calulations
             volt_unit_conv: conversion rate from original to display units
     """
     probe_species = "8Li" # unused
@@ -108,7 +110,7 @@ class bfit(object):
     bnqr_archive_label = "BNQR_ARCHIVE"
     update_period = 10  # s
     ppm_reference = 41270000 # Hz
-    rounding = 3       # number of decimal places to round results to in display
+    rounding = 5       # number of decimal places to round results to in display
     hist_select = ''    # histogram selection for asym calculations
     freq_unit_conv = 1.e-6   # conversion rate from original to display units
     volt_unit_conv = 1.e-3   # conversion rate from original to display units
@@ -127,6 +129,8 @@ class bfit(object):
                             "Alpha Diffusion",
                             "Combined Hel (Alpha Tag)","Split Hel (Alpha Tag)",
                             "Combined Hel (!Alpha Tag)","Split Hel (!Alpha Tag)")}
+    
+    data = {}   # for fitdata objects
     
     try: 
         bnmr_data_dir = os.environ[bnmr_archive_label]

@@ -13,29 +13,26 @@ from functools import partial
 from bfit.gui.zahersCalculator import current2field
 from bdata import bdata
 
-
-
-
 # =========================================================================== #
 # =========================================================================== #
 class fit_files(object):
     """
         Data fields:
-            chi_threshold: if chi > thres, set color to red
-            data: dictionary of bdata objects, keyed by run number. 
-            file_tabs: dictionary of fitinputtab objects, keyed by group number 
-            fitter: fitting object from self.bfit.routine_mod
+            chi_threshold:  if chi > thres, set color to red
+            data            pointer to bfit.data
+            file_tabs:      dictionary of fitinputtab objects, keyed by group number 
+            fitter:         fitting object from self.bfit.routine_mod
             fit_function_title: title of fit function to use
             fit_function_title_box: spinbox for fit function names
-            fit_input:  fitting input values = (fn_name,ncomp,data_list)
-            fit_output: fitting results, output of fitter
-            groups: group numbers from fetch tab
-            mode: what type of run is this. 
-            n_component: number of fitting components (IntVar)
-            runbook: notebook of fit inputs for runs
-            runmode_label: display run mode 
-            xaxis: StringVar() for parameter to draw on x axis
-            yaxis: StringVar() for parameter to draw on y axis
+            fit_input:      fitting input values = (fn_name,ncomp,data_list)
+            fit_output:     fitting results, output of fitter
+            groups:         group numbers from fetch tab
+            mode:           what type of run is this. 
+            n_component:    number of fitting components (IntVar)
+            runbook:        notebook of fit inputs for runs
+            runmode_label:  display run mode 
+            xaxis:          StringVar() for parameter to draw on x axis
+            yaxis:          StringVar() for parameter to draw on y axis
             xaxis_combobox: box for choosing x axis draw parameter
             yaxis_combobox: box for choosing y axis draw parameter
     """ 
@@ -57,6 +54,7 @@ class fit_files(object):
         # initialize
         self.file_tabs = {}
         self.bfit = bfit
+        self.data = self.bfit.data
         self.groups = []
         self.fit_output = {}
         self.fitter = self.bfit.routine_mod.fitter()
@@ -261,7 +259,8 @@ class fit_files(object):
             for r in runlist:
                 
                 # bdata object
-                bdataobj = self.bfit.fetch_files.data[r]
+                bdfit = self.data[r]
+                bdataobj = bdfit.bd
                 
                 # pdict
                 pdict = {}
@@ -288,8 +287,8 @@ class fit_files(object):
                     
                 # doptions
                 doptions = {}
-                doptions['rebin'] = self.bfit.fetch_files.data_lines[r].rebin.get()
-                doptions['group'] = g
+                doptions['rebin'] = bdfit.rebin.get()
+                doptions['group'] = bdfit.group.get()
                 
                 if self.mode == '1f':
                     dline = self.bfit.fetch_files.data_lines[r]
@@ -340,7 +339,8 @@ class fit_files(object):
         
         # do fit then kill window
         try:
-            self.fit_output = fitter(fn_name=fn_name,ncomp=ncomp,
+            # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
+            fit_output = fitter(fn_name=fn_name,ncomp=ncomp,
                                      data_list=data_list,
                                      hist_select=self.bfit.hist_select)
         except Exception as errmsg:
@@ -350,6 +350,10 @@ class fit_files(object):
         else:
             fit_status_window.destroy()
         
+        # set output results
+        for run in fit_output.keys():
+            self.data[run].set_fitresult(fit_output[run])
+            
         # display run results
         for g in self.groups:
             self.file_tabs[g].set_fit_results()
@@ -383,15 +387,16 @@ class fit_files(object):
                      
         # get data and fit results
         data = self.data[run]
-        fit_out = self.fit_output[run]
-        fn = self.fitter.fn_list[run]
-                
+        fit_par = [data.fitpar['res'][p] for p in data.parnames]
+        fn = data.fitfn
+        data = data.bd
+        
         # get draw style
         style = self.bfit.draw_style.get()
         
         # label reset
         if 'label' not in drawargs.keys():
-            drawargs['label'] = self.bfit.fetch_files.data_lines[run].label.get()+'_fit'
+            drawargs['label'] = self.data[run].label.get()+'_fit'
         elif 'fit' not in drawargs['label']:
             drawargs['label'] += ' (fit)'
         label = drawargs['label']
@@ -436,7 +441,7 @@ class fit_files(object):
         elif data.mode == '1n': fitxx = fitx*self.bfit.volt_unit_conv
         else:                   fitxx = fitx
     
-        plt.plot(fitxx,fn(fitx,*(fit_out[1])),zorder=10,**drawargs)
+        plt.plot(fitxx,fn(fitx,*fit_par),zorder=10,**drawargs)
         
         # plot elements
         plt.ylabel('Asymmetry')
@@ -598,18 +603,21 @@ class fitinputtab(object):
         Instance variables 
         
             bfit        pointer to top class
+            data        pointer to bfit.data
             parent      pointer to parent object (frame)
             group       fitting group number
             parlabels   label objects, saved for later destruction
-            parentry    {parname:(StrVar,entry)} objects saved for retrieval and destruction
+            parentry    [parname][colname] of ttk.Entry objects saved for 
+                            retrieval and destruction
             runbox      listbox with run numbers: select which result to display
             runlist     list of run numbers to fit
+            selected    index of selected run in runbox (int)
             fitframe    mainframe for this tab. 
     """
     
     n_runs_max = 5      # number of runs before scrollbar appears
     collist = ['p0','blo','bhi','res','dres','chi','fixed']
-    init_param = {}     # initial parameters
+    selected = 0        # index of selected run 
     
     # ======================================================================= #
     def __init__(self,bfit,parent,group):
@@ -622,6 +630,7 @@ class fitinputtab(object):
         
         # initialize
         self.bfit = bfit
+        self.data = self.bfit.data
         self.parent = parent
         self.group = group
         self.parlabels = []
@@ -675,6 +684,17 @@ class fitinputtab(object):
         self.fitframe = fitframe
         
     # ======================================================================= #
+    def get_selected_run(self):
+        """Get the run number of the selected run"""
+        try:
+            self.selected = self.runbox.curselection()[0]
+        except IndexError:
+            self.selected = 0 
+            self.runbox.select_set(0)
+            
+        return self.runlist[self.selected]
+        
+    # ======================================================================= #
     def populate_param(self):
         """Populate the list of parameters"""
 
@@ -683,15 +703,14 @@ class fitinputtab(object):
         fitter = fit_files.fitter
         ncomp = fit_files.n_component.get()
         fn_title = fit_files.fit_function_title.get()
-
+        
         # get list of parameters and initial values
         try:
             plist = fitter.gen_param_names(fn_title,ncomp)
-            
             for i in range(self.runbox.size()):
                 run = self.runlist[i]
-                values = fitter.gen_init_par(fn_title,ncomp,self.bfit.fit_files.data[run])
-                self.init_param[run] = values
+                values = fitter.gen_init_par(fn_title,ncomp,self.data[run].bd)
+                self.data[run].set_fitpar(values)
         except KeyError:
             return
         finally:
@@ -712,34 +731,39 @@ class fitinputtab(object):
             self.parlabels.append(ttk.Label(self.fitframe,text=p,justify=LEFT))
             self.parlabels[-1].grid(column=c,row=1+i,padx=5,sticky=E)
         
-        # values: initial parameters
+        # get data of selected run
+        run = self.get_selected_run()
+        fitdat = self.data[run]
+        
+        # input values: initial parameters
         r = 0
-        for p in plist:
-            c = 2
-            r += 1
+        for p in plist:         # iterate parameter names
+            c = 2   # gridding column         
+            r += 1  # gridding row         
             self.parentry[p] = {}
             for i in range(3):
                 c += 1
+                
                 value = StringVar()
                 entry = ttk.Entry(self.fitframe,textvariable=value,width=10)
-                entry.insert(0,str(values[p][i]))
+                entry.insert(0,str(fitdat.fitpar[self.collist[i]][p]))
                 entry.grid(column=c,row=r,padx=5,sticky=E)
                 self.parentry[p][self.collist[i]] = (value,entry)
             
             # do results
             c += 1
-            value_p = StringVar()
-            par = ttk.Entry(self.fitframe,textvariable=value_p,width=15)
+            par_val = StringVar()
+            par = ttk.Entry(self.fitframe,textvariable=par_val,width=15)
             par['state'] = 'readonly'
             par['foreground'] = 'black'
             
-            value_dp = StringVar()
-            dpar = ttk.Entry(self.fitframe,textvariable=value_dp,width=10)
+            dpar_val = StringVar()
+            dpar = ttk.Entry(self.fitframe,textvariable=dpar_val,width=10)
             dpar['state'] = 'readonly'
             dpar['foreground'] = 'black'
             
-            value_chi = StringVar()
-            chi = ttk.Entry(self.fitframe,textvariable=value_chi,width=5)
+            chi_val = StringVar()
+            chi = ttk.Entry(self.fitframe,textvariable=chi_val,width=5)
             chi['state'] = 'readonly'
             chi['foreground'] = 'black'
                                      
@@ -747,9 +771,10 @@ class fitinputtab(object):
             dpar.grid(column=c,row=r,padx=5,sticky=E); c += 1
             chi. grid(column=c,row=r,padx=5,sticky=E); c += 1
             
-            self.parentry[p][self.collist[3]] = (value_p,par)
-            self.parentry[p][self.collist[4]] = (value_dp,dpar)
-            self.parentry[p][self.collist[5]] = (value_chi,chi)
+            # save ttk.Entry objects in dictionary [parname][colname]
+            self.parentry[p][self.collist[3]] = (par_val,par)
+            self.parentry[p][self.collist[4]] = (dpar_val,dpar)
+            self.parentry[p][self.collist[5]] = (chi_val,chi)
             
             # do fixed box
             value = BooleanVar()
@@ -761,55 +786,62 @@ class fitinputtab(object):
         # set parameters
         self.set_init_param()
         
-            
     # ======================================================================= #
     def set_init_param(self,*args):
         """Set initial parameters in display to that of selected run"""
         
-        # get run number of selected run
-        try:
-            line = self.runbox.curselection()[0]
-        except IndexError:
-            line = 0 
-            self.runbox.select_set(0)
-            # ~ self.runbox.event_generate("<<ListboxSelect>>")
-        run = self.runlist[line]
+        # get data that is currently there
+        run = self.runlist[self.selected]
+        fitdat_old = self.data[run]
         
-        par = self.init_param[run]
-        
-        for p in self.parentry.keys():
-            self.parentry[p][self.collist[0]][0].set(
-                        ("%"+".%df" % self.bfit.rounding) % par[p][0])
+        # get run number of new selected run
+        run = self.get_selected_run()
+        fitdat_new = self.data[run]
+    
+        for p in self.parentry.keys():  # parentry = [parname][colname][value,entry]
+            for i in range(3):          # iterate input columns
+                col = self.collist[i]   # column title
+                
+                # get data of old entry
+                fitdat_old.fitpar[col][p] = float(self.parentry[p][col][0].get())
+                
+                # set values of new data
+                self.parentry[p][col][0].set(
+                    ("%"+".%df" % self.bfit.rounding) % fitdat_new.fitpar[col][p])
+            
+            # get fixed status of old data then set to new
+            fitdat_old.fitpar['fixed'][p] = self.parentry[p]['fixed'][0].get()
+            
+            try:
+                self.parentry[p]['fixed'][0].set(fitdat_new.fitpar['fixed'][p])
+            except KeyError:
+                fitdat_new.fitpar['fixed'][p] = False
+                self.parentry[p]['fixed'][0].set(False)
     
     # ======================================================================= #
     def set_fit_results(self,*args):
         """Show fit results"""
         
         # Set up variables
-        out = self.bfit.fit_files.fit_output
         displays = self.parentry
         
         # get run number of selected run
-        try:
-            line = self.runbox.curselection()[0]
-        except IndexError:
-            line = 0 
-            self.runbox.select_set(0)
-            # ~ self.runbox.event_generate("<<ListboxSelect>>")
-        run = self.runlist[line]
+        run = self.get_selected_run()
         
         try:
-            out = out[run]
+            data = self.data[run]
         except KeyError:
             return
-        chi = out[3]
+        chi = data.chi
         
         # display
-        for name,val,err in zip(*(out[:3])):
-            disp = displays[name]
+        for parname in data.fitpar['res'].keys():
+        
+        # ~ for name,val,err in zip(*(out[:3])):
+            disp = displays[parname]
             showstr = "%"+".%df" % self.bfit.rounding
-            disp['res'][0].set(showstr % val)
-            disp['dres'][0].set(showstr % err)
+            disp['res'][0].set(showstr % data.fitpar['res'][parname])
+            disp['dres'][0].set(showstr % data.fitpar['dres'][parname])
             disp['chi'][0].set(showstr % chi)
          
     # ======================================================================= #
@@ -817,10 +849,9 @@ class fitinputtab(object):
         """On fit, set the color of the line in the run number select."""
 
         runlist = map(int,self.runbox.get(0,self.runbox.size()))
-        out = self.bfit.fit_files.fit_output
         
         for i,r in enumerate(runlist):
-            if out[r][3] > self.bfit.fit_files.chi_threshold:
+            if self.data[r].chi > self.bfit.fit_files.chi_threshold:
                 self.runbox.itemconfig(i, {'bg':'red'})
             else:
                 self.runbox.itemconfig(i, {'bg':'white'})

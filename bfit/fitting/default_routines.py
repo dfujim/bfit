@@ -54,7 +54,7 @@ class fitter(object):
                                     'group':int,    # fitting group
                                  }
                                             
-            returns dictionary of {run: [[par_names],[par_values],[par_errors]]}
+            returns dictionary of {run: [[par_names],[par_values],[par_errors],[fitfunction pointers]]}
         """
 
         # initialize output
@@ -93,16 +93,14 @@ class fitter(object):
             if self.mode == '20':    
                 par,cov,chi,ftemp = fn(data=dat,rebin=doptions['rebin'],p0=p0,
                                    bounds=bounds,hist_select=hist_select)
-                self.fn_list[dat.run] = ftemp
             
             elif self.mode == '1f':    
                 par,cov,chi,ftemp = fn(data=dat,omit=doptions['omit'],p0=p0,
                                    bounds=bounds,hist_select=hist_select)
-                self.fn_list[dat.run] = ftemp
                 
             # collect results
             cov = np.sqrt(np.diag(cov))
-            parout[dat.run] = [keylist,par,cov,chi]
+            parout[dat.run] = [keylist,par,cov,chi,ftemp]
         
         return parout
 
@@ -159,10 +157,10 @@ class fitter(object):
             base = np.mean(a[int(len(a)*0.75):])
             
             # set values
-            par_values = {'amp':(amp,0,np.inf,False),
-                          '1/T1':(T1,0,np.inf,False),
-                          'baseline':(base,-np.inf,np.inf,False),
-                          'beta':(0.5,0,1,False)}
+            par_values = {'amp':(amp,0,np.inf),
+                          '1/T1':(T1,0,np.inf),
+                          'baseline':(base,-np.inf,np.inf),
+                          'beta':(0.5,0,1)}
                          
         # set time integrated fit initial parameters
         elif fn_name in ['Lorentzian','Gaussian']:
@@ -179,16 +177,16 @@ class fitter(object):
             
             # set values
             if fn_name == 'Lorentzian':
-                par_values = {'peak':(peak,min(f),max(f),False),
-                              'width':(width,0,np.inf,False),
-                              'height':(height,0,np.inf,False),
-                              'baseline':(base,-np.inf,np.inf,False)
+                par_values = {'peak':(peak,min(f),max(f)),
+                              'width':(width,0,np.inf),
+                              'height':(height,0,np.inf),
+                              'baseline':(base,-np.inf,np.inf)
                              }
             elif fn_name == 'Gaussian':
-                par_values = {'peak':(peak,min(f),max(f),False),
-                              'sigma':(width,0,np.inf,False),
-                              'height':(height,0,np.inf,False),
-                              'baseline':(base,-np.inf,np.inf,False)
+                par_values = {'peak':(peak,min(f),max(f)),
+                              'sigma':(width,0,np.inf),
+                              'height':(height,0,np.inf),
+                              'baseline':(base,-np.inf,np.inf)
                               }
         else:
             raise RuntimeError('Bad function name.')

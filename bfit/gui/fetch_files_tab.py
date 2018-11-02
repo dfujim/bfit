@@ -10,6 +10,7 @@ from bdata import bdata
 import datetime
 from functools import partial
 import matplotlib.pyplot as plt
+from bfit.gui.fitdata import fitdata
 
 __doc__="""
     To-do:
@@ -28,7 +29,7 @@ class fetch_files(object):
             entry_asym_type: combobox for asym calc and draw type
             year: StringVar of year to fetch runs from 
             run: StringVar input to fetch runs.
-            data: dictionary of bdata obj, keyed by run number
+            data: pointer to bfit.data
             bfit: pointer to parent class
             data_lines: dictionary of dataline obj, keyed by run number
             fet_entry_frame: frame of fetch tab
@@ -49,13 +50,13 @@ class fetch_files(object):
         
         # initialize
         self.bfit = bfit
-        self.data = {}
         self.data_lines = {}
         self.fit_input_tabs = {}
         self.check_rebin = IntVar()
         self.check_bin_remove = StringVar()
         self.check_state = BooleanVar()
         self.fetch_data_tab = fetch_data_tab
+        self.data = self.bfit.data
         
         # Frame for specifying files -----------------------------------------
         fet_entry_frame = ttk.Labelframe(fetch_data_tab,text='Specify Files')
@@ -304,7 +305,7 @@ class fetch_files(object):
         s = ['Failed to open run']
         for r in run_numbers:
             try:
-                data[r] = bdata(r,year=int(self.year.get()))
+                data[r] = fitdata(self.bfit,bdata(r,year=int(self.year.get())))
             except (RuntimeError,ValueError):
                 s.append("%d (%d)" % (r,int(self.year.get())))
 
@@ -476,56 +477,48 @@ class dataline(object):
     bin_remove_starter_line = '1 5 100-200 (omit bins)'
     
     # ======================================================================= #
-    def __init__(self,bfit,lines_list,fetch_tab_frame,bd,row):
+    def __init__(self,bfit,lines_list,fetch_tab_frame,bdfit,row):
         """
             Inputs:
                 fetch_tab_frame: parent in which to place line
-                bd: bdata object corresponding to the file which is placed here. 
+                bdfit: fitdata object corresponding to the file which is placed here. 
                 row: where to grid this object
         """
         
         # variables
-        self.bin_remove = StringVar()
-        self.label = StringVar()
-        self.rebin = IntVar()
-        self.group = IntVar()
-        self.check_state = BooleanVar()
-        self.mode = bd.mode
-        self.run = bd.run
-        self.year = bd.year
+        self.bin_remove = bdfit.omit
+        self.label = bdfit.label
+        self.rebin = bdfit.rebin
+        self.group = bdfit.group
+        self.check_state = bdfit.check_state
+        self.mode = bdfit.mode
+        self.run =  bdfit.run
+        self.year = bdfit.year
         self.row = row
         self.bfit = bfit
         self.lines_list = lines_list
+        bd = bdfit.bd
+        self.bdfit = bdfit
         
         # temperature
         try:
-            self.temperature = int(np.round(bd.camp.smpl_read_A.mean))
+            self.temperature = int(np.round(bdfit.temperature))
         except AttributeError:
             self.temperature = -1
             
         # field
-        try:
-            if bd.area == 'BNMR':
-                self.field = np.around(bd.camp.b_field.mean,2)
-                field_text = "%.2f T"%self.field
-            else:
-                self.field = np.around(bd.camp.hh_current.mean,2)
-                field_text = "%.2f A"%self.field
-        except AttributeError:
-            self.field = -1
+        self.field = np.around(bdfit.field,2)
+        
+        if self.field > 0:
+            field_text = "%.2f T"%self.field
+        else:
             field_text = ' '*6
-        try:
-            if bd.area == 'BNMR':
-                self.bias = np.around(bd.epics.nmr_bias_p.mean,2)
-            else:
-                self.bias = np.around(bd.epics.nqr_bias.mean,2)/1000.
-                
-            if self.bias > 0:
-                bias_text = "%.2f kV"%self.bias
-            else:
-                bias_text = "% .2f kV"%self.bias
-        except AttributeError:
-            self.bias = -1
+        
+        # bias
+        self.bias = self.bdfit.bias
+        if self.bias > 0:
+            bias_text = "%.2f kV"%self.bias
+        else:
             bias_text = ' '*7
         
         # build objects
