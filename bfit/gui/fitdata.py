@@ -47,22 +47,30 @@ class fitdata(object):
     # ======================================================================= #
     def __init__(self,parentbfit,bd):
         
+        # top level pointer
         self.bfit = parentbfit
+        
+        # bdata access
         self.bd = bd
         self.mode = bd.mode
         self.run = bd.run
         self.year = bd.year
         self.area = bd.area
+        self.camp = bd.camp
+        self.ppg = bd.ppg
+        self.epics = bd.epics
     
+        # input variables for tkinter
         self.rebin = IntVar()
         self.group = IntVar()
         self.omit = StringVar()
         self.label = StringVar()
         self.check_state = BooleanVar()
         
-        self.fitpar = {}
-        
         self.check_state.set(False)
+        
+        # fit parameters dictionary
+        self.fitpar = {}
         
         # initialize fitpar with fitinputtab.collist
         for k in ['p0','blo','bhi','res','dres','chi','fixed']:
