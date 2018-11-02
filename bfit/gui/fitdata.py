@@ -70,7 +70,7 @@ class fitdata(object):
         
         # set temperature 
         if self.mode in ['2h']:
-            self.temperature = self.bd.camp.smpl_read_B.mean
+            self.temperature = self.bd.camp.oven_readC.mean
         else:
             self.temperature = self.bd.camp.smpl_read_A.mean
             
