@@ -159,60 +159,72 @@ class fit_files(object):
         """
         
         # get data
-        self.data = self.bfit.fetch_files.data
+        self.data = self.bfit.data
         
         # get groups 
         dl = self.bfit.fetch_files.data_lines
-        self.groups = [dl[k].group.get() for k in dl.keys()]
+        self.groups = np.unique([dl[k].group.get() for k in dl.keys()])
         
         # get run mode by looking at one of the data dictionary keys
         for key_zero in self.data.keys(): break
-        
-        # reset fit function combobox options
-        try:                
-            # set run mode 
-            self.mode = self.data[key_zero].mode 
-            self.fit_runmode_label['text'] = self.bfit.fetch_files.runmode_relabel[self.mode]
-            
-            # set routine
-            self.fit_routine_label['text'] = self.fitter.__name__
-            
-            # set run functions        
-            fn_titles = self.fitter.function_names[self.mode]
-            self.fit_function_title_box['values'] = fn_titles
-            self.fit_function_title.set(fn_titles[0])
-                
-        except UnboundLocalError:
-            self.fit_function_title_box['values'] = ()
-            self.fit_function_title.set("")
-            self.fit_runmode_label['text'] = ""
-            self.mode = ""
+
+        # check if clearing of old tabs is needed
+        keys = self.file_tabs.keys()
+        do_create = not all((g in keys for g in self.groups))
+        do_create = do_create or not all((g in self.groups for g in keys))
         
         # clear old tabs
-        for child in self.runbook.winfo_children():
-            child.destroy()
+        if do_create:
+            for child in self.runbook.winfo_children():
+                child.destroy()
         
-        # make fitinputtab objects, clean up old tabs
-        del_list = []
-        for g in self.groups:
-            
-            # add to list of groups
-            if not g in self.file_tabs.keys():
-                self.file_tabs[g] = fitinputtab(self.bfit,self.runbook,g)
+            # reset fit function combobox options
+            try:               
+                if self.mode != self.data[key_zero].mode:
+                    # set run mode 
+                    self.mode = self.data[key_zero].mode 
+                    self.fit_runmode_label['text'] = \
+                            self.bfit.fetch_files.runmode_relabel[self.mode]
                     
-        # clean up old tabs
-        del_list = [k for k in self.file_tabs.keys() if not k in self.groups]
-        
-        for k in del_list:
-            del self.file_tabs[k]
+                    # set routine
+                    self.fit_routine_label['text'] = self.fitter.__name__
                     
-        # add tabs to notebook
-        for k in self.file_tabs.keys():
-            self.file_tabs[k].create()
+                    # set run functions        
+                    fn_titles = self.fitter.function_names[self.mode]
+                    self.fit_function_title_box['values'] = fn_titles
+                    self.fit_function_title.set(fn_titles[0])
+                        
+            except UnboundLocalError:
+                self.fit_function_title_box['values'] = ()
+                self.fit_function_title.set("")
+                self.fit_runmode_label['text'] = ""
+                self.mode = ""
+
+                        
+            # make fitinputtab objects, clean up old tabs
+            for g in self.groups:
+                
+                # add to list of groups
+                if not g in self.file_tabs.keys():
+                    self.file_tabs[g] = fitinputtab(self.bfit,self.runbook,g)
+                
+            # clean up old tabs
+            del_list = [k for k in self.file_tabs.keys() if not k in self.groups]
             
-        # populate the list of parameters 
-        self.populate_param()
+            for k in del_list:
+                del self.file_tabs[k]
+                        
+            # add tabs to notebook
+            for k in self.file_tabs.keys():
+                self.file_tabs[k].create()
+            
+            # populate the list of parameters 
+            self.populate_param()
     
+        else:
+            for k in self.file_tabs.keys():
+                self.file_tabs[k].update()
+        
     # ======================================================================= #
     def populate_param(self,*args):
         """Populate the list of parameters"""
@@ -646,7 +658,7 @@ class fitinputtab(object):
         # get list of runs with the group number
         dl = self.bfit.fetch_files.data_lines
         self.runlist = [dl[k].run for k in dl.keys() 
-                            if dl[k].group.get() == self.group]
+                if dl[k].group.get() == self.group]
         
         # Display run info label 
         ttk.Label(fitframe,text="Run Numbers").grid(column=0,row=0,padx=5)
@@ -686,11 +698,11 @@ class fitinputtab(object):
     # ======================================================================= #
     def get_selected_run(self):
         """Get the run number of the selected run"""
+        
         try:
             self.selected = self.runbox.curselection()[0]
         except IndexError:
             self.selected = 0 
-            self.runbox.select_set(0)
             
         return self.runlist[self.selected]
         
@@ -707,8 +719,7 @@ class fitinputtab(object):
         # get list of parameters and initial values
         try:
             plist = fitter.gen_param_names(fn_title,ncomp)
-            for i in range(self.runbox.size()):
-                run = self.runlist[i]
+            for run in self.runlist:
                 values = fitter.gen_init_par(fn_title,ncomp,self.data[run].bd)
                 self.data[run].set_fitpar(values)
         except KeyError:
@@ -810,7 +821,10 @@ class fitinputtab(object):
                     ("%"+".%df" % self.bfit.rounding) % fitdat_new.fitpar[col][p])
             
             # get fixed status of old data then set to new
-            fitdat_old.fitpar['fixed'][p] = self.parentry[p]['fixed'][0].get()
+            try:
+                fitdat_old.fitpar['fixed'][p] = self.parentry[p]['fixed'][0].get()
+            except KeyError:
+                pass
             
             try:
                 self.parentry[p]['fixed'][0].set(fitdat_new.fitpar['fixed'][p])
@@ -856,8 +870,22 @@ class fitinputtab(object):
             else:
                 self.runbox.itemconfig(i, {'bg':'white'})
 
+    # ======================================================================= #
+    def update(self):
+        """Update tab with new data"""
         
-            
-            
-            
-            
+        # get list of runs with the group number
+        dl = self.bfit.fetch_files.data_lines
+        self.runlist = [dl[k].run for k in dl.keys() 
+                if dl[k].group.get() == self.group]
+        
+        # List box for run viewing
+        rlist = StringVar(value=tuple(map(str,self.runlist)))
+        self.runbox.config(height=min(len(self.runlist),self.n_runs_max))
+        self.runbox.config(listvariable=rlist)
+        self.runbox.activate(0)
+        
+        
+        
+        
+        

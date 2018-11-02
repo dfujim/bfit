@@ -361,6 +361,7 @@ class fetch_files(object):
                 self.data_lines[r] = dataline(self.bfit,\
                         self.data_lines,self.dataline_frame,self.data[r],n)
             n+=1
+            
         self.bfit.fit_files.populate()
         
     # ======================================================================= #
@@ -486,6 +487,7 @@ class dataline(object):
         """
         
         # variables
+        self.bfit = bfit
         self.bin_remove = bdfit.omit
         self.label = bdfit.label
         self.rebin = bdfit.rebin
@@ -495,7 +497,6 @@ class dataline(object):
         self.run =  bdfit.run
         self.year = bdfit.year
         self.row = row
-        self.bfit = bfit
         self.lines_list = lines_list
         bd = bdfit.bd
         self.bdfit = bdfit

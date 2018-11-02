@@ -819,15 +819,15 @@ class bfit(object):
         # fetch files
         elif tab_id == 1:
             try:
-                k = list(self.fetch_files.data.keys())[0]
+                k = list(self.data.keys())[0]
             except IndexError:
                 pass
             else:   
-                self.set_asym_calc_mode_box(self.fetch_files.data[k].mode)
+                self.set_asym_calc_mode_box(self.data[k].mode)
             
         # fit files
         elif tab_id == 2:
-            pass
+            self.fit_files.populate()
      
     # ======================================================================= #
     def set_asym_calc_mode_box(self,mode,*args):
