@@ -266,8 +266,8 @@ class fileviewer(object):
             pass
         
         try:
-            temp = data.camp.oven_readB.mean
-            temp_stdv = data.camp.oven_readB.std
+            temp = data.camp.oven_readC.mean
+            temp_stdv = data.camp.oven_readC.std
             data_sw['Oven Temperature'] = "%.2f +/- %.2f K" % (temp,temp_stdv)
             key_order_sw.append('Oven Temperature')
         except AttributeError:
