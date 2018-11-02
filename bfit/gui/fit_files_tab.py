@@ -31,6 +31,7 @@ class fit_files(object):
             n_component:    number of fitting components (IntVar)
             runbook:        notebook of fit inputs for runs
             runmode_label:  display run mode 
+            set_as_group:   BooleanVar() if true, set fit parfor whole group
             xaxis:          StringVar() for parameter to draw on x axis
             yaxis:          StringVar() for parameter to draw on y axis
             xaxis_combobox: box for choosing x axis draw parameter
@@ -88,6 +89,12 @@ class fit_files(object):
         fit_button = ttk.Button(fn_select_frame,text='Fit',command=self.do_fit,\
                                 pad=1)
         
+        # set as group checkbox
+        self.set_as_group = BooleanVar()
+        set_group_check = ttk.Checkbutton(fn_select_frame,
+                text='Set Parameters for Group',\
+                variable=self.set_as_group,onvalue=True,offvalue=False)
+        
         # run mode 
         fit_runmode_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
                 text='Run Mode',)
@@ -109,6 +116,7 @@ class fit_files(object):
                 row=0,sticky=(E),padx=5,pady=5)
         n_component_box.grid(column=2,row=0,padx=5,pady=5)
         fit_button.grid(column=3,row=0,padx=1,pady=1)
+        set_group_check.grid(column=4,row=0,padx=1,pady=1)
         
         # run mode gridding
         fit_runmode_label_frame.grid(column=1,row=0,sticky=(E,W))
@@ -695,6 +703,32 @@ class fitinputtab(object):
         self.fitframe = fitframe
         
     # ======================================================================= #
+    def get_new_parameters(self,runlist):
+        """
+            Fetch initial parameters from fitter, set to data.    
+            
+            runlist: list of run numbers to set new parameters for. 
+        """
+        
+        # get pointer to fit files object
+        fit_files = self.bfit.fit_files
+        fitter = fit_files.fitter
+        ncomp = fit_files.n_component.get()
+        fn_title = fit_files.fit_function_title.get()
+        
+        # get list of parameter names
+        plist = fitter.gen_param_names(fn_title,ncomp)
+        for run in runlist:
+            
+            # get init values
+            values = fitter.gen_init_par(fn_title,ncomp,self.data[run].bd)
+            
+            # set to data
+            self.data[run].set_fitpar(values)
+    
+        return plist
+        
+    # ======================================================================= #
     def get_selected_run(self):
         """Get the run number of the selected run"""
         
@@ -708,28 +742,19 @@ class fitinputtab(object):
     # ======================================================================= #
     def populate_param(self):
         """Populate the list of parameters"""
-
-        # get pointer to fit files object
-        fit_files = self.bfit.fit_files
-        fitter = fit_files.fitter
-        ncomp = fit_files.n_component.get()
-        fn_title = fit_files.fit_function_title.get()
         
         # get list of parameters and initial values
         try:
-            plist = fitter.gen_param_names(fn_title,ncomp)
-            for run in self.runlist:
-                values = fitter.gen_init_par(fn_title,ncomp,self.data[run].bd)
-                self.data[run].set_fitpar(values)
+            plist = self.get_new_parameters(self.runlist)
         except KeyError:
             return
         finally:
-            # clear old entries
             for label in self.parlabels:
                 label.destroy()
             for k in self.parentry.keys():
                 for p in self.parentry[k]:
                     self.parentry[k][p][1].destroy()
+        
         
         # make parameter input fields ---------------------------------------
         
@@ -771,15 +796,19 @@ class fitinputtab(object):
             dpar = ttk.Entry(self.fitframe,textvariable=dpar_val,width=10)
             dpar['state'] = 'readonly'
             dpar['foreground'] = 'black'
-            
-            chi_val = StringVar()
-            chi = ttk.Entry(self.fitframe,textvariable=chi_val,width=5)
-            chi['state'] = 'readonly'
-            chi['foreground'] = 'black'
                                      
             par. grid(column=c,row=r,padx=5,sticky=E); c += 1
             dpar.grid(column=c,row=r,padx=5,sticky=E); c += 1
-            chi. grid(column=c,row=r,padx=5,sticky=E); c += 1
+
+            # do chi only once
+            if r == 1:
+                chi_val = StringVar()
+                chi = ttk.Entry(self.fitframe,textvariable=chi_val,width=7)
+                chi['state'] = 'readonly'
+                chi['foreground'] = 'black'
+                
+                chi.grid(column=c,row=r,padx=5,sticky=E,rowspan=len(plist)); 
+            c += 1
             
             # save ttk.Entry objects in dictionary [parname][colname]
             self.parentry[p][self.collist[3]] = (par_val,par)
@@ -802,28 +831,39 @@ class fitinputtab(object):
         
         # INITIAL PARAMETERS
         
-        # get data that is currently there
+        # get data that is currently there, possibly for whole group
         run = self.runlist[self.selected]
-        fitdat_old = self.data[run]
+        if self.bfit.fit_files.set_as_group.get():        
+            fitdat_old = [self.data[r] for r in self.runlist]
+        else:
+            fitdat_old = [self.data[run]]
         
         # get run number of new selected run
         run = self.get_selected_run()
         fitdat_new = self.data[run]
     
+    
         for p in self.parentry.keys():  # parentry = [parname][colname][value,entry]
             for i in range(3):          # iterate input columns
                 col = self.collist[i]   # column title
-                
+        
+                # get new initial parameters
+                if len(fitdat_new.fitpar[col].keys()) == 0:
+                    self.get_new_parameters([run])
+                    
                 # get data of old entry
-                fitdat_old.fitpar[col][p] = float(self.parentry[p][col][0].get())
+                for d in fitdat_old:
+                    d.fitpar[col][p] = float(self.parentry[p][col][0].get())
                 
                 # set values of new data
                 self.parentry[p][col][0].set(
-                    ("%"+".%df" % self.bfit.rounding) % fitdat_new.fitpar[col][p])
-            
+                            ("%"+".%df" % self.bfit.rounding) % \
+                            fitdat_new.fitpar[col][p])
+                
             # get fixed status of old data then set to new
             try:
-                fitdat_old.fitpar['fixed'][p] = self.parentry[p]['fixed'][0].get()
+                for d in fitdat_old:
+                    d.fitpar['fixed'][p] = self.parentry[p]['fixed'][0].get()
             except KeyError:
                 pass
             
