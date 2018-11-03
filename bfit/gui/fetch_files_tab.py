@@ -29,7 +29,6 @@ class fetch_files(object):
             entry_asym_type: combobox for asym calc and draw type
             year: StringVar of year to fetch runs from 
             run: StringVar input to fetch runs.
-            data: pointer to bfit.data
             bfit: pointer to parent class
             data_lines: dictionary of dataline obj, keyed by run number
             fet_entry_frame: frame of fetch tab
@@ -56,7 +55,6 @@ class fetch_files(object):
         self.check_bin_remove = StringVar()
         self.check_state = BooleanVar()
         self.fetch_data_tab = fetch_data_tab
-        self.data = self.bfit.data
         
         # Frame for specifying files -----------------------------------------
         fet_entry_frame = ttk.Labelframe(fetch_data_tab,text='Specify Files')
@@ -286,8 +284,8 @@ class fetch_files(object):
             pass
         
         # get data and write
-        for k in self.data.keys():
-            d = self.data[k].bd
+        for k in self.bfit.data.keys():
+            d = self.bfit.data[k].bd
             self.bfit.export(d,filename%(d.year,d.run))
     
     # ======================================================================= #
@@ -317,8 +315,8 @@ class fetch_files(object):
         
         # check that data is all the same runtype
         run_types = []
-        for k in self.data.keys():
-            run_types.append(self.data[k].mode)
+        for k in self.bfit.data.keys():
+            run_types.append(self.bfit.data[k].mode)
         for k in data.keys():
             run_types.append(data[k].mode)
             
@@ -339,7 +337,7 @@ class fetch_files(object):
         # get only run_types[0]
         for k in data.keys():
             if data[k].mode == run_types[0]:
-                self.data[k] = data[k]
+                self.bfit.data[k] = data[k]
         
         try:
             self.runmode = run_types[0]
@@ -349,7 +347,7 @@ class fetch_files(object):
         self.runmode_label['text'] = self.runmode_relabel[self.runmode]
         self.bfit.set_asym_calc_mode_box(self.runmode)
         
-        keys_list = list(self.data.keys())
+        keys_list = list(self.bfit.data.keys())
         keys_list.sort()
         
         # make lines
@@ -359,7 +357,7 @@ class fetch_files(object):
                 self.data_lines[r].grid(n)
             else:
                 self.data_lines[r] = dataline(self.bfit,\
-                        self.data_lines,self.dataline_frame,self.data[r],n)
+                        self.data_lines,self.dataline_frame,self.bfit.data[r],n)
             n+=1
             
         self.bfit.fit_files.populate()

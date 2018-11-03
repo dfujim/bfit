@@ -19,7 +19,6 @@ class fit_files(object):
     """
         Data fields:
             chi_threshold:  if chi > thres, set color to red
-            data            pointer to bfit.data
             draw_components:list of titles for labels, options to export, draw.
             file_tabs:      dictionary of fitinputtab objects, keyed by group number 
             fitter:         fitting object from self.bfit.routine_mod
@@ -49,7 +48,6 @@ class fit_files(object):
         # initialize
         self.file_tabs = {}
         self.bfit = bfit
-        self.data = self.bfit.data
         self.groups = []
         self.fit_output = {}
         self.fitter = self.bfit.routine_mod.fitter()
@@ -161,15 +159,12 @@ class fit_files(object):
             Make tabs for setting fit input parameters. 
         """
         
-        # get data
-        self.data = self.bfit.data
-        
         # get groups 
         dl = self.bfit.fetch_files.data_lines
         self.groups = np.unique([dl[k].group.get() for k in dl.keys()])
         
         # get run mode by looking at one of the data dictionary keys
-        for key_zero in self.data.keys(): break
+        for key_zero in self.bfit.data.keys(): break
 
         # check if clearing of old tabs is needed
         keys = self.file_tabs.keys()
@@ -183,9 +178,9 @@ class fit_files(object):
         
             # reset fit function combobox options
             try:               
-                if self.mode != self.data[key_zero].mode:
+                if self.mode != self.bfit.data[key_zero].mode:
                     # set run mode 
-                    self.mode = self.data[key_zero].mode 
+                    self.mode = self.bfit.data[key_zero].mode 
                     self.fit_runmode_label['text'] = \
                             self.bfit.fetch_files.runmode_relabel[self.mode]
                     
@@ -274,7 +269,7 @@ class fit_files(object):
             for r in runlist:
                 
                 # bdata object
-                bdfit = self.data[r]
+                bdfit = self.bfit.data[r]
                 bdataobj = bdfit.bd
                 
                 # pdict
@@ -367,7 +362,7 @@ class fit_files(object):
         
         # set output results
         for run in fit_output.keys():
-            self.data[run].set_fitresult(fit_output[run])
+            self.bfit.data[run].set_fitresult(fit_output[run])
             
         # display run results
         for g in self.groups:
@@ -401,7 +396,7 @@ class fit_files(object):
                      '1n':'Voltage (V)'}
                      
         # get data and fit results
-        data = self.data[run]
+        data = self.bfit.data[run]
         fit_par = [data.fitpar['res'][p] for p in data.parnames]
         fn = data.fitfn
         data = data.bd
@@ -411,7 +406,7 @@ class fit_files(object):
         
         # label reset
         if 'label' not in drawargs.keys():
-            drawargs['label'] = self.data[run].label.get()+'_fit'
+            drawargs['label'] = self.bfit.data[run].label.get()+'_fit'
         elif 'fit' not in drawargs['label']:
             drawargs['label'] += ' (fit)'
         label = drawargs['label']
@@ -545,7 +540,7 @@ class fit_files(object):
     # ======================================================================= #
     def get_values(self,select):
         """ Get plottable values"""
-        data = self.data
+        data = self.bfit.data
         runs = list(data.keys())
         runs.sort()
     
@@ -597,8 +592,8 @@ class fit_files(object):
             
             for r in runs:
                 try:
-                    val.append(self.data[r].fitpar['res'][select])
-                    err.append(self.data[r].fitpar['dres'][select])
+                    val.append(self.bfit.data[r].fitpar['res'][select])
+                    err.append(self.bfit.data[r].fitpar['dres'][select])
                 except KeyError:
                     val.append(np.nan)
                     err.append(np.nan)
@@ -639,7 +634,6 @@ class fitinputtab(object):
         
         # initialize
         self.bfit = bfit
-        self.data = self.bfit.data
         self.parent = parent
         self.group = group
         self.parlabels = []
@@ -710,10 +704,10 @@ class fitinputtab(object):
         for run in runlist:
             
             # get init values
-            values = fitter.gen_init_par(fn_title,ncomp,self.data[run].bd)
+            values = fitter.gen_init_par(fn_title,ncomp,self.bfit.data[run].bd)
             
             # set to data
-            self.data[run].set_fitpar(values)
+            self.bfit.data[run].set_fitpar(values)
     
         return plist
         
@@ -757,7 +751,7 @@ class fitinputtab(object):
         
         # get data of selected run
         run = self.get_selected_run()
-        fitdat = self.data[run]
+        fitdat = self.bfit.data[run]
         
         # input values: initial parameters
         r = 0
@@ -823,13 +817,13 @@ class fitinputtab(object):
         # get data that is currently there, possibly for whole group
         run = self.runlist[self.selected]
         if self.bfit.fit_files.set_as_group.get():        
-            fitdat_old = [self.data[r] for r in self.runlist]
+            fitdat_old = [self.bfit.data[r] for r in self.runlist]
         else:
-            fitdat_old = [self.data[run]]
+            fitdat_old = [self.bfit.data[run]]
         
         # get run number of new selected run
         run = self.get_selected_run()
-        fitdat_new = self.data[run]
+        fitdat_new = self.bfit.data[run]
     
     
         for p in self.parentry.keys():  # parentry = [parname][colname][value,entry]
@@ -872,7 +866,7 @@ class fitinputtab(object):
         run = self.get_selected_run()
         
         try:
-            data = self.data[run]
+            data = self.bfit.data[run]
         except KeyError:
             return
             
@@ -896,7 +890,7 @@ class fitinputtab(object):
         runlist = map(int,self.runbox.get(0,self.runbox.size()))
         
         for i,r in enumerate(runlist):
-            if self.data[r].chi > self.bfit.fit_files.chi_threshold:
+            if self.bfit.data[r].chi > self.bfit.fit_files.chi_threshold:
                 self.runbox.itemconfig(i, {'bg':'red'})
             else:
                 self.runbox.itemconfig(i, {'bg':'white'})
