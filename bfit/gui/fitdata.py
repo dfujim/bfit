@@ -73,7 +73,7 @@ class fitdata(object):
         self.fitpar = {}
         
         # initialize fitpar with fitinputtab.collist
-        for k in ['p0','blo','bhi','res','dres','chi','fixed']:
+        for k in ['p0','blo','bhi','res','dres','chi','fixed','shared']:
             self.fitpar[k] = {}
         
         # set temperature 

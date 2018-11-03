@@ -47,6 +47,7 @@ class fitter(object):
                                     bound_lo,   # lower fitting bound
                                     bound_hi,   # upper fitting bound
                                     is_fixed,   # boolean, fix value?
+                                    is_shared,  # boolean, share value globally?
                                    )
                               }
                 where doptions = {  'omit':str,     # bins to omit in 1F calcs

@@ -508,17 +508,17 @@ class dataline(object):
         # field
         self.field = np.around(bdfit.field,2)
         
-        if self.field != np.nan:
+        try:
             field_text = "%.2f T"%self.field
-        else:
-            field_text = ' '*6
+        except TypeError:
+            field_text = ' '
         
         # bias
         self.bias = self.bdfit.bias
-        if self.bias != np.nan:
+        try:
             bias_text = "%.2f kV"%self.bias
-        else:
-            bias_text = ' '*7
+        except TypeError:
+            bias_text = ' '
         
         # build objects
         line_frame = ttk.Frame(fetch_tab_frame,pad=(5,0))

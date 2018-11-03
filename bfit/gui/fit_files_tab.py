@@ -293,6 +293,10 @@ class fit_files(object):
                         elif col in ['fixed']:
                             line.append(pline[col][0].get())
                     
+                        # get "Shared" entry
+                        elif col in ['shared']:
+                            line.append(pline[col][0].get())
+                    
                     # make dict
                     pdict[parname] = line
                     
@@ -621,7 +625,7 @@ class fitinputtab(object):
     """
     
     n_runs_max = 5      # number of runs before scrollbar appears
-    collist = ['p0','blo','bhi','res','dres','chi','fixed']
+    collist = ['p0','blo','bhi','res','dres','chi','fixed','shared']
     selected = 0        # index of selected run 
     
     # ======================================================================= #
@@ -658,8 +662,8 @@ class fitinputtab(object):
         # List box for run viewing
         rlist = StringVar(value=tuple(map(str,self.runlist)))
         self.runbox = Listbox(fitframe,height=min(len(self.runlist),self.n_runs_max),
-                         width=10,listvariable=rlist,justify=CENTER,
-                        selectmode=BROWSE)
+                                width=10,listvariable=rlist,justify=CENTER,
+                                selectmode=BROWSE)
         self.runbox.activate(0)
         self.runbox.bind('<<ListboxSelect>>',self.set_display)
         self.runbox.grid(column=0,row=1,rowspan=10)
@@ -682,6 +686,7 @@ class fitinputtab(object):
         ttk.Label(fitframe,text='Result Error').grid(   column=c,row=0,padx=5); c+=1
         ttk.Label(fitframe,text='ChiSq').grid(          column=c,row=0,padx=5); c+=1
         ttk.Label(fitframe,text='Fixed').grid(          column=c,row=0,padx=5); c+=1
+        ttk.Label(fitframe,text='Shared').grid(         column=c,row=0,padx=5); c+=1
         
         # save
         self.fitframe = fitframe
@@ -803,8 +808,16 @@ class fitinputtab(object):
             value = BooleanVar()
             entry = ttk.Checkbutton(self.fitframe,text='',\
                                      variable=value,onvalue=True,offvalue=False)
-            entry.grid(column=c,row=r,padx=5,sticky=E)
+            entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
             self.parentry[p][self.collist[6]] = (value,entry)
+            
+            # do shared box
+            value = BooleanVar()
+            entry = ttk.Checkbutton(self.fitframe,text='',\
+                                     variable=value,onvalue=True,offvalue=False)
+            entry.config(state=DISABLED)###################################################
+            entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
+            self.parentry[p][self.collist[7]] = (value,entry)
         
         # set parameters
         self.set_display()
@@ -857,7 +870,19 @@ class fitinputtab(object):
                 fitdat_new.fitpar['fixed'][p] = False
                 self.parentry[p]['fixed'][0].set(False)
     
-        
+            # get and set shared status 
+            try:
+                for d in fitdat_old:
+                    d.fitpar['shared'][p] = self.parentry[p]['shared'][0].get()
+            except KeyError:
+                pass
+            
+            try:
+                self.parentry[p]['shared'][0].set(fitdat_new.fitpar['shared'][p])
+            except KeyError:
+                fitdat_new.fitpar['shared'][p] = False
+                self.parentry[p]['shared'][0].set(False)
+            
         # FIT RESULTS    
         
         # Set up variables
