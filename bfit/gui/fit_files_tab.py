@@ -20,6 +20,7 @@ class fit_files(object):
         Data fields:
             chi_threshold:  if chi > thres, set color to red
             data            pointer to bfit.data
+            draw_components:list of titles for labels, options to export, draw.
             file_tabs:      dictionary of fitinputtab objects, keyed by group number 
             fitter:         fitting object from self.bfit.routine_mod
             fit_function_title: title of fit function to use
@@ -42,12 +43,6 @@ class fit_files(object):
     mode = ""
     chi_threshold = 1.5 # threshold for red highlight on bad fits 
     n_fitx_pts = 500    # number of points to draw in fitted curves
-
-    # define draw componeents in draw_param
-    draw_components = ['Temperature (K)','B0 Field (T)', 'RF Level DAC', 
-                       'Platform Bias (kV)', 'Impl. Energy (keV)', 
-                       'Run Duration (s)', 'Run Number','Sample', 'Start Time']
-
     # ======================================================================= #
     def __init__(self,fit_data_tab,bfit):
         
@@ -58,6 +53,7 @@ class fit_files(object):
         self.groups = []
         self.fit_output = {}
         self.fitter = self.bfit.routine_mod.fitter()
+        self.draw_components = bfit.draw_components
             
         # make top level frames
         top_fit_frame = ttk.Frame(fit_data_tab,pad=5)   # fn select, run mode

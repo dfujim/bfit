@@ -566,10 +566,11 @@ class dataline(object):
         bin_remove_entry.config(foreground='grey')
              
         # add grey text to label
-        label_entry.insert(0,str(self.run))
-        entry_fn_lab = partial(on_entry_click,text=str(self.run),
+        label = self.get_label()
+        label_entry.insert(0,label)
+        entry_fn_lab = partial(on_entry_click,text=label,
                                entry=label_entry)
-        on_focusout_fn_lab = partial(on_focusout,text=str(self.run),
+        on_focusout_fn_lab = partial(on_focusout,text=label,
                                  entry=label_entry)
         label_entry.bind('<FocusIn>', entry_fn_lab)
         label_entry.bind('<FocusOut>', on_focusout_fn_lab)
@@ -649,7 +650,48 @@ class dataline(object):
         else:
             self.bfit.draw(data,d,self.rebin.get(),\
                 option=self.bin_remove.get(),label=self.label.get())
+
+    # ======================================================================= #
+    def get_label(self):
+        """ Get label for plot"""
+        data = self.bfit.data[self.run]
         
+        # the thing to switch on
+        select = self.bfit.label_default.get()
+    
+        # Data file options
+        if select == 'Temperature (K)':
+            label = "%d K" % int(np.round(data.temperature.mean))
+            
+        elif select == 'B0 Field (T)':
+            label = "%.2f T" % np.around(data.field,2)
+            
+        elif select == 'RF Level DAC':
+            label = str(int(data.bd.camp.rf_dac.mean))
+            
+        elif select == 'Platform Bias (kV)':
+            label = "%d kV" % int(np.round(data.bias))
+                
+        elif select == 'Impl. Energy (keV)':
+            label = "%.2f keV" % np.around(data.bd.beam_kev())
+            
+        elif select == 'Run Duration (s)':
+            label = "%d s" % int(data.bd.duration)
+            
+        elif select == 'Run Number':
+            label = str(data.run)
+            
+        elif select == 'Sample':
+            label = data.bd.sample
+            
+        elif select == 'Start Time':
+            label = data.bd.start_date
+            
+        else:
+            label = str(data.run)
+        
+        return label
+    
 # =========================================================================== #
 def on_entry_click(event,entry,text):
     """Vanish grey text on click"""

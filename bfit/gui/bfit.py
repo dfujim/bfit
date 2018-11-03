@@ -89,6 +89,7 @@ class bfit(object):
             asym_dict_keys: asym calc and draw types
             data: dict of fitdata objects for drawing/fitting, keyed by run #
             draw_style: draw window types # stack, redraw, new
+            draw_components: list of titles for labels, options to export, draw.
             root: tkinter root instance
             mainframe: main frame for the object
             routine_mod: module with fitting routines
@@ -98,6 +99,7 @@ class bfit(object):
                 fetch_files
                 fit_files
             
+            label_default: StringVar() name of label defaults for fetch
             update_period: update spacing in s. 
             rounding: number of decimal places to round results to in display
             hist_select: histogram selection for asym calcs (blank for defaults)
@@ -132,6 +134,11 @@ class bfit(object):
     
     data = {}   # for fitdata objects
     
+    # define draw componeents in draw_param and labels
+    draw_components = ['Temperature (K)','B0 Field (T)', 'RF Level DAC', 
+                       'Platform Bias (kV)', 'Impl. Energy (keV)', 
+                       'Run Duration (s)', 'Run Number','Sample', 'Start Time']
+
     try: 
         bnmr_data_dir = os.environ[bnmr_archive_label]
         bnqr_data_dir = os.environ[bnqr_archive_label]
@@ -221,9 +228,11 @@ class bfit(object):
         menu_settings = Menu(menubar)
         menubar.add_cascade(menu=menu_settings, label='Settings')
         menu_settings_dir = Menu(menu_settings)
+        menu_settings_lab = Menu(menu_settings)
         
         # Settings cascade commands
         menu_settings.add_cascade(menu=menu_settings_dir,label='Set data directory')
+        menu_settings.add_cascade(menu=menu_settings_lab,label='Set label default')
         menu_settings.add_command(label="Set matplotlib global defaults",\
                 command=self.set_matplotlib)
         menu_settings.add_command(label='Set drawing style',
@@ -240,6 +249,13 @@ class bfit(object):
         # Settings: data directory
         menu_settings_dir.add_command(label="BNMR",command=self.set_bnmr_dir)
         menu_settings_dir.add_command(label="BNQR",command=self.set_bnqr_dir)
+        
+        # Settings: set label default
+        self.label_default = StringVar()
+        self.label_default.set('Run Number')
+        for dc in self.draw_components:
+            menu_settings_lab.add_radiobutton(label=dc,
+                variable=self.label_default,value=dc)
         
         # Draw style
         self.draw_style = StringVar()
