@@ -42,6 +42,7 @@ class fit_files(object):
     mode = ""
     chi_threshold = 1.5 # threshold for red highlight on bad fits 
     n_fitx_pts = 500    # number of points to draw in fitted curves
+    
     # ======================================================================= #
     def __init__(self,fit_data_tab,bfit):
         

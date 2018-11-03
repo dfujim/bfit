@@ -503,19 +503,19 @@ class dataline(object):
         try:
             self.temperature = int(np.round(bdfit.temperature.mean))
         except AttributeError:
-            self.temperature = -1
+            self.temperature = np.nan
                 
         # field
         self.field = np.around(bdfit.field,2)
         
-        if self.field > 0:
+        if self.field != np.nan:
             field_text = "%.2f T"%self.field
         else:
             field_text = ' '*6
         
         # bias
         self.bias = self.bdfit.bias
-        if self.bias > 0:
+        if self.bias != np.nan:
             bias_text = "%.2f kV"%self.bias
         else:
             bias_text = ' '*7

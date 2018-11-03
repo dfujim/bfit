@@ -91,19 +91,19 @@ class fitdata(object):
                 self.field = current2field(bd.epics.hh_current.mean)*1e-4
                 self.field_std = current2field(bd.epics.hh_current.std)*1e-4
         except AttributeError:
-            self.field = -1
-            self.field_std = -1
+            self.field = np.nan
+            self.field_std = np.nan
             
         # bias
         try:
             if bd.area == 'BNMR': 
-                self.bias = bd.epics.nmr_bias_p.mean
-                self.bias_std = bd.epics.nmr_bias_p.std
+                self.bias = bd.epics.nmr_bias.mean
+                self.bias_std = bd.epics.nmr_bias.std
             else:
                 self.bias = bd.epics.nqr_bias.mean/1000.
                 self.bias_std = bd.epics.nqr_bias.std/1000.
         except AttributeError:
-            self.bias = -1
+            self.bias = np.nan
 
     # ======================================================================= #
     def asym(self,*args,**kwargs):  return self.bd.asym(*args,**kwargs)
