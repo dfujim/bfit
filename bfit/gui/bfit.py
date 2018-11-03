@@ -110,7 +110,7 @@ class bfit(object):
     probe_species = "8Li" # unused
     bnmr_archive_label = "BNMR_ARCHIVE"
     bnqr_archive_label = "BNQR_ARCHIVE"
-    update_period = 10  # s
+    update_period = 20  # s
     ppm_reference = 41270000 # Hz
     rounding = 5       # number of decimal places to round results to in display
     hist_select = ''    # histogram selection for asym calculations

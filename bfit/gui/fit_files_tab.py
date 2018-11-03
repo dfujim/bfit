@@ -411,9 +411,8 @@ class fit_files(object):
         
         # label reset
         if 'label' not in drawargs.keys():
-            drawargs['label'] = self.bfit.data[run].label.get()+'_fit'
-        elif 'fit' not in drawargs['label']:
-            drawargs['label'] += ' (fit)'
+            drawargs['label'] = self.bfit.data[run].label.get()
+        drawargs['label'] += ' (fit)'
         label = drawargs['label']
         
         # set drawing style

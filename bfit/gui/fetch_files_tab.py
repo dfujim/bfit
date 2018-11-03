@@ -449,7 +449,6 @@ class fetch_files(object):
             state = not self.data_lines[k].check_state.get()
             self.data_lines[k].check_state.set(state)
 
-        
 # =========================================================================== #
 # =========================================================================== #
 class dataline(object):
