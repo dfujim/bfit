@@ -78,20 +78,21 @@ class fitdata(object):
         
         # set temperature 
         try:
-            self.temperature = self.bd.camp.smpl_read_A.mean
+            self.temperature = self.bd.camp.smpl_read_A
         except AttributeError:
-            self.temperature = self.bd.camp.oven_readC.mean
-            
+            self.temperature = self.bd.camp.oven_readC
+        
         # field
         try:
             if bd.area == 'BNMR':
                 self.field = bd.camp.b_field.mean
                 self.field_std = bd.camp.b_field.std
             else:
-                self.field = current2field(bd.camp.hh_current.mean)*1e-4
-                self.field_std = current2field(bd.camp.hh_current.std)*1e-4
+                self.field = current2field(bd.epics.hh_current.mean)*1e-4
+                self.field_std = current2field(bd.epics.hh_current.std)*1e-4
         except AttributeError:
             self.field = -1
+            self.field_std = -1
             
         # bias
         try:

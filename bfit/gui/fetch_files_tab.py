@@ -503,10 +503,10 @@ class dataline(object):
         
         # temperature
         try:
-            self.temperature = int(np.round(bdfit.temperature))
+            self.temperature = int(np.round(bdfit.temperature.mean))
         except AttributeError:
             self.temperature = -1
-            
+                
         # field
         self.field = np.around(bdfit.field,2)
         

@@ -25,7 +25,6 @@ class fit_files(object):
             fit_function_title: title of fit function to use
             fit_function_title_box: spinbox for fit function names
             fit_input:      fitting input values = (fn_name,ncomp,data_list)
-            fit_output:     fitting results, output of fitter
             groups:         group numbers from fetch tab
             mode:           what type of run is this. 
             n_component:    number of fitting components (IntVar)
@@ -553,20 +552,15 @@ class fit_files(object):
         data = self.data
         runs = list(data.keys())
         runs.sort()
-        parout = self.fit_output
     
         # Data file options
         if select == 'Temperature (K)':
-            val = [data[r].camp.smpl_read_A.mean for r in runs]
-            err = [data[r].camp.smpl_read_A.std for r in runs]
+            val = [data[r].temperature.mean for r in runs]
+            err = [data[r].temperature.std for r in runs]
         
         elif select == 'B0 Field (T)':
-            try:
-                val = [data[r].camp.b_field.mean for r in runs]
-                err = [data[r].camp.b_field.std for r in runs]
-            except AttributeError:
-                val = [current2field(data[r].epics.hh_current.mean)/1e4 for r in runs]
-                err = [current2field(data[r].epics.hh_current.std)/1e4 for r in runs]
+            val = [data[r].field for r in runs]
+            err = [data[r].field_std for r in runs]
         
         elif select == 'RF Level DAC':
             val = [data[r].camp.rf_dac.mean for r in runs]
@@ -574,18 +568,17 @@ class fit_files(object):
         
         elif select == 'Platform Bias (kV)':
             try:
-                val = [data[r].epics.nmr_bias.mean for r in runs]
-                err = [data[r].epics.nmr_bias.std for r in runs]
+                val = [data[r].bias for r in runs]
+                err = [data[r].bias_std for r in runs]
             except AttributeError:
-                val = [data[r].epics.nqr_bias.mean/1000. for r in runs]
-                err = [data[r].epics.nqr_bias.std/1000. for r in runs]
+                pass
                 
         elif select == 'Impl. Energy (keV)':
-            val =  [data[r].beam_kev() for r in runs]
+            val =  [data[r].bd.beam_kev() for r in runs]
             err =  [0 for r in runs]
         
         elif select == 'Run Duration (s)':
-            val = [data[r].duration for r in runs]
+            val = [data[r].bd.duration for r in runs]
             err = [0 for r in runs]
         
         elif select == 'Run Number':
@@ -593,11 +586,11 @@ class fit_files(object):
             err = [0 for r in runs]
         
         elif select == 'Sample':
-            val = [data[r].sample for r in runs]
+            val = [data[r].bd.sample for r in runs]
             err = [0 for r in runs]
             
         elif select == 'Start Time':
-            val = [data[r].start_date for r in runs]
+            val = [data[r].bd.start_date for r in runs]
             err = [0 for r in runs]
         
         # fitted parameter options
@@ -608,12 +601,12 @@ class fit_files(object):
             
             for r in runs:
                 try:
-                    val.append(parout[r][1][parout[r][0].index(select)])
-                    err.append(parout[r][2][parout[r][0].index(select)])
+                    val.append(self.data[r].fitpar['res'][select])
+                    err.append(self.data[r].fitpar['dres'][select])
                 except KeyError:
                     val.append(np.nan)
                     err.append(np.nan)
-        
+    
         return (val,err)
     
 # =========================================================================== #
