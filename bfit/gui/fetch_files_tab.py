@@ -287,7 +287,7 @@ class fetch_files(object):
         
         # get data and write
         for k in self.data.keys():
-            d = self.data[k]
+            d = self.data[k].bd
             self.bfit.export(d,filename%(d.year,d.run))
     
     # ======================================================================= #
