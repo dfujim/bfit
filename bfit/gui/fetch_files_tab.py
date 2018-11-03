@@ -615,12 +615,10 @@ class dataline(object):
         # kill buttons and fram
         for child in self.line_frame.winfo_children():
             child.destroy()
-        for child in self.line_frame.winfo_children():
-            child.destroy()
         self.line_frame.destroy()
         
         # get rid of data
-        del self.bfit.fetch_files.data[self.run]
+        del self.bfit.data[self.run]
         del self.lines_list[self.run]
         
         # repopulate fit files tab
