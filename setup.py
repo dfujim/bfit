@@ -32,18 +32,8 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ),
     install_requires=['markdown>=2.6','cython>=0.28','numpy>=1.14',
-                      'bdata>=1.2.0','matplotlib>=2.2.2','pandas>=0.23.0'],
+                      'bdata>=1.3.1','matplotlib>=2.2.2','pandas>=0.23.0'],
     package_data={'': ['./images/']},
     include_package_data=True,
     ext_modules = cythonize([ext],include_path = [numpy.get_include()]),
 )
-
-try:
-    print("")
-    print('BNMR_ARCHVE =', os.environ['BNMR_ARCHIVE'])
-    print('BNQR_ARCHVE =', os.environ['BNQR_ARCHIVE'],end='\n\n')
-except KeyError:
-    print("Add environment variables BNMR_ARCHIVE and BNQR_ARCHIVE which "+\
-          "point to the msr data file locations (ex: /data/bnmr/ which "+\
-          "contains directories for each year).",end='\n\n')
-

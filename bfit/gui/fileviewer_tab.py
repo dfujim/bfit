@@ -10,6 +10,7 @@ from bdata import bdata
 import matplotlib.pyplot as plt
 from multiprocessing import Process, Pipe
 from bfit.gui.zahersCalculator import current2field
+from bfit.gui.fitdata import fitdata
 
 __doc__ = """
     View file contents tab.
@@ -152,7 +153,8 @@ class fileviewer(object):
         """Get data then draw."""
         if self.get_data():
             self.bfit.draw(self.data,\
-                    self.asym_dict[self.asym_type.get()],rebin=self.rebin.get())
+                    self.asym_dict[self.asym_type.get()],rebin=self.rebin.get(),
+                    label=self.bfit.get_label(self.data))
             
     # ======================================================================= #
     def export(self):
@@ -186,25 +188,19 @@ class fileviewer(object):
             year = int(self.year.get())
             run = int(self.runn.get())
         except ValueError:
-            self.set_textbox_text(self.text_nw,'Input must be integer valued')
-            self.set_textbox_text(self.text_ne,'Input must be integer valued')
-            self.set_textbox_text(self.text_sw,'Input must be integer valued')
-            self.set_textbox_text(self.text_se,'Input must be integer valued')
+            for t in [self.text_nw,self.text_ne,self.text_sw,self.text_se]:
+                self.set_textbox_text(t,'Input must be integer valued')  
             return False
         
         try: 
-            data = bdata(run,year=year)
+            data = fitdata(self.bfit,bdata(run,year=year))
         except ValueError:
-            self.set_textbox_text(self.text_nw,'File read failed')
-            self.set_textbox_text(self.text_ne,'File read failed')
-            self.set_textbox_text(self.text_sw,'File read failed')
-            self.set_textbox_text(self.text_se,'File read failed')
+            for t in [self.text_nw,self.text_sw,self.text_se,self.text_ne]:
+                self.set_textbox_text(t,'File read failed')
             return False
         except RuntimeError:
-            self.set_textbox_text(self.text_nw,'File does not exist.')
-            self.set_textbox_text(self.text_ne,'File does not exist.')
-            self.set_textbox_text(self.text_sw,'File does not exist.')
-            self.set_textbox_text(self.text_se,'File does not exist.')
+            for t in [self.text_nw,self.text_sw,self.text_se,self.text_ne]:
+                self.set_textbox_text(t,'File does not exist.')
             return False
         
         # set draw parameters

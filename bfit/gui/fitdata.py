@@ -52,14 +52,7 @@ class fitdata(object):
         
         # bdata access
         self.bd = bd
-        self.mode = bd.mode
-        self.run = bd.run
-        self.year = bd.year
-        self.area = bd.area
-        self.camp = bd.camp
-        self.ppg = bd.ppg
-        self.epics = bd.epics
-    
+        
         # input variables for tkinter
         self.rebin = IntVar()
         self.group = IntVar()
@@ -106,6 +99,14 @@ class fitdata(object):
             self.bias = np.nan
 
     # ======================================================================= #
+    def __getattr__(self,name):
+        """Access bdata attributes in the case that fitdata doesn't have it."""
+        try:
+            return self.__dict__[name]
+        except KeyError:
+            return getattr(self.bd,name)
+
+    # ======================================================================= #
     def asym(self,*args,**kwargs):  return self.bd.asym(*args,**kwargs)
 
     # ======================================================================= #
@@ -136,4 +137,5 @@ class fitdata(object):
         self.chi = values[3]
         self.fitfn = values[4]
         
-    # ======================================================================= #
+    
+    

@@ -708,6 +708,48 @@ class bfit(object):
             pass
     
     # ======================================================================= #
+    def get_label(self,data):
+        """ Get label for plot
+            Input: fitdata object. 
+        """
+        
+        # the thing to switch on
+        select = self.label_default.get()
+    
+        # Data file options
+        if select == 'Temperature (K)':
+            label = "%d K" % int(round(data.temperature.mean))
+            
+        elif select == 'B0 Field (T)':
+            label = "%.2f T" % np.around(data.field,2)
+            
+        elif select == 'RF Level DAC':
+            label = str(int(data.bd.camp.rf_dac.mean))
+            
+        elif select == 'Platform Bias (kV)':
+            label = "%d kV" % int(np.round(data.bias))
+                
+        elif select == 'Impl. Energy (keV)':
+            label = "%.2f keV" % np.around(data.bd.beam_kev())
+            
+        elif select == 'Run Duration (s)':
+            label = "%d s" % int(data.bd.duration)
+            
+        elif select == 'Run Number':
+            label = str(data.run)
+            
+        elif select == 'Sample':
+            label = data.bd.sample
+            
+        elif select == 'Start Time':
+            label = data.bd.start_date
+            
+        else:
+            label = str(data.run)
+        
+        return label
+    
+    # ======================================================================= #
     def help(self):
         """Display help wiki"""
         p = os.path
