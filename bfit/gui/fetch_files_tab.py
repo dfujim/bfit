@@ -64,7 +64,7 @@ class fetch_files(object):
         self.year.set(datetime.datetime.now().year)
         
         entry_year = ttk.Entry(fet_entry_frame,textvariable=self.year,width=5)
-        entry_run = ttk.Entry(fet_entry_frame,textvariable=self.run,width=60)
+        entry_run = ttk.Entry(fet_entry_frame,textvariable=self.run,width=80)
         entry_run.insert(0,self.run_number_starter_line)
         entry_fn = partial(on_entry_click,text=self.run_number_starter_line,\
                             entry=entry_run)
@@ -78,14 +78,12 @@ class fetch_files(object):
         fetch = ttk.Button(fet_entry_frame,text='Fetch',command=self.get_data)
         
         # grid and labels
-        fet_entry_frame.grid(column=0,row=0,sticky=(N,E,W))
-        ttk.Label(fet_entry_frame,text="Year:").grid(column=0,row=0,\
-                sticky=(E))
-        entry_year.grid(column=1,row=0,sticky=(E))
-        ttk.Label(fet_entry_frame,text="Run Number:").grid(column=2,row=0,\
-                sticky=(E))
-        entry_run.grid(column=3,row=0,sticky=(E))
-        fetch.grid(column=4,row=0,sticky=(E))
+        fet_entry_frame.grid(column=0,row=0,sticky=(N,W))
+        ttk.Label(fet_entry_frame,text="Year:").grid(column=0,row=0,sticky=W)
+        entry_year.grid(column=1,row=0,sticky=(W))
+        ttk.Label(fet_entry_frame,text="Run Number:").grid(column=2,row=0,sticky=W)
+        entry_run.grid(column=3,row=0,sticky=W)
+        fetch.grid(column=4,row=0,sticky=E)
         
         # padding 
         for child in fet_entry_frame.winfo_children(): 
@@ -105,7 +103,7 @@ class fetch_files(object):
         
         # Frame for group set options ----------------------------------------
         right_frame = ttk.Labelframe(bigright_frame,\
-                text='Operations on Checked Items',pad=5)
+                text='Operations on Checked Items',pad=30)
         
         check_remove = ttk.Button(right_frame,text='Remove',\
                 command=self.remove_all,pad=5)
@@ -149,10 +147,10 @@ class fetch_files(object):
         runmode_label_frame.grid(column=1,row=0,sticky=(N,W,E))
         self.runmode_label.grid(column=0,row=0,sticky=(N,W,E))
         
-        bigright_frame.grid(column=1,row=1,sticky=(E,N,W))
+        bigright_frame.grid(column=1,row=1,sticky=(N,E))
         dataline_frame.grid(column=0,row=1,sticky=(E,W,S,N))
         
-        right_frame.grid(column=0,row=0,sticky=(N,E,W))
+        right_frame.grid(           column=0,row=0,sticky=(N,E,W))
         r = 0
         check_all_box.grid(         column=0,row=r,sticky=(N)); r+= 1
         check_toggle_button.grid(   column=0,row=r,sticky=(N),pady=10); r+= 1
@@ -164,17 +162,24 @@ class fetch_files(object):
         check_bin_remove_entry.grid(column=0,row=r,sticky=(N)); r+= 1
         check_set.grid(             column=0,row=r,sticky=(N))
         
-        bigright_frame.grid(rowspan=20)
-        check_all_box.grid(columnspan=2)
-        check_remove.grid(columnspan=2)
-        check_toggle_button.grid(columnspan=2)
+        bigright_frame.grid(        rowspan=20,sticky=(E,W))
+        check_all_box.grid(         columnspan=2)
+        check_remove.grid(          columnspan=2)
+        check_toggle_button.grid(   columnspan=2)
         check_bin_remove_entry.grid(columnspan=2)
-        check_set.grid(columnspan=2)
+        check_set.grid(             columnspan=2)
         
-        check_rebin_box.grid_configure(padx=5,pady=5)
-        check_rebin_label.grid_configure(padx=5,pady=5)
-        check_set.grid_configure(padx=5,pady=5)
+        check_rebin_box.grid_configure(padx=5,pady=5,sticky=(E,W))
+        check_rebin_label.grid_configure(padx=5,pady=5,sticky=(E,W))
+        check_set.grid_configure(padx=5,pady=5,sticky=(E,W))
         
+        # resizing
+        fetch_data_tab.grid_columnconfigure(0, weight=1)
+        for i in range(3):
+            if i%2 == 0:    fet_entry_frame.grid_columnconfigure(i, weight=2)
+        fet_entry_frame.grid_columnconfigure(3, weight=1)
+            
+            
         # drawing style
         style_frame = ttk.Labelframe(bigright_frame,text='Drawing Quantity',\
                 pad=5)
@@ -593,6 +598,13 @@ class dataline(object):
         draw_button.grid(column=c,row=0,sticky=E); c+=1
         self.draw_fit_button.grid(column=c,row=0,sticky=E); c+=1
         remove_button.grid(column=c,row=0,sticky=E); c+=1
+        
+        # resizing
+        fetch_tab_frame.grid_columnconfigure(0, weight=1)   # big frame
+        for i in (2,4,5,6):
+            line_frame.grid_columnconfigure(i, weight=100)  # run info
+        for i in (7,9,11):
+            line_frame.grid_columnconfigure(i, weight=1)    # input labels
         
         # passing
         self.line_frame = line_frame

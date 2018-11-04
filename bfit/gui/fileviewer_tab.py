@@ -97,22 +97,22 @@ class fileviewer(object):
         # viewer frame -------------------------------------------------------
         view_frame = ttk.Frame(file_tab,borderwidth=2)
         
-        self.text_nw = Text(view_frame,width=75,height=20,state='normal')
-        self.text_ne = Text(view_frame,width=75,height=20,state='normal')
-        self.text_sw = Text(view_frame,width=75,height=20,state='normal')
-        self.text_se = Text(view_frame,width=75,height=20,state='normal')
+        self.text_nw = Text(view_frame,width=80,height=20,state='normal')
+        self.text_ne = Text(view_frame,width=80,height=20,state='normal')
+        self.text_sw = Text(view_frame,width=80,height=20,state='normal')
+        self.text_se = Text(view_frame,width=80,height=20,state='normal')
         
         ttk.Label(view_frame,text="Run Info").grid(column=0,row=0,sticky=N)
         ttk.Label(view_frame,text="PPG Parameters").grid(column=1,row=0,sticky=N)
         ttk.Label(view_frame,text="Camp").grid(column=0,row=2,sticky=N)
         ttk.Label(view_frame,text="EPICS").grid(column=1,row=2,sticky=N)
         
-        self.text_nw.grid(column=0,row=1,sticky=(N,W,E,S))
-        self.text_ne.grid(column=1,row=1,sticky=(N,W,E,S))
-        self.text_sw.grid(column=0,row=3,sticky=(N,W,E,S))
-        self.text_se.grid(column=1,row=3,sticky=(N,W,E,S))
+        self.text_nw.grid(column=0,row=1,sticky=(N,W,E))
+        self.text_ne.grid(column=1,row=1,sticky=(N,W,E))
+        self.text_sw.grid(column=0,row=3,sticky=(N,W,E))
+        self.text_se.grid(column=1,row=3,sticky=(N,W,E))
         
-        view_frame.grid(column=0,row=1)
+        view_frame.grid(column=0,row=1,sticky=(N,E,W))
         
         # details frame: stuff at the bottom ----------------------------------
         details_frame = ttk.Frame(file_tab)
@@ -138,11 +138,31 @@ class fileviewer(object):
         entry_rebin.grid(column=1,row=0,sticky=E)
         self.entry_asym_type.grid(column=2,row=0,sticky=E)
         update_box.grid(column=3,row=0,sticky=E)
-        details_frame.grid(column=0,row=2,sticky=N)
+        details_frame.grid(column=0,row=2,sticky=S)
         
         # padding 
         for child in details_frame.winfo_children(): 
             child.grid_configure(padx=5, pady=5)
+            
+        # resizing
+        file_tab.grid_rowconfigure(1,weight=1)
+        file_tab.grid_columnconfigure(0,weight=1)
+        
+        entry_frame.grid_columnconfigure(0,weight=2)
+        entry_frame.grid_columnconfigure(2,weight=1)
+        entry_frame.grid_rowconfigure(0,weight=1)
+        
+        for i in range(4):
+            view_frame.grid_columnconfigure(i,weight=1)
+        view_frame.grid_rowconfigure(1,weight=1)
+        view_frame.grid_rowconfigure(3,weight=1)
+        
+        
+        
+        for t in [self.text_nw,self.text_ne,self.text_sw,self.text_se]:
+            for i in range(5):
+                t.grid_columnconfigure(i,weight=1)
+                t.grid_rowconfigure(i,weight=1)
             
     # ======================================================================= #
     def __del__(self):

@@ -55,18 +55,20 @@ class fit_files(object):
         self.draw_components = bfit.draw_components
             
         # make top level frames
-        top_fit_frame = ttk.Frame(fit_data_tab,pad=5)   # fn select, run mode
         mid_fit_frame = ttk.Frame(fit_data_tab,pad=5)   # notebook
         right_frame = ttk.Labelframe(fit_data_tab,text='Fit Results',pad=5)     # draw fit results
         
-        top_fit_frame.grid(column=0,row=0,sticky=(N,W))
-        mid_fit_frame.grid(column=0,row=1,sticky=(N,W))
-        right_frame.grid(column=1,row=1,columnspan=2,rowspan=2,sticky=(N,W,E))
+        mid_fit_frame.grid(column=0,row=1,sticky=(N,W,E))
+        right_frame.grid(column=1,row=1,columnspan=2,rowspan=2,sticky=(N,E,W))
+        
+        fit_data_tab.grid_columnconfigure(0,weight=1)   # fitting space
+        fit_data_tab.grid_columnconfigure(1,weight=10)  # par select space
         
         # TOP FRAME 
         
         # fit function select 
-        fn_select_frame = ttk.Labelframe(fit_data_tab,text='Fit Function')
+        fn_select_frame_border = ttk.Labelframe(fit_data_tab,text='Fit Function')
+        fn_select_frame = ttk.Frame(fn_select_frame_border)
         self.fit_function_title = StringVar()
         self.fit_function_title.set("")
         self.fit_function_title_box = ttk.Combobox(fn_select_frame, 
@@ -104,7 +106,8 @@ class fit_files(object):
         # GRIDDING
             
         # top frame gridding
-        fn_select_frame.grid(column=0,row=0,sticky=(E,W))
+        fn_select_frame_border.grid(column=0,row=0,sticky=(W,E))
+        fn_select_frame.grid(column=0,row=0,sticky=(W))
         self.fit_function_title_box.grid(column=0,row=0)
         ttk.Label(fn_select_frame,text="Number of Components:").grid(column=1,
                 row=0,sticky=(E),padx=5,pady=5)
@@ -153,6 +156,19 @@ class fit_files(object):
         
         self.xaxis_combobox.grid(column=1,row=1,pady=5)
         self.yaxis_combobox.grid(column=1,row=2,pady=5)
+        
+        # resizing
+        
+        # fn select
+        fn_select_frame_border.grid_columnconfigure(0,weight=1)
+        fn_select_frame.grid_columnconfigure(1,weight=1)
+        
+        # fitting frame
+        mid_fit_frame.grid_columnconfigure(0,weight=1)
+        
+        # right frame
+        for i in range(2):
+            right_frame.grid_columnconfigure(i,weight=1)
         
     # ======================================================================= #
     def populate(self,*args):
@@ -693,6 +709,14 @@ class fitinputtab(object):
         
         # grid the run_label
         self.run_label.grid(column=0,row=0,padx=5,pady=5,columnspan=c-1)
+        
+        # resizing
+        for i in (4,5):
+            fitframe.grid_columnconfigure(i,weight=1000)      # bounds
+        for i in (1,2,3):
+            fitframe.grid_columnconfigure(c-i,weight=10)  # fixed,share,chi
+        
+        fitframe.grid_columnconfigure(0,weight=1)           # run select
         
         # save
         self.fitframe = fitframe
