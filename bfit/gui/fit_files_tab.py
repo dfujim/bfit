@@ -618,6 +618,7 @@ class fitinputtab(object):
             parentry    [parname][colname] of ttk.Entry objects saved for 
                             retrieval and destruction
             runbox      listbox with run numbers: select which result to display
+            run_label   label for showing which run is selected
             runlist     list of run numbers to fit
             selected    index of selected run in runbox (int)
             fitframe    mainframe for this tab. 
@@ -656,7 +657,7 @@ class fitinputtab(object):
                 if dl[k].group.get() == self.group]
         
         # Display run info label 
-        ttk.Label(fitframe,text="Run Numbers").grid(column=0,row=0,padx=5)
+        ttk.Label(fitframe,text="Run Numbers").grid(column=0,row=1,padx=5)
 
         # List box for run viewing
         rlist = StringVar(value=tuple(map(str,self.runlist)))
@@ -665,27 +666,33 @@ class fitinputtab(object):
                                 selectmode=BROWSE)
         self.runbox.activate(0)
         self.runbox.bind('<<ListboxSelect>>',self.set_display)
-        self.runbox.grid(column=0,row=1,rowspan=10)
+        self.runbox.grid(column=0,row=2,rowspan=10)
         
         sbar = ttk.Scrollbar(fitframe,orient=VERTICAL,command=self.runbox.yview)
         self.runbox.configure(yscrollcommand=sbar.set)
         
         if len(self.runlist) > self.n_runs_max:
-            sbar.grid(column=1,row=1,sticky=(N,S),rowspan=10)
+            sbar.grid(column=1,row=2,sticky=(N,S),rowspan=10)
         else:
-            ttk.Label(fitframe,text=" ").grid(column=1,row=1,padx=5)
+            ttk.Label(fitframe,text=" ").grid(column=1,row=2,padx=5)
+        
+        # label for displyaing run number
+        self.run_label = ttk.Label(fitframe,text='',font='bold')
         
         # Parameter input labels
         c = 2
-        ttk.Label(fitframe,text='Parameter').grid(      column=c,row=0,padx=5); c+=1
-        ttk.Label(fitframe,text='Initial Value').grid(  column=c,row=0,padx=5); c+=1
-        ttk.Label(fitframe,text='Low Bound').grid(      column=c,row=0,padx=5); c+=1
-        ttk.Label(fitframe,text='High Bound').grid(     column=c,row=0,padx=5); c+=1
-        ttk.Label(fitframe,text='Result').grid(         column=c,row=0,padx=5); c+=1
-        ttk.Label(fitframe,text='Result Error').grid(   column=c,row=0,padx=5); c+=1
-        ttk.Label(fitframe,text='ChiSq').grid(          column=c,row=0,padx=5); c+=1
-        ttk.Label(fitframe,text='Fixed').grid(          column=c,row=0,padx=5); c+=1
-        ttk.Label(fitframe,text='Shared').grid(         column=c,row=0,padx=5); c+=1
+        ttk.Label(fitframe,text='Parameter').grid(      column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Initial Value').grid(  column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Low Bound').grid(      column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='High Bound').grid(     column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Result').grid(         column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Result Error').grid(   column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='ChiSq').grid(          column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Fixed').grid(          column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Shared').grid(         column=c,row=1,padx=5); c+=1
+        
+        # grid the run_label
+        self.run_label.grid(column=0,row=0,padx=5,pady=5,columnspan=c-1)
         
         # save
         self.fitframe = fitframe
@@ -752,14 +759,14 @@ class fitinputtab(object):
         self.parlabels = []     # track all labels and inputs
         for i,p in enumerate(plist):
             self.parlabels.append(ttk.Label(self.fitframe,text=p,justify=LEFT))
-            self.parlabels[-1].grid(column=c,row=1+i,padx=5,sticky=E)
+            self.parlabels[-1].grid(column=c,row=2+i,padx=5,sticky=E)
         
         # get data of selected run
         run = self.get_selected_run()
         fitdat = self.bfit.data[run]
         
         # input values: initial parameters
-        r = 0
+        r = 1
         for p in plist:         # iterate parameter names
             c = 2   # gridding column         
             r += 1  # gridding row         
@@ -789,7 +796,7 @@ class fitinputtab(object):
             dpar.grid(column=c,row=r,padx=5,sticky=E); c += 1
 
             # do chi only once
-            if r == 1:
+            if r == 2:
                 chi_val = StringVar()
                 chi = ttk.Entry(self.fitframe,textvariable=chi_val,width=7)
                 chi['state'] = 'readonly'
@@ -829,28 +836,42 @@ class fitinputtab(object):
         
         # get data that is currently there, possibly for whole group
         run = self.runlist[self.selected]
-        if self.bfit.fit_files.set_as_group.get():        
-            fitdat_old = [self.bfit.data[r] for r in self.runlist]
+        fitdat_old = self.bfit.data[run]
+        
+        # set as group 
+        if self.bfit.fit_files.set_as_group.get():
+            fitdat_list = [self.bfit.data[r] for r in self.runlist]
         else:
-            fitdat_old = [self.bfit.data[run]]
+            fitdat_list = [fitdat_old]
         
         # get run number of new selected run
         run = self.get_selected_run()
         fitdat_new = self.bfit.data[run]
     
+        # set label for run slection 
+        self.run_label['text'] = '[ %d ]' % (run)
     
         for p in self.parentry.keys():  # parentry = [parname][colname][value,entry]
             for i in range(3):          # iterate input columns
                 col = self.collist[i]   # column title
         
-                # get new initial parameters
+                # get new initial parameter
                 if len(fitdat_new.fitpar[col].keys()) == 0:
                     self.get_new_parameters([run])
+                newpar = float(self.parentry[p][col][0].get())
                     
-                # get data of old entry
-                for d in fitdat_old:
-                    d.fitpar[col][p] = float(self.parentry[p][col][0].get())
+                # check data of old entry: True if change data of all runs
+                change_par = fitdat_old.fitpar[col][p] != newpar
                 
+                # set parameters of all data
+                if change_par: 
+                    for d in fitdat_list:
+                        d.fitpar[col][p] = newpar
+                
+                # set only selected run
+                else:
+                    fitdat_old.fitpar[col][p] = newpar
+                    
                 # set values of new data
                 self.parentry[p][col][0].set(
                             ("%"+".%df" % self.bfit.rounding) % \
@@ -858,10 +879,16 @@ class fitinputtab(object):
                 
             # get fixed status of old data then set to new
             try:
-                for d in fitdat_old:
-                    d.fitpar['fixed'][p] = self.parentry[p]['fixed'][0].get()
+                newpar = self.parentry[p]['fixed'][0].get()
+                change_par = fitdat_old.fitpar['fixed'][p] != newpar
             except KeyError:
                 pass
+            else:
+                if change_par:
+                    for d in fitdat_list:   
+                        d.fitpar['fixed'][p] = newpar
+                else:
+                    fitdat_old.fitpar['fixed'][p] = newpar
             
             try:
                 self.parentry[p]['fixed'][0].set(fitdat_new.fitpar['fixed'][p])
@@ -871,10 +898,16 @@ class fitinputtab(object):
     
             # get and set shared status 
             try:
-                for d in fitdat_old:
-                    d.fitpar['shared'][p] = self.parentry[p]['shared'][0].get()
+                newpar = self.parentry[p]['shared'][0].get()
+                change_par = fitdat_old.fitpar['shared'][p] != newpar
             except KeyError:
                 pass
+            else:
+                if change_par:
+                    for d in fitdat_list:   
+                        d.fitpar['shared'][p] = newpar
+                else:
+                    fitdat_old.fitpar['shared'][p] = newpar
             
             try:
                 self.parentry[p]['shared'][0].set(fitdat_new.fitpar['shared'][p])
