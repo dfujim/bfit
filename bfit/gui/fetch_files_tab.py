@@ -179,7 +179,6 @@ class fetch_files(object):
             if i%2 == 0:    fet_entry_frame.grid_columnconfigure(i, weight=2)
         fet_entry_frame.grid_columnconfigure(3, weight=1)
             
-            
         # drawing style
         style_frame = ttk.Labelframe(bigright_frame,text='Drawing Quantity',\
                 pad=5)

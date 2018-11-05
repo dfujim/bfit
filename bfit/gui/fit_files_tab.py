@@ -164,7 +164,9 @@ class fit_files(object):
         fn_select_frame.grid_columnconfigure(1,weight=1)
         
         # fitting frame
+        fit_data_tab.grid_rowconfigure(1,weight=1)  #fitting area
         mid_fit_frame.grid_columnconfigure(0,weight=1)
+        mid_fit_frame.grid_rowconfigure(0,weight=1)
         
         # right frame
         for i in range(2):
@@ -682,13 +684,13 @@ class fitinputtab(object):
                                 selectmode=BROWSE)
         self.runbox.activate(0)
         self.runbox.bind('<<ListboxSelect>>',self.set_display)
-        self.runbox.grid(column=0,row=2,rowspan=10)
+        self.runbox.grid(column=0,row=2,rowspan=self.n_runs_max)
         
         sbar = ttk.Scrollbar(fitframe,orient=VERTICAL,command=self.runbox.yview)
         self.runbox.configure(yscrollcommand=sbar.set)
         
         if len(self.runlist) > self.n_runs_max:
-            sbar.grid(column=1,row=2,sticky=(N,S),rowspan=10)
+            sbar.grid(column=1,row=2,sticky=(N,S),rowspan=self.n_runs_max)
         else:
             ttk.Label(fitframe,text=" ").grid(column=1,row=2,padx=5)
         
@@ -717,6 +719,12 @@ class fitinputtab(object):
             fitframe.grid_columnconfigure(c-i,weight=10)  # fixed,share,chi
         
         fitframe.grid_columnconfigure(0,weight=1)           # run select
+        
+        fitframe.grid_rowconfigure(0,weight=1)              # run title
+        
+        for i in range(2,50):
+            fitframe.grid_rowconfigure(i,weight=1)
+        self.parent.grid_rowconfigure(1,weight=1)
         
         # save
         self.fitframe = fitframe
