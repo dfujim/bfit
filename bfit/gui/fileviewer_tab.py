@@ -39,9 +39,11 @@ class fileviewer(object):
     asym_dict = {"Combined Helicity"        :'c',
                  "Split Helicity"           :'h',
                  "Matched Helicity"         :'hm',
-                 "Shifted Helicity"         :'hs',
+                 "Shifted Split"            :'hs',
+                 "Shifted Combined"         :'cs',
                  "Matched Peak Finding"     :'hp',
                  "Raw Scans"                :'r',
+                 "Raw Histograms"           :'rhist',
                  "Combined Hel Raw"         :'2e_rw_c',
                  "Combined Hel Slopes"      :'2e_sl_c',
                  "Combined Hel Diff"        :'2e_di_c',
@@ -107,10 +109,10 @@ class fileviewer(object):
         ttk.Label(view_frame,text="Camp").grid(column=0,row=2,sticky=N)
         ttk.Label(view_frame,text="EPICS").grid(column=1,row=2,sticky=N)
         
-        self.text_nw.grid(column=0,row=1,sticky=(N,W,E))
-        self.text_ne.grid(column=1,row=1,sticky=(N,W,E))
-        self.text_sw.grid(column=0,row=3,sticky=(N,W,E))
-        self.text_se.grid(column=1,row=3,sticky=(N,W,E))
+        self.text_nw.grid(column=0,row=1,sticky=(N))
+        self.text_ne.grid(column=1,row=1,sticky=(N))
+        self.text_sw.grid(column=0,row=3,sticky=(N))
+        self.text_se.grid(column=1,row=3,sticky=(N))
         
         view_frame.grid(column=0,row=1,sticky=(N,E,W))
         
@@ -156,8 +158,6 @@ class fileviewer(object):
             view_frame.grid_columnconfigure(i,weight=1)
         view_frame.grid_rowconfigure(1,weight=1)
         view_frame.grid_rowconfigure(3,weight=1)
-        
-        
         
         for t in [self.text_nw,self.text_ne,self.text_sw,self.text_se]:
             for i in range(5):

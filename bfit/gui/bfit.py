@@ -118,11 +118,11 @@ class bfit(object):
     volt_unit_conv = 1.e-3   # conversion rate from original to display units
     
     asym_dict_keys = {'20':("Combined Helicity","Split Helicity",
-                            "Matched Helicity"),
+                            "Matched Helicity","Raw Histograms"),
                       '1f':("Combined Helicity","Split Helicity","Raw Scans",
-                            "Shifted Helicity"),
+                            "Shifted Split","Shifted Combined","Raw Histograms"),
                       '1n':("Combined Helicity","Split Helicity","Raw Scans",
-                            "Matched Peak Finding"),
+                            "Matched Peak Finding","Raw Histograms"),
                       '2e':("Combined Hel Raw","Combined Hel Slopes",      
                             "Combined Hel Diff","Split Hel Raw",
                             "Split Hel Slopes","Split Hel Diff"),
@@ -130,7 +130,8 @@ class bfit(object):
                             "Matched Helicity",
                             "Alpha Diffusion",
                             "Combined Hel (Alpha Tag)","Split Hel (Alpha Tag)",
-                            "Combined Hel (!Alpha Tag)","Split Hel (!Alpha Tag)")}
+                            "Combined Hel (!Alpha Tag)","Split Hel (!Alpha Tag)",
+                            "Raw Histograms")}
     
     data = {}   # for fitdata objects
     
@@ -349,7 +350,9 @@ class bfit(object):
                      '1f':'Frequency (MHz)',
                      '1n':'Voltage (V)'}
         ylabel_dict={'ad':r'$N_\alpha/N_\beta$', # otherwise, label as Asymmetry
-                     'hs':r'Asym-Asym($\nu_{min}$)'}
+                     'hs':r'Asym-Asym($\nu_{min}$)',
+                     'cs':r'Asym-Asym($\nu_{min}$)',
+                     'rhist':'Counts'}
         x_tag={'20':"time_s",
                '2h':"time_s",
                '2e':"time",
@@ -600,6 +603,21 @@ class bfit(object):
                 tag = a.c[0]!=0 # remove zero asym
                 plt.errorbar(x[tag],a.c[0][tag],a.c[1][tag],label=label,**drawargs)
                 
+            # plot combined helicities, shifted by baseline
+            elif asym_type == 'cs':
+                
+                # remove zero asym
+                ac = a.c[0]
+                tag = ac!=0
+                ac = ac[tag]
+                
+                # subtract first value
+                x = x[tag]
+                loc = np.where(x==min(x))[0][0]
+                ac -= ac[loc]
+                
+                plt.errorbar(x,ac,a.c[1][tag],label=label,**drawargs)
+            
             # attempting to draw raw scans unlawfully
             elif asym_type == 'r':
                 return
@@ -635,12 +653,40 @@ class bfit(object):
                                  label=label+r" !$\alpha$ ($+$)",**drawargs)
                     plt.errorbar(t,a.n_noA[0],a.n_noA[1],
                                  label=label+r" !$\alpha$ ($-$)",**drawargs)
+            
+            # draw raw histograms
+            elif asym_type == 'rhist':
+                
+                # make a new figure
+                style = draw_style.get()
+                
+                # get the histograms 
+                hist = data.hist
+                
+                # draw
+                keylist = ('F+','F-','B+','B-','L+','R+','L-','R-',
+                             'NBMF+','NBMF-','NBMB+','NBMB-','AL0+','AL0-')
+                for h in keylist:
+                    
+                    # get bins
+                    try:
+                        x = np.arange(len(hist[h].data))
+                    except KeyError:
+                        continue
+                    
+                    # check for non-empty histograms, then draw
+                    if np.mean(hist[h].data) > 0:                        
+                        plt.plot(x,hist[h].data,label=h)
+                        
+                plt.ylabel(ylabel_dict[asym_type])
+                plt.xlabel('Bin')
+                            
             # unknown run type
             else:
                 raise RuntimeError("Unknown draw style")
                     
         # plot elements
-        if data.mode != '2e':
+        if data.mode != '2e' and asym_type != 'rhist':
             plt.xlabel(xlabel)
             
             if asym_type in ylabel_dict.keys():
