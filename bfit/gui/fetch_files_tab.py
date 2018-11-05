@@ -23,9 +23,16 @@ class fetch_files(object):
     """
         Data fields:
             
+            canvas_frame_id: id number of frame in canvas
             check_rebin: IntVar for handling rebin aspect of checkall
             check_bin_remove: StringVar for handing omission of 1F data
             check_state: BooleanVar for handling check all
+            
+            
+            data_canvas: canvas object allowing for scrolling 
+            dataline_frame: frame holding all the data lines. Exists as a window
+                in the data_canvas
+            
             entry_asym_type: combobox for asym calc and draw type
             year: StringVar of year to fetch runs from 
             run: StringVar input to fetch runs.
@@ -34,6 +41,7 @@ class fetch_files(object):
             fet_entry_frame: frame of fetch tab
             runmode_label: display run mode
             runmode: display run mode string
+            max_number_fetched: max number of files you can fetch
     """
     
     runmode_relabel = {'20':'Spin-Lattice Relaxation (20)',
@@ -43,6 +51,7 @@ class fetch_files(object):
                        '2h':'Alpha Tagging/Diffusion (2h)'}
     run_number_starter_line = '40001 40005-40010 (run numbers)'
     bin_remove_starter_line = '1 5 100-200 (omit bins)'
+    max_number_fetched = 500
     
     # ======================================================================= #
     def __init__(self,fetch_data_tab,bfit):
@@ -95,8 +104,19 @@ class fetch_files(object):
         
         self.runmode_label = ttk.Label(runmode_label_frame,text="",font='bold',justify=CENTER)
         
-        # Frame to hold datalines
-        dataline_frame = ttk.Frame(fetch_data_tab,pad=5)
+        # Scrolling frame to hold datalines
+        yscrollbar = Scrollbar(fetch_data_tab, orient=VERTICAL)         
+        self.data_canvas = Canvas(fetch_data_tab,bd=0,              # make a canvas for scrolling
+                yscrollcommand=yscrollbar.set,                      # scroll command receive
+                scrollregion=(0, 0, 5000, 5000),confine=True)       # default size
+        yscrollbar.config(command=self.data_canvas.yview)           # scroll command send
+        dataline_frame = ttk.Frame(self.data_canvas,pad=5)          # holds 
+        
+        self.canvas_frame_id = self.data_canvas.create_window((0,0),    # make window which can scroll
+                window=dataline_frame,
+                anchor='nw')
+        dataline_frame.bind("<Configure>",self.config_canvas) # bind resize to alter scrollable region
+        self.data_canvas.bind("<Configure>",self.config_dataline_frame) # bind resize to change size of contained frame
         
         # Frame to hold everything on the right ------------------------------
         bigright_frame = ttk.Frame(fetch_data_tab,pad=5)
@@ -144,11 +164,13 @@ class fetch_files(object):
         check_bin_remove_entry.config(foreground='grey')
                 
         # grid
-        runmode_label_frame.grid(column=1,row=0,sticky=(N,W,E))
+        runmode_label_frame.grid(column=2,row=0,sticky=(N,W,E))
         self.runmode_label.grid(column=0,row=0,sticky=(N,W,E))
         
-        bigright_frame.grid(column=1,row=1,sticky=(N,E))
-        dataline_frame.grid(column=0,row=1,sticky=(E,W,S,N))
+        bigright_frame.grid(column=2,row=1,sticky=(N,E))
+        
+        self.data_canvas.grid(column=0,row=1,sticky=(E,W,S,N))
+        yscrollbar.grid(column=1,row=1,sticky=(W,S,N))
         
         right_frame.grid(           column=0,row=0,sticky=(N,E,W))
         r = 0
@@ -162,7 +184,7 @@ class fetch_files(object):
         check_bin_remove_entry.grid(column=0,row=r,sticky=(N)); r+= 1
         check_set.grid(             column=0,row=r,sticky=(N))
         
-        bigright_frame.grid(        rowspan=20,sticky=(E,W))
+        bigright_frame.grid(        rowspan=2,sticky=(N,E,W))
         check_all_box.grid(         columnspan=2)
         check_remove.grid(          columnspan=2)
         check_toggle_button.grid(   columnspan=2)
@@ -174,10 +196,15 @@ class fetch_files(object):
         check_set.grid_configure(padx=5,pady=5,sticky=(E,W))
         
         # resizing
-        fetch_data_tab.grid_columnconfigure(0, weight=1)
+        fetch_data_tab.grid_columnconfigure(0, weight=1)        # main area
+        fetch_data_tab.grid_rowconfigure(1,weight=1)            # main area
+        
         for i in range(3):
             if i%2 == 0:    fet_entry_frame.grid_columnconfigure(i, weight=2)
         fet_entry_frame.grid_columnconfigure(3, weight=1)
+            
+        self.data_canvas.grid_columnconfigure(0,weight=1)    # fetch frame 
+        self.data_canvas.grid_rowconfigure(0,weight=1)
             
         # drawing style
         style_frame = ttk.Labelframe(bigright_frame,text='Drawing Quantity',\
@@ -207,8 +234,20 @@ class fetch_files(object):
             self.data_lines[k].check_state.set(state)
         
     # ======================================================================= #
-    def draw_all(self,ignore_check=False):
+    def config_canvas(self,event):
+        """Alter scrollable region based on canvas bounding box size. 
+        (changes scrollbar properties)"""
+        self.data_canvas.configure(scrollregion=self.data_canvas.bbox("all"))
+    
+    # ======================================================================= #
+    def config_dataline_frame(self,event):
+        """Alter size of contained frame in canvas. Allows for inside window to 
+        be resized with mouse drag""" 
+        self.data_canvas.itemconfig(self.canvas_frame_id,width=event.width)
         
+    # ======================================================================= #
+    def draw_all(self,ignore_check=False):
+        """Draw all data in data lines"""
         # condense drawing into a funtion
         def draw_lines():
             for r in self.data_lines.keys():
@@ -241,7 +280,7 @@ class fetch_files(object):
 
     # ======================================================================= #
     def draw_all_fits(self,ignore_check=False):
-        
+        """Draw all fits in data lines"""
         # condense drawing into a funtion
         def draw_lines():
             for r in self.data_lines.keys():
@@ -442,7 +481,7 @@ class fetch_files(object):
         # sort
         run_numbers.sort()
         
-        if len(run_numbers) > 50:
+        if len(run_numbers) > self.max_number_fetched:
             raise RuntimeWarning("Too many files selected (max 50).")
         return run_numbers
     
