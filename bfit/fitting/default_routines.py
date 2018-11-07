@@ -159,7 +159,7 @@ class fitter(object):
             
             # set values
             par_values = {'amp':(amp,0,np.inf),
-                          '1/T1':(T1,0,np.inf),
+                          '1/T1':(1./T1,0,np.inf),
                           'baseline':(base,-np.inf,np.inf),
                           'beta':(0.5,0,1)}
                          
