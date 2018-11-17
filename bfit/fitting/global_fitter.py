@@ -1,4 +1,4 @@
-# Fit pair of runs globally with strexp
+# Fit set of data globally 
 # Derek Fujimoto
 # Nov 2018
 
@@ -125,8 +125,6 @@ class global_fitter(object):
         # check in input function is iterable
         if not isinstance(self.fn,collections.Iterable):
             self.fn = [self.fn for i in range(self.nsets)]
-        else:
-            self.fn = self.fn
         
         # get fit function
         self.fitfn = self._get_fitfn()
@@ -202,14 +200,14 @@ class global_fitter(object):
             xdraw = np.arange(self.ndraw_pts)/self.ndraw_pts*(max(x_draw)-min(x_draw))+min(x_draw)
             plt.plot(xdraw,f(xfit,*self.par[par_index[i]]),color=color,zorder=10)
         
-        # plot elements
-        plt.ylabel(ylabel)
-        plt.xlabel(xlabel)
-        
-        if do_legend:       plt.legend(fontsize='x-small')
-        if savefig!='':     plt.savefig(savefig)
-        
-        plt.tight_layout()
+            # plot elements
+            plt.ylabel(ylabel)
+            plt.xlabel(xlabel)
+            
+            if do_legend:       plt.legend(fontsize='x-small')
+            if savefig!='':     plt.savefig(savefig)
+            
+            plt.tight_layout()
 
         return fig_list
         
