@@ -4,4 +4,5 @@ __all__=['functions',
          'PulsedFns',
          'pulsed',
          'continuous',
-         'fitter']
+         'fitter',
+         'fit_bdata']

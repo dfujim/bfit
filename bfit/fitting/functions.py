@@ -46,7 +46,7 @@ class pulsed(object):
         if name == '__code__':
             return code_wrapper(self.__call__.__code__)
         else:
-            return self.name
+            return getattr(self,name)
 
 class pulsed_exp(pulsed):
     def __call__(self,time,lambda_s,amp):

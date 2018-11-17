@@ -18,7 +18,7 @@ __doc__=\
         
         Construct fitter:
             
-            g = global_fitter(x,y,dy,fn,sharelist)
+            g = global_fitter(x,y,dy,fn,sharelist,npar=-1)
             
             %s
     
