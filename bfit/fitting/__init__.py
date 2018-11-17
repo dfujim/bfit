@@ -10,3 +10,4 @@ else:
 
 
 from bfit.fitting.default_routines import fitter
+from bfit.fitting.global_fitter import global_fitter
