@@ -6,6 +6,7 @@ from bfit.fitting.integrator import PulsedFns
 from bdata import bdata
 from scipy.optimize import curve_fit
 import numpy as np
+import bfit.fitting.functions as fns
 
 # number of input parameters (not detectable)
 ninputs_dict = {'exp':2,'strexp':3,'mixed_strexp':6}
@@ -56,27 +57,19 @@ def slr(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',hist_select='',**kwar
         raise RuntimeError('ncomp needs to be >= 1')
     
     # Get fitting function 
-    pulser = PulsedFns(life,pulse)
     if mode == 'strexp':
-        fn1 = pulser.str_exp
-    elif mode == 'mixed_strexp':
-        fn1 = pulser.mixed_str_exp
+        fn1 = fns.pulsed_strexp(life,pulse)
     elif mode == 'exp':
-        fn1 = pulser.exp
+        fn1 = fns.pulsed_exp(life,pulse)
 
     # Make final function based on number of components
-    ninputs = ninputs_dict[mode]
-    npars = ninputs*ncomp
+    fnlist = [fn1]*ncomp
     
     if offset:
-        npars += 1
-        def fitfn(x,*pars):
-            val = lambda i : fn1(x,*tuple(pars[i*ninputs:(i+1)*ninputs]))
-            return np.sum(i for i in map(val,range(ncomp)))+pars[-1]
-    else:
-        def fitfn(x,*pars):
-            val = lambda i : fn1(x,*tuple(pars[i*ninputs:(i+1)*ninputs]))
-            return np.sum(i for i in map(val,range(ncomp)))
+        fnlist.append(lambda x,b: b)
+    
+    fitfn = fns.get_fn_superpos(fnlist)
+    npars = len(fnlist)
             
     # Make initial parameters
     if 'p0' in kwargs.keys():

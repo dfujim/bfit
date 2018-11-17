@@ -5,9 +5,7 @@
 from bdata import bdata
 from scipy.optimize import curve_fit
 import numpy as np
-
-# number of input parameters (not detectable)
-ninputs_dict = {'lor':3,'gaus':3,'2lor_shpk':5}
+import bfit.fitting.functions as fns
 
 # ========================================================================== #
 def fscan(data,mode,omit='',ncomp=1,probe='8Li',hist_select='',**kwargs):
@@ -53,19 +51,15 @@ def fscan(data,mode,omit='',ncomp=1,probe='8Li',hist_select='',**kwargs):
         
     # Get fitting function 
     if mode == 'lor':
-        fn1 = lor
+        fn1 = fns.lorentzian
     elif mode == 'gaus':
-        fn1 = gaus
-    elif mode == '2lor_shpk':
-        fn1 = lor2_shrpk
+        fn1 = fns.gaussian
     
     # Make final function based on number of components
-    ninputs = ninputs_dict[mode]
-    npars = ninputs*ncomp+1    
-    
-    def fitfn(x,*pars):
-        val = lambda i : fn1(x,*tuple(pars[i*ninputs:(i+1)*ninputs]))
-        return np.sum(i for i in map(val,range(ncomp)))+pars[-1]
+    base = lambda x,b: b
+    fnlist = [fn1]*ncomp+[base]
+    fitfn = fns.get_fn_superimpose(fnlist)
+    npars = len(fnlist)
     
     # Make initial parameters
     if 'p0' in kwargs.keys():
@@ -81,20 +75,6 @@ def fscan(data,mode,omit='',ncomp=1,probe='8Li',hist_select='',**kwargs):
     chi = np.sum(np.square((ydata-fitfn(xdata,*tuple(par)))/yerr))/(len(ydata)-1)
     
     return (par,cov,chi,fitfn)
-    
-# ========================================================================== #
-# FITTING FUNCTIONS
-def lor(freq,peak,width,amp):
-    """Lorentzian"""
-    return -amp*0.25*np.square(width)/(np.square(freq-peak)+np.square(0.5*width))
-
-def lor2_shrpk(freq,peak,width1,amp1,width2,amp2):
-    """Two Lorentzians with shared peak value"""
-    return -amp1*0.25*np.square(width1)/(np.square(freq-peak)+np.square(0.5*width1))+\
-            -amp2*0.25*np.square(width2)/(np.square(freq-peak)+np.square(0.5*width2))
-
-def gaus(freq,peak,width,amp):
-    return -amp*np.exp(-np.square((freq-peak)/(width))/2)
 
 
 
