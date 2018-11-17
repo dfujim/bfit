@@ -8,9 +8,6 @@ from scipy.optimize import curve_fit
 import numpy as np
 import bfit.fitting.functions as fns
 
-# number of input parameters (not detectable)
-ninputs_dict = {'exp':2,'strexp':3,'mixed_strexp':6}
-
 # ========================================================================== #
 def slr(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',hist_select='',**kwargs):
     """

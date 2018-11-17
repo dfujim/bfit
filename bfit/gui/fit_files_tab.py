@@ -752,7 +752,7 @@ class fitinputtab(object):
             
             # set to data
             self.bfit.data[run].set_fitpar(values)
-    
+        
         return plist
         
     # ======================================================================= #

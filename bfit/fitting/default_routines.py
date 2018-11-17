@@ -184,7 +184,7 @@ class fitter(object):
                               'baseline':(base,-np.inf,np.inf)
                              }
             elif fn_name == 'Gaussian':
-                par_values = {'peak':(peak,min(f),max(f)),
+                par_values = {'mean':(peak,min(f),max(f)),
                               'sigma':(width,0,np.inf),
                               'height':(height,0,np.inf),
                               'baseline':(base,-np.inf,np.inf)
@@ -216,7 +216,6 @@ class fitter(object):
             
             Returns python function(x,*pars)
         """
-        
         
         # set fitting function
         if fn_name == 'Lorentzian':

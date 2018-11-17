@@ -58,7 +58,7 @@ def fscan(data,mode,omit='',ncomp=1,probe='8Li',hist_select='',**kwargs):
     # Make final function based on number of components
     base = lambda x,b: b
     fnlist = [fn1]*ncomp+[base]
-    fitfn = fns.get_fn_superimpose(fnlist)
+    fitfn = fns.get_fn_superpos(fnlist)
     npars = len(fnlist)
     
     # Make initial parameters
