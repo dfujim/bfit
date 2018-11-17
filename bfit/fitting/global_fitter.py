@@ -85,7 +85,7 @@ class global_fitter(object):
     ndraw_pts = 500             # number of points to draw fits with
     
     # ======================================================================= #
-    def __init__(self,x,y,dy,fn,sharelist):
+    def __init__(self,x,y,dy,fn,sharelist,npar=-1):
         """
             x,y:        2-list of data sets of equal length. 
                         fmt: [[a1,a2,...],[b1,b2,...],...]
@@ -98,6 +98,10 @@ class global_fitter(object):
             
             sharelist:  tuple of booleans indicating which values to share. 
                         len = number of parameters 
+                        
+            npar:       number of free parameters in each fitting function.
+                        Set if number of parameters is not intuitable from 
+                            function code.
         """
         
         # save inputs
@@ -114,7 +118,10 @@ class global_fitter(object):
         self.xccat,self.yccat,self.dyccat = self._get_data()
         
         # get number of parameters
-        self.npar = len(self.fn.__code__.co_varnames)-1
+        if npar < 0:
+            self.npar = len(self.fn.__code__.co_varnames)-1
+        else:
+            self.npar = npar
         
         # get number of data sets
         self.nsets = len(self.xdata)

@@ -11,7 +11,7 @@ import collections
 class global_bdata_fitter(global_fitter):
     
     # ======================================================================= #
-    def __init__(self,runs,years,fn,sharelist):
+    def __init__(self,runs,years,fn,sharelist,npar=-1):
         """
             runs:       list of run numbers
             
@@ -24,6 +24,10 @@ class global_bdata_fitter(global_fitter):
             sharelist:  list of bool to indicate which parameters are shared. 
                         True if shared
                         len = number of parameters.
+                        
+            npar:       number of free parameters in each fitting function.
+                        Set if number of parameters is not intuitable from 
+                            function code.            
         """
         
         # Set years
