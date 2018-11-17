@@ -43,8 +43,7 @@ cdef class PulsedFns:
 
 # =========================================================================== #
     @cython.boundscheck(False)  # some speed up in exchange for instability
-    cpdef exp(self,np.ndarray[double, ndim=1] time,double Lambda,
-                   double amp):
+    cpdef exp(self,np.ndarray[double, ndim=1] time,double Lambda):
         """
             Pulsed exponential for an array of times. Efficient c-speed looping 
             and indexing. 
@@ -52,7 +51,6 @@ cdef class PulsedFns:
             Inputs: 
                 time: array of times
                 Lambda: 1/T1 in s^-1
-                Amp: amplitude
                 
             Outputs: 
                 np.array of values for the puslsed stretched exponential. 
@@ -71,7 +69,7 @@ cdef class PulsedFns:
         
         # precalculations 
         lambda1 = Lambda+1./life
-        prefac = amp/(lambda1*life)
+        prefac = lambda1*life
         afterfactor = (1-np.exp(-lambda1*pulse_len))/(1-np.exp(-pulse_len/life))
         
         # Calculate pulsed exponential
@@ -92,8 +90,7 @@ cdef class PulsedFns:
 
 # =========================================================================== #
     @cython.boundscheck(False)  # some speed up in exchange for instability
-    cpdef str_exp(self,np.ndarray[double, ndim=1] time,double Lambda, 
-                         double Beta, double amp):
+    cpdef str_exp(self,np.ndarray[double, ndim=1] time,double Lambda, double Beta):
         """
             Pulsed stretched exponential for an array of times. Efficient 
             c-speed looping and indexing. 
@@ -102,7 +99,6 @@ cdef class PulsedFns:
                 time: array of times
                 Lambda: 1/T1 in s^-1
                 Beta: stretching factor
-                Amp: amplitude
                 
             Outputs: 
                 np.array of values for the puslsed stretched exponential. 
@@ -134,12 +130,12 @@ cdef class PulsedFns:
             if t<pulse_len:
                 prefac = life*(1.-exp(-t/life))
                 x = intr.StrExp(t,t,Lambda,Beta)
-                out = amp*x/prefac
+                out = x/prefac
             
             # after pulse
             else:
                 x = intr.StrExp(t,pulse_len,Lambda,Beta)
-                out = amp*x*exp((t-pulse_len)/life)/prefac_post
+                out = x*exp((t-pulse_len)/life)/prefac_post
             
             # save result
             out_arr[i] = out
@@ -150,7 +146,7 @@ cdef class PulsedFns:
     @cython.boundscheck(False)  # some speed up in exchange for instability
     cpdef mixed_str_exp(self,np.ndarray[double, ndim=1] time, 
                 double Lambda1, double Beta1, double Lambda2, double Beta2,
-                double alpha, double amp):
+                double alpha):
         """
             Pulsed stretched exponential for an array of times. Efficient 
             c-speed looping and indexing. 
@@ -192,13 +188,13 @@ cdef class PulsedFns:
             if t<pulse_len:
                 prefac = life*(1.-exp(-t/life))
                 x = intr.MixedStrExp(t,t,Lambda1,Beta1,Lambda2,Beta2,alpha)
-                out = amp*x/prefac
+                out = x/prefac
             
             # after pulse
             else:
                 x = intr.MixedStrExp(t,pulse_len,Lambda1,Beta1,Lambda2,Beta2,
                                      alpha)
-                out = amp/prefac_post*x*exp((t-pulse_len)/life)
+                out = x*exp((t-pulse_len)/life)/prefac_post
             
             # save result
             out_arr[i] = out
