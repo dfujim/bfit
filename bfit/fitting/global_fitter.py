@@ -111,27 +111,27 @@ class global_fitter(object):
         self.fn = fn
         self.sharelist = sharelist
         
-        # check that input data is of the right format
-        self._check_input_data()
-        
-        # get data for appended runs
-        self.xccat,self.yccat,self.dyccat = self._get_data()
+        # check in input function is iterable
+        if not isinstance(self.fn,collections.Iterable):
+            self.fn = [self.fn for i in range(self.nsets)]
         
         # get number of parameters
         if npar < 0:
-            self.npar = len(self.fn.__code__.co_varnames)-1
+            self.npar = len(self.fn[0].__code__.co_varnames)-1
         else:
             self.npar = npar
         
         # get number of data sets
         self.nsets = len(self.xdata)
         
+        # check that input data is of the right format
+        self._check_input_data()
+        
+        # get data for appended runs
+        self.xccat,self.yccat,self.dyccat = self._get_data()
+        
         # set index
         self.par_index = self._get_shared_index()
-
-        # check in input function is iterable
-        if not isinstance(self.fn,collections.Iterable):
-            self.fn = [self.fn for i in range(self.nsets)]
         
         # get fit function
         self.fitfn = self._get_fitfn()
@@ -399,7 +399,7 @@ class global_fitter(object):
             raise RuntimeError('Lengths of input data arrays do not match')
         
         # TEST SHARED INPUT ===================================================
-        if len(self.sharelist) > len(self.fn.__code__.co_varnames)-1:
+        if len(self.sharelist) > self.npar:
             raise RuntimeError('Length of sharelist is too large. '+\
                                'len(sharelist) == len(fn parameters)')
     

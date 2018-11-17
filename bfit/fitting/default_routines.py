@@ -63,7 +63,7 @@ class fitter(object):
         fn = self.get_fn(fn_name,ncomp)
 
         
-        # fit each function 
+        # gather list of data to fit 
         for data in data_list:
             
             # split data list into parts
