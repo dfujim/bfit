@@ -1,2 +1,2 @@
-from bfit.gui.bfit import bfit
+__all__=['bfit']
 
