@@ -24,8 +24,8 @@ class code_wrapper(object):
 def lorentzian(freq,peak,width,amp):
     return -amp*0.25*np.square(width)/(np.square(freq-peak)+np.square(0.5*width))
 
-def gaussian(freq,peak,width,amp):
-    return -amp*np.exp(-np.square((freq-peak)/(width))/2)
+def gaussian(freq,mean,sigma,amp):
+    return -amp*np.exp(-np.square((freq-mean)/(sigma))/2)
 
 # =========================================================================== #
 # TYPE 2 PULSED FUNCTIONS 
