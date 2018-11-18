@@ -55,7 +55,8 @@ class fitter(object):
                                     'group':int,    # fitting group
                                  }
                                             
-            returns dictionary of {run: [[par_names],[par_values],[par_errors],[fitfunction pointers]]}
+            returns dictionary of {run: [[par_names],[par_values],[par_errors],
+                                        [chisquared],[fitfunction pointers]]}
         """
 
         # check ncomponents
