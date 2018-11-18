@@ -64,8 +64,8 @@ class fitter(object):
             
         # parameter names
         keylist = self.gen_param_names(fn_name,ncomp)
-        npar = len(keylist)*ncomp+1
-            
+        npar = len(keylist)
+        
         # gather list of data to fit 
         fn = []
         runs = []
@@ -74,7 +74,7 @@ class fitter(object):
         bounds = []
         omit = []
         rebin = []
-        sharelist = np.zeros(len(keylist),dtype=bool)
+        sharelist = np.zeros(npar,dtype=bool)
         
         for data in data_list:
             

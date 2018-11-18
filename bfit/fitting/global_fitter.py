@@ -307,8 +307,8 @@ class global_fitter(object):
         std = np.sqrt(np.diag(cov))
         
         # expand parameters
-        par_out = par[self.par_index]
-        std_out = std[self.par_index]
+        par_out = par[self.par_index].reshape(-1,self.npar)
+        std_out = std[self.par_index].reshape(-1,self.npar)
         
         # return
         self.par = par
@@ -352,51 +352,26 @@ class global_fitter(object):
         """
             Fetch fit parameters as dictionary
             
-            return dict(parameters and errors). Errors have prefix 'd'.
+            return 2-tuple of (par,error) each with format
+            
+            [data1:[par1,par2,...],data2:[],...]
         """
     
-        # set parameter indexes with sharing
-        par_index = self.par_index.reshape(-1,self.npar).transpose()
+        par = self.par[self.par_index].reshape(-1,self.npar)
+        std = self.std[self.par_index].reshape(-1,self.npar)
         
-        # get parameter names
-        parnames = self.fn[0].__code__.co_varnames[1:]
-        
-        # make output dictionairies
-        pardict = {name:self.par[p] for name,p in zip(parnames,par_index)}
-        errdict = {'d'+name:self.std[p] for name,p in zip(parnames,par_index)}
-        return dict(pardict,**errdict)
+        return (par,std)
     
     # ======================================================================= #
     def _check_input_data(self):
         """Check input data lengths match. Raise exception on failure."""
         
-        # flag for testing
-        all_is_good = True
-        
-        # TEST DATA ARRAYS ====================================================
-        
-        # test x
-        xtest = np.fromiter(map(len,self.xdata),dtype=int,count=len(self.xdata))
-        if not all(xtest == xtest[0]): 
-            all_is_good = False
-        
-        # test y
-        ytest = np.fromiter(map(len,self.ydata),dtype=int,count=len(self.ydata))
-        if not all(ytest == xtest[0]): 
-            all_is_good = False
-        
-        # test dy
-        dytest = np.fromiter(map(len,self.dydata),dtype=int,count=len(self.dydata))
-        if not all(dytest == xtest[0]): 
-            all_is_good = False
-        
         # test number of data sets
         if not len(self.xdata) == len(self.ydata) == len(self.dydata):
-            all_is_good = False
-        
-        # raise
-        if not all_is_good:
-            raise RuntimeError('Lengths of input data arrays do not match')
+            raise RuntimeError('Lengths of input data arrays do not match.\n'+\
+                'nsets: x, y, dy =  %d, %d, %d\n' % (len(self.xdata),
+                                                     len(self.ydata),
+                                                     len(self.dydata)))            
         
         # TEST SHARED INPUT ===================================================
         if len(self.sharelist) > self.npar:

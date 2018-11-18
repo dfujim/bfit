@@ -94,11 +94,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         g = global_bdata_fitter(runs,years,fnlist,sharelist,npar)
         g.fit(**kwargs)
         _,chis = g.get_chi()
-        pardict = g.get_par()
-        
-        # make output 
-        pars = [pardict[k] for k in fnlist[0].__code__.co_varnames[1:]]
-        stds = [pardict['d'+k] for k in fnlist[0].__code__.co_varnames[1:]]
+        pars,stds = g.get_par()
         
     # fit runs individually --------------------------------------------------
     else:
@@ -110,7 +106,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
             pars.append(p)
             stds.append(s)
             chis.append(c)
-    
+            
     return(pars,stds,chis)
 
 # =========================================================================== #
