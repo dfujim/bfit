@@ -853,7 +853,6 @@ class fitinputtab(object):
             value = BooleanVar()
             entry = ttk.Checkbutton(self.fitframe,text='',\
                                      variable=value,onvalue=True,offvalue=False)
-            entry.config(state=DISABLED)###################################################
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
             self.parentry[p][self.collist[7]] = (value,entry)
         
