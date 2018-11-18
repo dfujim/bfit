@@ -401,7 +401,8 @@ class global_fitter(object):
         # TEST SHARED INPUT ===================================================
         if len(self.sharelist) > self.npar:
             raise RuntimeError('Length of sharelist is too large. '+\
-                               'len(sharelist) == len(fn parameters)')
+                       'len(sharelist) [%d] == len(fn parameters [%d])'%\
+                        (len(self.sharelist),self.npar))
     
     # ======================================================================= #
     def _get_data(self):

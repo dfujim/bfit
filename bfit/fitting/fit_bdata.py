@@ -74,6 +74,20 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
     # get years
     if type(years) in (int,float):
         years = np.ones(nruns,dtype=int)*years
+        
+    # get p0 list
+    if 'p0' in kwargs.keys():
+        p0 = kwargs['p0']
+        del kwargs['p0']
+    else:
+        p0 = [np.ones(npar)]*nruns
+
+    # get bounds
+    if 'bounds' in kwargs.keys():
+        bounds = kwargs['bounds']
+        del kwargs['bounds']
+    else:
+        bounds = [(np.inf,np.inf)]*nruns
 
     # fit globally -----------------------------------------------------------
     if any(sharelist):
@@ -91,8 +105,8 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         pars = []
         stds = []
         chis = []
-        for r,y,fn,om,re in zip(runs,years,fnlist,omit,rebin):
-            p,s,c = fit_single(r,y,fn,om,re,hist_select,**kwargs)
+        for r,y,fn,om,re,p,b in zip(runs,years,fnlist,omit,rebin,p0,bounds):
+            p,s,c = fit_single(r,y,fn,om,re,hist_select,p0=p,bounds=b,**kwargs)
             pars.append(p)
             stds.append(s)
             chis.append(c)
@@ -145,24 +159,3 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs):
     chi = np.sum(np.square((y-fn(x,*par))/dy))/dof
     
     return (par,std,chi)
-    
-
-
-
-# check ncomponents
-    # ~ if ncomp < 1:
-        # ~ raise RuntimeError('ncomp needs to be >= 1')
-        
-    # ~ # Make final function based on number of components
-    # ~ base = lambda x,b: b
-    # ~ fnlist = [fn1]*ncomp+[base]
-    # ~ fitfn = fns.get_fn_superpos(fnlist)
-    # ~ npars = len(fnlist)
-    
-    # ~ # Make initial parameters
-    # ~ if 'p0' in kwargs.keys():
-        # ~ if len(kwargs['p0']) < npars: 
-            # ~ raise ValueError('Inconsistent shapes between p0 and `x0`.')
-    # ~ else:
-        # ~ kwargs['p0'] = np.zeros(npars)+1
-        

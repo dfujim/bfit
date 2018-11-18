@@ -43,4 +43,4 @@ class global_bdata_fitter(global_fitter):
         dy = np.array([d[2] for d in data])
         
         # intialize
-        super(global_bdata_fitter,self).__init__(x,y,dy,fn,sharelist)
+        super(global_bdata_fitter,self).__init__(x,y,dy,fn,sharelist,npar)

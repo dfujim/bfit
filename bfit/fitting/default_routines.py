@@ -2,8 +2,8 @@
 # Derek Fujimoto
 # Aug 2018
 
-from bfit.fitting.continuous import fscan
-from bfit.fitting.pulsed import slr
+from bfit.fitting.fit_bdata import fit_list
+import bfit.fitting.functions as fns
 from functools import partial
 import numpy as np
 
@@ -58,12 +58,24 @@ class fitter(object):
             returns dictionary of {run: [[par_names],[par_values],[par_errors],[fitfunction pointers]]}
         """
 
-        # initialize output
-        parout = {}
-        fn = self.get_fn(fn_name,ncomp)
-
-        
+        # check ncomponents
+        if ncomp < 1:
+            raise RuntimeError('ncomp needs to be >= 1')
+            
+        # parameter names
+        keylist = self.gen_param_names(fn_name,ncomp)
+        npar = len(keylist)*ncomp+1
+            
         # gather list of data to fit 
+        fn = []
+        runs = []
+        years = []
+        p0 = []
+        bounds = []
+        omit = []
+        rebin = []
+        sharelist = np.zeros(len(keylist),dtype=bool)
+        
         for data in data_list:
             
             # split data list into parts
@@ -71,39 +83,63 @@ class fitter(object):
             pdict = data[1]
             doptions = data[2]
             
+            # get fitting function
+            if dat.mode in ['20','2h']:
+                pulse = dat.pulse_off_s()
+                life = dat.life['8Li'][0]
+            else:
+                pulse = -1
+                life = -1
+            fn.append(self.get_fn(fn_name,ncomp,pulse,life))
+            
+            
+            # get year and run
+            runs.append(dat.run)
+            years.append(dat.year)
+            
             # get initial parameters
-            keylist = self.gen_param_names(fn_name,ncomp)
-            p0 = [pdict[k][0] for k in keylist]
+            p0.append(tuple(pdict[k][0] for k in keylist))
             
             # get fitting bounds
-            bounds = [[],[]]
+            bound = [[],[]]
+            shlist = []
             for k in keylist:
                 
                 # if fixed, set bounds to p0 +/- epsilon
                 if pdict[k][3]:
                     p0i = pdict[k][0]
-                    bounds[0].append(p0i-self.epsilon)
-                    bounds[1].append(p0i+self.epsilon)
+                    bound[0].append(p0i-self.epsilon)
+                    bound[1].append(p0i+self.epsilon)
             
                 # else set to bounds 
                 else:
-                    bounds[0].append(pdict[k][1])
-                    bounds[1].append(pdict[k][2])
+                    bound[0].append(pdict[k][1])
+                    bound[1].append(pdict[k][2])
+                    
+                # sharelist
+                shlist.append(pdict[k][4])
+            bounds.append(bound)
             
-            # fit data
-            if self.mode == '20':    
-                par,cov,chi,ftemp = fn(data=dat,rebin=doptions['rebin'],p0=p0,
-                                   bounds=bounds,hist_select=hist_select)
+            # look for any sharelist
+            sharelist += np.array(shlist)
             
-            elif self.mode == '1f':    
-                par,cov,chi,ftemp = fn(data=dat,omit=doptions['omit'],p0=p0,
-                                   bounds=bounds,hist_select=hist_select)
+            # rebin and omit
+            try:
+                rebin.append(doptions['rebin'])
+            except KeyError:
+                rebin.append(1)
                 
-            # collect results
-            cov = np.sqrt(np.diag(cov))
-            parout[dat.run] = [keylist,par,cov,chi,ftemp]
+            try:
+                omit.append(doptions['omit'])
+            except KeyError:
+                omit.append('')
+
+        # fit data
+        pars,stds,chis = fit_list(runs,years,fn,omit,rebin,sharelist,npar=npar,
+                                   hist_select=hist_select,p0=p0,bounds=bounds)
         
-        return parout
+        # collect results
+        return {d[0].run:[keylist,p,s,c,f] for d,p,s,c,f in zip(data_list,pars,stds,chis,fn)}
 
     # ======================================================================= #
     def gen_param_names(self,fn_name,ncomp):
@@ -207,31 +243,42 @@ class fitter(object):
         return par_values2
         
     # ======================================================================= #
-    def get_fn(self,fn_name,ncomp):
+    def get_fn(self,fn_name,ncomp=1,pulse_len=-1,lifetime=-1):
         """
             Get the fitting function used.
             
                 fn_name: string of the function name users will select. 
-                ncomp: number of components
+                ncomp: number of components, ex if 2, then return exp+exp
+                pulse_len: duration of beam on in s
+                lifetime: lifetime of probe in s
             
             Returns python function(x,*pars)
         """
         
         # set fitting function
         if fn_name == 'Lorentzian':
-            fn =  partial(fscan,mode='lor',ncomp=ncomp)
+            fn =  fns.lorentzian
             self.mode='1f'
         elif fn_name == 'Gaussian':
-            fn =  partial(fscan,mode='gaus',ncomp=ncomp)
+            fn =  fns.gaussian
             self.mode='1f'
         elif fn_name == 'Exp':
-            fn =  partial(slr,mode='exp',ncomp=ncomp,offset=True)
+            fn =  fns.pulsed_exp(lifetime,pulse_len)
             self.mode='20'
         elif fn_name == 'Str Exp':
-            fn =  partial(slr,mode='strexp',ncomp=ncomp,offset=True)
+            fn =  fns.pulsed_strexp(lifetime,pulse_len)
             self.mode='20'
         else:
             raise RuntimeError('Fitting function not found.')
-    
+        
+        # Make final function based on number of components
+        fnlist = [fn]*ncomp
+        fnlist.append(lambda x,b: b)
+        fn = fns.get_fn_superpos(fnlist)
+        
         return fn
-    
+        
+        
+        
+        
+        
