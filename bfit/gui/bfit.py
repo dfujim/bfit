@@ -38,17 +38,6 @@ from bfit.gui.fitdata import fitdata
 __doc__="""
     BNMR/BNQR data visualization and curve fitting.
     
-    Requirements:                       pip3 package name
-        python 3.5.2 or higher
-        tkinter 8.5 or higher           (python3-tk)
-        numpy 1.13.0 or higher          (numpy)
-        scipy 1.0.0 or higher           (scipy)
-        matplotlib 2.1.0 or higher      (matplotlib)
-        pandas 0.21.0 or higher         (pandas)
-        
-    Packages should be installable using "pip3 install pckg" or 
-    "pip3 install --upgrade pckg"
-        
     Hotkeys:
     
         General

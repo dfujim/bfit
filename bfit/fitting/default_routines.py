@@ -144,7 +144,13 @@ class fitter(object):
 
     # ======================================================================= #
     def gen_param_names(self,fn_name,ncomp):
-        """Make a list of the parameter names based on the number of components.
+        """
+            Make a list of the parameter names based on the number of components.
+            
+            fn_name: name of function (should match those in param_names)
+            ncomp: number of components
+            
+            return (names)
         """
         
         # get names
