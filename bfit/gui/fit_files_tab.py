@@ -935,7 +935,7 @@ class fitinputtab(object):
                 pass
             else:
                 if change_par:
-                    for d in fitdat_list:   
+                    for d in [self.bfit.data[r] for r in self.runlist]:   # shared is always shared
                         d.fitpar['shared'][p] = newpar
                 else:
                     fitdat_old.fitpar['shared'][p] = newpar
