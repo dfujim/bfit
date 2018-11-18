@@ -591,7 +591,7 @@ class dataline(object):
         group_box = Spinbox(line_frame,from_=1,to=100,width=3,\
                 textvariable=self.group)
                    
-        self.check_state.set(False)
+        self.check_state.set(bfit.fetch_files.check_state.get())
         check = ttk.Checkbutton(line_frame,text='',variable=self.check_state,\
                 onvalue=True,offvalue=False,pad=5)
          
