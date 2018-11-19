@@ -1,90 +1,242 @@
-# Fitting BNMR Data
+# Module Map
 
-## Compiling Pulsed Functions
+Submodules and function signatures: 
 
-First, one should install the fitting functions: `python3 setup_integrator.py build_ext --inplace` 
+* `bfit.fitting.functions` (base functions module)
+    * `lorentzian(freq,peak,width,amp)`
+    * `gaussian(freq,mean,sigma,amp)`
+    * `pulsed_exp`
+        * constructor: `pulsed_exp(lifetime,pulse_len)`
+        * call:`pulsed_exp(time,lambda_s,amp)`
+    * `pulsed_strexp`
+        * constructor: `pulsed_strexp(lifetime,pulse_len)`
+        * call:`pulsed_strexp(time,lambda_s,beta,amp)`
+    * `get_fn_superpos(fn_handles)`
+* `bfit.fitting.fit_bdata` (fitting bdata files module)
+    * `fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,hist_select='',**kwargs)`
+    * `fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs)`
+* `bfit.fitting.global_fitter` (general global fitting)
+    * constructor: `global_fitter(x,y,dy,fn,sharelist,npar=-1)`
+    * `draw(mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,savefig='',**errorbar_args`
+    * `fit(**fitargs)`
+    * `get_chi()`
+    * `get_par()`
+* `bfit.fitting.global_bdata_fitter` (global fitting of bdata objects, inherits from `global_fitter`)
+    * constructor: `global_bdata_fitter(runs,years,fn,sharelist,npar=-1)`
 
-Stretched exponential fitting requires double exponential intergration provided in the "FastNumericalIntegration_src" directory. This directory also contains the `integration_fns.cpp` and corresponding header file where the fitting functions are defined. These are then externed to the cython module `integrator.pyx`. 
+# Module Details
 
-## Fitting Pulsed Functions (SLR)
+## `bfit.fitting.functions`
 
-`from bfit.fitting.pulsed import import slr` 
+The lorentzian and gaussian are standard python functions. The pulsed functions are actually objects. For optimization purposes, they should be first initialized in the following manner: `fn = pulsed_exp(lifetime,pulse_len)` where *lifetime* is the probe lifetime in seconds and *pulse_len* is the duration of beam on in seconds. After which, the initialized object behaves like a normal function and can be used as such. 
 
-```text
-slr(data,mode,rebin=1,offset=False,ncomp=1,probe='8Li',**kwargs)
+Pulsed functions require double exponential intergration provided in the "FastNumericalIntegration_src" directory. This directory also contains the `integration_fns.cpp` and corresponding header file where the fitting functions are defined. These are then externed to the cython module `integrator.pyx`. 
 
-    Fit combined asymetry from pulsed beam SLR data: time scan.
+`get_fn_superpos(fn_handles)` takes a list of function handles and returns another function handle whose output is the sum of the input functions. Parameters are mapped appropriately (concatentated in order). 
 
-    data: tuple of (xdata,ydata,yerr,life,pulse) OR bdata object.
+## `bfit.fitting.fit_bdata`
 
-        xdata:  np array of xaxis data to fit.
-        ydata:  np array of yaxis data to fit.
-        yerr:   np array of error in ydata.
-        life:   probe lifetime in s.
-        pulse:  duration of beam-on time in s.
+These are easy fit [bdata object](https://ms-code.phas.ubc.ca:2633/dfujim_public/bdata) functions. The first, `fit_list`, fits a list of functions, possibly with global parameters. A list of fit functions needs to be passed such that different fit functions can be applied to different runs. These fit functions should all have the same signature. 
 
-    mode:           one of "strexp, mixed_strexp, exp".
-    rebin:          rebinning of data prior to fitting. 
-    offset:         if True, include offset parameter in fitting function.
-                        ensure that p0[-1] = offset, if specified. 
-    ncomp:          number of compenents. Ex: for exp+exp set ncomp=2. 
-    probe:          string for probe species. Tested only for 8Li. 
-    kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
+The second, `fit_single`, fits only a single run. 
 
-    Returns: par,cov,fn
-        par: best fit parameters
-        cov: covariance matrix
-        fn:  function pointer to fitted function
+Docstrings: 
+
+```python
+def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,hist_select='',**kwargs):
+    """
+        Fit combined asymetry from bdata.
+    
+        runs:           list of run numbers
+        
+        years:          list of years corresponding to run numbers, or int which applies to all
+        
+        fnlist:         list of function handles to fit (or single which applies to all)
+                        must specify inputs explicitly (do not do def fn(*par)!)
+                        must have len(fn) = len(runs) if list
+        
+        omit:           list of strings of space-separated bin ranges to omit
+        rebin:          list of rebinning of data prior to fitting. 
+        
+        sharelist:      list of bool to indicate which parameters are shared. 
+                        True if shared
+                        len = number of parameters.
+        
+        npar:           number of free parameters in each fitting function.
+                        Set if number of parameters is not intuitable from 
+                            function code.      
+        
+        hist_select:    string for selecting histograms to use in asym calc
+        
+        kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
+        
+        Returns: par,cov
+            par: best fit parameters
+            std: standard deviation for each parameter
+            chi: chisquared values
+    """
 ```
 
-See [curve_fit](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html) documentation for kwargs values. 
 
-Function parameter order on output
+```python
 
-| Mode | Parameter Order |
-| -------- | -------- |
-| exp     | lambda, amp |
-| strexp     | lambda, beta, amp |
-| mixed_strexp     | lambda1, beta1, lambda2, beta2, alpha, amp |
-
-for `ncomp > 1`, the above order repeats `ncomp` times. If `offset = True`, then the last parameter is the offset. 
-
-## Fitting Frequency Scans (1F)
-
-Simply `from bfit.fitting.continuous import fscan`
-
-```text
-fscan(data,mode,omit='',ncomp=1,probe='8Li',**kwargs):
-
-    Fit combined asymetry from 1F run: frequency scan. 
-
-    data: tuple of (xdata,ydata,yerr,life) OR bdata object.
-        xdata:  np array of xaxis data to fit.
-        ydata:  np array of yaxis data to fit.
-        yerr:   np array of error in ydata.
-        life:   probe lifetime in s.
-    mode:           one of "lor, gauss".
-    omit:           string of space-separated bin ranges to omit
-    ncomp:          number of compenents. Ex: for exp+exp set ncomp=2. 
-    probe:          string for probe species. Tested only for 8Li. 
-    kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
-
-    Returns: par,cov,fn
-        par: best fit parameters
-        cov: covariance matrix
-        fn:  function pointer to fitted function
-
-    Note: always fits baseline
-
+def fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs):
+    """
+        Fit combined asymetry from bdata.
+    
+        runs:           run number
+        
+        years:          year
+        
+        fn:             function handle to fit
+        
+        omit:           string of space-separated bin ranges to omit
+        rebin:          rebinning of data prior to fitting. 
+        
+        hist_select:    string for selecting histograms to use in asym calc
+        
+        kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
+        
+        Returns: par,cov
+            par: best fit parameters
+            std: standard deviation for each parameter
+            chi: chisquared value
+    """
 ```
 
-See [curve_fit](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html) documentation for kwargs values. 
+## `bfit.fitting.global_fitter`
 
-Function parameter order on output
+Global fitting object. 
 
-| Mode | Parameter Order |
-| -------- | -------- |
-| lor     | peak, width, amp |
-| gaus     | peak, width, amp |
+```text
+    Uses scipy.optimize.curve_fit to fit a function or list of functions to a set of data with shared parameters.
+    
+    Usage: 
+        
+        Construct fitter:
+            
+            g = global_fitter(x,y,dy,fn,sharelist,npar=-1)
+            
+            
+            x,y:        2-list of data sets of equal length. 
+                        fmt: [[a1,a2,...],[b1,b2,...],...]
+            
+            dy:         list of errors in y with same format as y
+            
+            fn:         function handle OR list of function handles. 
+                        MUST specify inputs explicitly
+                        if list must have that len(fn) = len(x)
+            
+            sharelist:  tuple of booleans indicating which values to share. 
+                        len = number of parameters 
+                        
+            npar:       number of free parameters in each fitting function.
+                        Set if number of parameters is not intuitable from 
+                            function code.
+        
+    
+        Fit
+            g.fit(**fitargs)
+        
+            
+            fitargs: parameters to pass to fitter (scipy.optimize.curve_fit) 
+            
+            p0:         [(p1,p2,...),...] innermost tuple is initial parameters 
+                            for each data set, list of tuples for all data sets
+                            if not enough sets of inputs, last input is copied 
+                            for remaining data sets.
+                            
+                            p0.shape = (nsets,npars)
+                    OR
+                        (p1,p2,...) single tuple to set same initial parameters 
+                            for all data sets
+            
+                            p0.shape = (npars,)
+            
+            bounds:     [((l1,l2,...),(h1,h2,...)),...] similar to p0, but use 
+                            2-tuples instead of the 1-tuples of p0
+                        
+                            bounds.shape = (nsets,2,npars)
+                        
+                    OR
+                        ((l1,l2,...),(h1,h2,...)) single 2-tuple to set same 
+                            bounds for all data sets
+                            
+                            bounds.shape = (2,npars)
+                            
+                            
+            returns (parameters,stdev)
+        
+            
+        Get chi squared
+            g.get_chi()
+            
+            
+            Calculate chisq/DOF, both globally and for each function.
+            
+            sets self.chi and self.chi_glbl
+            
+            return (global chi, list of chi for each fn)
+        
+        
+        Get fit parameters
+            g.get_par()
+            
+            
+            Fetch fit parameters as dictionary
+            
+            return 2-tuple of (par,error) each with format
+            
+            [data1:[par1,par2,...],data2:[],...]
+        
+            
+        Draw the result
+        
+            g.draw(mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,
+                   savefig='',**errorbar_args)
+           
+            
+            Draw data and fit results. 
+            
+            mode:           drawing mode. 
+                            one of 'stack', 'new', 'append' (or first character 
+                                for shorhand)
+            
+            xlabel/ylabel:  string for axis labels
+            
+            do_legend:      if true set legend
+            
+            labels:         list of string to label data
+            
+            savefig:        if not '', save figure with this name
+            
+            errorbar_args:  arguments to pass on to plt.errorbar
+            
+            Returns list of matplotlib figure objects
+```        
 
-for `ncomp > 1`, the above order repeats `ncomp` times. The last parameter is always the off-resonance baseline. 
+## `bfit.fitting.global_bdata_fitter`
+
+Inherits from `global_fitter`, but changes the constructor to extract [bdata](https://ms-code.phas.ubc.ca:2633/dfujim_public/bdata) asymmetries. 
+
+Constructor: 
+
+```python
+global_bdata_fitter(runs,years,fn,sharelist,npar=-1):
+        """
+            runs:       list of run numbers
+            
+            years:      list of years corresponding to run numbers, or int which applies to all
+            
+            fn:         list of function handles to fit (or single which applies to all)
+                        must specify inputs explicitly (do not do def fn(*par)!)
+                        must have len(fn) = len(runs) if list
+                        
+            sharelist:  list of bool to indicate which parameters are shared. 
+                        True if shared
+                        len = number of parameters.
+                        
+            npar:       number of free parameters in each fitting function.
+                        Set if number of parameters is not intuitable from function code.            
+        """
+```
