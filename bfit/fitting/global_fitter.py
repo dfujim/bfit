@@ -111,6 +111,9 @@ class global_fitter(object):
         self.fn = fn
         self.sharelist = sharelist
         
+        # get number of data sets
+        self.nsets = len(self.xdata)
+        
         # check in input function is iterable
         if not isinstance(self.fn,collections.Iterable):
             self.fn = [self.fn for i in range(self.nsets)]
@@ -120,9 +123,6 @@ class global_fitter(object):
             self.npar = len(self.fn[0].__code__.co_varnames)-1
         else:
             self.npar = npar
-        
-        # get number of data sets
-        self.nsets = len(self.xdata)
         
         # check that input data is of the right format
         self._check_input_data()
