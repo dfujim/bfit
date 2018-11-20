@@ -22,3 +22,5 @@ In this example, you would set `BNQR_ARCHIVE=/path/bnqr/` to the directory conta
 ## Operation Details
 
 See [help](https://ms-code.phas.ubc.ca:2633/dfujim_public/bfit/src/branch/master/bfit/gui/help.html) wiki.
+
+See [here](https://ms-code.phas.ubc.ca:2633/dfujim_public/bfit/src/branch/master/bfit/fitting/README.md) for the bfit fitting submodule documentation. 
