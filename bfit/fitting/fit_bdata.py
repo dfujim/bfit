@@ -87,7 +87,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         bounds = kwargs['bounds']
         del kwargs['bounds']
     else:
-        bounds = [(np.inf,np.inf)]*nruns
+        bounds = [(-np.inf,np.inf)]*nruns
 
     # fit globally -----------------------------------------------------------
     if any(sharelist):
@@ -106,6 +106,10 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
             pars.append(p)
             stds.append(s)
             chis.append(c)
+
+    pars = np.array(pars)
+    stds = np.array(stds)
+    chis = np.array(chis)
             
     return(pars,stds,chis)
 
