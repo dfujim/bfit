@@ -37,9 +37,10 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
-        Returns: par,cov
+        Returns: par,cov,chi
             par: best fit parameters
             std: standard deviation for each parameter
+            chi: chisquared of fits
     """
     
     nruns = len(runs)
@@ -90,7 +91,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         bounds = [(-np.inf,np.inf)]*nruns
 
     # fit globally -----------------------------------------------------------
-    if any(sharelist):
+    if any(sharelist) and len(runs)>1:
         g = global_bdata_fitter(runs,years,fnlist,sharelist,npar)
         g.fit(**kwargs)
         _,chis = g.get_chi()
@@ -134,6 +135,7 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs):
         Returns: par,cov
             par: best fit parameters
             std: standard deviation for each parameter
+            chi: chisquared of fit
     """
     
     # Get data input
