@@ -79,6 +79,8 @@ class bfit(object):
             data: dict of fitdata objects for drawing/fitting, keyed by run #
             draw_style: draw window types # stack, redraw, new
             draw_components: list of titles for labels, options to export, draw.
+            draw_ppm: BoolVar for drawing as ppm shift
+            draw_standardized_res: BoolVar for drawing residuals as standardized
             root: tkinter root instance
             mainframe: main frame for the object
             routine_mod: module with fitting routines
@@ -252,6 +254,8 @@ class bfit(object):
         self.draw_style.set("stack")
         self.draw_ppm = BooleanVar()
         self.draw_ppm.set(False)
+        self.draw_standardized_res = BooleanVar()
+        self.draw_standardized_res.set(False)
         
         menu_draw = Menu(menubar)
         menubar.add_cascade(menu=menu_draw,label='Draw Mode')
@@ -263,8 +267,10 @@ class bfit(object):
                 variable=self.draw_style,value='redraw',underline=0)
         
         menu_draw.add_separator()
-        menu_draw.add_checkbutton(label="Draw 1f as PPM Shift",\
+        menu_draw.add_checkbutton(label="Draw 1f as PPM shift",\
                 variable=self.draw_ppm,underline=0)
+        menu_draw.add_checkbutton(label="Draw residuals as standardized",\
+                variable=self.draw_standardized_res,underline=0)
         
         # Help
         menu_help = Menu(menubar)

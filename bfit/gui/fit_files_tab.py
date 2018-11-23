@@ -81,10 +81,12 @@ class fit_files(object):
         n_component_box = Spinbox(fn_select_frame,from_=1,to=20, 
                 textvariable=self.n_component,width=5,command=self.populate_param)
         
-        # fit button
+        # fit and residual button
         fit_button = ttk.Button(fn_select_frame,text='Fit',command=self.do_fit,\
                                 pad=1)
-        
+        residual_button = ttk.Button(fn_select_frame,text=' Draw Residual ',
+                        command=self.do_draw_residual,pad=1)
+                                
         # set as group checkbox
         self.set_as_group = BooleanVar()
         set_group_check = ttk.Checkbutton(fn_select_frame,
@@ -108,12 +110,15 @@ class fit_files(object):
         # top frame gridding
         fn_select_frame_border.grid(column=0,row=0,sticky=(W,E))
         fn_select_frame.grid(column=0,row=0,sticky=(W))
-        self.fit_function_title_box.grid(column=0,row=0)
-        ttk.Label(fn_select_frame,text="Number of Components:").grid(column=1,
-                row=0,sticky=(E),padx=5,pady=5)
-        n_component_box.grid(column=2,row=0,padx=5,pady=5)
-        fit_button.grid(column=3,row=0,padx=1,pady=1)
-        set_group_check.grid(column=4,row=0,padx=1,pady=1)
+        
+        c = 0
+        self.fit_function_title_box.grid(column=c,row=0); c+=1
+        ttk.Label(fn_select_frame,text="Number of Components:").grid(column=c,
+                row=0,sticky=(E),padx=5,pady=5); c+=1
+        n_component_box.grid(column=c,row=0,padx=5,pady=5); c+=1
+        fit_button.grid(column=c,row=0,padx=1,pady=1); c+=1
+        residual_button.grid(column=c,row=0,padx=1,pady=1); c+=1
+        set_group_check.grid(column=c,row=0,padx=1,pady=1); c+=1
         
         # run mode gridding
         fit_runmode_label_frame.grid(column=1,row=0,sticky=(E,W))
@@ -395,6 +400,7 @@ class fit_files(object):
         # enable draw buttons on fetch files tab
         for r in runlist:
             self.bfit.fetch_files.data_lines[r].draw_fit_button['state'] = 'normal'
+            self.bfit.fetch_files.data_lines[r].draw_res_button['state'] = 'normal'
         
         # draw fit results
         self.bfit.fetch_files.draw_all(ignore_check=True)
@@ -407,6 +413,108 @@ class fit_files(object):
         self.bfit.fetch_files.draw_all_fits(ignore_check=True)
         self.bfit.draw_style.set(style)
             
+    # ======================================================================= #
+    def do_draw_residual(self,*args):
+        """Draw the residual of the actively selected run."""
+        
+        # get tab id
+        tab = self.runbook.select()
+        group_num = int(self.runbook.tab(tab,'text').replace('Group','').strip())
+        
+        # get fitinputtab
+        tab = self.file_tabs[group_num]
+        
+        # get run number
+        run = int(tab.runbox.get(tab.selected))
+        rebin = self.bfit.fetch_files.data_lines[run].rebin.get()
+        
+        # draw
+        self.draw_residual(run=run,rebin=rebin)
+    
+    # ======================================================================= #
+    def draw_residual(self,run,rebin=1,**drawargs):
+        """Draw fitting residuals for a single run"""
+        
+        # Settings
+        xlabel_dict={'20':"Time (s)",
+                     '2h':"Time (s)",
+                     '2e':'Frequency (MHz)',
+                     '1f':'Frequency (MHz)',
+                     '1n':'Voltage (V)'}
+        
+        # get draw setting 
+        draw_style = self.bfit.draw_style
+        plt.ion()
+        
+        # get data and fit results
+        data = self.bfit.data[run]
+        fit_par = [data.fitpar['res'][p] for p in data.parnames]
+        fn = data.fitfn
+        data = data.bd
+        
+        # default label value
+        if 'label' not in drawargs.keys():
+            label = str(data.run)
+        else:
+            label = drawargs.pop('label',None)
+            
+        # set drawing style arguments
+        for k in self.bfit.style:
+            if k not in drawargs.keys():
+                drawargs[k] = self.bfit.style[k]
+        
+        ax = plt.gca()
+        
+        # make new window
+        if draw_style.get() == 'new':
+            plt.figure()
+            
+        # get index of label in run and delete that run
+        elif draw_style.get() == 'stack':
+            try:
+                idx = [ell.get_label() for ell in ax.containers].index(label)
+            except ValueError as err:
+                pass
+            else:
+                del ax.lines[idx]              # clear lines 
+                del ax.collections[idx]        # clear errorbar object 
+                del ax.containers[idx]         # clear errorbar object
+        
+        # delete all runs
+        elif draw_style.get() == 'redraw':
+            del ax.lines[:]              # clear lines 
+            del ax.collections[:]        # clear errorbar object 
+            del ax.containers[:]         # clear errorbar object
+            
+        ax.get_xaxis().get_major_formatter().set_useOffset(False)
+        
+        # get draw style
+        style = self.bfit.draw_style.get()
+
+        # get residuals
+        x,a,da = data.asym('c',rebin=rebin)
+        res = a - fn(x,*fit_par)
+            
+        # set x axis
+        if   data.mode == '1f': x *= self.bfit.freq_unit_conv
+        elif data.mode == '1n': x *= self.bfit.volt_unit_conv
+    
+        # draw 
+        if self.bfit.draw_standardized_res.get():
+            plt.errorbar(x,res/da,np.zeros(len(x)),label=label,**drawargs)
+            plt.ylabel(r'Standardized Residual ($\sigma$)')
+        else:
+            plt.errorbar(x,res,da,label=label,**drawargs)
+            plt.ylabel('Residual')
+        
+        # plot elementsplt.ylabel('Residual')
+        plt.xlabel(xlabel_dict[self.mode])
+        plt.axhline(0,color='k',linestyle='-',zorder=20)
+        
+        # show
+        plt.tight_layout()
+        plt.legend()
+        
     # ======================================================================= #
     def draw_fit(self,run,**drawargs):
         """Draw fit for a single run"""

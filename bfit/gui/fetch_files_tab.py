@@ -582,6 +582,10 @@ class dataline(object):
         self.draw_fit_button = ttk.Button(line_frame,text='Draw Fit',
                 command= lambda : self.bfit.fit_files.draw_fit(run=self.run),
                 pad=1,state=DISABLED)
+        self.draw_res_button = ttk.Button(line_frame,text='Draw Res',
+                command= lambda : self.bfit.fit_files.draw_residual(\
+                                    run=self.run,rebin=self.rebin.get()),
+                pad=1,state=DISABLED)
         
         rebin_label = ttk.Label(line_frame,text="Rebin:",pad=5)
         rebin_box = Spinbox(line_frame,from_=1,to=100,width=3,\
@@ -635,6 +639,7 @@ class dataline(object):
         group_box.grid(column=c,row=0,sticky=E); c+=1
         draw_button.grid(column=c,row=0,sticky=E); c+=1
         self.draw_fit_button.grid(column=c,row=0,sticky=E); c+=1
+        self.draw_res_button.grid(column=c,row=0,sticky=E); c+=1
         remove_button.grid(column=c,row=0,sticky=E); c+=1
         
         # resizing
