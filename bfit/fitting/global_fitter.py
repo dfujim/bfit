@@ -247,7 +247,7 @@ class global_fitter(object):
                             bounds.shape = (2,npars)
                             
                             
-            returns (parameters,stdev)
+            returns (parameters,covariance matrix)
         """
         # get rid of zero errors
         tag = self.dyccat != 0
@@ -304,17 +304,17 @@ class global_fitter(object):
         # to array
         par = np.asarray(par)
         cov = np.asarray(cov)
-        std = np.sqrt(np.diag(cov))
         
         # expand parameters
         par_out = par[self.par_index].reshape(-1,self.npar)
-        std_out = std[self.par_index].reshape(-1,self.npar)
+        cov_out = cov.transpose()[self.par_index].transpose()[self.par_index]
+        cov_out = np.array([cov_out[i:i+self.npar,i:+self.npar] \
+                            for i in np.arange(0,self.npar*self.nsets,self.npar)])
         
         # return
         self.par = par
-        self.std = std
         self.cov = cov
-        return (par_out,std_out)
+        return (par_out,cov_out)
     
     # ======================================================================= #
     def get_chi(self):
@@ -326,17 +326,17 @@ class global_fitter(object):
             return (global chi, list of chi for each fn)
         """
         
-        # global
-        tag = self.dyccat != 0
-        
-        dof = len(self.xccat[tag])-(self.npar*self.nsets)
-        self.chi_glbl = np.sum(np.square((self.yccat[tag]-\
-                      self.fitfn(self.xccat[tag],*self.par))/self.dyccat[tag]))/dof
-        
         # get fit parameters, with sharing
         par_index = self.par_index.reshape(-1,self.npar)
         pars = (self.par[p] for p in par_index)
+
+        # global
+        tag = self.dyccat != 0
         
+        dof = len(self.xccat[tag])-len(np.unique(par_index))
+        self.chi_glbl = np.sum(np.square((self.yccat[tag]-\
+                      self.fitfn(self.xccat[tag],*self.par))/self.dyccat[tag]))/dof
+
         # single fn chisq
         self.chi = []
         for x,y,dy,p,f in zip(self.xdata,self.ydata,self.dydata,pars,self.fn):
@@ -352,15 +352,18 @@ class global_fitter(object):
         """
             Fetch fit parameters as dictionary
             
-            return 2-tuple of (par,error) each with format
+            return 2-tuple of (par,cov) with format
             
-            [data1:[par1,par2,...],data2:[],...]
+            ([data1:[par1,par2,...],data2:[],...],
+             [data1:[cov1,cov2,...],data2:[],...],
+            )
         """
     
         par = self.par[self.par_index].reshape(-1,self.npar)
-        std = self.std[self.par_index].reshape(-1,self.npar)
-        
-        return (par,std)
+        cov = self.cov.transpose()[self.par_index].transpose()[self.par_index]
+        cov = np.array([cov[i:i+self.npar,i:+self.npar] \
+                        for i in np.arange(0,self.npar*self.nsets,self.npar)])
+        return (par,cov)
     
     # ======================================================================= #
     def _check_input_data(self):

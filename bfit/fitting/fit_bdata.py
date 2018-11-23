@@ -37,9 +37,9 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
-        Returns: par,cov,chi
+        Returns: (par,cov,chi)
             par: best fit parameters
-            std: standard deviation for each parameter
+            cov: covariance matrix
             chi: chisquared of fits
     """
     
@@ -95,24 +95,24 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         g = global_bdata_fitter(runs,years,fnlist,sharelist,npar)
         g.fit(**kwargs)
         _,chis = g.get_chi()
-        pars,stds = g.get_par()
+        pars,covs = g.get_par()
         
     # fit runs individually --------------------------------------------------
     else:
         pars = []
-        stds = []
+        covs = []
         chis = []
         for r,y,fn,om,re,p,b in zip(runs,years,fnlist,omit,rebin,p0,bounds):
             p,s,c = fit_single(r,y,fn,om,re,hist_select,p0=p,bounds=b,**kwargs)
             pars.append(p)
-            stds.append(s)
+            covs.append(s)
             chis.append(c)
 
     pars = np.array(pars)
-    stds = np.array(stds)
+    covs = np.array(covs)
     chis = np.array(chis)
             
-    return(pars,stds,chis)
+    return(pars,covs,chis)
 
 # =========================================================================== #
 def fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs):
@@ -132,9 +132,9 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs):
         
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
-        Returns: par,cov
+        Returns: (par,cov,chi)
             par: best fit parameters
-            std: standard deviation for each parameter
+            cov: covariance matrix
             chi: chisquared of fit
     """
     
@@ -154,10 +154,9 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs):
     
     # Fit the function 
     par,cov = curve_fit(fn,x,y,sigma=dy,**kwargs)
-    std = np.sqrt(np.diag(cov))
     dof = len(y)-fn.__code__.co_argcount+1
     
     # get chisquared
     chi = np.sum(np.square((y-fn(x,*par))/dy))/dof
     
-    return (par,std,chi)
+    return (par,cov,chi)

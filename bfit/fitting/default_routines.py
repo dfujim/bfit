@@ -136,11 +136,13 @@ class fitter(object):
                 omit.append('')
 
         # fit data
-        pars,stds,chis = fit_list(runs,years,fn,omit,rebin,sharelist,npar=npar,
+        pars,covs,chis = fit_list(runs,years,fn,omit,rebin,sharelist,npar=npar,
                                    hist_select=hist_select,p0=p0,bounds=bounds)
+        stds = [np.sqrt(np.diag(c)) for c in covs]
         
         # collect results
-        return {d[0].run:[keylist,p,s,c,f] for d,p,s,c,f in zip(data_list,pars,stds,chis,fn)}
+        return {d[0].run:[keylist,p,s,c,f] \
+                    for d,p,s,c,f in zip(data_list,pars,stds,chis,fn)}
 
     # ======================================================================= #
     def gen_param_names(self,fn_name,ncomp):
