@@ -307,9 +307,9 @@ class global_fitter(object):
         
         # expand parameters
         par_out = par[self.par_index].reshape(-1,self.npar)
-        cov_out = cov.transpose()[self.par_index].transpose()[self.par_index]
-        cov_out = np.array([cov_out[i:i+self.npar,i:+self.npar] \
-                            for i in np.arange(0,self.npar*self.nsets,self.npar)])
+        cov_out = cov.transpose()[self.par_index].transpose()[self.par_index]        
+        cov_out = np.array([cov_out[i:i+self.npar,i:i+self.npar] \
+                            for i in np.arange(0,len(cov_out),self.npar)])
         
         # return
         self.par = par
@@ -332,7 +332,6 @@ class global_fitter(object):
 
         # global
         tag = self.dyccat != 0
-        
         dof = len(self.xccat[tag])-len(np.unique(par_index))
         self.chi_glbl = np.sum(np.square((self.yccat[tag]-\
                       self.fitfn(self.xccat[tag],*self.par))/self.dyccat[tag]))/dof
@@ -361,7 +360,7 @@ class global_fitter(object):
     
         par = self.par[self.par_index].reshape(-1,self.npar)
         cov = self.cov.transpose()[self.par_index].transpose()[self.par_index]
-        cov = np.array([cov[i:i+self.npar,i:+self.npar] \
+        cov = np.array([cov[i:i+self.npar,i:i+self.npar] \
                         for i in np.arange(0,self.npar*self.nsets,self.npar)])
         return (par,cov)
     
