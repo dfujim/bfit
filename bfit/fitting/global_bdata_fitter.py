@@ -11,7 +11,7 @@ import collections
 class global_bdata_fitter(global_fitter):
     
     # ======================================================================= #
-    def __init__(self,runs,years,fn,sharelist,npar=-1):
+    def __init__(self,runs,years,fn,sharelist,npar=-1,xlims=None):
         """
             runs:       list of run numbers
             
@@ -28,6 +28,10 @@ class global_bdata_fitter(global_fitter):
             npar:       number of free parameters in each fitting function.
                         Set if number of parameters is not intuitable from 
                             function code.            
+            
+            xlims:      list of 2-tuples for (low,high) bounds on fitting range 
+                            based on x values. If list is not depth 2, use this 
+                            range on all runs.
         """
         
         # Set years
@@ -42,5 +46,29 @@ class global_bdata_fitter(global_fitter):
         y = np.array([d[1] for d in data])
         dy = np.array([d[2] for d in data])
         
+        # select subrange
+        if xlims is not None:
+            
+            # check depth
+            if len(np.array(xlims).shape) < 2:
+                xlims = [xlims for i in range(len(x))]
+            
+            # initialize new inputs
+            xnew = []
+            ynew = []
+            dynew = []
+            
+            # select subrange
+            for i,xl in enumerate(xlims):
+                tag = (xl[0]<x[i])*(x[i]<xl[1])
+                xnew.append(x[i][tag])
+                ynew.append(y[i][tag])
+                dynew.append(dy[i][tag])
+            
+            # new arrays
+            x = np.array(xnew)
+            y = np.array(ynew)
+            dy = np.array(dynew)
+            
         # intialize
         super(global_bdata_fitter,self).__init__(x,y,dy,fn,sharelist,npar)

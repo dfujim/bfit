@@ -10,7 +10,7 @@ import collections
 
 # ========================================================================== #
 def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
-              hist_select='',**kwargs):
+              hist_select='',xlims=None,**kwargs):
     """
         Fit combined asymetry from bdata.
     
@@ -35,6 +35,9 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         
         hist_select:    string for selecting histograms to use in asym calc
         
+        xlims:          list of 2-tuple for (low,high) bounds on fitting range 
+                            based on x values
+        
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
         Returns: (par,cov,chi)
@@ -57,17 +60,17 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
     fnlist.extend([fnlist[-1] for i in range(nruns-len(fnlist))])
 
     # get sharelist
-    if type(sharelist) == type(None):
+    if sharelist is None:
         sharelist = np.zeros(npar,dtype=bool)
 
     # get omit
-    if type(omit) == type(None):
+    if omit is None:
         omit = ['']*nruns
     elif len(omit) < nruns:
         omit = np.concatenate(omit,['']*(nruns-len(omit)))
         
     # get rebin
-    if type(rebin) == type(None):
+    if rebin is None:
         rebin = np.ones(nruns)
     elif len(rebin) < nruns:
         rebin = np.concatenate(rebin,[1]*(nruns-len(rebin)))
@@ -92,7 +95,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
 
     # fit globally -----------------------------------------------------------
     if any(sharelist) and len(runs)>1:
-        g = global_bdata_fitter(runs,years,fnlist,sharelist,npar)
+        g = global_bdata_fitter(runs,years,fnlist,sharelist,npar,xlims)
         g.fit(**kwargs)
         _,chis = g.get_chi()
         pars,covs = g.get_par()
@@ -102,8 +105,8 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         pars = []
         covs = []
         chis = []
-        for r,y,fn,om,re,p,b in zip(runs,years,fnlist,omit,rebin,p0,bounds):
-            p,s,c = fit_single(r,y,fn,om,re,hist_select,p0=p,bounds=b,**kwargs)
+        for r,y,fn,om,re,p,b,xl in zip(runs,years,fnlist,omit,rebin,p0,bounds,xlims):
+            p,s,c = fit_single(r,y,fn,om,re,hist_select,p0=p,bounds=b,xlim=xl**kwargs)
             pars.append(p)
             covs.append(s)
             chis.append(c)
@@ -115,7 +118,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
     return(pars,covs,chis)
 
 # =========================================================================== #
-def fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs):
+def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,**kwargs):
     """
         Fit combined asymetry from bdata.
     
@@ -129,6 +132,9 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs):
         rebin:          rebinning of data prior to fitting. 
         
         hist_select:    string for selecting histograms to use in asym calc
+        
+        xlim:           2-tuple for (low,high) bounds on fitting range based on 
+                            x values
         
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
@@ -147,6 +153,13 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs):
     x = x[tag]
     y = y[tag]
     dy = dy[tag]
+    
+    # apply xlimits
+    if xlim is not None:
+        tag =(xlim[0]<x)*(x<xlim[1])
+        x = x[tag]
+        y = y[tag]
+        dy = dy[tag]
     
     # p0
     if 'p0' not in kwargs.keys():

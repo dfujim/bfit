@@ -167,7 +167,7 @@ class global_fitter(object):
             raise RuntimeError('Drawing mode %s not recognized' % mode)
         
         # get label
-        if type(labels) == type(None):
+        if labels is None:
             labels = ['_no_label_' for i in range(self.nsets)]
         
         # get fit parameters
@@ -287,8 +287,6 @@ class global_fitter(object):
                 hi_add = [bounds[-1][1] for i in range(self.nsets-sh[0])]
                 lo = np.concatenate((*bounds[:,0,:],*lo_add))
                 hi = np.concatenate((*bounds[:,1,:],*hi_add))
-        
-            bounds = np.array((lo,hi))
             
             # reshuffle bounds
             lo = lo[uniq]
