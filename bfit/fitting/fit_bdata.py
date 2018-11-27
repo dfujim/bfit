@@ -86,23 +86,23 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
     else:
         p0 = [np.ones(npar)]*nruns
 
-    # get bounds
-    if 'bounds' in kwargs.keys():
-        bounds = kwargs['bounds']
-        del kwargs['bounds']
-    else:
-        bounds = [(-np.inf,np.inf)]*nruns
-
     # fit globally -----------------------------------------------------------
     if any(sharelist) and len(runs)>1:
         g = global_bdata_fitter(runs,years,fnlist,sharelist,npar,xlims)
-        g.fit(p0=p0,bounds=bounds,**kwargs)
+        g.fit(p0=p0,**kwargs)
         _,chis = g.get_chi()
         pars,covs = g.get_par()
         
     # fit runs individually --------------------------------------------------
     else:
         
+        # get bounds
+        if 'bounds' in kwargs.keys():
+            bounds = kwargs['bounds']
+            del kwargs['bounds']
+        else:
+            bounds = [(-np.inf,np.inf)]*nruns 
+            
         # check xlims shape - should match number of runs
         if len(np.array(xlims).shape) < 2:
             xlims = [xlims for i in range(len(runs))]
