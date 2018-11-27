@@ -5,7 +5,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-import os, collections
+import os, collections, warnings, textwrap
 
 __doc__=\
 """
@@ -276,20 +276,13 @@ class global_fitter(object):
         except KeyError:
             pass
         else:
-            # build and flatten bounds
-            sh = bounds.shape
-            if len(sh) == 2:    # one input
-                lo = np.concatenate([bounds[0] for i in range(self.nsets)])
-                hi = np.concatenate([bounds[1] for i in range(self.nsets)])
-            else:               # list input
-                lo_add = [bounds[-1][0] for i in range(self.nsets-sh[0])]
-                hi_add = [bounds[-1][1] for i in range(self.nsets-sh[0])]
-                lo = np.concatenate((*bounds[:,0,:],*lo_add))
-                hi = np.concatenate((*bounds[:,1,:],*hi_add))
             
+            # get expanded bounds
+            bounds = self._get_expanded_bounds(bounds)
+    
             # reshuffle bounds
-            lo = lo[uidx]
-            hi = hi[uidx]
+            lo = np.concatenate(bounds[:,0,:])[uidx]
+            hi = np.concatenate(bounds[:,1,:])[uidx]
             fitargs['bounds'] = np.array((lo,hi))
             
         # do fit
@@ -379,6 +372,97 @@ class global_fitter(object):
                         (len(self.sharelist),self.npar))
     
     # ======================================================================= #
+    def _get_expanded_bounds(self,bounds):
+        """For various bound input formats expand such that all bounds are 
+        defined explicitly. """
+        
+        # get shapes (nsets,2,npar)
+        sh = bounds.shape
+        max_depth = self._get_full_depth(bounds)
+        
+        # easy cases: all explicit for set all data sets the same -------------
+        #         OR  fully explicit implementation
+        #         OR  some integers present in otherwise full explicit
+        if len(sh) in (1,3) or (len(sh) == 2 and max_depth == 3):
+            
+            # increase depth
+            if len(sh) != 2:
+                bounds = np.array([bounds]).tolist()
+
+            # look at bounds for individual data sets
+            for i,bnd in enumerate(bounds):
+                
+                # look at low,high bounds
+                for j,b in enumerate(bnd):
+                    
+                    # expand NoneType
+                    if b is None:
+                        bounds[i][j] = np.ones(self.npar)*np.nan*pow(-1,j+1)
+                    
+                    # expand int, float
+                    elif not isinstance(b,collections.Iterable):
+                        bounds[i][j] = np.ones(self.npar)*b
+        
+        # hard case: mixed input specification --------------------------------
+        elif len(sh) == 2:
+            
+            
+            # set pars the same for all sets (pars explicit) 
+            # or set pars the same for each set (sets explicit)
+            if max_depth == 2:
+                
+                # pars are explicit case: check lo<hi and match length to npars
+                if all([all(bounds[0][i] < np.array(bounds[1])) \
+                        for i in range(len(bounds[0]))]) \
+                        and len(bounds[0]) == len(bounds[1]) == self.npar:
+                        
+                    warnings.warn(textwrap.fill(textwrap.dedent("""\
+                        Attempting to intuit ambiguous bounds input. Determined
+                        that values are set explicity for each parameter, and
+                        bounds are common to all data sets."""),100),
+                        RuntimeWarning)
+                            
+                    # add depth
+                    bounds = np.array([bounds])                             
+                    
+                # sets are explicit case
+                else:
+                    warnings.warn(textwrap.fill(textwrap.dedent("""\
+                        Attempting to intuit ambiguous bounds input. Determined
+                        that values are common to for parameters in that bound,
+                        and bounds are set explicity for each data set."""),100),
+                        RuntimeWarning)
+                    
+                    # allow adding depth
+                    bounds = bounds.tolist()
+                            
+                    # look at bounds for individual data sets
+                    for i,bnd in enumerate(bounds):
+                        
+                        # look at low,high bounds
+                        for j,b in enumerate(bnd):
+                            
+                            # expand NoneType
+                            if b is None:
+                                bounds[i][j] = np.ones(self.npar)*np.nan*\
+                                                    pow(-1,j+1)
+                            
+                            # expand int, float
+                            elif not isinstance(b,collections.Iterable):
+                                bounds[i][j] = np.ones(self.npar)*b
+            else:
+                raise RuntimeError('Uncertain bounds input format')
+            
+        # duplicate top level until number of sets is reached
+        bounds = np.asarray(bounds)
+        sh = bounds.shape
+        if sh[0] < self.nsets:
+            add = [bounds[-1] for i in range(self.nsets-sh[0])]
+            bounds = np.concatenate((bounds,add))
+        
+        return bounds
+        
+    # ======================================================================= #
     def _get_data(self):
         """
             Get list of concatenated data
@@ -417,6 +501,14 @@ class global_fitter(object):
                                     for x,p,f in zip(xdata,par_index,self.fn)])
         return fitfn
 
+    # ======================================================================= #
+    def _get_full_depth(self,nested_list,depth=0):
+        """Get full depth of list"""
+        if not isinstance(nested_list,collections.Iterable):    
+            return depth
+        depth += 1
+        return max((self._get_full_depth(n,depth) for n in nested_list))
+    
     # ======================================================================= #
     def _get_shared_index(self):
         """
