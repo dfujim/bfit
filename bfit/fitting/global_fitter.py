@@ -267,9 +267,8 @@ class global_fitter(object):
             p0 = np.concatenate((*p0,*p0_add))
         
         # reshuffle input p0 to have no excess inputs
-        uniq = np.unique(self.par_index)
-        p0_new = [p0[i] for i in uniq]
-        fitargs['p0'] = np.array(p0_new)
+        _,uidx = np.unique(self.par_index,return_index=True)
+        fitargs['p0'] = p0[uidx] 
         
         # do bounds input
         try:
@@ -289,10 +288,10 @@ class global_fitter(object):
                 hi = np.concatenate((*bounds[:,1,:],*hi_add))
             
             # reshuffle bounds
-            lo = lo[uniq]
-            hi = hi[uniq]
+            lo = lo[uidx]
+            hi = hi[uidx]
             fitargs['bounds'] = np.array((lo,hi))
-        
+            
         # do fit
         par,cov = curve_fit(self.fitfn,
                             self.xccat[tag],

@@ -96,12 +96,20 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
     # fit globally -----------------------------------------------------------
     if any(sharelist) and len(runs)>1:
         g = global_bdata_fitter(runs,years,fnlist,sharelist,npar,xlims)
-        g.fit(**kwargs)
+        g.fit(p0=p0,bounds=bounds,**kwargs)
         _,chis = g.get_chi()
         pars,covs = g.get_par()
         
     # fit runs individually --------------------------------------------------
     else:
+        
+        # check xlims shape - should match number of runs
+        if len(np.array(xlims).shape) < 2:
+            xlims = [xlims for i in range(len(runs))]
+        else:
+            xlims = list(xlims)
+            xlims.extend([xlims[-1] for i in range(len(runs)-len(xlims))])
+        
         pars = []
         covs = []
         chis = []
