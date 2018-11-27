@@ -386,7 +386,7 @@ class global_fitter(object):
         if len(sh) in (1,3) or (len(sh) == 2 and max_depth == 3):
             
             # increase depth
-            if len(sh) != 2:
+            if len(sh) == 1:
                 bounds = np.array([bounds]).tolist()
 
             # look at bounds for individual data sets
