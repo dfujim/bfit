@@ -106,7 +106,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         covs = []
         chis = []
         for r,y,fn,om,re,p,b,xl in zip(runs,years,fnlist,omit,rebin,p0,bounds,xlims):
-            p,s,c = fit_single(r,y,fn,om,re,hist_select,p0=p,bounds=b,xlim=xl**kwargs)
+            p,s,c = fit_single(r,y,fn,om,re,hist_select,p0=p,bounds=b,xlim=xl,**kwargs)
             pars.append(p)
             covs.append(s)
             chis.append(c)
