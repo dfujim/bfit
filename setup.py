@@ -24,7 +24,7 @@ setuptools.setup(
     description="BNMR/BNQR Data Fitting and Visualization",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://ms-code.phas.ubc.ca:2633/dfujim_public/bfit",
+    url="https://github.com/dfujim/bfit",
     packages=setuptools.find_packages(),
     classifiers=(
         "Programming Language :: Python :: 3",
