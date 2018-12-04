@@ -227,6 +227,14 @@ class fetch_files(object):
         self.dataline_frame = dataline_frame
     
     # ======================================================================= #
+    def canvas_scroll(self,event):
+        """Scroll canvas with files selected."""
+        if event.num == 4:
+            self.data_canvas.yview_scroll(-1,"units")
+        elif event.num == 5:
+            self.data_canvas.yview_scroll(1,"units")
+    
+    # ======================================================================= #
     def check_all(self):
         """Force all tickboxes to be in a given state"""
         for k in self.data_lines.keys():

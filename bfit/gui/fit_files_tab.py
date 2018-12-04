@@ -432,6 +432,31 @@ class fit_files(object):
         self.draw_residual(run=run,rebin=rebin)
     
     # ======================================================================= #
+    def do_scrollbar(self,event):
+        """Change selection based on scrolling"""
+        group = self.groups[self.runbook.index('current')]
+        runbox = self.file_tabs[group].runbox
+        
+        cur = runbox.index(ACTIVE)
+        runbox.selection_clear(cur)
+        
+        # move selection
+        if event.num == 4:
+            cur -= 1
+        elif event.num == 5:
+            cur += 1
+    
+        # check bounds
+        if cur < 0:     cur = 0
+        else:           cur = min(cur,runbox.size()-1)
+        
+        # set selection 
+        runbox.select_set(cur)
+        runbox.activate(cur)
+        runbox.see(cur)
+        runbox.event_generate("<<ListboxSelect>>")
+
+    # ======================================================================= #
     def draw_residual(self,run,rebin=1,**drawargs):
         """Draw fitting residuals for a single run"""
         
@@ -796,11 +821,7 @@ class fitinputtab(object):
         
         sbar = ttk.Scrollbar(fitframe,orient=VERTICAL,command=self.runbox.yview)
         self.runbox.configure(yscrollcommand=sbar.set)
-        
-        if len(self.runlist) > self.n_runs_max:
-            sbar.grid(column=1,row=2,sticky=(N,S),rowspan=self.n_runs_max)
-        else:
-            ttk.Label(fitframe,text=" ").grid(column=1,row=2,padx=5)
+        sbar.grid(column=1,row=2,sticky=(N,S),rowspan=self.n_runs_max)
         
         # label for displyaing run number
         self.run_label = ttk.Label(fitframe,text='',font='bold')

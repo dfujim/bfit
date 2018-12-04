@@ -180,6 +180,9 @@ class bfit(object):
         root.bind('<Control-Key-2>',lambda x: self.set_focus_tab(idn=1))
         root.bind('<Control-Key-3>',lambda x: self.set_focus_tab(idn=2))
         
+        root.bind("<Button-4>",self.scroll_binder) 
+        root.bind("<Button-5>",self.scroll_binder)
+        
         # event bindings
         root.protocol("WM_DELETE_WINDOW",self.on_closing)
         
@@ -824,6 +827,24 @@ class bfit(object):
         else:
             pass
     
+    # ======================================================================= #
+    def scroll_binder(self,event):
+        """
+            Switch between various functions of the mousewheel button. 
+            Bound to <Button-4> and <Button-5>
+        """
+        
+        idx = self.notebook.index('current')
+        
+        if idx == 0:        # data viewer
+            pass
+        elif idx == 1:        # data fetch_files
+            self.fetch_files.canvas_scroll(event)
+        elif idx == 2:        # fit viewer
+            self.fit_files.do_scrollbar(event)
+        else:
+            pass
+               
     # ======================================================================= #
     def search_archive(self):  webbrowser.open('http://musr.ca/mud/runSel.html')
         
