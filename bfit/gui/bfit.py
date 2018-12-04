@@ -209,6 +209,7 @@ class bfit(object):
         
         # File
         menu_file = Menu(menubar)
+        menu_file.add_command(label='Search archive',command=self.search_archive)
         menu_file.add_command(label='BNMR Oscillating Field Calculator',\
                 command=monikasCalculator)
         menu_file.add_command(label='BNQR Static Field Calculator',\
@@ -277,7 +278,6 @@ class bfit(object):
         menu_help = Menu(menubar)
         menubar.add_cascade(menu=menu_help, label='Help')
         menu_help.add_command(label='Show help wiki',command=self.help)
-        menu_help.add_command(label='Search archive',command=self.search_archive)
         
         # Top Notebook: File Viewer, Fit, Fit Viewer -------------------------
         noteframe = ttk.Frame(mainframe,relief='sunken',pad=5)
