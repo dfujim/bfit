@@ -277,6 +277,7 @@ class bfit(object):
         menu_help = Menu(menubar)
         menubar.add_cascade(menu=menu_help, label='Help')
         menu_help.add_command(label='Show help wiki',command=self.help)
+        menu_help.add_command(label='Search archive',command=self.search_archive)
         
         # Top Notebook: File Viewer, Fit, Fit Viewer -------------------------
         noteframe = ttk.Frame(mainframe,relief='sunken',pad=5)
@@ -823,6 +824,9 @@ class bfit(object):
         else:
             pass
     
+    # ======================================================================= #
+    def search_archive(self):  webbrowser.open('http://musr.ca/mud/runSel.html')
+        
     # ======================================================================= #
     def set_bnmr_dir(self): 
         """Set directory location via environment variable BNMR_ARCHIVE."""
