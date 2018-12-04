@@ -143,7 +143,7 @@ class fetch_files(object):
         check_all_box = ttk.Checkbutton(right_frame,
                 text='Force Check State',variable=self.check_state,
                 onvalue=True,offvalue=False,pad=5,command=self.check_all)
-        self.check_state.set(False)
+        self.check_state.set(True)
                 
         check_toggle_button = ttk.Button(right_frame,\
                 text='Toggle All Check States',command=self.toggle_all,pad=5)

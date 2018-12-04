@@ -92,6 +92,7 @@ class fit_files(object):
         set_group_check = ttk.Checkbutton(fn_select_frame,
                 text='Set Parameters for Group',\
                 variable=self.set_as_group,onvalue=True,offvalue=False)
+        self.set_as_group.set(True)
         
         # run mode 
         fit_runmode_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
