@@ -129,7 +129,8 @@ class bfit(object):
     # define draw componeents in draw_param and labels
     draw_components = ['Temperature (K)','B0 Field (T)', 'RF Level DAC', 
                        'Platform Bias (kV)', 'Impl. Energy (keV)', 
-                       'Run Duration (s)', 'Run Number','Sample', 'Start Time']
+                       'Run Duration (s)', 'Run Number','Sample', 'Start Time',
+                       'Title']
 
     try: 
         bnmr_data_dir = os.environ[bnmr_archive_label]
@@ -785,6 +786,9 @@ class bfit(object):
             
         elif select == 'Start Time':
             label = data.bd.start_date
+        
+        elif select == 'Title':
+            label = data.bd.title
             
         else:
             label = str(data.run)
