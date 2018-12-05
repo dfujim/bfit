@@ -739,6 +739,10 @@ class fit_files(object):
             val = [data[r].bd.start_date for r in runs]
             err = [0 for r in runs]
         
+        elif select == 'Title':
+            val = [data[r].bd.title for r in runs]
+            err = [0 for r in runs]
+        
         # fitted parameter options
         elif select in self.fitter.gen_param_names(self.fit_function_title.get(),
                                                    self.n_component.get()):
@@ -753,6 +757,7 @@ class fit_files(object):
                     val.append(np.nan)
                     err.append(np.nan)
     
+        
         return (val,err)
     
 # =========================================================================== #
