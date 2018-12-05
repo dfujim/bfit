@@ -522,15 +522,26 @@ class fit_files(object):
             
         # set x axis
         if   data.mode == '1f': x *= self.bfit.freq_unit_conv
-        elif data.mode == '1n': x *= self.bfit.volt_unit_conv
-    
+        elif data.mode == '1n': x *= self.bfit.volt_unit_conv    
+
         # draw 
         if self.bfit.draw_standardized_res.get():
             plt.errorbar(x,res/da,np.zeros(len(x)),label=label,**drawargs)
+            
+            # draw fill
+            ax = plt.gca()
+            lim = ax.get_xlim()
+            for i in range(1,4):
+                ax.fill_between(lim,-1*i,i,color='k',alpha=0.1)
+            plt.xlim(lim)
             plt.ylabel(r'Standardized Residual ($\sigma$)')
         else:
             plt.errorbar(x,res,da,label=label,**drawargs)
             plt.ylabel('Residual')
+        
+        # draw pulse marker
+        if '2' in data.mode: plt.axvline(data.get_pulse_s(),ls='--',color='k')
+            
         
         # plot elementsplt.ylabel('Residual')
         plt.xlabel(xlabel_dict[self.mode])
