@@ -215,6 +215,8 @@ class fit_files(object):
                     # set run functions        
                     fn_titles = self.fitter.function_names[self.mode]
                     self.fit_function_title_box['values'] = fn_titles
+                    if self.fit_function_title.get() == '':
+                        self.fit_function_title.set(fn_titles[0])
                         
             except UnboundLocalError:
                 self.fit_function_title_box['values'] = ()
