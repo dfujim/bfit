@@ -490,14 +490,14 @@ class fit_files(object):
             if k not in drawargs.keys():
                 drawargs[k] = self.bfit.style[k]
         
-        ax = plt.gca()
-        
         # make new window
         if draw_style.get() == 'new':
             plt.figure()
+            ax = plt.gca()
             
         # get index of label in run and delete that run
         elif draw_style.get() == 'stack':
+            ax = plt.gca()
             try:
                 idx = [ell.get_label() for ell in ax.containers].index(label)
             except ValueError as err:
@@ -509,6 +509,7 @@ class fit_files(object):
         
         # delete all runs
         elif draw_style.get() == 'redraw':
+            ax = plt.gca()
             del ax.lines[:]              # clear lines 
             del ax.collections[:]        # clear errorbar object 
             del ax.containers[:]         # clear errorbar object
