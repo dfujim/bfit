@@ -2,11 +2,12 @@
 # Derek Fujimoto
 # Nov 2018
 
+import collections
+import numpy as np
 from bdata import bdata
 from scipy.optimize import curve_fit
-import numpy as np
+from tqdm import tqdm
 from bfit.fitting.global_bdata_fitter import global_bdata_fitter
-import collections
 
 # ========================================================================== #
 def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
@@ -88,6 +89,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
 
     # fit globally -----------------------------------------------------------
     if any(sharelist) and len(runs)>1:
+        print('Running shared parameter fitting...')
         g = global_bdata_fitter(runs,years,fnlist,sharelist,npar,xlims)
         g.fit(p0=p0,**kwargs)
         _,chis = g.get_chi()
@@ -113,7 +115,9 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         pars = []
         covs = []
         chis = []
-        for r,y,fn,om,re,p,b,xl in zip(runs,years,fnlist,omit,rebin,p0,bounds,xlims):
+        iter_obj = tqdm(zip(runs,years,fnlist,omit,rebin,p0,bounds,xlims),
+                        total=len(runs),desc='Independent Fitting')
+        for r,y,fn,om,re,p,b,xl in iter_obj:
             p,s,c = fit_single(r,y,fn,om,re,hist_select,p0=p,bounds=b,xlim=xl,**kwargs)
             pars.append(p)
             covs.append(s)
@@ -174,7 +178,7 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,**kwargs):
         kwargs['p0'] = np.ones(fn.__code__.co_argcount-1)
     
     # Fit the function 
-    par,cov = curve_fit(fn,x,y,sigma=dy,**kwargs)
+    par,cov = curve_fit(fn,x,y,sigma=dy,absolute_sigma=True,**kwargs)
     dof = len(y)-fn.__code__.co_argcount+1
     
     # get chisquared

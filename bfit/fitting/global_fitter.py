@@ -290,6 +290,7 @@ class global_fitter(object):
                             self.xccat[tag],
                             self.yccat[tag],
                             sigma=self.dyccat[tag],
+                            absolute_sigma=True,
                             **fitargs)
         # to array
         par = np.asarray(par)
@@ -503,7 +504,7 @@ class global_fitter(object):
 
     # ======================================================================= #
     def _get_full_depth(self,nested_list,depth=0):
-        """Get full depth of list"""
+        """Get maximum depth of nested list set recursively."""
         if not isinstance(nested_list,collections.Iterable):    
             return depth
         depth += 1
