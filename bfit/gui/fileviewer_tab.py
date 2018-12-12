@@ -5,7 +5,7 @@
 from tkinter import *
 from tkinter import ttk
 import numpy as np
-import sys,os,datetime,time
+import sys,os,datetime,time,glob
 from bdata import bdata
 import matplotlib.pyplot as plt
 from multiprocessing import Process, Pipe
@@ -203,14 +203,42 @@ class fileviewer(object):
                     '2h':'SLR with Alpha Tracking','2s':'Spin Echo',
                     '2e':'Randomized Frequency Scan'}
         
-        # fetch data file
+        # fetch year
         try:
             year = int(self.year.get())
-            run = int(self.runn.get())
         except ValueError:
             for t in [self.text_nw,self.text_ne,self.text_sw,self.text_se]:
-                self.set_textbox_text(t,'Input must be integer valued')  
+                self.set_textbox_text(t,'Year input must be integer valued')  
             return False
+        
+        # fetch run number
+        run = self.runn.get()
+        if run.isdigit() and int(run) > 40000:
+            run = int(run)
+        else:
+            # globbing
+            if run != '' and run[0] != '0':             run = '0'+run       
+            if not any([key in run for key in '*?']):   run = run+'*'
+            if '.msr' not in run:                       run = run + '.msr'
+            
+            # look for latest run by run number
+            runlist = []
+            for d in [self.bfit.bnmr_archive_label,self.bfit.bnqr_archive_label]:
+                dirloc = os.environ[d]
+                runlist.extend(glob.glob(os.path.join(dirloc,str(year),run)))
+            
+            runlist = [int(os.path.splitext(os.path.basename(r))[0]) for r in runlist]
+            
+            # get latest run by max run number
+            try:
+                run = max(runlist)
+            except ValueError:
+                for t in [self.text_nw,self.text_ne,self.text_sw,self.text_se]:
+                    self.set_textbox_text(t,'Run input must be integer '+\
+                    'valued, or have unix-style pathname pattern extension '+\
+                    'which corresponds to an existing run number'+\
+                    '(see glob module)')  
+                return False
         
         try: 
             data = fitdata(self.bfit,bdata(run,year=year))
