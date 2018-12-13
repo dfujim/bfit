@@ -823,7 +823,7 @@ class bfit(object):
         elif idx == 1:        # data fetch_files
             self.fetch_files.return_binder()
         elif idx == 2:        # fit viewer
-            self.fit_files.do_fit()
+            self.fit_files.draw_param()
         else:
             pass
     

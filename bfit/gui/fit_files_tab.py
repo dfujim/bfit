@@ -18,6 +18,7 @@ from bdata import bdata
 class fit_files(object):
     """
         Data fields:
+            annotation:     stringvar: name of quantity for annotating parameters 
             chi_threshold:  if chi > thres, set color to red
             draw_components:list of titles for labels, options to export, draw.
             file_tabs:      dictionary of fitinputtab objects, keyed by group number 
@@ -143,16 +144,22 @@ class fit_files(object):
         # menus for x and y values
         ttk.Label(right_frame,text="x axis:").grid(column=0,row=1)
         ttk.Label(right_frame,text="y axis:").grid(column=0,row=2)
+        ttk.Label(right_frame,text="Annotation:").grid(column=0,row=3)
         
         self.xaxis = StringVar()
         self.yaxis = StringVar()
+        self.annotation = StringVar()
         
         self.xaxis.set('')
         self.yaxis.set('')
+        self.annotation.set('')
         
         self.xaxis_combobox = ttk.Combobox(right_frame,textvariable=self.xaxis,
                                       state='readonly',width=15)
         self.yaxis_combobox = ttk.Combobox(right_frame,textvariable=self.yaxis,
+                                      state='readonly',width=15)
+        self.annotation_combobox = ttk.Combobox(right_frame,
+                                      textvariable=self.annotation,
                                       state='readonly',width=15)
         
         # gridding
@@ -162,6 +169,7 @@ class fit_files(object):
         
         self.xaxis_combobox.grid(column=1,row=1,pady=5)
         self.yaxis_combobox.grid(column=1,row=2,pady=5)
+        self.annotation_combobox.grid(column=1,row=3,pady=5)
         
         # resizing
         
@@ -268,12 +276,14 @@ class fit_files(object):
         except KeyError:
             self.xaxis_combobox['values'] = []
             self.yaxis_combobox['values'] = []
+            self.annotation_combobox['values'] = []
             return
             
         parlst.sort()
         
-        self.xaxis_combobox['values'] = parlst+lst
-        self.yaxis_combobox['values'] = parlst+lst
+        self.xaxis_combobox['values'] = ['']+parlst+lst
+        self.yaxis_combobox['values'] = ['']+parlst+lst
+        self.annotation_combobox['values'] = ['']+parlst+lst
             
     # ======================================================================= #
     def do_fit(self,*args):
@@ -639,6 +649,7 @@ class fit_files(object):
         # get draw components
         xdraw = self.xaxis.get()
         ydraw = self.yaxis.get()
+        ann = self.annotation.get()
         
         # get plottable data
         try:
@@ -651,6 +662,26 @@ class fit_files(object):
             messagebox.showerror("Error",
                     'Drawing parameter "%s" or "%s" not found' % (xdraw,ydraw))
             raise err
+            
+        # get annotation
+        try:
+            ann, _ = self.get_values(ann)
+        except UnboundLocalError:
+            ann = None
+        except (KeyError,AttributeError) as err:
+            messagebox.showerror("Error",
+                    'Annotation "%s" not found' % (ann))
+            raise err
+        
+        # fix annotation values (blank to none)
+        if ann == '': ann = None
+        
+        # fix annotation values (round floats)
+        if ann is not None: 
+            number_string = '%.'+'%df' % self.bfit.rounding
+            for i,a in enumerate(ann):
+                if type(a) in [float,np.float64]:
+                    ann[i] = number_string % np.around(a,self.bfit.rounding)
             
         # get draw style
         style = self.bfit.draw_style.get()
@@ -673,8 +704,9 @@ class fit_files(object):
             plt.gca().set_yticklabels(yvals)
             yvals = np.arange(len(yvals))
         
-        plt.errorbar(xvals,yvals,xerr=xerrs,yerr=yerrs,fmt='.')
-            
+        f = plt.errorbar(xvals,yvals,xerr=xerrs,yerr=yerrs,fmt='.')
+        self._annotate(xvals,yvals,ann,color=f[0].get_color())
+        
         # plot elements
         plt.xlabel(xdraw)
         plt.ylabel(ydraw)
@@ -774,6 +806,30 @@ class fit_files(object):
         
         return (val,err)
     
+    # =========================================================================== #
+    def _annotate(self,x,y,ptlabels,color='k'):
+        """Add annotation"""
+        
+        # base case
+        if ptlabels is None: return
+        
+        # do annotation
+        for label,xcoord,ycoord in zip(ptlabels,x,y):        
+            if type(label) != type(None):
+                plt.annotate(label,
+                             xy=(xcoord,ycoord),
+                             xytext=(-3, 20),
+                             textcoords='offset points', 
+                             ha='right', 
+                             va='bottom',
+                             bbox=dict(boxstyle='round,pad=0.1',
+                                       fc=color, 
+                                       alpha=0.1),
+                             arrowprops=dict(arrowstyle = '->', 
+                                             connectionstyle='arc3,rad=0'),
+                            fontsize='xx-small',
+                            )    
+                            
 # =========================================================================== #
 # =========================================================================== #
 class fitinputtab(object):

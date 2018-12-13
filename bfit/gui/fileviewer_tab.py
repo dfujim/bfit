@@ -234,12 +234,13 @@ class fileviewer(object):
                 run = max(runlist)
             except ValueError:
                 for t in [self.text_nw,self.text_ne,self.text_sw,self.text_se]:
-                    self.set_textbox_text(t,'Run input must be integer '+\
-                    'valued, or have unix-style pathname pattern extension '+\
-                    'which corresponds to an existing run number'+\
-                    '(see glob module)')  
+                    self.set_textbox_text(t,'Run not found.\n\n'+\
+                    'Run input must be integer valued, or have unix-style '+\
+                    'pathname pattern extension which corresponds to an '+\
+                    'existing run number (see glob module).')  
                 return False
         
+        # get data
         try: 
             data = fitdata(self.bfit,bdata(run,year=year))
         except ValueError:
