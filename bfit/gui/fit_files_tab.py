@@ -717,10 +717,13 @@ class fit_files(object):
         
         # get values and errors
         val = {}
+        
         for v in self.xaxis_combobox['values']:
+            if v == '': continue
+            
             try:
                 v2 = self.get_values(v) 
-            except AttributeError: 
+            except Exception: 
                 traceback.print_exc()
             else:
                 val[v] = v2[0]
@@ -729,6 +732,11 @@ class fit_files(object):
         # make data frame for output
         df = pd.DataFrame(val)
         df.set_index('Run Number',inplace=True)
+        
+        # drop completely empty columns
+        bad_cols = [c for c in df.columns if all(df[c].isna())]
+        for c in bad_cols:
+            df.drop(c,axis='columns',inplace=True)
         
         # get file name
         filename = filedialog.asksaveasfilename()
@@ -755,8 +763,11 @@ class fit_files(object):
             err = [data[r].field_std for r in runs]
         
         elif select == 'RF Level DAC':
-            val = [data[r].camp.rf_dac.mean for r in runs]
-            err = [data[r].camp.rf_dac.std for r in runs]
+            try:
+                val = [data[r].camp.rf_dac.mean for r in runs]
+                err = [data[r].camp.rf_dac.std for r in runs]
+            except AttributeError:
+                pass
         
         elif select == 'Platform Bias (kV)':
             try:
@@ -767,27 +778,27 @@ class fit_files(object):
                 
         elif select == 'Impl. Energy (keV)':
             val =  [data[r].bd.beam_kev() for r in runs]
-            err =  [0 for r in runs]
+            err =  [np.nan for r in runs]
         
         elif select == 'Run Duration (s)':
             val = [data[r].bd.duration for r in runs]
-            err = [0 for r in runs]
+            err = [np.nan for r in runs]
         
         elif select == 'Run Number':
             val = [data[r].run for r in runs]
-            err = [0 for r in runs]
+            err = [np.nan for r in runs]
         
         elif select == 'Sample':
             val = [data[r].bd.sample for r in runs]
-            err = [0 for r in runs]
+            err = [np.nan for r in runs]
             
         elif select == 'Start Time':
             val = [data[r].bd.start_date for r in runs]
-            err = [0 for r in runs]
+            err = [np.nan for r in runs]
         
         elif select == 'Title':
             val = [data[r].bd.title for r in runs]
-            err = [0 for r in runs]
+            err = [np.nan for r in runs]
         
         # fitted parameter options
         elif select in self.fitter.gen_param_names(self.fit_function_title.get(),
@@ -803,9 +814,11 @@ class fit_files(object):
                     val.append(np.nan)
                     err.append(np.nan)
     
+        try:
+            return (val,err)
+        except UnboundLocalError:
+            raise AttributeError('Selection "%s" not found' % select)
         
-        return (val,err)
-    
     # =========================================================================== #
     def _annotate(self,x,y,ptlabels,color='k'):
         """Add annotation"""
