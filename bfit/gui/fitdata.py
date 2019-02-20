@@ -5,9 +5,13 @@
 
 from tkinter import *
 from bdata import bdata
-import bfit
-import numpy as np
 from bfit.gui.zahersCalculator import current2field
+from bfit import logger_name
+
+import numpy as np
+
+import bfit
+import logging
 
 # =========================================================================== #
 # =========================================================================== #
@@ -47,6 +51,10 @@ class fitdata(object):
     # ======================================================================= #
     def __init__(self,parentbfit,bd):
         
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.debug('Initializing.')
+        
         # top level pointer
         self.bfit = parentbfit
         
@@ -73,6 +81,7 @@ class fitdata(object):
         try:
             self.temperature = self.bd.camp.smpl_read_A
         except AttributeError:
+            self.logger.exception('Thermometer not found')
             self.temperature = self.bd.camp.oven_readC
         
         # field
@@ -84,6 +93,7 @@ class fitdata(object):
                 self.field = current2field(bd.epics.hh_current.mean)*1e-4
                 self.field_std = current2field(bd.epics.hh_current.std)*1e-4
         except AttributeError:
+            self.logger.exception('Field not found')
             self.field = np.nan
             self.field_std = np.nan
             
@@ -96,7 +106,10 @@ class fitdata(object):
                 self.bias = bd.epics.nqr_bias.mean/1000.
                 self.bias_std = bd.epics.nqr_bias.std/1000.
         except AttributeError:
+            self.logger.exception('Bias not found')
             self.bias = np.nan
+
+        self.logger.debug('Initialization success.')
 
     # ======================================================================= #
     def __getattr__(self,name):
@@ -115,11 +128,13 @@ class fitdata(object):
         values: output of routine gen_init_par: 
                 {par_name:(par,lobnd,hibnd)}
         """
-
+    
         for v in values.keys():
             self.fitpar['p0'][v] = values[v][0]
             self.fitpar['blo'][v] = values[v][1]
             self.fitpar['bhi'][v] = values[v][2]
+        
+        self.logger.debug('Fit parameters set to %s',self.fitpar)
 
     # ======================================================================= #
     def set_fitresult(self,values):
@@ -137,5 +152,5 @@ class fitdata(object):
         self.chi = values[3]
         self.fitfn = values[4]
         
-    
+        self.logger.debug('Setting fit results to %s',self.fitpar)
     

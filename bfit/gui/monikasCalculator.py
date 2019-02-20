@@ -4,8 +4,11 @@
 
 from tkinter import *
 from tkinter import ttk
+from bfit import logger_name
 import numpy as np
 import webbrowser
+import logging
+
 
 # =========================================================================== #
 class monikasCalculator(object):
@@ -13,6 +16,10 @@ class monikasCalculator(object):
     # ======================================================================= #
     def __init__(self):
         """Draw window for Monika's calculator"""
+        
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.info('Initializing')
         
         # root 
         root = Toplevel()
@@ -78,6 +85,7 @@ class monikasCalculator(object):
         
         # runloop
         self.root = root
+        self.logger.debug('Initialization success. Starting mainloop.')
         root.mainloop()
         
     # ======================================================================= #
@@ -92,17 +100,27 @@ class monikasCalculator(object):
         # convert field to voltage
         if focus_id == str(self.entry_field):        
             try:
-                field = float(self.field.get()) 
-                self.volt.set("%9.6f" % np.around(field/0.0396*nu,6))
+                field = float(self.field.get())
+                value = field/0.0396*nu
+                self.volt.set("%9.6f" % np.around(value,6))
+                
+                self.logger.info('Field of %g G converted to voltage of %g mV',
+                                 field,value)
             except ValueError:
+                self.logger.exception('Bad input.')
                 self.volt.set('Error')
         
         # convert voltage to field
         elif focus_id == str(self.entry_voltage):        
             try:
                 voltage = float(self.volt.get())
-                self.field.set("%9.6f" % np.around(voltage*0.0396/nu,6))
+                value = voltage*0.0396/nu
+                self.field.set("%9.6f" % np.around(value,6))
+                
+                self.logger.info('Voltage of %g mV converted to field of %g G',
+                                 voltage,value)
             except ValueError:
+                self.logger.exception('Bad input.')
                 self.field.set('Error')
             
 

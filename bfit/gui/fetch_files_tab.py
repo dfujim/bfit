@@ -4,13 +4,16 @@
 
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
+from bfit import logger_name
+from bdata import bdata
+from functools import partial
+from bfit.gui.fitdata import fitdata
 import numpy as np
 import pandas as pd
-from bdata import bdata
-import datetime
-from functools import partial
 import matplotlib.pyplot as plt
-from bfit.gui.fitdata import fitdata
+import datetime
+import logging
+
 
 __doc__="""
     To-do:
@@ -56,6 +59,10 @@ class fetch_files(object):
     # ======================================================================= #
     def __init__(self,fetch_data_tab,bfit):
         
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.debug('Initializing')
+    
         # initialize
         self.bfit = bfit
         self.data_lines = {}
@@ -225,6 +232,8 @@ class fetch_files(object):
         self.check_bin_remove_entry = check_bin_remove_entry
         self.check_all_box = check_all_box
         self.dataline_frame = dataline_frame
+
+        self.logger.debug('Initialization success.')
     
     # ======================================================================= #
     def canvas_scroll(self,event):
@@ -237,8 +246,9 @@ class fetch_files(object):
     # ======================================================================= #
     def check_all(self):
         """Force all tickboxes to be in a given state"""
+        state = self.check_state.get()
+        self.logger.info('Changing state of all tickboxes to %s',state)
         for k in self.data_lines.keys():
-            state = self.check_state.get()
             self.data_lines[k].check_state.set(state)
         
     # ======================================================================= #
@@ -256,6 +266,9 @@ class fetch_files(object):
     # ======================================================================= #
     def draw_all(self,ignore_check=False):
         """Draw all data in data lines"""
+        
+        self.logger.info('Drawing all data (ignore check: %s)', ignore_check)
+        
         # condense drawing into a funtion
         def draw_lines():
             for r in self.data_lines.keys():
@@ -264,6 +277,7 @@ class fetch_files(object):
                 
         # get draw style
         style = self.bfit.draw_style.get()
+        self.logger.debug('Draw style: "%s"',style)
         
         # make new figure, draw stacked
         if style == 'stack':
@@ -283,12 +297,17 @@ class fetch_files(object):
             draw_lines()
             self.bfit.draw_style.set('new')
         else:
-            messagebox.showerror(message="Draw style not recognized")
-            raise ValueError("Draw style not recognized")
+            s = "Draw style not recognized"
+            messagebox.showerror(message=s)
+            self.logger.error(s)
+            raise ValueError(s)
 
     # ======================================================================= #
     def draw_all_fits(self,ignore_check=False):
         """Draw all fits in data lines"""
+        
+        self.logger.info('Drawing all fits (ignore check: %s)', ignore_check)
+        
         # condense drawing into a funtion
         def draw_lines():
             for r in self.data_lines.keys():
@@ -301,6 +320,7 @@ class fetch_files(object):
                 
         # get draw style
         style = self.bfit.draw_style.get()
+        self.logger.debug('Draw style: "%s"',style)
         
         # make new figure, draw stacked
         if style == 'new':
@@ -320,8 +340,10 @@ class fetch_files(object):
             self.bfit.draw_style.set('redraw')
             
         else:
-            messagebox.showerror(message="Draw style not recognized")
-            raise ValueError("Draw style not recognized")
+            s = "Draw style not recognized"
+            messagebox.showerror(message=s)
+            self.logger.error(s)
+            raise ValueError(s)
 
     # ======================================================================= #
     def export(self):
@@ -329,6 +351,7 @@ class fetch_files(object):
         
         # filename
         filename = self.bfit.fileviewer.default_export_filename
+        self.logger.info('Exporting to file %s',filename)
         try:
             filename = filedialog.askdirectory()+'/'+filename
         except TypeError:
@@ -338,15 +361,19 @@ class fetch_files(object):
         for k in self.bfit.data.keys():
             d = self.bfit.data[k].bd
             self.bfit.export(d,filename%(d.year,d.run))
-    
+        self.logger.debug('Success.')
+        
     # ======================================================================= #
     def get_data(self):
         """Split data into parts, and assign to dictionary."""
+        
+        self.logger.info('Fetching data')
         
         # make list of run numbers, replace possible deliminators
         try:
             run_numbers = self.string2run(self.run.get())
         except ValueError:
+            self.logger.exception('Bad run number string')
             return
         
         # get data
@@ -362,6 +389,7 @@ class fetch_files(object):
         if len(s)>1:
             s = '\n'.join(s)
             print(s)
+            self.logger.warning(s)
             messagebox.showinfo(message=s)
         
         # check that data is all the same runtype
@@ -386,6 +414,7 @@ class fetch_files(object):
             messagebox.showinfo(message=message)
             
         # get only run_types[0]
+        self.logger.debug('Fetching runs of mode %s',run_types[0])
         for k in data.keys():
             if data[k].mode == run_types[0]:
                 self.bfit.data[k] = data[k]
@@ -393,8 +422,10 @@ class fetch_files(object):
         try:
             self.runmode = run_types[0]
         except IndexError:
-            messagebox.showerror(message='No valid runs detected.')
-            raise RuntimeError('No valid runs detected.')
+            s = 'No valid runs detected.'
+            messagebox.showerror(message=s)
+            self.logger.warning(s)
+            raise RuntimeError(s)
         self.runmode_label['text'] = self.runmode_relabel[self.runmode]
         self.bfit.set_asym_calc_mode_box(self.runmode)
         
@@ -412,10 +443,13 @@ class fetch_files(object):
             n+=1
             
         self.bfit.fit_files.populate()
+        self.logger.debug('Fetch done.')
         
     # ======================================================================= #
     def remove_all(self):
         """Remove all data files from self.data_lines"""
+        
+        self.logger.info('Removing all data files')
         del_list = []
         for r in self.data_lines.keys():
             if self.data_lines[r].check_state.get():
@@ -429,16 +463,20 @@ class fetch_files(object):
         
         # check where the focus is
         focus_id = str(self.bfit.root.focus_get())
+        self.logger.debug('Return key called with focus %s',focus_id)
         
         # run or year entry
         if focus_id in [str(self.entry_run), str(self.entry_year)]:
+            self.logger.debug('Focus is: run or year entry')
             self.get_data()
         
         # checked rebin or checked run omission
         elif focus_id in [str(self.check_rebin_box),\
                           str(self.check_bin_remove_entry)]:
+            self.logger.debug('Focus is: checked rebin or checked run omission')
             self.set_all()
         elif focus_id == str(self.check_all_box):
+            self.logger.debug('Focus is: check all box')
             self.draw_all()
         else:
             pass
@@ -446,6 +484,8 @@ class fetch_files(object):
     # ======================================================================= #
     def set_all(self):
         """Set a particular property for all checked items. """
+        
+        self.logger.info('Set all')
         
         # check all file lines
         for r in self.data_lines.keys():
@@ -486,8 +526,11 @@ class fetch_files(object):
                     run_numbers.extend(rns)
             else:
                 run_numbers.append(int(s))
+        
         # sort
         run_numbers.sort()
+        self.logger.debug('Parsed "%s" to run numbers (len: %d) %s',string,
+                          len(run_numbers),run_numbers)
         
         if len(run_numbers) > self.max_number_fetched:
             raise RuntimeWarning("Too many files selected (max 50).")
@@ -496,6 +539,7 @@ class fetch_files(object):
     # ======================================================================= #
     def toggle_all(self):
         """Toggle all tickboxes"""
+        self.logger.info('Toggling all tickboxes')
         for k in self.data_lines.keys():
             state = not self.data_lines[k].check_state.get()
             self.data_lines[k].check_state.set(state)
@@ -533,6 +577,10 @@ class dataline(object):
                 bdfit: fitdata object corresponding to the file which is placed here. 
                 row: where to grid this object
         """
+        
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.debug('Initializing run %d (%d)',bdfit.run,bdfit.year)
         
         # variables
         self.bfit = bfit
@@ -674,6 +722,8 @@ class dataline(object):
     def remove(self):
         """Remove displayed dataline object from file selection. """
         
+        self.logger.info('Removing run %d (%d)',self.run,self.year)
+        
         # kill buttons and fram
         for child in self.line_frame.winfo_children():
             child.destroy()
@@ -694,6 +744,8 @@ class dataline(object):
     # ======================================================================= #
     def draw(self):
         """Draw single data file."""
+        
+        self.logger.info('Draw run %d (%d)',self.run,self.year)
         
         # get new data file
         data = bdata(self.run,year=self.year)

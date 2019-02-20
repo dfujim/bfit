@@ -4,9 +4,11 @@
 
 from tkinter import *
 from tkinter import ttk
+from bfit import logger_name
 import webbrowser
 import textwrap
 import os
+import logging
 
 # ========================================================================== #
 class set_histograms_popup(object):
@@ -18,7 +20,11 @@ class set_histograms_popup(object):
     def __init__(self,parent):
         self.parent = parent
         
-         # make a new window
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.info('Initializing')
+        
+        # make a new window
         self.win = Toplevel(parent.mainframe)
         self.win.title('Set Histograms')
         frame = ttk.Frame(self.win,relief='sunken',pad=5)
@@ -69,7 +75,8 @@ class set_histograms_popup(object):
             else:
                 run = list(parent.fetch_files.data.keys())[0]
                 s = list(parent.fetch_files.data[run].hist.keys())
-        except IndexError:
+        except (IndexError,AttributeError):
+            self.logger.exception('No files fetched or viewed')
             s = 'No files fetched or viewed'
         else:
             s.sort()
@@ -100,9 +107,12 @@ class set_histograms_popup(object):
             
         # grid frame
         frame.grid(column=0,row=0)
+        
+        self.logger.debug('Initialization success. Starting mainloop.')
 
     # ====================================================================== #
     def help(self):
+        self.logger.info('Opening help')
         p = os.path
         webbrowser.open(p.split(p.abspath(p.realpath(__file__)))[0]+'/help.html')
 
@@ -110,6 +120,7 @@ class set_histograms_popup(object):
     def set(self,*args):
         """Set entered values"""
         self.parent.hist_select = self.entry.get()
+        self.logger.info('Set histogram selection to "%s"',self.parent.hist_select)
         self.win.destroy()
         
     # ====================================================================== #

@@ -4,14 +4,18 @@
 
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import datetime, os, traceback
-
 from functools import partial
 from bfit.gui.zahersCalculator import current2field
 from bdata import bdata
+from bfit import logger_name
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+import datetime, os, traceback
+import logging
+
 
 # =========================================================================== #
 # =========================================================================== #
@@ -46,6 +50,10 @@ class fit_files(object):
     
     # ======================================================================= #
     def __init__(self,fit_data_tab,bfit):
+        
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.debug('Initializing')
         
         # initialize
         self.file_tabs = {}
@@ -186,11 +194,15 @@ class fit_files(object):
         for i in range(2):
             right_frame.grid_columnconfigure(i,weight=1)
         
+        self.logger.debug('Initialization success.')
+        
     # ======================================================================= #
     def populate(self,*args):
         """
             Make tabs for setting fit input parameters. 
         """
+        
+        self.logger.debug('Populating data')
         
         # get groups 
         dl = self.bfit.fetch_files.data_lines
@@ -212,6 +224,7 @@ class fit_files(object):
             # reset fit function combobox options
             try:               
                 if self.mode != self.bfit.data[key_zero].mode:
+                    
                     # set run mode 
                     self.mode = self.bfit.data[key_zero].mode 
                     self.fit_runmode_label['text'] = \
@@ -231,7 +244,6 @@ class fit_files(object):
                 self.fit_function_title.set("")
                 self.fit_runmode_label['text'] = ""
                 self.mode = ""
-
                         
             # make fitinputtab objects, clean up old tabs
             for g in self.groups:
@@ -261,6 +273,8 @@ class fit_files(object):
     def populate_param(self,*args):
         """Populate the list of parameters"""
         
+        self.logger.debug('Populating fit parameters')
+        
         # populate tabs
         for k in self.file_tabs.keys():
             self.file_tabs[k].populate_param()
@@ -287,6 +301,8 @@ class fit_files(object):
             
     # ======================================================================= #
     def do_fit(self,*args):
+        
+        self.logger.info('Fitting runs')
         
         # fitter
         fitter = self.fitter
@@ -322,6 +338,7 @@ class fit_files(object):
                             try:
                                 line.append(float(pline[col][0].get()))
                             except ValueError as errmsg:
+                                self.logger.exception("Bad input.")
                                 messagebox.showerror("Error",str(errmsg))
                         
                         # get "Fixed" entry
@@ -353,9 +370,11 @@ class fit_files(object):
                     pass
                     
                 elif self.mode == '2e':
+                    self.logger.error('2e fitting not implemented')
                     raise RuntimeError('2e fitting not implemented')
                 
                 else:
+                    self.logger.error('Fitting mode not recognized')
                     raise RuntimeError('Fitting mode not recognized')
                 
                 # make data list
@@ -388,12 +407,14 @@ class fit_files(object):
         fit_status_window.update_idletasks()
         
         # do fit then kill window
+        self.logger.debug('Fitting with data list and fit options: %s',data_list)
         try:
             # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
             fit_output = fitter(fn_name=fn_name,ncomp=ncomp,
                                      data_list=data_list,
                                      hist_select=self.bfit.hist_select)
         except Exception as errmsg:
+            self.logger.exception('Fitting error')
             fit_status_window.destroy()
             messagebox.showerror("Error",str(errmsg))
             raise errmsg
@@ -416,7 +437,6 @@ class fit_files(object):
         
         # draw fit results
         self.bfit.fetch_files.draw_all(ignore_check=True)
-        
         style = self.bfit.draw_style.get()
         
         if style in ['redraw','new']:
@@ -471,6 +491,10 @@ class fit_files(object):
     # ======================================================================= #
     def draw_residual(self,run,rebin=1,**drawargs):
         """Draw fitting residuals for a single run"""
+        
+        self.logger.info('Drawing residual for run %d, rebin %d, '+\
+                         'standardized: %s, %s',run,rebin,
+                         self.bfit.draw_standardized_res.get(),drawargs)
         
         # Settings
         xlabel_dict={'20':"Time (s)",
@@ -568,6 +592,8 @@ class fit_files(object):
     def draw_fit(self,run,**drawargs):
         """Draw fit for a single run"""
         
+        self.logger.info('Drawing fit for run %d. %s',run,drawargs)
+        
         # Settings
         xlabel_dict={'20':"Time (s)",
                      '2h':"Time (s)",
@@ -643,6 +669,8 @@ class fit_files(object):
     # ======================================================================= #
     def draw_param(self,*args):
         
+        self.logger.info('Draw fit paramters')
+        
         # make sure plot shows
         plt.ion()
         
@@ -656,25 +684,30 @@ class fit_files(object):
             xvals, xerrs = self.get_values(xdraw)
             yvals, yerrs = self.get_values(ydraw)
         except UnboundLocalError as err:
+            self.logger.exception('Bad input parameter selection')
             messagebox.showerror("Error",'Select two input parameters')
             raise err
         except (KeyError,AttributeError) as err:
+            self.logger.exception('Parameter not found for drawing')
             messagebox.showerror("Error",
                     'Drawing parameter "%s" or "%s" not found' % (xdraw,ydraw))
             raise err
             
         # get annotation
-        try:
-            ann, _ = self.get_values(ann)
-        except UnboundLocalError:
-            ann = None
-        except (KeyError,AttributeError) as err:
-            messagebox.showerror("Error",
-                    'Annotation "%s" not found' % (ann))
-            raise err
+        if ann != '':
+            try:
+                ann, _ = self.get_values(ann)
+            except UnboundLocalError:
+                ann = None
+            except (KeyError,AttributeError) as err:
+                self.logger.exception('Bad input annotation value')
+                messagebox.showerror("Error",
+                        'Annotation "%s" not found' % (ann))
+                raise err
         
         # fix annotation values (blank to none)
-        if ann == '': ann = None
+        else:
+            ann = None
         
         # fix annotation values (round floats)
         if ann is not None: 
@@ -740,11 +773,13 @@ class fit_files(object):
         
         # get file name
         filename = filedialog.asksaveasfilename()
+        self.logger.info('Exporting parameters to "%s"',filename)
         
         # check extension 
         if os.path.splitext(filename)[1] == '':
             filename += '.csv'
         df.to_csv(filename)
+        self.logger.debug('Export success')
         
     # ======================================================================= #
     def get_values(self,select):
@@ -752,6 +787,8 @@ class fit_files(object):
         data = self.bfit.data
         runs = list(data.keys())
         runs.sort()
+    
+        self.logger.debug('Fetching parameter %s',select)
     
         # Data file options
         if select == 'Temperature (K)':
@@ -817,6 +854,7 @@ class fit_files(object):
         try:
             return (val,err)
         except UnboundLocalError:
+            self.logger.warning('Parameter selection "%s" not found' % select)
             raise AttributeError('Selection "%s" not found' % select)
         
     # =========================================================================== #
@@ -876,6 +914,10 @@ class fitinputtab(object):
                 group: number of data group to fit
         """
         
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.debug('Initalizing fit tab group %d',group)
+        
         # initialize
         self.bfit = bfit
         self.parent = parent
@@ -886,6 +928,8 @@ class fitinputtab(object):
     # ======================================================================= #
     def create(self):
         """Create graphics for this object"""
+        
+        self.logger.debug('Creating graphics for fit input group %d',self.group)
         
         fitframe = ttk.Frame(self.parent)
         self.parent.add(fitframe,text='Group %d' % self.group)
@@ -945,6 +989,7 @@ class fitinputtab(object):
         
         # save
         self.fitframe = fitframe
+        self.logger.debug('Creation success')
         
     # ======================================================================= #
     def get_new_parameters(self,runlist):
@@ -953,6 +998,8 @@ class fitinputtab(object):
             
             runlist: list of run numbers to set new parameters for. 
         """
+        
+        self.logger.debug('Fetching new parameters')
         
         # get pointer to fit files object
         fit_files = self.bfit.fit_files
@@ -981,6 +1028,8 @@ class fitinputtab(object):
         except IndexError:
             self.selected = 0 
             
+        self.logger.info("Fetching selected run %d",self.runlist[self.selected])
+            
         return self.runlist[self.selected]
         
     # ======================================================================= #
@@ -999,6 +1048,7 @@ class fitinputtab(object):
                 for p in self.parentry[k]:
                     self.parentry[k][p][1].destroy()
         
+        self.logger.debug('Populating parameter list with %s',plist)
         
         # make parameter input fields ---------------------------------------
         
@@ -1204,6 +1254,8 @@ class fitinputtab(object):
     # ======================================================================= #
     def update(self):
         """Update tab with new data"""
+        
+        self.logger.info('Updating fit tab for group %d',self.group)
         
         # get list of runs with the group number
         dl = self.bfit.fetch_files.data_lines

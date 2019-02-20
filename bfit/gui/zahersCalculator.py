@@ -6,6 +6,8 @@ from tkinter import *
 from tkinter import ttk
 import numpy as np
 import webbrowser
+import logging
+from bfit import logger_name
 
 # =========================================================================== #
 class zahersCalculator(object):
@@ -13,6 +15,10 @@ class zahersCalculator(object):
     # ======================================================================= #
     def __init__(self):
         """Draw window for Zaher's calculator"""
+        
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.info('Initializing')
         
         # root 
         root = Toplevel()
@@ -63,6 +69,7 @@ class zahersCalculator(object):
         
         # runloop
         self.root = root
+        self.logger.debug('Initialization success. Starting mainloop.')
         root.mainloop()
         
     # ======================================================================= #
@@ -75,16 +82,24 @@ class zahersCalculator(object):
         if focus_id == str(self.entry_field):        
             try:
                 field = float(self.field.get()) 
-                self.current.set("%.4f" % np.around(field2current(field),4))
+                value = field2current(field)
+                self.current.set("%.4f" % np.around(value,4))
+                self.logger.info('Field of %g G converted to current of %g A',
+                                 field,value)
             except ValueError:
+                self.logger.exception('Bad input')
                 self.current.set('Error')
             
         # convert current to field
         elif focus_id == str(self.entry_current):        
             try:
                 current = float(self.current.get()) 
-                self.field.set("%.4f" % np.around(current2field(current),4))
+                value = current2field(current)
+                self.field.set("%.4f" % np.around(value,4))
+                self.logger.info('Current of %g A converted to field of %g G',
+                                 current,value)
             except ValueError:
+                self.logger.exception('Bad input')
                 self.field.set('Error')
             
 # ======================================================================= #

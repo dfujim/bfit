@@ -4,7 +4,10 @@
 
 from tkinter import *
 from tkinter import ttk
+from bfit import logger_name
 import webbrowser
+import logging
+
 
 # ========================================================================== #
 class drawstyle_popup(object):
@@ -15,6 +18,10 @@ class drawstyle_popup(object):
     # ====================================================================== #
     def __init__(self,parent):
         self.parent = parent
+        
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.info('Initializing')
         
          # make a new window
         self.win = Toplevel(parent.mainframe)
@@ -56,9 +63,11 @@ class drawstyle_popup(object):
             
         # grid frame
         frame.grid(column=0,row=0)
-
+        self.logger.debug('Initialization success. Starting mainloop.')
+        
     # ====================================================================== #
     def help(self):
+        self.logger.info('Opening help webpage.')
         webbrowser.open('https://matplotlib.org/api/_as_gen/matplotlib.lines.'+\
                         'Line2D.html#matplotlib.lines.Line2D')
 
@@ -73,6 +82,8 @@ class drawstyle_popup(object):
                 val = float(val)
             
             self.parent.style[k] = val
+        self.logger.info('Setting values %s to %s',self.key_list,
+                                            [s.get() for s in self.text_list])
         self.win.destroy()
         
     # ====================================================================== #

@@ -4,7 +4,9 @@
 
 from tkinter import *
 from tkinter import ttk
+from bfit import logger_name
 import webbrowser
+import logging
 
 # ========================================================================== #
 class set_ppm_reference_popup(object):
@@ -15,6 +17,10 @@ class set_ppm_reference_popup(object):
     # ====================================================================== #
     def __init__(self,parent):
         self.parent = parent
+        
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.info('Initializing')
         
         # make a new window
         self.win = Toplevel(parent.mainframe)
@@ -47,11 +53,14 @@ class set_ppm_reference_popup(object):
             
         # grid frame
         frame.grid(column=0,row=0)
+        self.logger.debug('Initialization success. Starting mainloop.')
     
     # ====================================================================== #
     def set(self,*args):
         """Set entered values"""        
         self.parent.ppm_reference = self.text.get()
+        self.logger.info('Set ppm reference to %s Hz',self.parent.ppm_reference)
+        self.logger
         self.win.destroy()
         
     # ====================================================================== #

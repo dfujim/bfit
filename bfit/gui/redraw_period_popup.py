@@ -4,7 +4,10 @@
 
 from tkinter import *
 from tkinter import ttk
+from bfit import logger_name
 import webbrowser
+import logging
+
 
 # ========================================================================== #
 class redraw_period_popup(object):
@@ -15,6 +18,10 @@ class redraw_period_popup(object):
     # ====================================================================== #
     def __init__(self,parent):
         self.parent = parent
+        
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.info('Initializing')
         
         # make a new window
         self.win = Toplevel(parent.mainframe)
@@ -47,11 +54,13 @@ class redraw_period_popup(object):
             
         # grid frame
         frame.grid(column=0,row=0)
+        self.logger.debug('Initialization success. Starting mainloop.')
     
     # ====================================================================== #
     def set(self,*args):
         """Set entered values"""        
         self.parent.update_period = self.text.get()
+        self.logger.info('Set redraw period to %s s',self.parent.update_period)
         self.win.destroy()
         
     # ====================================================================== #

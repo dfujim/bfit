@@ -4,13 +4,17 @@
 
 from tkinter import *
 from tkinter import ttk
-import numpy as np
-import sys,os,datetime,time,glob
-from bdata import bdata
-import matplotlib.pyplot as plt
 from multiprocessing import Process, Pipe
 from bfit.gui.zahersCalculator import current2field
 from bfit.gui.fitdata import fitdata
+from bdata import bdata
+from bfit import logger_name
+
+import numpy as np
+import matplotlib.pyplot as plt
+import sys,os,datetime,time,glob
+import logging
+
 
 __doc__ = """
     View file contents tab.
@@ -61,6 +65,10 @@ class fileviewer(object):
     # ======================================================================= #
     def __init__(self,file_tab,bfit):
         """ Position tab tkinter elements"""
+        
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.debug('Initializing')
         
         # year and filenumber entry ------------------------------------------
         entry_frame = ttk.Frame(file_tab,borderwidth=1)
@@ -164,6 +172,8 @@ class fileviewer(object):
                 t.grid_columnconfigure(i,weight=1)
                 t.grid_rowconfigure(i,weight=1)
             
+        self.logger.debug('Initialization success.')
+            
     # ======================================================================= #
     def __del__(self):
         pass
@@ -179,6 +189,8 @@ class fileviewer(object):
     # ======================================================================= #
     def export(self):
         """Export data as csv"""
+        
+        self.logger.info('Export button pressed')
         
         # get data
         if not self.get_data():
@@ -209,10 +221,14 @@ class fileviewer(object):
         except ValueError:
             for t in [self.text_nw,self.text_ne,self.text_sw,self.text_se]:
                 self.set_textbox_text(t,'Year input must be integer valued')  
+                self.logger.exception('Year input must be integer valued')
             return False
         
         # fetch run number
         run = self.runn.get()
+        
+        self.logger.debug('Parsing run input %s',run)
+        
         if run.isdigit() and int(run) > 40000:
             run = int(run)
         else:
@@ -233,6 +249,7 @@ class fileviewer(object):
             try:
                 run = max(runlist)
             except ValueError:
+                self.logger.exception('Run fetch from glob input failed')
                 for t in [self.text_nw,self.text_ne,self.text_sw,self.text_se]:
                     self.set_textbox_text(t,'Run not found.\n\n'+\
                     'Run input must be integer valued, or have unix-style '+\
@@ -240,14 +257,18 @@ class fileviewer(object):
                     'existing run number (see glob module).')  
                 return False
         
+        self.logger.info('Fetching run %s from %s',run,year)
+        
         # get data
         try: 
             data = fitdata(self.bfit,bdata(run,year=year))
         except ValueError:
+            self.logger.exception('File read failed.')
             for t in [self.text_nw,self.text_sw,self.text_se,self.text_ne]:
-                self.set_textbox_text(t,'File read failed')
+                self.set_textbox_text(t,'File read failed.')
             return False
         except RuntimeError:
+            self.logger.exception('File does not exist.')
             for t in [self.text_nw,self.text_sw,self.text_se,self.text_ne]:
                 self.set_textbox_text(t,'File does not exist.')
             return False
@@ -762,6 +783,7 @@ class fileviewer(object):
     # ======================================================================= #
     def do_update(self):
         
+        self.logger.debug('Draw via periodic update')
         if self.is_updating.get():
             self.draw()
             print('\rLast update:',str(datetime.datetime.now()).split('.')[0],

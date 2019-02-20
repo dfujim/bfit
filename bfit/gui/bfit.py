@@ -22,8 +22,9 @@ import matplotlib as mpl
 import webbrowser
 import subprocess
 import importlib
+import logging
 
-from bfit import __version__
+from bfit import __version__,logger_name
 from bfit.gui.fileviewer_tab import fileviewer
 from bfit.gui.fetch_files_tab import fetch_files
 from bfit.gui.fit_files_tab import fit_files
@@ -91,6 +92,8 @@ class bfit(object):
                 fit_files
             
             label_default: StringVar() name of label defaults for fetch
+            logger: logging object 
+            logger_name: string of unique logger name
             update_period: update spacing in s. 
             rounding: number of decimal places to round results to in display
             hist_select: histogram selection for asym calcs (blank for defaults)
@@ -148,6 +151,10 @@ class bfit(object):
         
     # ======================================================================= #
     def __init__(self):
+        
+        # logging
+        self.logger = logging.getLogger(logger_name)
+        self.logger.info('Initializing ' + '-'*50)
         
         # root 
         root = Tk()
@@ -313,9 +320,12 @@ class bfit(object):
         self.mainframe = mainframe
         self.notebook = notebook
         
+        # logging 
+        self.logger.debug('Initialization success. Starting mainloop.')
+        
         # runloop
         self.root.mainloop()
-
+        
     # ======================================================================= #
     def __del__(self):
         del self.fileviewer
@@ -329,7 +339,7 @@ class bfit(object):
         depending on what tab is selected. """ 
         
         idx = self.notebook.index('current')
-        
+        self.logger.debug('Exporting for notebook index %d',idx)
         if idx == 0:        # data viewer
             self.fileviewer.export()
         elif idx == 1:        # data fetch_files
@@ -342,6 +352,10 @@ class bfit(object):
     # ======================================================================= #
     def draw(self,data,asym_type,rebin=1,option='',**drawargs):
         """Draw the selected file"""
+        
+        self.logger.info('Drawing run %d. type: %s, rebin: %d, '+\
+                     'option: %s, style: %s, %s',
+                     data.run,asym_type,rebin,option,self.draw_style.get(),drawargs)
         
         # Settings
         xlabel_dict={'20':"Time (s)",
@@ -497,6 +511,8 @@ class bfit(object):
             if   data.mode == '1n': x *= self.volt_unit_conv
             elif data.mode == '1f': 
                 if self.draw_ppm.get():
+                    self.logger.info('Drawing as PPM shift with reference %s Hz',
+                                     self.ppm_reference)
                     x = 1e6*(x-self.ppm_reference)/self.ppm_reference
                     xlabel = 'Frequency Shift (PPM)'
                 else: 
@@ -697,6 +713,7 @@ class bfit(object):
                 
         plt.tight_layout()
         plt.legend()
+        self.logger.debug('Drawing success.')
     
     # ======================================================================= #
     def draw_binder(self,*args):
@@ -706,7 +723,7 @@ class bfit(object):
         """
         
         idx = self.notebook.index('current')
-        
+        self.logger.debug('Drawing for notebook index %d',idx)
         if idx == 0:        # data viewer
             self.fileviewer.draw()
         elif idx == 1:        # data fetch_files
@@ -719,6 +736,8 @@ class bfit(object):
     # ======================================================================= #
     def export(self,data,filename):
         """Export single data file as csv"""
+        
+        self.logger.info('Exporting single run (%d) as "%s"',data.run,filename)
         
         # settings
         title_dict = {'c':"combined",'p':"positive_helicity",
@@ -752,6 +771,7 @@ class bfit(object):
         try:
             df.to_csv(filename)
         except AttributeError:
+            self.logger.exception('Export file write failed')
             pass
     
     # ======================================================================= #
@@ -762,7 +782,9 @@ class bfit(object):
         
         # the thing to switch on
         select = self.label_default.get()
-    
+        
+        self.logger.debug('Fetching plot label for "%s"',select)
+        
         # Data file options
         if select == 'Temperature (K)':
             label = "%d K" % int(round(data.temperature.mean))
@@ -802,22 +824,24 @@ class bfit(object):
     # ======================================================================= #
     def help(self):
         """Display help wiki"""
+        self.logger.info('Opening help wiki')
         p = os.path
         webbrowser.open(p.split(p.abspath(p.realpath(__file__)))[0]+'/help.html')
     
     # ======================================================================= #
     def on_closing(self):
         """Excecute this when window is closed: destroy and close all plots."""
-        
+        self.logger.info('Closing all windows.')
         plt.close('all')
         self.root.destroy()
+        self.logger.info('Finished     ' + '-'*50)
     
     # ======================================================================= #
     def return_binder(self,*args):
         """Switch between various functions of the enter button. """
         
         idx = self.notebook.index('current')
-        
+        self.logger.debug('Calling return key command for notebook index %d',idx)
         if idx == 0:        # data viewer
             self.fileviewer.get_data()
         elif idx == 1:        # data fetch_files
@@ -846,32 +870,44 @@ class bfit(object):
             pass
                
     # ======================================================================= #
-    def search_archive(self):  webbrowser.open('http://musr.ca/mud/runSel.html')
+    def search_archive(self):  
+        self.logger.info('Opening mud archive musr website')
+        webbrowser.open('http://musr.ca/mud/runSel.html')
         
     # ======================================================================= #
     def set_bnmr_dir(self): 
         """Set directory location via environment variable BNMR_ARCHIVE."""
+        self.logger.info('Setting BNMR environment directory')
         d = filedialog.askdirectory(parent=self.root,mustexist=True, 
                 initialdir=self.bnmr_data_dir)
             
         if type(d) == str:
             self.bnmr_data_dir = d
             os.environ[self.bnmr_archive_label] = d
+            self.logger.debug('Environment variable "%s" set to "%s"',
+                              self.bnmr_archive_label,d)
+        else:
+            self.logger.error('Input was not of type string')
             
     # ======================================================================= #
     def set_bnqr_dir(self): 
         """Set directory location via environment variable BNQR_ARCHIVE."""
+        self.logger.info('Setting BNQR environment directory')
         d = filedialog.askdirectory(parent=self.root,mustexist=True, 
                 initialdir=self.bnqr_data_dir)
         
         if type(d) == str:
             self.bnqr_data_dir = d
             os.environ[self.bnqr_archive_label] = d
-        
+            self.logger.debug('Environment variable "%s" set to "%s"',
+                              self.bnqr_archive_label,d)
+        else:
+            self.logger.error('Input was not of type string')
+    
     # ======================================================================= #
     def set_fit_routines(self):
         """Set python module for fitting routines"""
-        
+        self.logger.info('Setting fitting backend routine')
         d = filedialog.askopenfilename(initialdir = "./",
                 title = "Select fitting routine module",
                 filetypes = (("python modules","*.py"),
@@ -882,6 +918,7 @@ class bfit(object):
             
             # empty condition
             if d == '':
+                self.logger.error('Input was empty string.')
                 return
             
             # get paths
@@ -889,18 +926,25 @@ class bfit(object):
             pwd = os.getcwd()
             
             # load the module
+            self.logger.info('Loading module...')
             os.chdir(os.path.dirname(path))
             self.routine_mod = importlib.import_module(os.path.splitext(
                                                         os.path.basename(d))[0])
             os.chdir(pwd)
             
             # repopuate fitter
+            self.logger.info('Repopulating fitter...')
             self.fit_files.fitter = self.routine_mod.fitter()
             self.fit_files.populate()
-            
+        else:
+            self.logger.error('Input was not of type string.')    
+        self.logger.info('Success.')
+        
     # ======================================================================= #
     def set_matplotlib(self): 
         """Edit matplotlib settings file, or give info on how to do so."""
+        
+        self.logger.info('Attempting to edit matplotlibrc file')
         
         # settings
         location = os.environ['HOME']+"/.config/matplotlib/"
@@ -910,6 +954,7 @@ class bfit(object):
         
         # check for file existance
         if not os.path.isfile(location+filename):
+            self.logger.debug('File not found.')
             value = messagebox.showinfo(parent=self.mainframe,
                     title="Get matplotlibrc",\
                     message="No matplotlibrc file found.",
@@ -921,22 +966,32 @@ class bfit(object):
             return
         
         # if file exists, edit
+        self.logger.debug('File found. Opening in external program.')
         subprocess.call(['xdg-open',location+filename])
             
     # ======================================================================= #
     def set_check_all(self,x):  
+        self.logger.info('Checking all files')
         state = self.fetch_files.check_state.get()
         self.fetch_files.check_state.set(not state)
         self.fetch_files.check_all()
     def set_draw_style(self):       drawstyle_popup(self)
-    def set_style_new(self,x):      self.draw_style.set('new')
-    def set_style_stack(self,x):    self.draw_style.set('stack')
-    def set_style_redraw(self,x):   self.draw_style.set('redraw')
+    def set_style_new(self,x):      
+        self.logger.info('Setting draw style to "new"')
+        self.draw_style.set('new')
+    def set_style_stack(self,x):    
+        self.logger.info('Setting draw style to "stack"')
+        self.draw_style.set('stack')
+    def set_style_redraw(self,x):   
+        self.logger.info('Setting draw style to "redraw"')
+        self.draw_style.set('redraw')
     def set_focus_tab(self,idn,*a): self.notebook.select(idn)
     def set_redraw_period(self,*a): redraw_period_popup(self)
     def set_ppm_reference(self,*a): set_ppm_reference_popup(self)
     def set_histograms(self,*a):    set_histograms_popup(self)
     def set_tab_change(self,tab_id):
+        
+        self.logger.debug('Changing to tab %d',tab_id)
         
         # fileviewer
         if tab_id == 0:
@@ -962,6 +1017,8 @@ class bfit(object):
     def set_asym_calc_mode_box(self,mode,*args):
         """Set asym combobox values. Asymmetry calculation and draw modes."""
         
+        self.logger.debug('Setting fileviewer asym combobox values for mode '+\
+                         '"%s"',mode)
         fv = self.fileviewer
     
         # selection: switch if run mode not possible
