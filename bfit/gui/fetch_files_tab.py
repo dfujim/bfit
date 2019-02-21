@@ -267,7 +267,7 @@ class fetch_files(object):
     def draw_all(self,ignore_check=False):
         """Draw all data in data lines"""
         
-        self.logger.info('Drawing all data (ignore check: %s)', ignore_check)
+        self.logger.debug('Drawing all data (ignore check: %s)', ignore_check)
         
         # condense drawing into a funtion
         def draw_lines():
@@ -306,7 +306,7 @@ class fetch_files(object):
     def draw_all_fits(self,ignore_check=False):
         """Draw all fits in data lines"""
         
-        self.logger.info('Drawing all fits (ignore check: %s)', ignore_check)
+        self.logger.debug('Drawing all fits (ignore check: %s)', ignore_check)
         
         # condense drawing into a funtion
         def draw_lines():
@@ -367,7 +367,7 @@ class fetch_files(object):
     def get_data(self):
         """Split data into parts, and assign to dictionary."""
         
-        self.logger.info('Fetching data')
+        self.logger.info('Fetching runs')
         
         # make list of run numbers, replace possible deliminators
         try:
@@ -443,6 +443,8 @@ class fetch_files(object):
             n+=1
             
         self.bfit.fit_files.populate()
+        
+        self.logger.info('Fetched runs %s',list(self.bfit.data.keys()))
         self.logger.debug('Fetch done.')
         
     # ======================================================================= #
@@ -745,7 +747,7 @@ class dataline(object):
     def draw(self):
         """Draw single data file."""
         
-        self.logger.info('Draw run %d (%d)',self.run,self.year)
+        self.logger.debug('Draw run %d (%d)',self.run,self.year)
         
         # get new data file
         data = bdata(self.run,year=self.year)

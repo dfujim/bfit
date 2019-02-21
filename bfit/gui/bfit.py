@@ -353,9 +353,15 @@ class bfit(object):
     def draw(self,data,asym_type,rebin=1,option='',**drawargs):
         """Draw the selected file"""
         
-        self.logger.info('Drawing run %d. type: %s, rebin: %d, '+\
+        self.logger.info('Drawing run %d (%d). mode: %s, rebin: %d, '+\
                      'option: %s, style: %s, %s',
-                     data.run,asym_type,rebin,option,self.draw_style.get(),drawargs)
+                     data.run,
+                     data.year,
+                     asym_type,
+                     rebin,
+                     option,
+                     self.draw_style.get(),
+                     drawargs)
         
         # Settings
         xlabel_dict={'20':"Time (s)",

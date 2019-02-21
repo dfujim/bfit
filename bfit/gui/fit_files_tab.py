@@ -407,7 +407,9 @@ class fit_files(object):
         fit_status_window.update_idletasks()
         
         # do fit then kill window
-        self.logger.debug('Fitting with data list and fit options: %s',data_list)
+        for d in data_list:
+            self.logger.info('Fitting run %d (%d): %s',d[0].run,d[0].year,d[1:])
+            
         try:
             # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
             fit_output = fitter(fn_name=fn_name,ncomp=ncomp,
@@ -669,8 +671,6 @@ class fit_files(object):
     # ======================================================================= #
     def draw_param(self,*args):
         
-        self.logger.info('Draw fit paramters')
-        
         # make sure plot shows
         plt.ion()
         
@@ -679,16 +679,20 @@ class fit_files(object):
         ydraw = self.yaxis.get()
         ann = self.annotation.get()
         
+        self.logger.info('Draw fit paramters "%s" vs "%s" with annotation "%s"',
+                          ydraw,xdraw,ann)
+        
         # get plottable data
         try:
             xvals, xerrs = self.get_values(xdraw)
             yvals, yerrs = self.get_values(ydraw)
         except UnboundLocalError as err:
-            self.logger.exception('Bad input parameter selection')
+            self.logger.error('Bad input parameter selection')
             messagebox.showerror("Error",'Select two input parameters')
             raise err
         except (KeyError,AttributeError) as err:
-            self.logger.exception('Parameter not found for drawing')
+            self.logger.error('Parameter "%s or "%s" not found for drawing',
+                              xdraw,ydraw)
             messagebox.showerror("Error",
                     'Drawing parameter "%s" or "%s" not found' % (xdraw,ydraw))
             raise err
@@ -700,7 +704,7 @@ class fit_files(object):
             except UnboundLocalError:
                 ann = None
             except (KeyError,AttributeError) as err:
-                self.logger.exception('Bad input annotation value')
+                self.logger.error('Bad input annotation value "%s"',ann)
                 messagebox.showerror("Error",
                         'Annotation "%s" not found' % (ann))
                 raise err
@@ -1028,7 +1032,7 @@ class fitinputtab(object):
         except IndexError:
             self.selected = 0 
             
-        self.logger.info("Fetching selected run %d",self.runlist[self.selected])
+        self.logger.debug("Fetching selected run %d",self.runlist[self.selected])
             
         return self.runlist[self.selected]
         
@@ -1255,7 +1259,7 @@ class fitinputtab(object):
     def update(self):
         """Update tab with new data"""
         
-        self.logger.info('Updating fit tab for group %d',self.group)
+        self.logger.debug('Updating fit tab for group %d',self.group)
         
         # get list of runs with the group number
         dl = self.bfit.fetch_files.data_lines
