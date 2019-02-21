@@ -35,18 +35,17 @@ if __name__ == '__main__':
                                   mode='a',
                                   maxBytes=100*1000, # 100 kB max
                                   backupCount=1)
-    # format output string                          
-    formatter = logging.Formatter(
-            '%(asctime)s %(levelname)-8s %(module)s %(message)s')
 
-    # get level 
+    # get level and format for output string
     if args.debug:
         level = logging.DEBUG
+        fmt = '%(asctime)s %(levelname)-8s %(module)s.%(funcName)s() [%(lineno)d] -- %(message)s'
     else:
         level = logging.INFO
-
+        fmt = '%(asctime)s %(levelname)-8s %(module)s -- %(message)s'
+    
     # set
-    handler.setFormatter(formatter)
+    handler.setFormatter(logging.Formatter(fmt))
     handler.setLevel(level)
 
     logger.addHandler(handler)
