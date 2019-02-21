@@ -206,7 +206,9 @@ class fit_files(object):
         
         # get groups 
         dl = self.bfit.fetch_files.data_lines
-        self.groups = np.unique([dl[k].group.get() for k in dl.keys()])
+        self.groups = np.unique([dl[k].group.get() for k in dl.keys() \
+                                 if dl[k].check_state.get()])
+        self.logger.debug('Groups: %s',self.groups)
         
         # get run mode by looking at one of the data dictionary keys
         for key_zero in self.bfit.data.keys(): break
@@ -302,8 +304,6 @@ class fit_files(object):
     # ======================================================================= #
     def do_fit(self,*args):
         
-        self.logger.info('Fitting runs')
-        
         # fitter
         fitter = self.fitter
         
@@ -311,12 +311,16 @@ class fit_files(object):
         fn_name = self.fit_function_title.get()
         ncomp = self.n_component.get()
         
+        self.logger.info('Fitting with "%s" with %d components',fn_name,ncomp)
+        
         # build data list
         data_list = []
         for g in self.groups:
             tab = self.file_tabs[g]
             collist = tab.collist
             runlist = tab.runlist
+            
+            self.logger.debug('Group %d contains runs %s',g,runlist)
             
             for r in runlist:
                 
@@ -438,13 +442,13 @@ class fit_files(object):
             self.bfit.fetch_files.data_lines[r].draw_res_button['state'] = 'normal'
         
         # draw fit results
-        self.bfit.fetch_files.draw_all(ignore_check=True)
+        self.bfit.fetch_files.draw_all(ignore_check=False)
         style = self.bfit.draw_style.get()
         
         if style in ['redraw','new']:
             self.bfit.draw_style.set('stack')
         
-        self.bfit.fetch_files.draw_all_fits(ignore_check=True)
+        self.bfit.fetch_files.draw_all_fits(ignore_check=False)
         self.bfit.draw_style.set(style)
             
     # ======================================================================= #
@@ -941,7 +945,7 @@ class fitinputtab(object):
         # get list of runs with the group number
         dl = self.bfit.fetch_files.data_lines
         self.runlist = [dl[k].run for k in dl.keys() 
-                if dl[k].group.get() == self.group]
+                if dl[k].group.get() == self.group and dl[k].check_state.get()]
         
         # Display run info label 
         ttk.Label(fitframe,text="Run Numbers").grid(column=0,row=1,padx=5)
@@ -1032,7 +1036,8 @@ class fitinputtab(object):
         except IndexError:
             self.selected = 0 
             
-        self.logger.debug("Fetching selected run %d",self.runlist[self.selected])
+        self.logger.debug("Selected combobx[%d] (run %d)",
+                          self.selected,self.runlist[self.selected])
             
         return self.runlist[self.selected]
         
@@ -1140,6 +1145,8 @@ class fitinputtab(object):
         run = self.runlist[self.selected]
         fitdat_old = self.bfit.data[run]
         
+        self.logger.debug('Setting display for run %d',run)
+        
         # set as group 
         if self.bfit.fit_files.set_as_group.get():
             fitdat_list = [self.bfit.data[r] for r in self.runlist]
@@ -1222,9 +1229,6 @@ class fitinputtab(object):
         # Set up variables
         displays = self.parentry
         
-        # get run number of selected run
-        run = self.get_selected_run()
-        
         try:
             data = self.bfit.data[run]
         except KeyError:
@@ -1264,13 +1268,14 @@ class fitinputtab(object):
         # get list of runs with the group number
         dl = self.bfit.fetch_files.data_lines
         self.runlist = [dl[k].run for k in dl.keys() 
-                if dl[k].group.get() == self.group]
+                if dl[k].group.get() == self.group and dl[k].check_state.get()]
         
         # List box for run viewing
         rlist = StringVar(value=tuple(map(str,self.runlist)))
         self.runbox.config(height=min(len(self.runlist),self.n_runs_max))
         self.runbox.config(listvariable=rlist)
         self.runbox.activate(0)
+        self.runbox.event_generate('<<ListboxSelect>>')
         
         
         

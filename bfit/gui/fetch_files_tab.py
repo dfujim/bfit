@@ -445,7 +445,6 @@ class fetch_files(object):
         self.bfit.fit_files.populate()
         
         self.logger.info('Fetched runs %s',list(self.bfit.data.keys()))
-        self.logger.debug('Fetch done.')
         
     # ======================================================================= #
     def remove_all(self):
