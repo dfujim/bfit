@@ -12,7 +12,7 @@ from bfit import logger_name
 
 import numpy as np
 import matplotlib.pyplot as plt
-import sys,os,datetime,time,glob
+import sys,os,time,glob
 import logging
 
 
@@ -77,7 +77,7 @@ class fileviewer(object):
         self.rebin = IntVar()
         self.bfit = bfit
         
-        self.year.set(datetime.datetime.now().year)
+        self.year.set(self.bfit.get_latest_year())
         self.rebin.set(1)
         
         entry_year = ttk.Entry(entry_frame,\

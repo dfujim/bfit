@@ -11,7 +11,6 @@ from bfit.gui.fitdata import fitdata
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import datetime
 import logging
 
 
@@ -77,7 +76,7 @@ class fetch_files(object):
         self.year = StringVar()
         self.run = StringVar()
         
-        self.year.set(datetime.datetime.now().year)
+        self.year.set(self.bfit.get_latest_year())
         
         entry_year = ttk.Entry(fet_entry_frame,textvariable=self.year,width=5)
         entry_run = ttk.Entry(fet_entry_frame,textvariable=self.run,width=80)

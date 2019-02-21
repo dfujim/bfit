@@ -828,6 +828,27 @@ class bfit(object):
         return label
     
     # ======================================================================= #
+    def get_latest_year(self):
+        """Get the year which has the last data set in it."""
+        
+        # get the current year
+        year = datetime.datetime.now().year
+        
+        # functions to check for data (NMR or NQR)
+        no_nmr = lambda y: not os.path.isdir(os.path.join(
+                                    os.environ[self.bnmr_archive_label],str(y)))
+        no_nqr = lambda y: not os.path.isdir(os.path.join(
+                                    os.environ[self.bnqr_archive_label],str(y)))
+        
+        # check data
+        while (no_nmr(year) or no_nqr(year)) and year > 0:
+            year -= 1
+            
+        self.logger.debug('Latest year with data: %d (NMR: %s, NQR: %s)',
+                          year,not no_nmr(year),not no_nqr(year))
+        return year
+    
+    # ======================================================================= #
     def help(self):
         """Display help wiki"""
         self.logger.info('Opening help wiki')
