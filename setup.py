@@ -31,7 +31,7 @@ setuptools.setup(
         "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
         "Operating System :: OS Independent",
     ),
-    install_requires=['cython>=0.28','numpy>=1.14',
+    install_requires=['cython>=0.28','numpy>=1.14','tqdm>=4.31'
                       'bdata>=1.3.10','matplotlib>=2.2.2','pandas>=0.23.0'],
     package_data={'': ['./images/']},
     include_package_data=True,
