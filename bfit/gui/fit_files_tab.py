@@ -802,8 +802,6 @@ class fit_files(object):
         df = self.export(savetofile=False)
         show_param_popup(df)
         
-        
-        
     # ======================================================================= #
     def get_values(self,select):
         """ Get plottable values"""
@@ -838,7 +836,7 @@ class fit_files(object):
                 
         elif select == 'Impl. Energy (keV)':
             val =  [data[r].bd.beam_kev() for r in runs]
-            err =  [np.nan for r in runs]
+            err =  [data[r].bd.beam_kev(get_error=True) for r in runs]
         
         elif select == 'Run Duration (s)':
             val = [data[r].bd.duration for r in runs]

@@ -290,7 +290,7 @@ class fileviewer(object):
         duration = "%dm %ds" % (mins,sec)
         
         # set dictionary
-        data_nw =  {"Run":str(data.run),
+        data_nw =  {"Run":'%d (%d)' % (data.run,data.year),
                     "Area": data.area,
                     "Run Mode": "%s (%s)" % (mode,data.mode),
                     "Title": data.title,
@@ -348,7 +348,8 @@ class fileviewer(object):
         
         try: 
             field = np.around(data.camp.b_field.mean,3)
-            data_sw['Magnetic Field'] = "%.3f T" % field
+            field_stdv = np.around(data.camp.b_field.std,3)
+            data_sw['Magnetic Field'] = "%.3f +/- %.3f T" % (field,field_stdv)
             key_order_sw.append('Magnetic Field')
         except AttributeError:
             pass
@@ -358,14 +359,14 @@ class fileviewer(object):
         # cryo options
         try: 
             mass = data.camp.mass_read
-            data_sw['Mass Flow'] = "%.3f +\- %.3f" % (mass.mean,mass.std)
+            data_sw['Mass Flow'] = "%.3f +/- %.3f" % (mass.mean,mass.std)
             key_order_sw.append('Mass Flow')
         except AttributeError:
             pass
     
         try: 
             cryo = data.camp.cryo_read
-            data_sw['CryoEx Mass Flow'] = "%.3f +\- %.3f" % (cryo.mean,cryo.std)
+            data_sw['CryoEx Mass Flow'] = "%.3f +/- %.3f" % (cryo.mean,cryo.std)
             key_order_sw.append('CryoEx Mass Flow')
         except AttributeError:
             pass    
@@ -419,18 +420,23 @@ class fileviewer(object):
         # get data: biases 
         try:
             if 'nqr_bias' in data.epics.keys():
-                bias =  data.epics.nqr_bias.mean/1000.
+                bias =      data.epics.nqr_bias.mean/1000.
+                bias_std =  data.epics.nqr_bias.std/1000.
             elif 'nmr_bias' in data.epics.keys():
-                bias =  data.epics.nmr_bias.mean
+                bias =      data.epics.nmr_bias.mean
+                bias_std =  data.epics.nmr_bias.std
             
-            data_se["Platform Bias"] = "%.3f kV" % np.around(bias,3)
+            data_se["Platform Bias"] = "%.3f +/- %.3f kV" % \
+                    (np.around(bias,3),np.around(bias_std,3))
             key_order_se.append("Platform Bias")
             
         except UnboundLocalError:
             pass
         
         try:
-            data_se["BIAS15"] = "%.3f V" % np.around(data.epics.bias15.mean,3)
+            data_se["BIAS15"] = "%.3f +/- %.3f V" % \
+                    (np.around(data.epics.bias15.mean,3),
+                     np.around(data.epics.bias15.std,3))
             key_order_se.append('BIAS15')
         except AttributeError:
             pass
@@ -438,15 +444,18 @@ class fileviewer(object):
         # get data: beam energy
         try: 
             init_bias = data.epics.target_bias.mean
+            init_bias_std = data.epics.target_bias.std
         except AttributeError:
             try:
                 init_bias = data.epics.target_bias.mean
+                init_bias_std = data.epics.target_bias.std
             except AttributeError:
                 pass
             
         try:
             val = np.around(init_bias/1000.,3)
-            data_se["Initial Beam Energy"] = "%.3f keV" % val
+            std = np.around(init_bias_std/1000.,3)
+            data_se["Initial Beam Energy"] = "%.3f +/- %.3f keV" % (val,std)
             key_order_se.append('Initial Beam Energy')
         except UnboundLocalError:
             pass
@@ -454,7 +463,8 @@ class fileviewer(object):
         # Get final beam energy
         try: 
             val = np.around(data.beam_kev(),3)
-            data_se['Implantation Energy'] = "%.3f keV" % val
+            std = np.around(data.beam_kev(get_error=True),3)
+            data_se['Implantation Energy'] = "%.3f +/- %.3f keV" % (val,std)
             key_order_se.append('Implantation Energy')
         except AttributeError:
             pass
@@ -464,7 +474,7 @@ class fileviewer(object):
         # laser stuff
         try: 
             val = data.epics.las_pwr
-            data_se['Laser Power'] = "%.3f +\- %.3f A" % (val.mean,val.std)
+            data_se['Laser Power'] = "%.3f +/- %.3f A" % (val.mean,val.std)
             key_order_se.append('Laser Power')
         except AttributeError:
             pass
@@ -472,7 +482,8 @@ class fileviewer(object):
         # magnet stuff
         try: 
             val = data.epics.hh_current.mean
-            data_se['Magnet Current'] = "%.3f A" % val
+            std = data.epics.hh_current.std
+            data_se['Magnet Current'] = "%.3f +/- %.3f A" % (val,std)
             key_order_se.append('Magnet Current')
             
             val = current2field(val)
