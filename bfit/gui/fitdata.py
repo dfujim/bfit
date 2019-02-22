@@ -53,7 +53,7 @@ class fitdata(object):
         
         # get logger
         self.logger = logging.getLogger(logger_name)
-        self.logger.debug('Initializing.')
+        self.logger.debug('Initializing run %d (%d).',bd.run,bd.year)
         
         # top level pointer
         self.bfit = parentbfit
@@ -108,8 +108,6 @@ class fitdata(object):
         except AttributeError:
             self.logger.exception('Bias not found')
             self.bias = np.nan
-
-        self.logger.debug('Initialization success.')
 
     # ======================================================================= #
     def __getattr__(self,name):

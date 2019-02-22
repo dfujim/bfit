@@ -6,6 +6,7 @@ from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from functools import partial
 from bfit.gui.zahersCalculator import current2field
+from bfit.gui.show_param_popup import show_param_popup
 from bdata import bdata
 from bfit import logger_name
 
@@ -148,6 +149,7 @@ class fit_files(object):
         button_frame = ttk.Frame(right_frame)
         draw_button = ttk.Button(button_frame,text='Draw',command=self.draw_param)
         export_button = ttk.Button(button_frame,text='Export',command=self.export)
+        show_button = ttk.Button(button_frame,text='Show All',command=self.show_all_results)
         
         # menus for x and y values
         ttk.Label(right_frame,text="x axis:").grid(column=0,row=1)
@@ -174,6 +176,7 @@ class fit_files(object):
         button_frame.grid(column=0,row=0,columnspan=2)
         draw_button.grid(column=0,row=0,padx=5,pady=5)
         export_button.grid(column=1,row=0,padx=5,pady=5)
+        show_button.grid(column=2,row=0,padx=5,pady=5)
         
         self.xaxis_combobox.grid(column=1,row=1,pady=5)
         self.yaxis_combobox.grid(column=1,row=2,pady=5)
@@ -194,21 +197,18 @@ class fit_files(object):
         for i in range(2):
             right_frame.grid_columnconfigure(i,weight=1)
         
-        self.logger.debug('Initialization success.')
-        
     # ======================================================================= #
     def populate(self,*args):
         """
             Make tabs for setting fit input parameters. 
         """
         
-        self.logger.debug('Populating data')
-        
         # get groups 
         dl = self.bfit.fetch_files.data_lines
         self.groups = np.unique([dl[k].group.get() for k in dl.keys() \
                                  if dl[k].check_state.get()])
-        self.logger.debug('Groups: %s',self.groups)
+        
+        self.logger.debug('Populating data. Groups: %s',self.groups)
         
         # get run mode by looking at one of the data dictionary keys
         for key_zero in self.bfit.data.keys(): break
@@ -754,7 +754,7 @@ class fit_files(object):
         plt.tight_layout()
         
     # ======================================================================= #
-    def export(self):
+    def export(self,savetofile=True):
         
         # get values and errors
         val = {}
@@ -779,15 +779,30 @@ class fit_files(object):
         for c in bad_cols:
             df.drop(c,axis='columns',inplace=True)
         
-        # get file name
-        filename = filedialog.asksaveasfilename()
-        self.logger.info('Exporting parameters to "%s"',filename)
+        if savetofile:
+            
+            # get file name
+            filename = filedialog.asksaveasfilename()
+            self.logger.info('Exporting parameters to "%s"',filename)
+            
+            # check extension 
+            if os.path.splitext(filename)[1] == '':
+                filename += '.csv'
+            df.to_csv(filename)
+            self.logger.debug('Export success')
+        else:
+            self.logger.info('Returned exported parameters')
+            return df
         
-        # check extension 
-        if os.path.splitext(filename)[1] == '':
-            filename += '.csv'
-        df.to_csv(filename)
-        self.logger.debug('Export success')
+    # ======================================================================= #
+    def show_all_results(self):
+        """Make a window to display table of fit results"""
+        
+        # get fit results
+        df = self.export(savetofile=False)
+        show_param_popup(df)
+        
+        
         
     # ======================================================================= #
     def get_values(self,select):
@@ -997,7 +1012,6 @@ class fitinputtab(object):
         
         # save
         self.fitframe = fitframe
-        self.logger.debug('Creation success')
         
     # ======================================================================= #
     def get_new_parameters(self,runlist):
@@ -1276,8 +1290,4 @@ class fitinputtab(object):
         self.runbox.config(listvariable=rlist)
         self.runbox.activate(0)
         self.runbox.event_generate('<<ListboxSelect>>')
-        
-        
-        
-        
         

@@ -366,7 +366,7 @@ class fetch_files(object):
     def get_data(self):
         """Split data into parts, and assign to dictionary."""
         
-        self.logger.info('Fetching runs')
+        self.logger.debug('Fetching runs')
         
         # make list of run numbers, replace possible deliminators
         try:
@@ -463,7 +463,6 @@ class fetch_files(object):
         
         # check where the focus is
         focus_id = str(self.bfit.root.focus_get())
-        self.logger.debug('Return key called with focus %s',focus_id)
         
         # run or year entry
         if focus_id in [str(self.entry_run), str(self.entry_year)]:
