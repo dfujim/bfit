@@ -54,9 +54,13 @@ class zahersCalculator(object):
                 textvariable=self.current,width=10,justify=RIGHT)
         amperes = ttk.Label(mainframe,text='Amperes')
         explanation = ttk.Label(mainframe,
-                text='Press Enter to convert\n\n'+\
-                '(http://bnmr.triumf.ca/?file=HH_Calibration)',
+                text='Press Enter to convert',
                 justify=CENTER)
+                
+        link = ttk.Button(mainframe,
+                          text='Calibration Data Here',
+                          command=lambda : webbrowser.open(\
+                                  'http://bnmr.triumf.ca/?file=HH_Calibration'))
         
         # Gridding
         title_line.grid(        column=0,row=0,padx=5,pady=5,columnspan=5)
@@ -66,6 +70,7 @@ class zahersCalculator(object):
         self.entry_current.grid(column=3,row=1,padx=5,pady=5)
         amperes.grid(           column=4,row=1,padx=5,pady=5)
         explanation.grid(       column=0,row=2,padx=5,pady=5,columnspan=5)
+        link.grid(              column=0,row=3,padx=5,pady=5,columnspan=5)
         
         # runloop
         self.root = root
