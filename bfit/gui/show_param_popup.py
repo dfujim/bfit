@@ -15,7 +15,7 @@ class show_param_popup(object):
         Display pandas dataframe object as pretty table in popup window.
     """
     
-    rounding = 5
+    rounding = 8
     
     # ======================================================================= #
     def __init__(self,df):
@@ -70,7 +70,7 @@ class show_param_popup(object):
         nice_output = '\n'.join([str_fmt % tuple(line) for line in output_list])
                 
         # Text box and other objects
-        self.text = Text(mainframe,width=800,height=600,state='normal',wrap="none")
+        self.text = Text(mainframe,width=150,height=30,state='normal',wrap="none")
         self.text.delete('1.0',END)
         self.text.insert('1.0',nice_output)
         
