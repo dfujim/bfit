@@ -69,7 +69,7 @@ cdef class PulsedFns:
         
         # precalculations 
         lambda1 = Lambda+1./life
-        prefac = lambda1*life
+        prefac = 1./(lambda1*life)
         afterfactor = (1-np.exp(-lambda1*pulse_len))/(1-np.exp(-pulse_len/life))
         
         # Calculate pulsed exponential
