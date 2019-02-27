@@ -73,6 +73,8 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
     # get rebin
     if rebin is None:
         rebin = np.ones(nruns)
+    elif type(rebin) is int:
+        rebin = np.ones(nruns)*rebin
     elif len(rebin) < nruns:
         rebin = np.concatenate(rebin,[1]*(nruns-len(rebin)))
 
