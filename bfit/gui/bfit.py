@@ -899,7 +899,7 @@ class bfit(object):
     # ======================================================================= #
     def search_archive(self):  
         self.logger.info('Opening mud archive musr website')
-        webbrowser.open('http://musr.ca/mud/runSel.html')
+        webbrowser.open('http://musr.ca/mud/runSel.html',new=1)
         
     # ======================================================================= #
     def set_bnmr_dir(self): 
