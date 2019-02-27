@@ -6,6 +6,7 @@ from bfit.fitting.fit_bdata import fit_list
 import bfit.fitting.functions as fns
 from functools import partial
 import numpy as np
+import bdata as bd
 
 class fitter(object):
 
@@ -86,8 +87,8 @@ class fitter(object):
             
             # get fitting function
             if dat.mode in ['20','2h']:
-                pulse = dat.pulse_off_s()
-                life = dat.life['8Li'][0]
+                pulse = dat.get_pulse_s()
+                life = bd.life.Li8
             else:
                 pulse = -1
                 life = -1
