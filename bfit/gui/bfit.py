@@ -1074,6 +1074,7 @@ class bfit(object):
         self.logger.info('Using pip to update')
         subprocess.call([sys.executable, "-m", "pip", "install", "--user", 
                          "--upgrade", 'bfit'])
+        print('Done. Restart to implement updates.')
         
 # =========================================================================== #
 if __name__ == "__main__":
