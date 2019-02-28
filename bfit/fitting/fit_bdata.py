@@ -77,7 +77,8 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         rebin = np.ones(nruns)*rebin
     elif len(rebin) < nruns:
         rebin = np.concatenate((rebin,np.ones(nruns-len(rebin))))
-    rebin = rebin.astype(int)
+    
+    rebin = np.asarray(rebin).astype(int)
 
     # get years
     if type(years) in (int,float):
@@ -95,7 +96,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         print('Running shared parameter fitting...')
         g = global_bdata_fitter(runs,years,fnlist,sharelist,npar,xlims)
         g.fit(p0=p0,**kwargs)
-        _,chis = g.get_chi()
+        gchi,chis = g.get_chi() # returns global chi, individual chi
         pars,covs = g.get_par()
         
     # fit runs individually --------------------------------------------------
@@ -118,6 +119,8 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         pars = []
         covs = []
         chis = []
+        gchi = 0.
+        dof = 0.
         iter_obj = tqdm(zip(runs,years,fnlist,omit,rebin,p0,bounds,xlims),
                         total=len(runs),desc='Independent Fitting')
         for r,y,fn,om,re,p,b,xl in iter_obj:
@@ -125,12 +128,26 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
             pars.append(p)
             covs.append(s)
             chis.append(c)
-
-    pars = np.array(pars)
-    covs = np.array(covs)
-    chis = np.array(chis)
             
-    return(pars,covs,chis)
+            # get global chi 
+            t,a,da = bdata(r,year=y).asym('c',rebin=re)
+            
+            if xl is None:  
+                xl = [-np.inf,np.inf]
+            else:
+                if xl[0] is None: xl[0] = -np.inf
+                if xl[1] is None: xl[1] = np.inf
+            
+            idx = (xl[0]<t)*(t<xl[1])
+            gchi += np.sum(np.square((a[idx]-fn(t[idx],*p))/da[idx]))
+            dof += len(t[idx])-len(p)
+        gchi /= dof
+        
+    pars = np.asarray(pars)
+    covs = np.asarray(covs)
+    chis = np.asarray(chis)
+            
+    return(pars,covs,chis,gchi)
 
 # =========================================================================== #
 def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,**kwargs):
