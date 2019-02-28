@@ -288,6 +288,8 @@ class bfit(object):
         menu_help = Menu(menubar)
         menubar.add_cascade(menu=menu_help, label='Help')
         menu_help.add_command(label='Show help wiki',command=self.help)
+        menu_help.add_command(label='Report an issue',command=self.report_issue)
+        menu_help.add_command(label='Update BFIT',command=self.update_bfit)
         
         # Top Notebook: File Viewer, Fit, Fit Viewer -------------------------
         noteframe = ttk.Frame(mainframe,relief='sunken',pad=5)
@@ -864,6 +866,13 @@ class bfit(object):
         self.logger.info('Finished     ' + '-'*50)
     
     # ======================================================================= #
+    def report_issue(self):
+        """Display github issue page"""
+        self.logger.info('Opening github issue page: '+\
+                         'https://github.com/dfujim/bfit/issues')
+        webbrowser.open('https://github.com/dfujim/bfit/issues')
+    
+    # ======================================================================= #
     def return_binder(self,*args):
         """Switch between various functions of the enter button. """
         
@@ -1058,6 +1067,13 @@ class bfit(object):
     
         # fetch files
         self.fetch_files.entry_asym_type['values'] = self.asym_dict_keys[mode]
+    
+    # ======================================================================= #
+    def update_bfit(self):
+        """Check pip for updated version"""
+        self.logger.info('Using pip to update')
+        subprocess.call([sys.executable, "-m", "pip", "install", "--user", 
+                         "--upgrade", 'bfit'])
         
 # =========================================================================== #
 if __name__ == "__main__":
