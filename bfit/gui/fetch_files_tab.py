@@ -73,12 +73,13 @@ class fetch_files(object):
         
         # Frame for specifying files -----------------------------------------
         fet_entry_frame = ttk.Labelframe(fetch_data_tab,text='Specify Files')
-        self.year = StringVar()
+        self.year = IntVar()
         self.run = StringVar()
         
         self.year.set(self.bfit.get_latest_year())
         
-        entry_year = ttk.Entry(fet_entry_frame,textvariable=self.year,width=5)
+        entry_year = Spinbox(fet_entry_frame,textvariable=self.year,width=5,
+                             from_=2000,to=3000)
         entry_run = ttk.Entry(fet_entry_frame,textvariable=self.run,width=80)
         entry_run.insert(0,self.run_number_starter_line)
         entry_fn = partial(on_entry_click,text=self.run_number_starter_line,\

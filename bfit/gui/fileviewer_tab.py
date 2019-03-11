@@ -72,7 +72,7 @@ class fileviewer(object):
         
         # year and filenumber entry ------------------------------------------
         entry_frame = ttk.Frame(file_tab,borderwidth=1)
-        self.year = StringVar()
+        self.year = IntVar()
         self.runn = StringVar()
         self.rebin = IntVar()
         self.bfit = bfit
@@ -80,8 +80,8 @@ class fileviewer(object):
         self.year.set(self.bfit.get_latest_year())
         self.rebin.set(1)
         
-        entry_year = ttk.Entry(entry_frame,\
-                textvariable=self.year,width=5)
+        entry_year = Spinbox(entry_frame,\
+                from_=2000,to=3000,textvariable=self.year,width=5)
         self.entry_runn = ttk.Entry(entry_frame,\
                 textvariable=self.runn,width=7)
         
