@@ -438,8 +438,11 @@ class fit_files(object):
         
         # enable draw buttons on fetch files tab
         for r in runlist:
-            self.bfit.fetch_files.data_lines[r].draw_fit_button['state'] = 'normal'
-            self.bfit.fetch_files.data_lines[r].draw_res_button['state'] = 'normal'
+            dline = self.bfit.fetch_files.data_lines[r]
+            
+            dline.draw_fit_checkbox['state'] = 'normal'
+            dline.draw_res_checkbox['state'] = 'normal'
+            dline.check_fit.set(True)
         
         # draw fit results
         self.bfit.fetch_files.draw_all(ignore_check=False)
@@ -448,7 +451,6 @@ class fit_files(object):
         if style in ['redraw','new']:
             self.bfit.draw_style.set('stack')
         
-        self.bfit.fetch_files.draw_all_fits(ignore_check=False)
         self.bfit.draw_style.set(style)
             
     # ======================================================================= #

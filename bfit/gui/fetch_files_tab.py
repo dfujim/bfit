@@ -30,7 +30,9 @@ class fetch_files(object):
             check_rebin: IntVar for handling rebin aspect of checkall
             check_bin_remove: StringVar for handing omission of 1F data
             check_state: BooleanVar for handling check all
-            
+            check_state_data: BooleanVar for handling check_all_data
+            check_state_fit: BooleanVar for handling check_all_fit
+            check_state_res: BooleanVar for handling check_all_res
             
             data_canvas: canvas object allowing for scrolling 
             dataline_frame: frame holding all the data lines. Exists as a window
@@ -135,10 +137,8 @@ class fetch_files(object):
         
         check_remove = ttk.Button(right_frame,text='Remove',\
                 command=self.remove_all,pad=5)
-        check_draw = ttk.Button(right_frame,text='Draw Data',\
+        check_draw = ttk.Button(right_frame,text='Draw',\
                 command=self.draw_all,pad=5)
-        check_draw_fits = ttk.Button(right_frame,text='Draw Fits',\
-                command=self.draw_all_fits,pad=5)
         
         check_set = ttk.Button(right_frame,text='Set',\
                 command=self.set_all)
@@ -152,6 +152,24 @@ class fetch_files(object):
                 text='Force Check State',variable=self.check_state,
                 onvalue=True,offvalue=False,pad=5,command=self.check_all)
         self.check_state.set(True)
+        
+        right_checkbox_frame = ttk.Frame(right_frame)
+        
+        self.check_state_data = BooleanVar()        
+        check_data_box = ttk.Checkbutton(right_checkbox_frame,
+                text='Data',variable=self.check_state_data,
+                onvalue=True,offvalue=False,pad=5,command=self.check_all_data)
+        self.check_state_data.set(True)
+        
+        self.check_state_fit = BooleanVar()        
+        check_fit_box = ttk.Checkbutton(right_checkbox_frame,
+                text='Fit',variable=self.check_state_fit,
+                onvalue=True,offvalue=False,pad=5,command=self.check_all_fit)
+        
+        self.check_state_res = BooleanVar()        
+        check_res_box = ttk.Checkbutton(right_checkbox_frame,
+                text='Res',variable=self.check_state_res,
+                onvalue=True,offvalue=False,pad=5,command=self.check_all_res)
                 
         check_toggle_button = ttk.Button(right_frame,\
                 text='Toggle All Check States',command=self.toggle_all,pad=5)
@@ -180,21 +198,25 @@ class fetch_files(object):
         self.data_canvas.grid(column=0,row=1,sticky=(E,W,S,N))
         yscrollbar.grid(column=1,row=1,sticky=(W,S,N))
         
+        check_data_box.grid(        column=0,row=0,sticky=(N))
+        check_fit_box.grid(         column=1,row=0,sticky=(N))
+        check_res_box.grid(         column=2,row=0,sticky=(N)) 
+        
         right_frame.grid(           column=0,row=0,sticky=(N,E,W))
         r = 0
         check_all_box.grid(         column=0,row=r,sticky=(N)); r+= 1
-        check_toggle_button.grid(   column=0,row=r,sticky=(N),pady=10); r+= 1
-        check_draw.grid(            column=0,row=r,sticky=(N))
-        check_draw_fits.grid(       column=1,row=r,sticky=(N)); r+= 1
-        check_remove.grid(          column=0,row=r,sticky=(N,E,W)); r+= 1
+        right_checkbox_frame.grid(  column=0,row=r,sticky=(N)); r+= 1
+        check_toggle_button.grid(   column=0,row=r,sticky=(N,E,W),pady=1); r+= 1
+        check_draw.grid(            column=0,row=r,sticky=(N,W));
+        check_remove.grid(          column=1,row=r,sticky=(N,E)); r+= 1
         check_rebin_label.grid(     column=0,row=r)
         check_rebin_box.grid(       column=1,row=r); r+= 1
         check_bin_remove_entry.grid(column=0,row=r,sticky=(N)); r+= 1
-        check_set.grid(             column=0,row=r,sticky=(N))
+        check_set.grid(             column=0,row=r,sticky=(N,E,W))
         
         bigright_frame.grid(        rowspan=2,sticky=(N,E,W))
         check_all_box.grid(         columnspan=2)
-        check_remove.grid(          columnspan=2)
+        right_checkbox_frame.grid(  columnspan=2)
         check_toggle_button.grid(   columnspan=2)
         check_bin_remove_entry.grid(columnspan=2)
         check_set.grid(             columnspan=2)
@@ -237,6 +259,26 @@ class fetch_files(object):
         self.logger.debug('Initialization success.')
     
     # ======================================================================= #
+    def _do_check_all(self,state,var,box):
+        """
+            Force all tickboxes of a given type to be in a given state, assuming 
+            the tickbox is active
+        """
+        
+        self.logger.info('Changing state of all %s tickboxes to %s',var,state)
+        for k in self.data_lines.keys():
+            
+            # check if tickbox is object variable
+            if hasattr(self.data_lines[k],box):
+                
+                # check if tickbox is disabled
+                if str(getattr(self.data_lines[k],box)['state']) == 'disabled':
+                    continue
+                    
+            # set value
+            getattr(self.data_lines[k],var).set(state)
+
+    # ======================================================================= #
     def canvas_scroll(self,event):
         """Scroll canvas with files selected."""
         if event.num == 4:
@@ -245,12 +287,17 @@ class fetch_files(object):
             self.data_canvas.yview_scroll(1,"units")
     
     # ======================================================================= #
-    def check_all(self):
-        """Force all tickboxes to be in a given state"""
-        state = self.check_state.get()
-        self.logger.info('Changing state of all tickboxes to %s',state)
-        for k in self.data_lines.keys():
-            self.data_lines[k].check_state.set(state)
+    def check_all(self):  
+        self._do_check_all(self.check_state.get(),'check_state','None')
+        
+    def check_all_data(self):  
+        self._do_check_all(self.check_state_data.get(),'check_data','None')
+        
+    def check_all_fit(self):  
+        self._do_check_all(self.check_state_fit.get(),'check_fit','draw_fit_checkbox')
+    
+    def check_all_res(self):  
+        self._do_check_all(self.check_state_res.get(),'check_res','draw_res_checkbox')    
         
     # ======================================================================= #
     def config_canvas(self,event):
@@ -302,50 +349,7 @@ class fetch_files(object):
             messagebox.showerror(message=s)
             self.logger.error(s)
             raise ValueError(s)
-
-    # ======================================================================= #
-    def draw_all_fits(self,ignore_check=False):
-        """Draw all fits in data lines"""
-        
-        self.logger.debug('Drawing all fits (ignore check: %s)', ignore_check)
-        
-        # condense drawing into a funtion
-        def draw_lines():
-            for r in self.data_lines.keys():
-                line = self.data_lines[r] 
-                if line.check_state.get() or ignore_check:
-                    try:
-                        self.bfit.fit_files.draw_fit(r,label=line.label.get())
-                    except KeyError:
-                        pass
-                
-        # get draw style
-        style = self.bfit.draw_style.get()
-        self.logger.debug('Draw style: "%s"',style)
-        
-        # make new figure, draw stacked
-        if style == 'new':
-            plt.figure()
-            self.bfit.draw_style.set('stack')
-            draw_lines()
-            self.bfit.draw_style.set('new')
-            
-        elif style == 'stack':
-            draw_lines()
-            
-        # overdraw in current figure, stacked
-        elif style == 'redraw':
-            plt.clf()
-            self.bfit.draw_style.set('stack')
-            draw_lines()
-            self.bfit.draw_style.set('redraw')
-            
-        else:
-            s = "Draw style not recognized"
-            messagebox.showerror(message=s)
-            self.logger.error(s)
-            raise ValueError(s)
-
+    
     # ======================================================================= #
     def export(self):
         """Export all data files as csv"""
@@ -437,7 +441,12 @@ class fetch_files(object):
         n = 1
         for r in keys_list:
             if r in self.data_lines.keys():
-                self.data_lines[r].grid(n)
+                dline = self.data_lines[r]
+                dline.grid(n)
+                dline.draw_fit_checkbox['state'] = 'disabled'
+                dline.draw_res_checkbox['state'] = 'disabled'
+                dline.check_fit.set(False)
+                dline.check_res.set(False)
             else:
                 self.data_lines[r] = dataline(self.bfit,\
                         self.data_lines,self.dataline_frame,self.bfit.data[r],n)
@@ -554,7 +563,12 @@ class dataline(object):
         bfit:           pointer to root 
         bin_remove:     StringVar for specifying which bins to remove in 1f runs
         bin_remove_entry: Entry object for bin remove 
+        check_data:     BooleanVar for specifying to draw data
+        check_fit:      BooleanVar for specifying to draw fit
+        check_res:      BooleanVar for specifying to draw residual
         check_state:    BooleanVar for specifying check state
+        draw_fit_checkbox: Checkbutton linked to check_fit
+        draw_res_checkbox: Checkbutton linked to check_res
         group:          IntVar for fitting group ID
         label:          StringVar for labelling runs in legends
         line_frame:     Frame that object is placed in
@@ -564,8 +578,6 @@ class dataline(object):
         row:            position in list
         run:            bdata run number
         year:           bdata year
-        
-        
     """
         
     bin_remove_starter_line = '1 5 100-200 (omit bins)'
@@ -636,13 +648,23 @@ class dataline(object):
         remove_button = ttk.Button(line_frame,text='Remove',\
                 command=self.remove,pad=1)
         draw_button = ttk.Button(line_frame,text='Draw',command=self.draw,pad=1)
-        self.draw_fit_button = ttk.Button(line_frame,text='Draw Fit',
-                command= lambda : self.bfit.fit_files.draw_fit(run=self.run),
-                pad=1,state=DISABLED)
-        self.draw_res_button = ttk.Button(line_frame,text='Draw Res',
-                command= lambda : self.bfit.fit_files.draw_residual(\
-                                    run=self.run,rebin=self.rebin.get()),
-                pad=1,state=DISABLED)
+        
+        self.check_data = BooleanVar()
+        self.check_data.set(True)
+        draw_data_checkbox = ttk.Checkbutton(line_frame,text='Data',
+                variable=self.check_data,onvalue=True,offvalue=False,pad=5)
+        
+        self.check_fit = BooleanVar()
+        self.check_fit.set(False)
+        self.draw_fit_checkbox = ttk.Checkbutton(line_frame,text='Fit',
+                variable=self.check_fit,onvalue=True,offvalue=False,pad=5,
+                state=DISABLED)
+        
+        self.check_res = BooleanVar()
+        self.check_res.set(False)
+        self.draw_res_checkbox = ttk.Checkbutton(line_frame,text='Res',
+                variable=self.check_res,onvalue=True,offvalue=False,pad=5,
+                state=DISABLED)
         
         rebin_label = ttk.Label(line_frame,text="Rebin:",pad=5)
         rebin_box = Spinbox(line_frame,from_=1,to=100,width=3,\
@@ -690,9 +712,10 @@ class dataline(object):
         label_entry.grid(column=c,row=0,sticky=E); c+=1
         group_label.grid(column=c,row=0,sticky=E); c+=1
         group_box.grid(column=c,row=0,sticky=E); c+=1
+        draw_data_checkbox.grid(column=c,row=0,sticky=E); c+=1
+        self.draw_fit_checkbox.grid(column=c,row=0,sticky=E); c+=1
+        self.draw_res_checkbox.grid(column=c,row=0,sticky=E); c+=1
         draw_button.grid(column=c,row=0,sticky=E); c+=1
-        self.draw_fit_button.grid(column=c,row=0,sticky=E); c+=1
-        self.draw_res_button.grid(column=c,row=0,sticky=E); c+=1
         remove_button.grid(column=c,row=0,sticky=E); c+=1
         
         # resizing
@@ -742,21 +765,32 @@ class dataline(object):
     def draw(self):
         """Draw single data file."""
         
-        self.logger.debug('Draw run %d (%d)',self.run,self.year)
+        # draw data
+        if self.check_data.get():
+            self.logger.debug('Draw run %d (%d)',self.run,self.year)
+                    
+            # get new data file
+            data = bdata(self.run,year=self.year)
+            
+            # get data file run type
+            d = self.bfit.fileviewer.asym_type.get()
+            d = self.bfit.fileviewer.asym_dict[d]
+            
+            if self.bin_remove.get() == self.bin_remove_starter_line:
+                self.bfit.draw(data,d,self.rebin.get(),
+                    label=self.label.get())
+            else:
+                self.bfit.draw(data,d,self.rebin.get(),\
+                    option=self.bin_remove.get(),label=self.label.get())
+
+        # draw fit
+        if self.check_fit.get():
+            self.bfit.fit_files.draw_fit(run=self.run),
         
-        # get new data file
-        data = bdata(self.run,year=self.year)
-        
-        # get data file run type
-        d = self.bfit.fileviewer.asym_type.get()
-        d = self.bfit.fileviewer.asym_dict[d]
-        
-        if self.bin_remove.get() == self.bin_remove_starter_line:
-            self.bfit.draw(data,d,self.rebin.get(),
-                label=self.label.get())
-        else:
-            self.bfit.draw(data,d,self.rebin.get(),\
-                option=self.bin_remove.get(),label=self.label.get())
+        # draw residual
+        if self.check_res.get():
+            self.bfit.fit_files.draw_residual(run=self.run,
+                                              rebin=self.rebin.get())
 
 # =========================================================================== #
 def on_entry_click(event,entry,text):
