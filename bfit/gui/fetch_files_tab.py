@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import logging
+import time 
 
 
 __doc__="""
@@ -442,8 +443,8 @@ class fetch_files(object):
                         self.data_lines,self.dataline_frame,self.bfit.data[r],n)
             n+=1
             
+        t1 = time.time()
         self.bfit.fit_files.populate()
-        
         self.logger.info('Fetched runs %s',list(self.bfit.data.keys()))
         
     # ======================================================================= #
@@ -607,24 +608,24 @@ class dataline(object):
         self.field = np.around(bdfit.field,2)
         
         try:
-            field_text = "%.2f T"%self.field
+            field_text = "%3.2f T"%self.field
         except TypeError:
             field_text = ' '
         
         # bias
         self.bias = self.bdfit.bias
         try:
-            bias_text = "%.2f kV"%self.bias
+            bias_text = "%4.2f kV"%self.bias
         except TypeError:
             bias_text = ' '
         
         # build objects
         line_frame = ttk.Frame(fetch_tab_frame,pad=(5,0))
-        year_label = ttk.Label(line_frame,text="%d"%self.year,pad=5)
-        run_label = ttk.Label(line_frame,text="%d"%self.run,pad=5)
-        temp_label = ttk.Label(line_frame,text="%3d K"%self.temperature,pad=5)
-        field_label = ttk.Label(line_frame,text=field_text,pad=5)
-        bias_label = ttk.Label(line_frame,text=bias_text,pad=5)
+        
+        info_str = "%d  %d  %3d K  %s  %s" % (self.year,self.run,
+                                              self.temperature,field_text,
+                                              bias_text)
+        info_label = ttk.Label(line_frame,text=info_str,pad=5)
         bin_remove_entry = ttk.Entry(line_frame,textvariable=self.bin_remove,\
                 width=20)
                 
@@ -647,9 +648,6 @@ class dataline(object):
         rebin_box = Spinbox(line_frame,from_=1,to=100,width=3,\
                 textvariable=self.rebin)
                 
-        group_label = ttk.Label(line_frame,text="Group:",pad=5)
-        group_box = Spinbox(line_frame,from_=1,to=100,width=3,\
-                textvariable=self.group)
                    
         self.check_state.set(bfit.fetch_files.check_state.get())
         check = ttk.Checkbutton(line_frame,text='',variable=self.check_state,\
@@ -679,11 +677,7 @@ class dataline(object):
         # grid
         c = 1
         check.grid(column=c,row=0,sticky=E); c+=1
-        year_label.grid(column=c,row=0,sticky=E); c+=1
-        run_label.grid(column=c,row=0,sticky=E); c+=1
-        temp_label.grid(column=c,row=0,sticky=E); c+=1
-        field_label.grid(column=c,row=0,sticky=E); c+=1
-        bias_label.grid(column=c,row=0,sticky=E); c+=1
+        info_label.grid(column=c,row=0,sticky=E); c+=1
         if self.mode in ['1f','1n']: 
             bin_remove_entry.grid(column=c,row=0,sticky=E); c+=1
         if self.mode in ['20','2h']: 
@@ -700,10 +694,10 @@ class dataline(object):
         
         # resizing
         fetch_tab_frame.grid_columnconfigure(0, weight=1)   # big frame
-        for i in (2,4,5,6):
-            line_frame.grid_columnconfigure(i, weight=100)  # run info
-        for i in (7,9,11):
-            line_frame.grid_columnconfigure(i, weight=1)    # input labels
+        for i in (3,5,7):
+            line_frame.grid_columnconfigure(i, weight=100)    # input labels
+        for i in (4,6,8):
+            line_frame.grid_columnconfigure(i, weight=1)  # input fields
         
         # passing
         self.line_frame = line_frame
