@@ -648,6 +648,9 @@ class dataline(object):
         rebin_box = Spinbox(line_frame,from_=1,to=100,width=3,\
                 textvariable=self.rebin)
                 
+        group_label = ttk.Label(line_frame,text="Group:",pad=5)
+        group_box = Spinbox(line_frame,from_=1,to=100,width=3,\
+                textvariable=self.group)
                    
         self.check_state.set(bfit.fetch_files.check_state.get())
         check = ttk.Checkbutton(line_frame,text='',variable=self.check_state,\
