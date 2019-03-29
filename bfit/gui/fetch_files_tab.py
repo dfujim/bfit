@@ -670,10 +670,6 @@ class dataline(object):
         rebin_box = Spinbox(line_frame,from_=1,to=100,width=3,\
                 textvariable=self.rebin)
                 
-        group_label = ttk.Label(line_frame,text="Group:",pad=5)
-        group_box = Spinbox(line_frame,from_=1,to=100,width=3,\
-                textvariable=self.group)
-                   
         self.check_state.set(bfit.fetch_files.check_state.get())
         check = ttk.Checkbutton(line_frame,text='',variable=self.check_state,\
                 onvalue=True,offvalue=False,pad=5)
@@ -710,8 +706,6 @@ class dataline(object):
             rebin_box.grid(column=c,row=0,sticky=E); c+=1
         label_label.grid(column=c,row=0,sticky=E); c+=1
         label_entry.grid(column=c,row=0,sticky=E); c+=1
-        group_label.grid(column=c,row=0,sticky=E); c+=1
-        group_box.grid(column=c,row=0,sticky=E); c+=1
         draw_data_checkbox.grid(column=c,row=0,sticky=E); c+=1
         self.draw_fit_checkbox.grid(column=c,row=0,sticky=E); c+=1
         self.draw_res_checkbox.grid(column=c,row=0,sticky=E); c+=1
