@@ -41,7 +41,6 @@ class fitdata(object):
             parnames:   parameter names in the order needed by the fit function
             
             drawarg:    drawing arguments for errorbars (dict)
-            group:      group number (IntVar)
             rebin:      rebin factor (IntVar)
             mode:       run mode (str)
             omit:       omit bins, 1f only (StringVar)
@@ -63,7 +62,6 @@ class fitdata(object):
         
         # input variables for tkinter
         self.rebin = IntVar()
-        self.group = IntVar()
         self.omit = StringVar()
         self.label = StringVar()
         self.check_state = BooleanVar()

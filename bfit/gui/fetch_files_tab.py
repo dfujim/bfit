@@ -569,7 +569,6 @@ class dataline(object):
         check_state:    BooleanVar for specifying check state
         draw_fit_checkbox: Checkbutton linked to check_fit
         draw_res_checkbox: Checkbutton linked to check_res
-        group:          IntVar for fitting group ID
         label:          StringVar for labelling runs in legends
         line_frame:     Frame that object is placed in
         lines_list:     list of datalines
@@ -600,7 +599,6 @@ class dataline(object):
         self.bin_remove = bdfit.omit
         self.label = bdfit.label
         self.rebin = bdfit.rebin
-        self.group = bdfit.group
         self.check_state = bdfit.check_state
         self.mode = bdfit.mode
         self.run =  bdfit.run

@@ -205,9 +205,7 @@ class fit_files(object):
         
         # get groups 
         dl = self.bfit.fetch_files.data_lines
-        self.groups = np.unique([dl[k].group.get() for k in dl.keys() \
-                                 if dl[k].check_state.get()])
-        
+        self.groups = np.array([1])
         self.logger.debug('Populating data. Groups: %s',self.groups)
         
         # get run mode by looking at one of the data dictionary keys
@@ -359,7 +357,6 @@ class fit_files(object):
                 # doptions
                 doptions = {}
                 doptions['rebin'] = bdfit.rebin.get()
-                doptions['group'] = bdfit.group.get()
                 
                 if self.mode == '1f':
                     dline = self.bfit.fetch_files.data_lines[r]
@@ -960,7 +957,7 @@ class fitinputtab(object):
         # get list of runs with the group number
         dl = self.bfit.fetch_files.data_lines
         self.runlist = [dl[k].run for k in dl.keys() 
-                if dl[k].group.get() == self.group and dl[k].check_state.get()]
+                if dl[k].check_state.get()]
         
         # Display run info label 
         ttk.Label(fitframe,text="Run Numbers").grid(column=0,row=1,padx=5)
@@ -1282,7 +1279,7 @@ class fitinputtab(object):
         # get list of runs with the group number
         dl = self.bfit.fetch_files.data_lines
         self.runlist = [dl[k].run for k in dl.keys() 
-                if dl[k].group.get() == self.group and dl[k].check_state.get()]
+                if dl[k].check_state.get()]
         
         # List box for run viewing
         rlist = StringVar(value=tuple(map(str,self.runlist)))
