@@ -26,12 +26,11 @@ class fit_files(object):
             annotation:     stringvar: name of quantity for annotating parameters 
             chi_threshold:  if chi > thres, set color to red
             draw_components:list of titles for labels, options to export, draw.
-            file_tabs:      dictionary of fitinputtab objects, keyed by group number 
+            file_tabs:      fitinputtab object
             fitter:         fitting object from self.bfit.routine_mod
             fit_function_title: title of fit function to use
             fit_function_title_box: spinbox for fit function names
             fit_input:      fitting input values = (fn_name,ncomp,data_list)
-            groups:         group numbers from fetch tab
             mode:           what type of run is this. 
             n_component:    number of fitting components (IntVar)
             runbook:        notebook of fit inputs for runs
@@ -57,9 +56,8 @@ class fit_files(object):
         self.logger.debug('Initializing')
         
         # initialize
-        self.file_tabs = {}
+        self.file_tabs = None
         self.bfit = bfit
-        self.groups = []
         self.fit_output = {}
         self.fitter = self.bfit.routine_mod.fitter()
         self.draw_components = bfit.draw_components
@@ -203,18 +201,15 @@ class fit_files(object):
             Make tabs for setting fit input parameters. 
         """
         
-        # get groups 
+        # get data
         dl = self.bfit.fetch_files.data_lines
-        self.groups = np.array([1])
-        self.logger.debug('Populating data. Groups: %s',self.groups)
+        self.logger.debug('Populating data.')
         
         # get run mode by looking at one of the data dictionary keys
         for key_zero in self.bfit.data.keys(): break
 
         # check if clearing of old tabs is needed
-        keys = self.file_tabs.keys()
-        do_create = not all((g in keys for g in self.groups))
-        do_create = do_create or not all((g in self.groups for g in keys))
+        do_create = True if self.file_tabs is None else False
         
         # clear old tabs
         if do_create:
@@ -246,28 +241,17 @@ class fit_files(object):
                 self.mode = ""
                         
             # make fitinputtab objects, clean up old tabs
-            for g in self.groups:
-                
-                # add to list of groups
-                if not g in self.file_tabs.keys():
-                    self.file_tabs[g] = fitinputtab(self.bfit,self.runbook,g)
-                
-            # clean up old tabs
-            del_list = [k for k in self.file_tabs.keys() if not k in self.groups]
-            
-            for k in del_list:
-                del self.file_tabs[k]
-                        
+            self.file_tabs = fitinputtab(self.bfit,self.runbook)
+                            
             # add tabs to notebook
-            for k in self.file_tabs.keys():
-                self.file_tabs[k].create()
+            self.file_tabs.create()
             
             # populate the list of parameters 
+            self.file_tabs.populate_param()
             self.populate_param()
     
         else:
-            for k in self.file_tabs.keys():
-                self.file_tabs[k].update()
+            self.file_tabs.update()
         
     # ======================================================================= #
     def populate_param(self,*args):
@@ -275,10 +259,6 @@ class fit_files(object):
         
         self.logger.debug('Populating fit parameters')
         
-        # populate tabs
-        for k in self.file_tabs.keys():
-            self.file_tabs[k].populate_param()
-            
         # populate axis comboboxes
         lst = self.draw_components.copy()
         lst.sort()
@@ -313,73 +293,72 @@ class fit_files(object):
         
         # build data list
         data_list = []
-        for g in self.groups:
-            tab = self.file_tabs[g]
-            collist = tab.collist
-            runlist = tab.runlist
+        tab = self.file_tabs
+        collist = tab.collist
+        runlist = tab.runlist
+        
+        self.logger.debug('Contains runs %s',runlist)
             
-            self.logger.debug('Group %d contains runs %s',g,runlist)
+        for r in runlist:
             
-            for r in runlist:
+            # bdata object
+            bdfit = self.bfit.data[r]
+            bdataobj = bdfit.bd
+            
+            # pdict
+            pdict = {}
+            for parname in tab.parentry.keys():
                 
-                # bdata object
-                bdfit = self.bfit.data[r]
-                bdataobj = bdfit.bd
+                # get entry values
+                pline = tab.parentry[parname]
+                line = []
+                for col in collist:
+                    
+                    # get number entries
+                    if col in ['p0','blo','bhi']:
+                        try:
+                            line.append(float(pline[col][0].get()))
+                        except ValueError as errmsg:
+                            self.logger.exception("Bad input.")
+                            messagebox.showerror("Error",str(errmsg))
+                    
+                    # get "Fixed" entry
+                    elif col in ['fixed']:
+                        line.append(pline[col][0].get())
                 
-                # pdict
-                pdict = {}
-                for parname in tab.parentry.keys():
-                    
-                    # get entry values
-                    pline = tab.parentry[parname]
-                    line = []
-                    for col in collist:
-                        
-                        # get number entries
-                        if col in ['p0','blo','bhi']:
-                            try:
-                                line.append(float(pline[col][0].get()))
-                            except ValueError as errmsg:
-                                self.logger.exception("Bad input.")
-                                messagebox.showerror("Error",str(errmsg))
-                        
-                        # get "Fixed" entry
-                        elif col in ['fixed']:
-                            line.append(pline[col][0].get())
-                    
-                        # get "Shared" entry
-                        elif col in ['shared']:
-                            line.append(pline[col][0].get())
-                    
-                    # make dict
-                    pdict[parname] = line
-                    
-                # doptions
-                doptions = {}
-                doptions['rebin'] = bdfit.rebin.get()
+                    # get "Shared" entry
+                    elif col in ['shared']:
+                        line.append(pline[col][0].get())
                 
-                if self.mode == '1f':
-                    dline = self.bfit.fetch_files.data_lines[r]
-                    doptions['omit'] = dline.bin_remove.get()
-                    if doptions['omit'] == dline.bin_remove_starter_line: 
-                        doptions['omit'] = ''
-                    
-                elif self.mode == '20':
-                    pass
-                    
-                elif self.mode == '2h':
-                    pass
-                    
-                elif self.mode == '2e':
-                    self.logger.error('2e fitting not implemented')
-                    raise RuntimeError('2e fitting not implemented')
+                # make dict
+                pdict[parname] = line
                 
-                else:
-                    self.logger.error('Fitting mode not recognized')
-                    raise RuntimeError('Fitting mode not recognized')
+            # doptions
+            doptions = {}
+            doptions['rebin'] = bdfit.rebin.get()
+            
+            if self.mode == '1f':
+                dline = self.bfit.fetch_files.data_lines[r]
+                doptions['omit'] = dline.bin_remove.get()
+                if doptions['omit'] == dline.bin_remove_starter_line: 
+                    doptions['omit'] = ''
                 
-                # make data list
-                data_list.append([bdataobj,pdict,doptions])
+            elif self.mode == '20':
+                pass
+                
+            elif self.mode == '2h':
+                pass
+                
+            elif self.mode == '2e':
+                self.logger.error('2e fitting not implemented')
+                raise RuntimeError('2e fitting not implemented')
+            
+            else:
+                self.logger.error('Fitting mode not recognized')
+                raise RuntimeError('Fitting mode not recognized')
+            
+            # make data list
+            data_list.append([bdataobj,pdict,doptions])
         
         # call fitter with error message, potentially
         self.fit_input = (fn_name,ncomp,data_list)
@@ -429,9 +408,8 @@ class fit_files(object):
             self.bfit.data[run].set_fitresult(fit_output[run])
             
         # display run results
-        for g in self.groups:
-            self.file_tabs[g].set_display()
-            self.file_tabs[g].set_run_color()
+        self.file_tabs.set_display()
+        self.file_tabs.set_run_color()
         
         # enable draw buttons on fetch files tab
         for r in runlist:
@@ -456,10 +434,9 @@ class fit_files(object):
         
         # get tab id
         tab = self.runbook.select()
-        group_num = int(self.runbook.tab(tab,'text').replace('Group','').strip())
         
         # get fitinputtab
-        tab = self.file_tabs[group_num]
+        tab = self.file_tabs
         
         # get run number
         run = int(tab.runbox.get(tab.selected))
@@ -471,8 +448,7 @@ class fit_files(object):
     # ======================================================================= #
     def do_scrollbar(self,event):
         """Change selection based on scrolling"""
-        group = self.groups[self.runbook.index('current')]
-        runbox = self.file_tabs[group].runbox
+        runbox = self.file_tabs.runbox
         
         cur = runbox.index(ACTIVE)
         runbox.selection_clear(cur)
@@ -910,7 +886,6 @@ class fitinputtab(object):
             bfit        pointer to top class
             data        pointer to bfit.data
             parent      pointer to parent object (frame)
-            group       fitting group number
             parlabels   label objects, saved for later destruction
             parentry    [parname][colname] of ttk.Entry objects saved for 
                             retrieval and destruction
@@ -926,22 +901,20 @@ class fitinputtab(object):
     selected = 0        # index of selected run 
     
     # ======================================================================= #
-    def __init__(self,bfit,parent,group):
+    def __init__(self,bfit,parent):
         """
             Inputs:
                 bfit: top level pointer
                 parent      pointer to parent object (frame)
-                group: number of data group to fit
         """
         
         # get logger
         self.logger = logging.getLogger(logger_name)
-        self.logger.debug('Initalizing fit tab group %d',group)
+        self.logger.debug('Initalizing fit tab')
         
         # initialize
         self.bfit = bfit
         self.parent = parent
-        self.group = group
         self.parlabels = []
         self.parentry = {}
         
@@ -949,12 +922,12 @@ class fitinputtab(object):
     def create(self):
         """Create graphics for this object"""
         
-        self.logger.debug('Creating graphics for fit input group %d',self.group)
+        self.logger.debug('Creating graphics for fit input')
         
         fitframe = ttk.Frame(self.parent)
-        self.parent.add(fitframe,text='Group %d' % self.group)
+        self.parent.add(fitframe,text='')
         
-        # get list of runs with the group number
+        # get list of runs
         dl = self.bfit.fetch_files.data_lines
         self.runlist = [dl[k].run for k in dl.keys() 
                 if dl[k].check_state.get()]
@@ -1152,7 +1125,7 @@ class fitinputtab(object):
         
         # INITIAL PARAMETERS
         
-        # get data that is currently there, possibly for whole group
+        # get data that is currently there
         run = self.runlist[self.selected]
         fitdat_old = self.bfit.data[run]
         
@@ -1274,9 +1247,9 @@ class fitinputtab(object):
     def update(self):
         """Update tab with new data"""
         
-        self.logger.debug('Updating fit tab for group %d',self.group)
+        self.logger.debug('Updating fit tab')
         
-        # get list of runs with the group number
+        # get list of runs
         dl = self.bfit.fetch_files.data_lines
         self.runlist = [dl[k].run for k in dl.keys() 
                 if dl[k].check_state.get()]
