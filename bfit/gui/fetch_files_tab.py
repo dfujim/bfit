@@ -403,7 +403,7 @@ class fetch_files(object):
             run_types.append(self.bfit.data[k].mode)
         for k in data.keys():
             run_types.append(data[k].mode)
-            
+        
         # different run types: select all runs of same type
         if not all([r==run_types[0] for r in run_types]):
             

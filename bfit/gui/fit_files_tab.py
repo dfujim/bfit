@@ -33,7 +33,7 @@ class fit_files(object):
             fit_input:      fitting input values = (fn_name,ncomp,data_list)
             mode:           what type of run is this. 
             n_component:    number of fitting components (IntVar)
-            runbook:        notebook of fit inputs for runs
+            runframe:       frame for displaying fit results and inputs
             runmode_label:  display run mode 
             set_as_group:   BooleanVar() if true, set fit parfor whole group
             xaxis:          StringVar() for parameter to draw on x axis
@@ -64,7 +64,8 @@ class fit_files(object):
             
         # make top level frames
         mid_fit_frame = ttk.Frame(fit_data_tab,pad=5)   # notebook
-        right_frame = ttk.Labelframe(fit_data_tab,text='Fit Results',pad=5)     # draw fit results
+        right_frame = ttk.Labelframe(fit_data_tab,
+            text='Fit Results and Run Conditions',pad=5)     # draw fit results
         
         mid_fit_frame.grid(column=0,row=1,sticky=(N,W,E))
         right_frame.grid(column=1,row=1,columnspan=2,rowspan=2,sticky=(N,E,W))
@@ -138,8 +139,9 @@ class fit_files(object):
         self.fit_routine_label.grid(column=0,row=0,sticky=(E,W))
         
         # MID FRAME        
-        self.runbook = ttk.Notebook(mid_fit_frame)
-        self.runbook.grid(column=0,row=0)
+        self.runframe = ttk.Labelframe(mid_fit_frame,
+                    text='Set Initial Parameters',pad=5) 
+        self.runframe.grid(column=0,row=0,sticky=(N,E,W))
         
         # RIGHT FRAME
         
@@ -207,52 +209,43 @@ class fit_files(object):
         
         # get run mode by looking at one of the data dictionary keys
         for key_zero in self.bfit.data.keys(): break
-
-        # check if clearing of old tabs is needed
-        do_create = True if self.file_tabs is None else False
-        
-        # clear old tabs
-        if do_create:
-            for child in self.runbook.winfo_children():
-                child.destroy()
-        
-            # reset fit function combobox options
-            try:               
-                if self.mode != self.bfit.data[key_zero].mode:
-                    
-                    # set run mode 
-                    self.mode = self.bfit.data[key_zero].mode 
-                    self.fit_runmode_label['text'] = \
-                            self.bfit.fetch_files.runmode_relabel[self.mode]
-                    
-                    # set routine
-                    self.fit_routine_label['text'] = self.fitter.__name__
-                    
-                    # set run functions        
-                    fn_titles = self.fitter.function_names[self.mode]
-                    self.fit_function_title_box['values'] = fn_titles
-                    if self.fit_function_title.get() == '':
-                        self.fit_function_title.set(fn_titles[0])
-                        
-            except UnboundLocalError:
-                self.fit_function_title_box['values'] = ()
-                self.fit_function_title.set("")
-                self.fit_runmode_label['text'] = ""
-                self.mode = ""
-                        
-            # make fitinputtab objects, clean up old tabs
-            self.file_tabs = fitinputtab(self.bfit,self.runbook)
-                            
-            # add tabs to notebook
-            self.file_tabs.create()
             
-            # populate the list of parameters 
-            self.file_tabs.populate_param()
-            self.populate_param()
-    
-        else:
-            self.file_tabs.update()
+        # delete everything in the initial parameters frame 
+        for child in self.runframe.winfo_children():
+            child.destroy()
         
+        # create fit function combobox options
+        try:               
+            if self.mode != self.bfit.data[key_zero].mode:
+                
+                # set run mode 
+                self.mode = self.bfit.data[key_zero].mode 
+                self.fit_runmode_label['text'] = \
+                        self.bfit.fetch_files.runmode_relabel[self.mode]
+                
+                # set routine
+                self.fit_routine_label['text'] = self.fitter.__name__
+                
+                # set run functions        
+                fn_titles = self.fitter.function_names[self.mode]
+                self.fit_function_title_box['values'] = fn_titles
+                if self.fit_function_title.get() == '':
+                    self.fit_function_title.set(fn_titles[0])
+                    
+        except UnboundLocalError:
+            self.fit_function_title_box['values'] = ()
+            self.fit_function_title.set("")
+            self.fit_runmode_label['text'] = ""
+            self.mode = ""
+                    
+        # make fitinputtab objects
+        self.file_tabs = fitinputtab(self.bfit,self.runframe)
+        self.file_tabs.create()
+        
+        # populate the list of parameters 
+        self.file_tabs.populate_param()
+        self.populate_param()        
+   
     # ======================================================================= #
     def populate_param(self,*args):
         """Populate the list of parameters"""
@@ -431,9 +424,6 @@ class fit_files(object):
     # ======================================================================= #
     def do_draw_residual(self,*args):
         """Draw the residual of the actively selected run."""
-        
-        # get tab id
-        tab = self.runbook.select()
         
         # get fitinputtab
         tab = self.file_tabs
@@ -924,8 +914,7 @@ class fitinputtab(object):
         
         self.logger.debug('Creating graphics for fit input')
         
-        fitframe = ttk.Frame(self.parent)
-        self.parent.add(fitframe,text='')
+        fitframe = self.parent
         
         # get list of runs
         dl = self.bfit.fetch_files.data_lines
@@ -1244,20 +1233,20 @@ class fitinputtab(object):
                 self.runbox.itemconfig(i, {'bg':'white'})
 
     # ======================================================================= #
-    def update(self):
-        """Update tab with new data"""
+    # ~ def update(self):
+        # ~ """Update tab with new data"""
         
-        self.logger.debug('Updating fit tab')
+        # ~ self.logger.debug('Updating fit tab')
         
-        # get list of runs
-        dl = self.bfit.fetch_files.data_lines
-        self.runlist = [dl[k].run for k in dl.keys() 
-                if dl[k].check_state.get()]
+        # ~ # get list of runs
+        # ~ dl = self.bfit.fetch_files.data_lines
+        # ~ self.runlist = [dl[k].run for k in dl.keys() 
+                # ~ if dl[k].check_state.get()]
         
-        # List box for run viewing
-        rlist = StringVar(value=tuple(map(str,self.runlist)))
-        self.runbox.config(height=min(len(self.runlist),self.n_runs_max))
-        self.runbox.config(listvariable=rlist)
-        self.runbox.activate(0)
-        self.runbox.event_generate('<<ListboxSelect>>')
+        # ~ # List box for run viewing
+        # ~ rlist = StringVar(value=tuple(map(str,self.runlist)))
+        # ~ self.runbox.config(height=min(len(self.runlist),self.n_runs_max))
+        # ~ self.runbox.config(listvariable=rlist)
+        # ~ self.runbox.activate(0)
+        # ~ self.runbox.event_generate('<<ListboxSelect>>')
         
