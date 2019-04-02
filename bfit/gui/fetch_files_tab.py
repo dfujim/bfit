@@ -440,15 +440,7 @@ class fetch_files(object):
         # make lines
         n = 1
         for r in keys_list:
-            if r in self.data_lines.keys():
-                dline = self.data_lines[r]
-                dline.grid(n)
-                dline.draw_fit_checkbox['state'] = 'disabled'
-                dline.draw_res_checkbox['state'] = 'disabled'
-                dline.check_fit.set(False)
-                dline.check_res.set(False)
-            else:
-                self.data_lines[r] = dataline(self.bfit,\
+            self.data_lines[r] = dataline(self.bfit,\
                         self.data_lines,self.dataline_frame,r,n)
             n+=1
             

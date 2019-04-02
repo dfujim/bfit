@@ -328,9 +328,7 @@ class fit_files(object):
                 
             # doptions
             doptions = {}
-            
-            dline = self.bfit.fetch_files.data_lines[r]
-            doptions['rebin'] = dline.rebin.get()
+            doptions['rebin'] = bdfit.rebin.get()
             
             if self.mode == '1f':
                 dline = self.bfit.fetch_files.data_lines[r]
