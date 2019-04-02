@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import logging
-import time 
+import time,datetime
 
 
 __doc__="""
@@ -82,7 +82,7 @@ class fetch_files(object):
         self.year.set(self.bfit.get_latest_year())
         
         entry_year = Spinbox(fet_entry_frame,textvariable=self.year,width=5,
-                             from_=2000,to=3000)
+                             from_=2000,to=datetime.datetime.today().year)
         entry_run = ttk.Entry(fet_entry_frame,textvariable=self.run,width=80)
         entry_run.insert(0,self.run_number_starter_line)
         entry_fn = partial(on_entry_click,text=self.run_number_starter_line,\

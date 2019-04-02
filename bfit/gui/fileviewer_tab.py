@@ -12,7 +12,7 @@ from bfit import logger_name
 
 import numpy as np
 import matplotlib.pyplot as plt
-import sys,os,time,glob
+import sys,os,time,glob,datetime
 import logging
 
 
@@ -81,7 +81,8 @@ class fileviewer(object):
         self.rebin.set(1)
         
         entry_year = Spinbox(entry_frame,\
-                from_=2000,to=3000,textvariable=self.year,width=5)
+                from_=2000,to=datetime.datetime.today().year,
+                textvariable=self.year,width=5)
         self.entry_runn = ttk.Entry(entry_frame,\
                 textvariable=self.runn,width=7)
         
