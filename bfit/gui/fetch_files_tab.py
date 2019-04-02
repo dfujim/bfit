@@ -385,11 +385,22 @@ class fetch_files(object):
         data = {}
         s = ['Failed to open run']
         for r in run_numbers:
+            
+            # read from archive
             try:
-                data[r] = fitdata(self.bfit,bdata(r,year=int(self.year.get())))
+                new_data = bdata(r,year=int(self.year.get()))
             except (RuntimeError,ValueError):
                 s.append("%d (%d)" % (r,int(self.year.get())))
-
+            else:
+                
+                # update data
+                if r in self.bfit.data.keys():
+                    self.bfit.data[r].bd = new_data
+                    
+                # new data
+                else:
+                    data[r] = fitdata(self.bfit,new_data)
+            
         # print error message
         if len(s)>1:
             s = '\n'.join(s)
@@ -440,8 +451,14 @@ class fetch_files(object):
         # make lines
         n = 1
         for r in keys_list:
-            self.data_lines[r] = dataline(self.bfit,\
+            
+            # new line
+            if r not in self.data_lines.keys():
+                self.data_lines[r] = dataline(self.bfit,\
                         self.data_lines,self.dataline_frame,r,n)
+            # old line
+            else:
+                self.data_lines[r].grid(n)
             n+=1
             
         self.bfit.fit_files.populate()
