@@ -39,7 +39,7 @@ class fetch_files(object):
                 in the data_canvas
             
             entry_asym_type: combobox for asym calc and draw type
-            year: StringVar of year to fetch runs from 
+            year: IntVar of year to fetch runs from 
             run: StringVar input to fetch runs.
             bfit: pointer to parent class
             data_lines: dictionary of dataline obj, keyed by run number
@@ -449,10 +449,9 @@ class fetch_files(object):
                 dline.check_res.set(False)
             else:
                 self.data_lines[r] = dataline(self.bfit,\
-                        self.data_lines,self.dataline_frame,self.bfit.data[r],n)
+                        self.data_lines,self.dataline_frame,r,n)
             n+=1
             
-        t1 = time.time()
         self.bfit.fit_files.populate()
         self.logger.info('Fetched runs %s',list(self.bfit.data.keys()))
         
@@ -582,7 +581,7 @@ class dataline(object):
     bin_remove_starter_line = '1 5 100-200 (omit bins)'
     
     # ======================================================================= #
-    def __init__(self,bfit,lines_list,fetch_tab_frame,bdfit,row):
+    def __init__(self,bfit,lines_list,fetch_tab_frame,run,row):
         """
             Inputs:
                 fetch_tab_frame: parent in which to place line
@@ -592,6 +591,7 @@ class dataline(object):
         
         # get logger
         self.logger = logging.getLogger(logger_name)
+        bdfit = bfit.data[run]
         self.logger.debug('Initializing run %d (%d)',bdfit.run,bdfit.year)
         
         # variables

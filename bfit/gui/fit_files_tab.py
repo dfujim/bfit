@@ -274,7 +274,7 @@ class fit_files(object):
             
     # ======================================================================= #
     def do_fit(self,*args):
-        
+                
         # fitter
         fitter = self.fitter
         
@@ -291,7 +291,7 @@ class fit_files(object):
         runlist = tab.runlist
         
         self.logger.debug('Contains runs %s',runlist)
-            
+                
         for r in runlist:
             
             # bdata object
@@ -328,7 +328,9 @@ class fit_files(object):
                 
             # doptions
             doptions = {}
-            doptions['rebin'] = bdfit.rebin.get()
+            
+            dline = self.bfit.fetch_files.data_lines[r]
+            doptions['rebin'] = dline.rebin.get()
             
             if self.mode == '1f':
                 dline = self.bfit.fetch_files.data_lines[r]
