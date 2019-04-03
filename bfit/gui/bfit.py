@@ -901,7 +901,7 @@ class bfit(object):
         elif idx == 1:        # data fetch_files
             self.fetch_files.canvas_scroll(event)
         elif idx == 2:        # fit viewer
-            self.fit_files.do_scrollbar(event)
+            self.fit_files.canvas_scroll(event)
         else:
             pass
                

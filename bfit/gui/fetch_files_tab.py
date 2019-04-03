@@ -16,8 +16,6 @@ import time,datetime
 
 
 __doc__="""
-    To-do:
-        scrollbar for lots of runs selected
     """
 
 # =========================================================================== #

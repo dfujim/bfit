@@ -24,9 +24,11 @@ class fit_files(object):
     """
         Data fields:
             annotation:     stringvar: name of quantity for annotating parameters 
+            canvas_frame_id:id number of frame in canvas
             chi_threshold:  if chi > thres, set color to red
             draw_components:list of titles for labels, options to export, draw.
-            file_tabs:      fitinputtab object
+            file_lines:     dictionary of fitline objects, keyed by run
+            fit_canvas:     canvas object allowing for scrolling 
             fitter:         fitting object from self.bfit.routine_mod
             fit_function_title: title of fit function to use
             fit_function_title_box: spinbox for fit function names
@@ -63,7 +65,8 @@ class fit_files(object):
         self.draw_components = bfit.draw_components
             
         # make top level frames
-        mid_fit_frame = ttk.Frame(fit_data_tab,pad=5)   # notebook
+        mid_fit_frame = ttk.Labelframe(fit_data_tab,
+                    text='Set Initial Parameters',pad=5)
         right_frame = ttk.Labelframe(fit_data_tab,
             text='Fit Results and Run Conditions',pad=5)     # draw fit results
         
@@ -73,7 +76,7 @@ class fit_files(object):
         fit_data_tab.grid_columnconfigure(0,weight=1)   # fitting space
         fit_data_tab.grid_columnconfigure(1,weight=10)  # par select space
         
-        # TOP FRAME 
+        # TOP FRAME -----------------------------------------------------------
         
         # fit function select 
         fn_select_frame_border = ttk.Labelframe(fit_data_tab,text='Fit Function')
@@ -99,7 +102,7 @@ class fit_files(object):
         # set as group checkbox
         self.set_as_group = BooleanVar()
         set_group_check = ttk.Checkbutton(fn_select_frame,
-                text='Set Parameters for Group',\
+                text='Set All Parameters',\
                 variable=self.set_as_group,onvalue=True,offvalue=False)
         self.set_as_group.set(True)
         
@@ -138,12 +141,28 @@ class fit_files(object):
         fit_routine_label_frame.grid(column=2,row=0,sticky=(E,W))
         self.fit_routine_label.grid(column=0,row=0,sticky=(E,W))
         
-        # MID FRAME        
-        self.runframe = ttk.Labelframe(mid_fit_frame,
-                    text='Set Initial Parameters',pad=5) 
-        self.runframe.grid(column=0,row=0,sticky=(N,E,W))
+        # MID FRAME -----------------------------------------------------------
         
-        # RIGHT FRAME
+        # Scrolling frame to hold fitlines
+        yscrollbar = Scrollbar(mid_fit_frame, orient=VERTICAL)         
+        self.fit_canvas = Canvas(mid_fit_frame,bd=0,                # make a canvas for scrolling
+                yscrollcommand=yscrollbar.set,                      # scroll command receive
+                scrollregion=(0, 0, 5000, 5000),confine=True)       # default size
+        yscrollbar.config(command=self.fit_canvas.yview)            # scroll command send
+        self.runframe = ttk.Frame(self.fit_canvas,pad=5)           # holds 
+        
+        self.canvas_frame_id = self.fit_canvas.create_window((0,0),    # make window which can scroll
+                window=self.runframe,
+                anchor='nw')
+        self.runframe.bind("<Configure>",self.config_canvas) # bind resize to alter scrollable region
+        self.fit_canvas.bind("<Configure>",self.config_runframe) # bind resize to change size of contained frame
+        
+        # gridding
+        self.fit_canvas.grid(column=0,row=1,sticky=(E,W,S,N))
+        yscrollbar.grid(column=1,row=1,sticky=(W,S,N))
+        self.runframe.grid(column=0,row=1,sticky=(E,W,S,N))
+        
+        # RIGHT FRAME ---------------------------------------------------------
         
         # draw and export buttons
         button_frame = ttk.Frame(right_frame)
@@ -189,6 +208,8 @@ class fit_files(object):
         fn_select_frame.grid_columnconfigure(1,weight=1)
         
         # fitting frame
+        self.fit_canvas.grid_columnconfigure(0,weight=1)    # fetch frame 
+        self.fit_canvas.grid_rowconfigure(0,weight=1)
         fit_data_tab.grid_rowconfigure(1,weight=1)  #fitting area
         mid_fit_frame.grid_columnconfigure(0,weight=1)
         mid_fit_frame.grid_rowconfigure(0,weight=1)
@@ -197,6 +218,29 @@ class fit_files(object):
         for i in range(2):
             right_frame.grid_columnconfigure(i,weight=1)
         
+        # store lines for fitting
+        self.fit_lines = {}
+        
+   # ======================================================================= #
+    def canvas_scroll(self,event):
+        """Scroll canvas with files selected."""
+        if event.num == 4:
+            self.fit_canvas.yview_scroll(-1,"units")
+        elif event.num == 5:
+            self.fit_canvas.yview_scroll(1,"units")  
+    
+    # ======================================================================= #
+    def config_canvas(self,event):
+        """Alter scrollable region based on canvas bounding box size. 
+        (changes scrollbar properties)"""
+        self.fit_canvas.configure(scrollregion=self.fit_canvas.bbox("all"))
+    
+    # ======================================================================= #
+    def config_runframe(self,event):
+        """Alter size of contained frame in canvas. Allows for inside window to 
+        be resized with mouse drag""" 
+        self.fit_canvas.itemconfig(self.canvas_frame_id,width=event.width)
+    
     # ======================================================================= #
     def populate(self,*args):
         """
@@ -205,6 +249,8 @@ class fit_files(object):
         
         # get data
         dl = self.bfit.fetch_files.data_lines
+        keylist = [k for k in dl.keys() if dl[k].check_state.get()]
+        keylist.sort()
         self.logger.debug('Populating data.')
         
         # get run mode by looking at one of the data dictionary keys
@@ -237,15 +283,20 @@ class fit_files(object):
             self.fit_function_title.set("")
             self.fit_runmode_label['text'] = ""
             self.mode = ""
-                    
-        # make fitinputtab objects
-        self.file_tabs = fitinputtab(self.bfit,self.runframe)
-        self.file_tabs.create()
         
-        # populate the list of parameters 
-        self.file_tabs.populate_param()
-        self.populate_param()        
-   
+        # delete unused fitline objects
+        for k in list(self.fit_lines.keys()):       # iterate fit list
+            if k not in keylist:                    # check data list
+                del self.fit_lines[k]
+            
+        # make or regrid fitline objects
+        n = 0
+        for k in dl.keys():
+            if k not in self.fit_lines.keys():
+                self.fit_lines[n] = fitline(self.bfit,self.runframe,dl[k],n)
+            self.fit_lines[n].grid(n)
+            n+=1
+            
     # ======================================================================= #
     def populate_param(self,*args):
         """Populate the list of parameters"""
@@ -435,30 +486,6 @@ class fit_files(object):
         # draw
         self.draw_residual(run=run,rebin=rebin)
     
-    # ======================================================================= #
-    def do_scrollbar(self,event):
-        """Change selection based on scrolling"""
-        runbox = self.file_tabs.runbox
-        
-        cur = runbox.index(ACTIVE)
-        runbox.selection_clear(cur)
-        
-        # move selection
-        if event.num == 4:
-            cur -= 1
-        elif event.num == 5:
-            cur += 1
-    
-        # check bounds
-        if cur < 0:     cur = 0
-        else:           cur = min(cur,runbox.size()-1)
-        
-        # set selection 
-        runbox.select_set(cur)
-        runbox.activate(cur)
-        runbox.see(cur)
-        runbox.event_generate("<<ListboxSelect>>")
-
     # ======================================================================= #
     def draw_residual(self,run,rebin=1,**drawargs):
         """Draw fitting residuals for a single run"""
@@ -842,8 +869,8 @@ class fit_files(object):
         except UnboundLocalError:
             self.logger.warning('Parameter selection "%s" not found' % select)
             raise AttributeError('Selection "%s" not found' % select)
-        
-    # =========================================================================== #
+    
+    # ======================================================================= #
     def _annotate(self,x,y,ptlabels,color='k'):
         """Add annotation"""
         
@@ -867,9 +894,14 @@ class fit_files(object):
                             fontsize='xx-small',
                             )    
                             
+    # ======================================================================= # 
+    def _set_all(self):
+        """Set all entry fields to this value"""
+        pass
+
 # =========================================================================== #
 # =========================================================================== #
-class fitinputtab(object):
+class fitline(object):
     """
         Instance variables 
         
@@ -879,7 +911,6 @@ class fitinputtab(object):
             parlabels   label objects, saved for later destruction
             parentry    [parname][colname] of ttk.Entry objects saved for 
                             retrieval and destruction
-            runbox      listbox with run numbers: select which result to display
             run_label   label for showing which run is selected
             runlist     list of run numbers to fit
             selected    index of selected run in runbox (int)
@@ -891,11 +922,14 @@ class fitinputtab(object):
     selected = 0        # index of selected run 
     
     # ======================================================================= #
-    def __init__(self,bfit,parent):
+    def __init__(self,bfit,parent,dataline,row):
         """
             Inputs:
-                bfit: top level pointer
-                parent      pointer to parent object (frame)
+                bfit:       top level pointer
+                parent:     pointer to parent frame object
+                dataline:   fetch_files.dataline object corresponding to the 
+                                data we want to fit
+                row:        grid position
         """
         
         # get logger
@@ -905,43 +939,23 @@ class fitinputtab(object):
         # initialize
         self.bfit = bfit
         self.parent = parent
+        self.dataline = dataline
+        self.row = row
         self.parlabels = []
         self.parentry = {}
+             
+        # get data and run
+        fitdat = self.dataline.bdfit
         
-    # ======================================================================= #
-    def create(self):
-        """Create graphics for this object"""
-        
-        self.logger.debug('Creating graphics for fit input')
-        
-        fitframe = self.parent
-        
-        # get list of runs
-        dl = self.bfit.fetch_files.data_lines
-        self.runlist = [dl[k].run for k in dl.keys() 
-                if dl[k].check_state.get()]
-        
-        # Display run info label 
-        ttk.Label(fitframe,text="Run Numbers").grid(column=0,row=1,padx=5)
-
-        # List box for run viewing
-        rlist = StringVar(value=tuple(map(str,self.runlist)))
-        self.runbox = Listbox(fitframe,height=min(len(self.runlist),self.n_runs_max),
-                                width=10,listvariable=rlist,justify=CENTER,
-                                selectmode=BROWSE)
-        self.runbox.activate(0)
-        self.runbox.bind('<<ListboxSelect>>',self.set_display)
-        self.runbox.grid(column=0,row=2,rowspan=self.n_runs_max)
-        
-        sbar = ttk.Scrollbar(fitframe,orient=VERTICAL,command=self.runbox.yview)
-        self.runbox.configure(yscrollcommand=sbar.set)
-        sbar.grid(column=1,row=2,sticky=(N,S),rowspan=self.n_runs_max)
+        # get parent frame
+        fitframe = ttk.Frame(self.parent,pad=(5,0))
         
         # label for displyaing run number
-        self.run_label = ttk.Label(fitframe,text='',font='bold')
-        
+        self.run_label = ttk.Label(fitframe,text='[ %d ]' % (self.dataline.run),
+                                    font='bold')
+     
         # Parameter input labels
-        c = 2
+        c = 0
         ttk.Label(fitframe,text='Parameter').grid(      column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Initial Value').grid(  column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Low Bound').grid(      column=c,row=1,padx=5); c+=1
@@ -969,58 +983,9 @@ class fitinputtab(object):
             fitframe.grid_rowconfigure(i,weight=1)
         self.parent.grid_rowconfigure(1,weight=1)
         
-        # save
-        self.fitframe = fitframe
-        
-    # ======================================================================= #
-    def get_new_parameters(self,runlist):
-        """
-            Fetch initial parameters from fitter, set to data.    
-            
-            runlist: list of run numbers to set new parameters for. 
-        """
-        
-        self.logger.debug('Fetching new parameters')
-        
-        # get pointer to fit files object
-        fit_files = self.bfit.fit_files
-        fitter = fit_files.fitter
-        ncomp = fit_files.n_component.get()
-        fn_title = fit_files.fit_function_title.get()
-        
-        # get list of parameter names
-        plist = fitter.gen_param_names(fn_title,ncomp)
-        for run in runlist:
-            
-            # get init values
-            values = fitter.gen_init_par(fn_title,ncomp,self.bfit.data[run].bd)
-            
-            # set to data
-            self.bfit.data[run].set_fitpar(values)
-        
-        return plist
-        
-    # ======================================================================= #
-    def get_selected_run(self):
-        """Get the run number of the selected run"""
-        
-        try:
-            self.selected = self.runbox.curselection()[0]
-        except IndexError:
-            self.selected = 0 
-            
-        self.logger.debug("Selected combobx[%d] (run %d)",
-                          self.selected,self.runlist[self.selected])
-            
-        return self.runlist[self.selected]
-        
-    # ======================================================================= #
-    def populate_param(self):
-        """Populate the list of parameters"""
-        
         # get list of parameters and initial values
         try:
-            plist = self.get_new_parameters(self.runlist)
+            plist = self.get_new_parameters()
         except KeyError:
             return
         finally:
@@ -1035,28 +1000,24 @@ class fitinputtab(object):
         # make parameter input fields ---------------------------------------
         
         # labels
-        c = 2
+        c = 0
         
         self.parlabels = []     # track all labels and inputs
         for i,p in enumerate(plist):
-            self.parlabels.append(ttk.Label(self.fitframe,text=p,justify=LEFT))
+            self.parlabels.append(ttk.Label(fitframe,text=p,justify=LEFT))
             self.parlabels[-1].grid(column=c,row=2+i,padx=5,sticky=E)
-        
-        # get data of selected run
-        run = self.get_selected_run()
-        fitdat = self.bfit.data[run]
         
         # input values: initial parameters
         r = 1
         for p in plist:         # iterate parameter names
-            c = 2   # gridding column         
+            c = 0   # gridding column         
             r += 1  # gridding row         
             self.parentry[p] = {}
             for i in range(3):
                 c += 1
                 
                 value = StringVar()
-                entry = ttk.Entry(self.fitframe,textvariable=value,width=10)
+                entry = ttk.Entry(fitframe,textvariable=value,width=10)
                 entry.insert(0,str(fitdat.fitpar[self.collist[i]][p]))
                 entry.grid(column=c,row=r,padx=5,sticky=E)
                 self.parentry[p][self.collist[i]] = (value,entry)
@@ -1064,12 +1025,12 @@ class fitinputtab(object):
             # do results
             c += 1
             par_val = StringVar()
-            par = ttk.Entry(self.fitframe,textvariable=par_val,width=15)
+            par = ttk.Entry(fitframe,textvariable=par_val,width=15)
             par['state'] = 'readonly'
             par['foreground'] = 'black'
             
             dpar_val = StringVar()
-            dpar = ttk.Entry(self.fitframe,textvariable=dpar_val,width=10)
+            dpar = ttk.Entry(fitframe,textvariable=dpar_val,width=10)
             dpar['state'] = 'readonly'
             dpar['foreground'] = 'black'
                                      
@@ -1079,7 +1040,7 @@ class fitinputtab(object):
             # do chi only once
             if r == 2:
                 chi_val = StringVar()
-                chi = ttk.Entry(self.fitframe,textvariable=chi_val,width=7)
+                chi = ttk.Entry(fitframe,textvariable=chi_val,width=7)
                 chi['state'] = 'readonly'
                 chi['foreground'] = 'black'
                 
@@ -1093,111 +1054,73 @@ class fitinputtab(object):
             
             # do fixed box
             value = BooleanVar()
-            entry = ttk.Checkbutton(self.fitframe,text='',\
+            entry = ttk.Checkbutton(fitframe,text='',\
                                      variable=value,onvalue=True,offvalue=False)
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
             self.parentry[p][self.collist[6]] = (value,entry)
             
             # do shared box
             value = BooleanVar()
-            entry = ttk.Checkbutton(self.fitframe,text='',\
+            entry = ttk.Checkbutton(fitframe,text='',\
                                      variable=value,onvalue=True,offvalue=False)
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
             self.parentry[p][self.collist[7]] = (value,entry)
         
-        # set parameters
-        self.set_display()
+        # save frame 
+        self.fitframe = fitframe
         
     # ======================================================================= #
-    def set_display(self,*args):
-        """Set initial parameters and fit results in display to that of selected run"""
+    def get_new_parameters(self):
+        """
+            Fetch initial parameters from fitter, set to data.    
+            
+            runlist: list of run numbers to set new parameters for. 
+        """
         
-        # INITIAL PARAMETERS
+        run = self.dataline.run
         
-        # get data that is currently there
-        run = self.runlist[self.selected]
-        fitdat_old = self.bfit.data[run]
+        # get pointer to fit files object
+        fit_files = self.bfit.fit_files
+        fitter = fit_files.fitter
+        ncomp = fit_files.n_component.get()
+        fn_title = fit_files.fit_function_title.get()
         
-        self.logger.debug('Setting display for run %d',run)
+        # get list of parameter names
+        plist = fitter.gen_param_names(fn_title,ncomp)
         
-        # set as group 
-        if self.bfit.fit_files.set_as_group.get():
-            fitdat_list = [self.bfit.data[r] for r in self.runlist]
-        else:
-            fitdat_list = [fitdat_old]
+        # get init values
+        values = fitter.gen_init_par(fn_title,ncomp,self.bfit.data[run].bd)
         
-        # get run number of new selected run
-        run = self.get_selected_run()
-        fitdat_new = self.bfit.data[run]
-    
-        # set label for run slection 
-        self.run_label['text'] = '[ %d ]' % (run)
-    
+        # set to data
+        self.bfit.data[run].set_fitpar(values)
+        
+        return plist
+        
+    # ======================================================================= #
+    def set_new_init_param(self,other_fitline):
+        """
+            Set the initial parameters of this fitline to match those of another. 
+        """
+        
+        other_parentry = other_fitline.parentry
+        
         for p in self.parentry.keys():  # parentry = [parname][colname][value,entry]
             for i in range(3):          # iterate input columns
+                
                 col = self.collist[i]   # column title
+                
+                self.parentry[p][col][0].delete(0,'end')
+                self.parentry[p][col][0].set(other_parentry[p][col][0].get())
         
-                # get new initial parameter
-                if len(fitdat_new.fitpar[col].keys()) == 0:
-                    self.get_new_parameters([run])
-                newpar = float(self.parentry[p][col][0].get())
-                    
-                # check data of old entry: True if change data of all runs
-                change_par = fitdat_old.fitpar[col][p] != newpar
+        
+            self.parentry[p]['shared'][0].set(other_parentry[p]['shared'][0].get())
+            self.parentry[p]['fixed'][0].set(other_parentry[p]['fixed'][0].get())
                 
-                # set parameters of all data
-                if change_par: 
-                    for d in fitdat_list:
-                        d.fitpar[col][p] = newpar
-                
-                # set only selected run
-                else:
-                    fitdat_old.fitpar[col][p] = newpar
-                    
-                # set values of new data
-                self.parentry[p][col][0].set(
-                            ("%"+".%df" % self.bfit.rounding) % \
-                            fitdat_new.fitpar[col][p])
-                
-            # get fixed status of old data then set to new
-            try:
-                newpar = self.parentry[p]['fixed'][0].get()
-                change_par = fitdat_old.fitpar['fixed'][p] != newpar
-            except KeyError:
-                pass
-            else:
-                if change_par:
-                    for d in fitdat_list:   
-                        d.fitpar['fixed'][p] = newpar
-                else:
-                    fitdat_old.fitpar['fixed'][p] = newpar
-            
-            try:
-                self.parentry[p]['fixed'][0].set(fitdat_new.fitpar['fixed'][p])
-            except KeyError:
-                fitdat_new.fitpar['fixed'][p] = False
-                self.parentry[p]['fixed'][0].set(False)
-    
-            # get and set shared status 
-            try:
-                newpar = self.parentry[p]['shared'][0].get()
-                change_par = fitdat_old.fitpar['shared'][p] != newpar
-            except KeyError:
-                pass
-            else:
-                if change_par:
-                    for d in [self.bfit.data[r] for r in self.runlist]:   # shared is always shared
-                        d.fitpar['shared'][p] = newpar
-                else:
-                    fitdat_old.fitpar['shared'][p] = newpar
-            
-            try:
-                self.parentry[p]['shared'][0].set(fitdat_new.fitpar['shared'][p])
-            except KeyError:
-                fitdat_new.fitpar['shared'][p] = False
-                self.parentry[p]['shared'][0].set(False)
-            
-        # FIT RESULTS    
+    # ======================================================================= #
+    def show_fit_result(self):
+        
+        self.logger.debug('Showing fit result for run %d',run)
+        
         
         # Set up variables
         displays = self.parentry
@@ -1221,32 +1144,8 @@ class fitinputtab(object):
             disp['chi'][0].set(showstr % chi)
          
     # ======================================================================= #
-    def set_run_color(self):
-        """On fit, set the color of the line in the run number select."""
-
-        runlist = map(int,self.runbox.get(0,self.runbox.size()))
-        
-        for i,r in enumerate(runlist):
-            if self.bfit.data[r].chi > self.bfit.fit_files.chi_threshold:
-                self.runbox.itemconfig(i, {'bg':'red'})
-            else:
-                self.runbox.itemconfig(i, {'bg':'white'})
-
-    # ======================================================================= #
-    # ~ def update(self):
-        # ~ """Update tab with new data"""
-        
-        # ~ self.logger.debug('Updating fit tab')
-        
-        # ~ # get list of runs
-        # ~ dl = self.bfit.fetch_files.data_lines
-        # ~ self.runlist = [dl[k].run for k in dl.keys() 
-                # ~ if dl[k].check_state.get()]
-        
-        # ~ # List box for run viewing
-        # ~ rlist = StringVar(value=tuple(map(str,self.runlist)))
-        # ~ self.runbox.config(height=min(len(self.runlist),self.n_runs_max))
-        # ~ self.runbox.config(listvariable=rlist)
-        # ~ self.runbox.activate(0)
-        # ~ self.runbox.event_generate('<<ListboxSelect>>')
-        
+    def grid(self,row):
+        """Re-grid a dataline object so that it is in order by run number"""
+        self.row = row
+        self.fitframe.grid(column=0,row=row,columnspan=2, sticky=(W,N))
+    
