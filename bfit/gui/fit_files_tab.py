@@ -18,7 +18,6 @@ import datetime, os, traceback
 import logging
 
 """
-    Refit with new number of components fails 
 """
 
 # =========================================================================== #
@@ -1221,7 +1220,6 @@ class fitline(object):
         
         self.logger.debug('Showing fit result for run %d',self.dataline.run)
         
-        
         # Set up variables
         displays = self.parentry
         
@@ -1236,7 +1234,7 @@ class fitline(object):
             return 
         
         # display
-        for parname in data.fitpar['res'].keys():
+        for parname in displays.keys():
             disp = displays[parname]
             showstr = "%"+".%df" % self.bfit.rounding
             disp['res'][0].set(showstr % data.fitpar['res'][parname])
