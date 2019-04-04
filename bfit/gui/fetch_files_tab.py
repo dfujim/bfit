@@ -262,15 +262,17 @@ class fetch_files(object):
     def __del__(self):
         
         # delete lists and dictionaries
-        del data_lines
-        del data_lines_old
+        if hasattr(self,'data_lines'):      del self.data_lines
+        if hasattr(self,'data_lines_old'):  del self.data_lines_old
         
         # kill buttons and frame
-        for child in self.fetch_data_tab.winfo_children():
-            child.destroy()
-        self.fetch_data_tab.destroy()
-    
-    
+        try:
+            for child in self.fetch_data_tab.winfo_children():
+                child.destroy()
+            self.fetch_data_tab.destroy()
+        except Exception:
+            pass
+        
     # ======================================================================= #
     def _do_check_all(self,state,var,box):
         """

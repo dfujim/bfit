@@ -330,10 +330,14 @@ class bfit(object):
         
     # ======================================================================= #
     def __del__(self):
-        del self.fileviewer
-        del self.fetch_files
-        del self.fitviewer
-        plt.close('all')
+        if hasattr(self,'fileviewer'):  del self.fileviewer
+        if hasattr(self,'fetch_files'): del self.fetch_files
+        if hasattr(self,'fitviewer'):   del self.fitviewer
+    
+        try:
+            plt.close('all')
+        except ImportError:
+            pass
     
     # ======================================================================= #
     def do_export(self):

@@ -90,8 +90,7 @@ class fit_files(object):
         self.fit_function_title.set("")
         self.fit_function_title_box = ttk.Combobox(fn_select_frame, 
                 textvariable=self.fit_function_title,state='readonly')
-        # ~ self.fit_function_title_box.bind('<<ComboboxSelected>>',self.populate_param)
-        self.fit_function_title.trace('w', self.populate_param)
+        self.fit_function_title_box.bind('<<ComboboxSelected>>',self.populate_param)
         
         # number of components in fit spinbox
         self.n_component = IntVar()
@@ -231,7 +230,7 @@ class fit_files(object):
         
         if hasattr(self,'fit_lines'):       del self.fit_lines
         if hasattr(self,'fit_lines_old'):   del self.fit_lines_old
-        del self.fitter
+        if hasattr(self,'fitter'):          del self.fitter
         
         # kill buttons and frame
         try:
@@ -813,14 +812,6 @@ class fit_files(object):
             return df
         
     # ======================================================================= #
-    def show_all_results(self):
-        """Make a window to display table of fit results"""
-        
-        # get fit results
-        df = self.export(savetofile=False)
-        show_param_popup(df)
-        
-    # ======================================================================= #
     def get_values(self,select):
         """ Get plottable values"""
         data = self.bfit.data
@@ -897,6 +888,24 @@ class fit_files(object):
             raise AttributeError('Selection "%s" not found' % select)
     
     # ======================================================================= #
+    def link_shared(self,p,var):
+        """Ensure all of the share parameter tick boxes are synchronized.
+            p = parentry key to link
+            var: boolean var to get data from
+        """
+        for k in self.fit_lines.keys():
+            line = self.fit_lines[k]
+            line.parentry[p][line.collist[7]][0].set(var.get())
+    
+    # ======================================================================= #
+    def show_all_results(self):
+        """Make a window to display table of fit results"""
+        
+        # get fit results
+        df = self.export(savetofile=False)
+        show_param_popup(df)
+        
+    # ======================================================================= #
     def _annotate(self,x,y,ptlabels,color='k'):
         """Add annotation"""
         
@@ -920,11 +929,6 @@ class fit_files(object):
                             fontsize='xx-small',
                             )    
                             
-    # ======================================================================= # 
-    def _set_all(self):
-        """Set all entry fields to this value"""
-        pass
-
 # =========================================================================== #
 # =========================================================================== #
 class fitline(object):
@@ -1175,10 +1179,12 @@ class fitline(object):
             
             # do shared box
             value = BooleanVar()
-            entry = ttk.Checkbutton(fitframe,text='',\
-                                     variable=value,onvalue=True,offvalue=False)
+            entry = ttk.Checkbutton(fitframe,text='',variable=value,\
+                        onvalue=True,offvalue=False,\
+                        command=partial(self.bfit.fit_files.link_shared,p=p,var=value))
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
             self.parentry[p][self.collist[7]] = (value,entry)
+            
     
     # ======================================================================= #
     def get_new_parameters(self):
