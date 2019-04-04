@@ -90,6 +90,7 @@ class fit_files(object):
         self.fit_function_title.set("")
         self.fit_function_title_box = ttk.Combobox(fn_select_frame, 
                 textvariable=self.fit_function_title,state='readonly')
+        # ~ self.fit_function_title_box.bind('<<ComboboxSelected>>',self.populate_param)
         self.fit_function_title.trace('w', self.populate_param)
         
         # number of components in fit spinbox
@@ -228,15 +229,18 @@ class fit_files(object):
     # ======================================================================= #
     def __del__(self):
         
-        del fit_lines
-        del fit_lines_old
-        del fitter
+        if hasattr(self,'fit_lines'):       del self.fit_lines
+        if hasattr(self,'fit_lines_old'):   del self.fit_lines_old
+        del self.fitter
         
         # kill buttons and frame
-        for child in self.fetch_data_tab.winfo_children():
-            child.destroy()
-        self.fetch_data_tab.destroy()
-    
+        try:
+            for child in self.fetch_data_tab.winfo_children():
+                child.destroy()
+            self.fetch_data_tab.destroy()
+        except Exception:
+            pass
+            
     # ======================================================================= #
     def canvas_scroll(self,event):
         """Scroll canvas with files selected."""
@@ -315,6 +319,8 @@ class fit_files(object):
             self.fit_lines[k].grid(n)
             if n==0 or n%5==0:  self.runframe.update_idletasks()
             n+=1
+        
+        self.populate_param()
             
     # ======================================================================= #
     def populate_param(self,*args):
@@ -998,8 +1004,11 @@ class fitline(object):
         if hasattr(self,'parlabels'):   del self.parlabels
         
         # kill buttons and frame
-        for child in self.parent.winfo_children():
-            child.destroy()
+        try:
+            for child in self.parent.winfo_children():
+                child.destroy()
+        except Exception:
+            pass
     
         if hasattr(self,'parentry'):    del self.parentry
     
@@ -1019,6 +1028,7 @@ class fitline(object):
             min_n_par = min(n_old_par,n_new_par)
             
             parkeys = list(self.parentry.keys())    # old parameter keys
+            parkeys.sort()
             
             # destroy excess labels and entries
             for i in range(n_new_par,n_old_par):
@@ -1028,6 +1038,7 @@ class fitline(object):
                     
                 del self.parlabels[-1]
                 del self.parentry[parkeys[i]]
+        
         self.logger.debug('Populating parameter list with %s',plist)
 
         # get data and frame
@@ -1058,14 +1069,18 @@ class fitline(object):
         # initial parameters ------------------------------------------------- 
         
         # repurpose old parameter fields
+        r = 1
         for i in range(min_n_par):
             p = plist[i]
+            c = 1
+            r += 1
             
             # clear entry and insert new text
             for j in range(3):                
                 entry = self.parentry[p][self.collist[j]][1]
                 entry.delete(0,'end')
                 entry.insert(0,str(fitdat.fitpar[self.collist[j]][p]))
+                entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
                     
         r = min_n_par+1
                 
@@ -1088,23 +1103,34 @@ class fitline(object):
         
         # fit results ------------------------------------------------------- 
         
-        # repurpose old parameter fields
+        # repurpose old result fields
+        r = 1
         for i in range(min_n_par):
-            
+            r += 1
+            c = 4
             p = plist[i]
             
             # clear text in parentry fields
             for j in range(3,6):
                 if self.collist[j] in self.parentry[p].keys():  # exception needed for chi
-                    self.parentry[p][self.collist[j]][1].delete(0,'end')
-            
+                    par = self.parentry[p][self.collist[j]][1]
+                    par.delete(0,'end')
+                    
+                    if self.collist[j] == 'chi':
+                        par.grid(column=c,row=r,padx=5,sticky=E,rowspan=len(plist))
+                    else:
+                        par.grid(column=c,row=r,padx=5,sticky=E)
+                c += 1
+                    
             # do fixed box
             self.parentry[p][self.collist[6]][0].set(False)
+            self.parentry[p][self.collist[6]][1].grid(column=c,row=r,padx=5,sticky=E); c += 1
             
             # do shared box
             self.parentry[p][self.collist[7]][0].set(False)
+            self.parentry[p][self.collist[7]][1].grid(column=c,row=r,padx=5,sticky=E); c += 1
         
-        # make new parameter fields
+        # make new result fields
         r = min_n_par+1
         for i in range(n_old_par,n_new_par):
             r += 1
@@ -1171,7 +1197,8 @@ class fitline(object):
         fn_title = fit_files.fit_function_title.get()
         
         # get list of parameter names
-        plist = fitter.gen_param_names(fn_title,ncomp)
+        plist = list(fitter.gen_param_names(fn_title,ncomp))
+        plist.sort()
         
         # get init values
         values = fitter.gen_init_par(fn_title,ncomp,self.bfit.data[run].bd)
@@ -1179,7 +1206,7 @@ class fitline(object):
         # set to data
         self.bfit.data[run].set_fitpar(values)
         
-        return plist
+        return tuple(plist)
         
     # ======================================================================= #
     def grid(self,row):

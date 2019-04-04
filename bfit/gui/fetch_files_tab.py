@@ -759,10 +759,12 @@ class dataline(object):
     def __del__(self):
         
         # kill buttons and frame
-        for child in self.line_frame.winfo_children():
-            child.destroy()
-        self.line_frame.destroy()
-    
+        try:
+            for child in self.line_frame.winfo_children():
+                child.destroy()
+        except Exception:
+            pass
+            
     # ======================================================================= #
     def grid(self,row):
         """Re-grid a dataline object so that it is in order by run number"""
