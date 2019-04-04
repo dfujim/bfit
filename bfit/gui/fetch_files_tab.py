@@ -41,6 +41,7 @@ class fetch_files(object):
             run: StringVar input to fetch runs.
             bfit: pointer to parent class
             data_lines: dictionary of dataline obj, keyed by run number
+            data_lines_old: dictionary of removed dataline obj, keyed by run number
             fet_entry_frame: frame of fetch tab
             runmode_label: display run mode
             runmode: display run mode string
@@ -66,6 +67,7 @@ class fetch_files(object):
         # initialize
         self.bfit = bfit
         self.data_lines = {}
+        self.data_lines_old = {}
         self.fit_input_tabs = {}
         self.check_rebin = IntVar()
         self.check_bin_remove = StringVar()
@@ -452,11 +454,15 @@ class fetch_files(object):
             
             # new line
             if r not in self.data_lines.keys():
-                self.data_lines[r] = dataline(self.bfit,\
-                        self.data_lines,self.dataline_frame,r,n)
-            # old line
-            else:
-                self.data_lines[r].grid(n)
+                
+                if r in self.data_lines_old.keys():
+                    self.data_lines[r] = self.data_lines_old[r]
+                    del self.data_lines_old[r]
+                else:
+                    self.data_lines[r] = dataline(self.bfit,\
+                        self.data_lines,self.data_lines_old,
+                        self.dataline_frame,r,n)
+            self.data_lines[r].grid(n)
             n+=1
             
         self.logger.info('Fetched runs %s',list(self.bfit.data.keys()))
@@ -474,7 +480,7 @@ class fetch_files(object):
             if self.data_lines[r].check_state.get():
                 del_list.append(self.data_lines[r])
         for d in del_list:
-            d.remove()
+            d.degrid()
     
     # ======================================================================= #
     def return_binder(self):
@@ -523,6 +529,19 @@ class fetch_files(object):
                     
                 # generate focus out event: trigger grey text reset
                 self.data_lines[r].bin_remove_entry.event_generate('<FocusOut>')
+
+    # ======================================================================= #
+    def set_all_labels(self):
+        """Set lable text in all items """
+        
+        self.logger.info('Setting all label text')
+        
+        # check all file lines
+        for r in self.data_lines.keys():
+            self.data_lines[r].set_label()
+            
+        for r in self.data_lines_old.keys():
+            self.data_lines_old[r].set_label()
 
     # ======================================================================= #
     def string2run(self,string):
@@ -578,8 +597,10 @@ class dataline(object):
         draw_fit_checkbox: Checkbutton linked to check_fit
         draw_res_checkbox: Checkbutton linked to check_res
         label:          StringVar for labelling runs in legends
+        label_entry:    Entry object for labelling runs in legends
         line_frame:     Frame that object is placed in
-        lines_list:     list of datalines
+        lines_list:     dictionary of datalines
+        lines_list_old: dictionary of datalines
         mode:           bdata run mode
         rebin:          IntVar for SLR rebin
         row:            position in list
@@ -590,7 +611,7 @@ class dataline(object):
     bin_remove_starter_line = '1 5 100-200 (omit bins)'
     
     # ======================================================================= #
-    def __init__(self,bfit,lines_list,fetch_tab_frame,run,row):
+    def __init__(self,bfit,lines_list,lines_list_old,fetch_tab_frame,run,row):
         """
             Inputs:
                 fetch_tab_frame: parent in which to place line
@@ -614,6 +635,7 @@ class dataline(object):
         self.year = bdfit.year
         self.row = row
         self.lines_list = lines_list
+        self.lines_list_old = lines_list_old
         bd = bdfit.bd
         self.bdfit = bdfit
         
@@ -649,11 +671,11 @@ class dataline(object):
                 width=20)
                 
         label_label = ttk.Label(line_frame,text="Label:",pad=5)
-        label_entry = ttk.Entry(line_frame,textvariable=self.label,\
+        self.label_entry = ttk.Entry(line_frame,textvariable=self.label,\
                 width=10)
                 
         remove_button = ttk.Button(line_frame,text='Remove',\
-                command=self.remove,pad=1)
+                command=self.degrid,pad=1)
         draw_button = ttk.Button(line_frame,text='Draw',command=self.draw,pad=1)
         
         self.check_data = BooleanVar()
@@ -692,15 +714,7 @@ class dataline(object):
         bin_remove_entry.config(foreground='grey')
              
         # add grey text to label
-        label = self.bfit.get_label(self.bfit.data[self.run])
-        label_entry.insert(0,label)
-        entry_fn_lab = partial(on_entry_click,text=label,
-                               entry=label_entry)
-        on_focusout_fn_lab = partial(on_focusout,text=label,
-                                 entry=label_entry)
-        label_entry.bind('<FocusIn>', entry_fn_lab)
-        label_entry.bind('<FocusOut>', on_focusout_fn_lab)
-        label_entry.config(foreground='grey')
+        self.set_label()
                 
         # grid
         c = 1
@@ -712,7 +726,7 @@ class dataline(object):
             rebin_label.grid(column=c,row=0,sticky=E); c+=1
             rebin_box.grid(column=c,row=0,sticky=E); c+=1
         label_label.grid(column=c,row=0,sticky=E); c+=1
-        label_entry.grid(column=c,row=0,sticky=E); c+=1
+        self.label_entry.grid(column=c,row=0,sticky=E); c+=1
         draw_data_checkbox.grid(column=c,row=0,sticky=E); c+=1
         self.draw_fit_checkbox.grid(column=c,row=0,sticky=E); c+=1
         self.draw_res_checkbox.grid(column=c,row=0,sticky=E); c+=1
@@ -730,9 +744,6 @@ class dataline(object):
         self.line_frame = line_frame
         self.bin_remove_entry = bin_remove_entry
         
-        # grid frame
-        self.grid(row)
-        
     # ======================================================================= #
     def grid(self,row):
         """Re-grid a dataline object so that it is in order by run number"""
@@ -740,18 +751,14 @@ class dataline(object):
         self.line_frame.grid(column=0,row=row,columnspan=2, sticky=(W,N))
         
     # ======================================================================= #
-    def remove(self):
-        """Remove displayed dataline object from file selection. """
+    def degrid(self):
+        """Hide displayed dataline object from file selection. """
         
-        self.logger.info('Removing run %d (%d)',self.run,self.year)
+        self.logger.info('Degridding run %d (%d)',self.run,self.year)
         
-        # kill buttons and fram
-        for child in self.line_frame.winfo_children():
-            child.destroy()
-        self.line_frame.destroy()
+        self.line_frame.grid_forget()
         
-        # get rid of data
-        del self.bfit.data[self.run]
+        self.lines_list_old[self.run] = self.lines_list[self.run]
         del self.lines_list[self.run]
         
         # repopulate fit files tab
@@ -793,6 +800,51 @@ class dataline(object):
             self.bfit.fit_files.draw_residual(run=self.run,
                                               rebin=self.rebin.get())
 
+    # ======================================================================= #
+    def remove(self):
+        """Remove displayed dataline object from file selection. """
+        
+        self.logger.info('Removing run %d (%d)',self.run,self.year)
+        
+        # kill buttons and fram
+        for child in self.line_frame.winfo_children():
+            child.destroy()
+        self.line_frame.destroy()
+        
+        # get rid of data
+        del self.bfit.data[self.run]
+        del self.lines_list[self.run]
+        
+        # repopulate fit files tab
+        self.bfit.fit_files.populate()
+        
+        # remove data from storage
+        if len(self.lines_list) == 0:
+            ff = self.bfit.fetch_files
+            ff.runmode_label['text'] = ''
+    
+    # ======================================================================= #
+    def set_label(self):
+        """Set default label text"""
+        
+        # clear old text
+        self.label_entry.delete(0,'end')
+        
+        # get default label
+        label = self.bfit.get_label(self.bfit.data[self.run])
+        self.label_entry.insert(0,label)
+        
+        # make function to clear and replace with default text
+        entry_fn_lab = partial(on_entry_click,text=label,
+                               entry=self.label_entry)
+        on_focusout_fn_lab = partial(on_focusout,text=label,
+                                 entry=self.label_entry)
+                                 
+        # bindings
+        self.label_entry.bind('<FocusIn>', entry_fn_lab)
+        self.label_entry.bind('<FocusOut>', on_focusout_fn_lab)
+        self.label_entry.config(foreground='grey')
+        
 # =========================================================================== #
 def on_entry_click(event,entry,text):
     """Vanish grey text on click"""

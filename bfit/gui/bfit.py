@@ -259,7 +259,7 @@ class bfit(object):
         self.label_default.set('Run Number')
         for dc in self.draw_components:
             menu_settings_lab.add_radiobutton(label=dc,
-                variable=self.label_default,value=dc)
+                variable=self.label_default,value=dc,command=self.set_all_labels)
         
         # Draw style
         self.draw_style = StringVar()
@@ -289,7 +289,7 @@ class bfit(object):
         menubar.add_cascade(menu=menu_help, label='Help')
         menu_help.add_command(label='Show help wiki',command=self.help)
         menu_help.add_command(label='Report an issue',command=self.report_issue)
-        menu_help.add_command(label='Update BFIT',command=self.update_bfit)
+        menu_help.add_command(label='Update bfit',command=self.update_bfit)
         
         # Top Notebook: File Viewer, Fit, Fit Viewer -------------------------
         noteframe = ttk.Frame(mainframe,relief='sunken',pad=5)
@@ -790,7 +790,6 @@ class bfit(object):
         
         # the thing to switch on
         select = self.label_default.get()
-        
         self.logger.debug('Fetching plot label for "%s"',select)
         
         # Data file options
@@ -1006,6 +1005,7 @@ class bfit(object):
         subprocess.call(['xdg-open',location+filename])
             
     # ======================================================================= #
+    def set_all_labels(self,*a):    self.fetch_files.set_all_labels()
     def set_check_all(self,x):  
         self.logger.info('Checking all files')
         state = self.fetch_files.check_state.get()
