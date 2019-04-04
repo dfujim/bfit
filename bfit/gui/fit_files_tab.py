@@ -993,6 +993,7 @@ class fitline(object):
         self.fitframe = fitframe
         
         # fill with initial parameters
+        self.parlabels = []     # track all labels and inputs
         self.populate()
                 
     # ======================================================================= #
@@ -1003,7 +1004,6 @@ class fitline(object):
         # kill buttons and frame
         for child in self.parent.winfo_children():
             child.destroy()
-        self.parent.destroy()
     
         if hasattr(self,'parentry'):    del self.parentry
     
@@ -1015,41 +1015,72 @@ class fitline(object):
         try:
             plist = self.get_new_parameters()
         except KeyError:
-            return
+            return          # returns if no parameters found
         finally:
             
-            # destroy excess labels
-            for i in range(len(plist),len(self.parlabels)):
-                self.parlabels[i].destroy()
+            n_old_par = len(self.parlabels)
+            n_new_par = len(plist)
+            min_n_par = min(n_old_par,n_new_par)
             
-            # destroy excess entries
-            for label in self.parlabels:
-                label.destroy()
-            for k in self.parentry.keys():
-                for p in self.parentry[k]:
-                    self.parentry[k][p][1].destroy()
-        
+            parkeys = list(self.parentry.keys())    # old parameter keys
+            
+            # destroy excess labels and entries
+            for i in range(n_new_par,n_old_par):
+                self.parlabels[-1].destroy()
+                for p in self.parentry[parkeys[i]].keys():
+                    self.parentry[parkeys[i]][p][1].destroy()
+                    
+                del self.parlabels[-1]
+                del self.parentry[parkeys[i]]
         self.logger.debug('Populating parameter list with %s',plist)
-        
-        # make parameter input fields ---------------------------------------
-        
-        # labels
-        c = 0
-        
-        self.parlabels = []     # track all labels and inputs
+
+        # get data and frame
         fitframe = self.fitframe
         fitdat = self.dataline.bdfit
         
-        for i,p in enumerate(plist):
-            self.parlabels.append(ttk.Label(fitframe,text=p,justify=LEFT))
+        # labels ------------------------------------------------------------
+        c = 0
+
+        # repurpose old labels
+        for i in range(min_n_par):
+            self.parlabels[i]['text'] = plist[i]
+        
+        # make new labels
+        for i in range(n_old_par,n_new_par):
+            self.parlabels.append(ttk.Label(fitframe,text=plist[i],justify=LEFT))
             self.parlabels[-1].grid(column=c,row=2+i,padx=5,sticky=E)
         
-        # input values: initial parameters
-        r = 1
-        for p in plist:         # iterate parameter names
-            c = 0   # gridding column         
-            r += 1  # gridding row         
+        # move all parameters entries and values to new key set
+        for i in range(min_n_par):
+            p = plist[i]
+            p_old = parkeys[i]
+            
+            if p != p_old:
+                self.parentry[p] = self.parentry[p_old]
+                del self.parentry[p_old]
+        
+        # initial parameters ------------------------------------------------- 
+        
+        # repurpose old parameter fields
+        for i in range(min_n_par):
+            p = plist[i]
+            
+            # clear entry and insert new text
+            for j in range(3):                
+                entry = self.parentry[p][self.collist[j]][1]
+                entry.delete(0,'end')
+                entry.insert(0,str(fitdat.fitpar[self.collist[j]][p]))
+                    
+        r = min_n_par+1
+                
+        # make new parameter fields
+        for i in range(n_old_par,n_new_par):
+            p = plist[i]
             self.parentry[p] = {}
+            
+            c = 0               # gridding column         
+            r += 1              # gridding row         
+            
             for i in range(3):
                 c += 1
                 
@@ -1058,9 +1089,33 @@ class fitline(object):
                 entry.insert(0,str(fitdat.fitpar[self.collist[i]][p]))
                 entry.grid(column=c,row=r,padx=5,sticky=E)
                 self.parentry[p][self.collist[i]] = (value,entry)
+        
+        # fit results ------------------------------------------------------- 
+        
+        # repurpose old parameter fields
+        for i in range(min_n_par):
+            
+            p = plist[i]
+            
+            # clear text in parentry fields
+            for j in range(3,6):
+                if self.collist[j] in self.parentry[p].keys():  # exception needed for chi
+                    self.parentry[p][self.collist[j]][1].delete(0,'end')
+            
+            # do fixed box
+            self.parentry[p][self.collist[6]][0].set(False)
+            
+            # do shared box
+            self.parentry[p][self.collist[7]][0].set(False)
+        
+        # make new parameter fields
+        r = min_n_par+1
+        for i in range(n_old_par,n_new_par):
+            r += 1
+            c = 4
+            p = plist[i]
             
             # do results
-            c += 1
             par_val = StringVar()
             par = ttk.Entry(fitframe,textvariable=par_val,width=15)
             par['state'] = 'readonly'
@@ -1075,19 +1130,19 @@ class fitline(object):
             dpar.grid(column=c,row=r,padx=5,sticky=E); c += 1
 
             # do chi only once
-            if r == 2:
+            if r == 1:
                 chi_val = StringVar()
                 chi = ttk.Entry(fitframe,textvariable=chi_val,width=7)
                 chi['state'] = 'readonly'
                 chi['foreground'] = 'black'
                 
                 chi.grid(column=c,row=r,padx=5,sticky=E,rowspan=len(plist)); 
+                self.parentry[p][self.collist[5]] = (chi_val,chi)
             c += 1
             
             # save ttk.Entry objects in dictionary [parname][colname]
             self.parentry[p][self.collist[3]] = (par_val,par)
             self.parentry[p][self.collist[4]] = (dpar_val,dpar)
-            self.parentry[p][self.collist[5]] = (chi_val,chi)
             
             # do fixed box
             value = BooleanVar()

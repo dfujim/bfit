@@ -762,7 +762,6 @@ class dataline(object):
         for child in self.line_frame.winfo_children():
             child.destroy()
         self.line_frame.destroy()
-        
     
     # ======================================================================= #
     def grid(self,row):
