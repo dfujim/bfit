@@ -459,8 +459,10 @@ class fetch_files(object):
                 self.data_lines[r].grid(n)
             n+=1
             
-        self.bfit.fit_files.populate()
         self.logger.info('Fetched runs %s',list(self.bfit.data.keys()))
+        
+        # populate fitting tab
+        # ~ self.bfit.fit_files.populate()
         
     # ======================================================================= #
     def remove_all(self):

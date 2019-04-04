@@ -17,6 +17,12 @@ import matplotlib.pyplot as plt
 import datetime, os, traceback
 import logging
 
+"""
+    Make an initial fitline and reassign to new values when needed? 
+    This might be faster
+    
+    Fit results don't show all the time... why?
+"""
 
 # =========================================================================== #
 # =========================================================================== #
@@ -28,11 +34,13 @@ class fit_files(object):
             chi_threshold:  if chi > thres, set color to red
             draw_components:list of titles for labels, options to export, draw.
             file_lines:     dictionary of fitline objects, keyed by run
+            file_lines_old: dictionary of previously used fitline objects, keyed by run
             fit_canvas:     canvas object allowing for scrolling 
             fitter:         fitting object from self.bfit.routine_mod
             fit_function_title: title of fit function to use
             fit_function_title_box: spinbox for fit function names
             fit_input:      fitting input values = (fn_name,ncomp,data_list)
+            fit_lines:      Dict storing fitline objects
             mode:           what type of run is this. 
             n_component:    number of fitting components (IntVar)
             runframe:       frame for displaying fit results and inputs
@@ -70,11 +78,12 @@ class fit_files(object):
         right_frame = ttk.Labelframe(fit_data_tab,
             text='Fit Results and Run Conditions',pad=5)     # draw fit results
         
-        mid_fit_frame.grid(column=0,row=1,sticky=(N,W,E))
-        right_frame.grid(column=1,row=1,columnspan=2,rowspan=2,sticky=(N,E,W))
+        mid_fit_frame.grid(column=0,row=1,sticky=(N,W,E,S))
+        right_frame.grid(column=1,row=1,columnspan=2,sticky=(N,E,W))
         
         fit_data_tab.grid_columnconfigure(0,weight=1)   # fitting space
-        fit_data_tab.grid_columnconfigure(1,weight=10)  # par select space
+        mid_fit_frame.grid_columnconfigure(0,weight=1)
+        mid_fit_frame.grid_rowconfigure(0,weight=1)
         
         # TOP FRAME -----------------------------------------------------------
         
@@ -158,9 +167,8 @@ class fit_files(object):
         self.fit_canvas.bind("<Configure>",self.config_runframe) # bind resize to change size of contained frame
         
         # gridding
-        self.fit_canvas.grid(column=0,row=1,sticky=(E,W,S,N))
-        yscrollbar.grid(column=1,row=1,sticky=(W,S,N))
-        self.runframe.grid(column=0,row=1,sticky=(E,W,S,N))
+        self.fit_canvas.grid(column=0,row=0,sticky=(E,W,S,N))
+        yscrollbar.grid(column=1,row=0,sticky=(W,S,N))
         
         # RIGHT FRAME ---------------------------------------------------------
         
@@ -210,16 +218,16 @@ class fit_files(object):
         # fitting frame
         self.fit_canvas.grid_columnconfigure(0,weight=1)    # fetch frame 
         self.fit_canvas.grid_rowconfigure(0,weight=1)
+        
         fit_data_tab.grid_rowconfigure(1,weight=1)  #fitting area
-        mid_fit_frame.grid_columnconfigure(0,weight=1)
-        mid_fit_frame.grid_rowconfigure(0,weight=1)
         
         # right frame
         for i in range(2):
-            right_frame.grid_columnconfigure(i,weight=1)
+            right_frame.grid_columnconfigure(i,weight=0)
         
         # store lines for fitting
         self.fit_lines = {}
+        self.fit_lines_old = {}
         
    # ======================================================================= #
     def canvas_scroll(self,event):
@@ -251,14 +259,10 @@ class fit_files(object):
         dl = self.bfit.fetch_files.data_lines
         keylist = [k for k in dl.keys() if dl[k].check_state.get()]
         keylist.sort()
-        self.logger.debug('Populating data.')
+        self.logger.debug('Populating data for %s',keylist)
         
         # get run mode by looking at one of the data dictionary keys
         for key_zero in self.bfit.data.keys(): break
-            
-        # delete everything in the initial parameters frame 
-        for child in self.runframe.winfo_children():
-            child.destroy()
         
         # create fit function combobox options
         try:               
@@ -268,6 +272,7 @@ class fit_files(object):
                 self.mode = self.bfit.data[key_zero].mode 
                 self.fit_runmode_label['text'] = \
                         self.bfit.fetch_files.runmode_relabel[self.mode]
+                self.logger.debug('Set new run mode %s',self.mode)
                 
                 # set routine
                 self.fit_routine_label['text'] = self.fitter.__name__
@@ -287,14 +292,19 @@ class fit_files(object):
         # delete unused fitline objects
         for k in list(self.fit_lines.keys()):       # iterate fit list
             if k not in keylist:                    # check data list
+                self.fit_lines[k].degrid()
+                self.fit_lines_old[k] = self.fit_lines[k]
                 del self.fit_lines[k]
             
         # make or regrid fitline objects
         n = 0
-        for k in dl.keys():
+        for k in keylist:
             if k not in self.fit_lines.keys():
-                self.fit_lines[n] = fitline(self.bfit,self.runframe,dl[k],n)
-            self.fit_lines[n].grid(n)
+                if k in self.fit_lines_old.keys():
+                    self.fit_lines[k] = self.fit_lines_old[k]
+                else:
+                    self.fit_lines[k] = fitline(self.bfit,self.runframe,dl[k],n)
+            self.fit_lines[k].grid(n)
             n+=1
             
     # ======================================================================= #
@@ -337,26 +347,23 @@ class fit_files(object):
         
         # build data list
         data_list = []
-        tab = self.file_tabs
-        collist = tab.collist
-        runlist = tab.runlist
-        
-        self.logger.debug('Contains runs %s',runlist)
-                
-        for r in runlist:
+        for key in self.fit_lines.keys():
+            
+            # get fit line
+            fitline = self.fit_lines[key]
             
             # bdata object
-            bdfit = self.bfit.data[r]
+            bdfit = fitline.dataline.bdfit
             bdataobj = bdfit.bd
             
             # pdict
             pdict = {}
-            for parname in tab.parentry.keys():
+            for parname in fitline.parentry.keys():
                 
                 # get entry values
-                pline = tab.parentry[parname]
+                pline = fitline.parentry[parname]
                 line = []
-                for col in collist:
+                for col in fitline.collist:
                     
                     # get number entries
                     if col in ['p0','blo','bhi']:
@@ -382,7 +389,7 @@ class fit_files(object):
             doptions['rebin'] = bdfit.rebin.get()
             
             if self.mode == '1f':
-                dline = self.bfit.fetch_files.data_lines[r]
+                dline = self.bfit.fetch_files.data_lines[key]
                 doptions['omit'] = dline.bin_remove.get()
                 if doptions['omit'] == dline.bin_remove_starter_line: 
                     doptions['omit'] = ''
@@ -452,12 +459,12 @@ class fit_files(object):
             self.bfit.data[run].set_fitresult(fit_output[run])
             
         # display run results
-        self.file_tabs.set_display()
-        self.file_tabs.set_run_color()
+        for key in self.fit_lines.keys():
+            self.fit_lines[key].show_fit_result()
         
         # enable draw buttons on fetch files tab
-        for r in runlist:
-            dline = self.bfit.fetch_files.data_lines[r]
+        for k in self.bfit.fetch_files.data_lines.keys():
+            dline = self.bfit.fetch_files.data_lines[k]
             
             dline.draw_fit_checkbox['state'] = 'normal'
             dline.draw_res_checkbox['state'] = 'normal'
@@ -906,7 +913,7 @@ class fitline(object):
         Instance variables 
         
             bfit        pointer to top class
-            data        pointer to bfit.data
+            dataline    pointer to dataline object in fetch_files_tab
             parent      pointer to parent object (frame)
             parlabels   label objects, saved for later destruction
             parentry    [parname][colname] of ttk.Entry objects saved for 
@@ -934,7 +941,8 @@ class fitline(object):
         
         # get logger
         self.logger = logging.getLogger(logger_name)
-        self.logger.debug('Initalizing fit tab')
+        self.logger.debug('Initializing fit line for run %d in row %d',
+                          dataline.run,row)
         
         # initialize
         self.bfit = bfit
@@ -968,20 +976,6 @@ class fitline(object):
         
         # grid the run_label
         self.run_label.grid(column=0,row=0,padx=5,pady=5,columnspan=c-1)
-        
-        # resizing
-        for i in (4,5):
-            fitframe.grid_columnconfigure(i,weight=1000)      # bounds
-        for i in (1,2,3):
-            fitframe.grid_columnconfigure(c-i,weight=10)  # fixed,share,chi
-        
-        fitframe.grid_columnconfigure(0,weight=1)           # run select
-        
-        fitframe.grid_rowconfigure(0,weight=1)              # run title
-        
-        for i in range(2,50):
-            fitframe.grid_rowconfigure(i,weight=1)
-        self.parent.grid_rowconfigure(1,weight=1)
         
         # get list of parameters and initial values
         try:
@@ -1097,6 +1091,32 @@ class fitline(object):
         return plist
         
     # ======================================================================= #
+    def grid(self,row):
+        """Re-grid a dataline object so that it is in order by run number"""
+        self.row = row
+        self.fitframe.grid(column=0,row=row, sticky=(W,N))
+    
+    # ======================================================================= #
+    def remove(self):
+        """Remove and delete displayed dataline object from file selection. """
+        
+        self.logger.info('Removing fitline for run %d (%d)',self.dataline.run,
+                                                          self.dataline.year)
+        
+        # kill buttons and fram
+        for child in self.fitframe.winfo_children():
+            child.destroy()
+        self.fitframe.destroy()
+        
+    # ======================================================================= #
+    def degrid(self):
+        """Remove displayed dataline object from file selection. """
+        
+        self.logger.info('Degridding fitline for run %d (%d)',self.dataline.run,
+                                                          self.dataline.year)
+        self.fitframe.grid_forget()
+    
+    # ======================================================================= #
     def set_new_init_param(self,other_fitline):
         """
             Set the initial parameters of this fitline to match those of another. 
@@ -1119,14 +1139,14 @@ class fitline(object):
     # ======================================================================= #
     def show_fit_result(self):
         
-        self.logger.debug('Showing fit result for run %d',run)
+        self.logger.debug('Showing fit result for run %d',self.dataline.run)
         
         
         # Set up variables
         displays = self.parentry
         
         try:
-            data = self.bfit.data[run]
+            data = self.dataline.bdfit
         except KeyError:
             return
             
@@ -1143,9 +1163,4 @@ class fitline(object):
             disp['dres'][0].set(showstr % data.fitpar['dres'][parname])
             disp['chi'][0].set(showstr % chi)
          
-    # ======================================================================= #
-    def grid(self,row):
-        """Re-grid a dataline object so that it is in order by run number"""
-        self.row = row
-        self.fitframe.grid(column=0,row=row,columnspan=2, sticky=(W,N))
     
