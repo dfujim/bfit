@@ -18,10 +18,7 @@ import datetime, os, traceback
 import logging
 
 """
-    Make an initial fitline and reassign to new values when needed? 
-    This might be faster
-    
-    Fit results don't show all the time... why?
+    Refit with new number of components fails 
 """
 
 # =========================================================================== #
@@ -1130,7 +1127,7 @@ class fitline(object):
             dpar.grid(column=c,row=r,padx=5,sticky=E); c += 1
 
             # do chi only once
-            if r == 1:
+            if i==0:
                 chi_val = StringVar()
                 chi = ttk.Entry(fitframe,textvariable=chi_val,width=7)
                 chi['state'] = 'readonly'
@@ -1244,6 +1241,8 @@ class fitline(object):
             showstr = "%"+".%df" % self.bfit.rounding
             disp['res'][0].set(showstr % data.fitpar['res'][parname])
             disp['dres'][0].set(showstr % data.fitpar['dres'][parname])
-            disp['chi'][0].set(showstr % chi)
+            
+            if 'chi' in disp.keys():
+                disp['chi'][0].set(showstr % chi)
          
     
