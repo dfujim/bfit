@@ -317,7 +317,7 @@ class fit_files(object):
                 else:
                     self.fit_lines[k] = fitline(self.bfit,self.runframe,dl[k],n)
             self.fit_lines[k].grid(n)
-            if n==0 or n%10==0:  self.runframe.update_idletasks()
+            if n==0 or n%5==0:  self.runframe.update_idletasks()
             n+=1
             
     # ======================================================================= #
@@ -345,6 +345,10 @@ class fit_files(object):
         self.xaxis_combobox['values'] = ['']+parlst+lst
         self.yaxis_combobox['values'] = ['']+parlst+lst
         self.annotation_combobox['values'] = ['']+parlst+lst
+        
+        # regenerate fitlines
+        for k in self.fit_lines.keys():
+            self.fit_lines[k].populate()
             
     # ======================================================================= #
     def do_fit(self,*args):
@@ -963,9 +967,6 @@ class fitline(object):
         self.parlabels = []
         self.parentry = {}
              
-        # get data and run
-        fitdat = self.dataline.bdfit
-        
         # get parent frame
         fitframe = ttk.Frame(self.parent,pad=(5,0))
         
@@ -988,12 +989,40 @@ class fitline(object):
         # grid the run_label
         self.run_label.grid(column=0,row=0,padx=5,pady=5,columnspan=c-1)
         
+        # save frame 
+        self.fitframe = fitframe
+        
+        # fill with initial parameters
+        self.populate()
+                
+    # ======================================================================= #
+    def __del__(self):
+        
+        if hasattr(self,'parlabels'):   del self.parlabels
+        
+        # kill buttons and frame
+        for child in self.parent.winfo_children():
+            child.destroy()
+        self.parent.destroy()
+    
+        if hasattr(self,'parentry'):    del self.parentry
+    
+    # ======================================================================= #
+    def populate(self):
+        """Fill and grid new parameters. Reuse old fields if possible"""
+        
         # get list of parameters and initial values
         try:
             plist = self.get_new_parameters()
         except KeyError:
             return
         finally:
+            
+            # destroy excess labels
+            for i in range(len(plist),len(self.parlabels)):
+                self.parlabels[i].destroy()
+            
+            # destroy excess entries
             for label in self.parlabels:
                 label.destroy()
             for k in self.parentry.keys():
@@ -1008,6 +1037,9 @@ class fitline(object):
         c = 0
         
         self.parlabels = []     # track all labels and inputs
+        fitframe = self.fitframe
+        fitdat = self.dataline.bdfit
+        
         for i,p in enumerate(plist):
             self.parlabels.append(ttk.Label(fitframe,text=p,justify=LEFT))
             self.parlabels[-1].grid(column=c,row=2+i,padx=5,sticky=E)
@@ -1070,26 +1102,13 @@ class fitline(object):
                                      variable=value,onvalue=True,offvalue=False)
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
             self.parentry[p][self.collist[7]] = (value,entry)
-        
-        # save frame 
-        self.fitframe = fitframe
-        
-    # ======================================================================= #
-    def __del__(self):
-        
-        del parlabels
-        
-        # kill buttons and frame
-        for child in self.parent.winfo_children():
-            child.destroy()
-        self.parent.destroy()
     
     # ======================================================================= #
     def get_new_parameters(self):
         """
             Fetch initial parameters from fitter, set to data.    
             
-            runlist: list of run numbers to set new parameters for. 
+            plist: Dictionary of initial parameters {par_name:par_value}
         """
         
         run = self.dataline.run
@@ -1116,19 +1135,7 @@ class fitline(object):
         """Re-grid a dataline object so that it is in order by run number"""
         self.row = row
         self.fitframe.grid(column=0,row=row, sticky=(W,N))
-    
-    # ======================================================================= #
-    def remove(self):
-        """Remove and delete displayed dataline object from file selection. """
-        
-        self.logger.info('Removing fitline for run %d (%d)',self.dataline.run,
-                                                          self.dataline.year)
-        
-        # kill buttons and fram
-        for child in self.fitframe.winfo_children():
-            child.destroy()
-        self.fitframe.destroy()
-        
+           
     # ======================================================================= #
     def degrid(self):
         """Remove displayed dataline object from file selection. """

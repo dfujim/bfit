@@ -463,7 +463,7 @@ class fetch_files(object):
         
         # make lines
         n = 1
-        for r in keys_list:
+        for r in run_numbers:
             
             # new line
             if r not in self.data_lines.keys():
@@ -769,6 +769,7 @@ class dataline(object):
         """Re-grid a dataline object so that it is in order by run number"""
         self.row = row
         self.line_frame.grid(column=0,row=row,columnspan=2, sticky=(W,N))
+        self.bfit.data[self.run] = self.bdfit
         
     # ======================================================================= #
     def degrid(self):
@@ -780,6 +781,7 @@ class dataline(object):
         
         self.lines_list_old[self.run] = self.lines_list[self.run]
         del self.lines_list[self.run]
+        del self.bfit.data[self.run]
         
         # repopulate fit files tab
         self.bfit.fit_files.populate()
