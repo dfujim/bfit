@@ -259,6 +259,19 @@ class fetch_files(object):
         self.logger.debug('Initialization success.')
     
     # ======================================================================= #
+    def __del__(self):
+        
+        # delete lists and dictionaries
+        del data_lines
+        del data_lines_old
+        
+        # kill buttons and frame
+        for child in self.fetch_data_tab.winfo_children():
+            child.destroy()
+        self.fetch_data_tab.destroy()
+    
+    
+    # ======================================================================= #
     def _do_check_all(self,state,var,box):
         """
             Force all tickboxes of a given type to be in a given state, assuming 
@@ -463,12 +476,10 @@ class fetch_files(object):
                         self.data_lines,self.data_lines_old,
                         self.dataline_frame,r,n)
             self.data_lines[r].grid(n)
+            if n==1 or n%20==0:  self.dataline_frame.update_idletasks()
             n+=1
             
         self.logger.info('Fetched runs %s',list(self.bfit.data.keys()))
-        
-        # populate fitting tab
-        # ~ self.bfit.fit_files.populate()
         
     # ======================================================================= #
     def remove_all(self):
@@ -672,7 +683,7 @@ class dataline(object):
                 
         label_label = ttk.Label(line_frame,text="Label:",pad=5)
         self.label_entry = ttk.Entry(line_frame,textvariable=self.label,\
-                width=10)
+                width=20)
                 
         remove_button = ttk.Button(line_frame,text='Remove',\
                 command=self.degrid,pad=1)
@@ -745,6 +756,15 @@ class dataline(object):
         self.bin_remove_entry = bin_remove_entry
         
     # ======================================================================= #
+    def __del__(self):
+        
+        # kill buttons and frame
+        for child in self.line_frame.winfo_children():
+            child.destroy()
+        self.line_frame.destroy()
+        
+    
+    # ======================================================================= #
     def grid(self,row):
         """Re-grid a dataline object so that it is in order by run number"""
         self.row = row
@@ -800,29 +820,6 @@ class dataline(object):
             self.bfit.fit_files.draw_residual(run=self.run,
                                               rebin=self.rebin.get())
 
-    # ======================================================================= #
-    def remove(self):
-        """Remove displayed dataline object from file selection. """
-        
-        self.logger.info('Removing run %d (%d)',self.run,self.year)
-        
-        # kill buttons and fram
-        for child in self.line_frame.winfo_children():
-            child.destroy()
-        self.line_frame.destroy()
-        
-        # get rid of data
-        del self.bfit.data[self.run]
-        del self.lines_list[self.run]
-        
-        # repopulate fit files tab
-        self.bfit.fit_files.populate()
-        
-        # remove data from storage
-        if len(self.lines_list) == 0:
-            ff = self.bfit.fetch_files
-            ff.runmode_label['text'] = ''
-    
     # ======================================================================= #
     def set_label(self):
         """Set default label text"""

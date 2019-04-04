@@ -33,14 +33,14 @@ class fit_files(object):
             canvas_frame_id:id number of frame in canvas
             chi_threshold:  if chi > thres, set color to red
             draw_components:list of titles for labels, options to export, draw.
-            file_lines:     dictionary of fitline objects, keyed by run
-            file_lines_old: dictionary of previously used fitline objects, keyed by run
             fit_canvas:     canvas object allowing for scrolling 
-            fitter:         fitting object from self.bfit.routine_mod
+            fit_data_tab:   containing frame (for destruction)
             fit_function_title: title of fit function to use
             fit_function_title_box: spinbox for fit function names
             fit_input:      fitting input values = (fn_name,ncomp,data_list)
             fit_lines:      Dict storing fitline objects
+            fit_lines_old: dictionary of previously used fitline objects, keyed by run
+            fitter:         fitting object from self.bfit.routine_mod
             mode:           what type of run is this. 
             n_component:    number of fitting components (IntVar)
             runframe:       frame for displaying fit results and inputs
@@ -66,11 +66,11 @@ class fit_files(object):
         self.logger.debug('Initializing')
         
         # initialize
-        self.file_tabs = None
         self.bfit = bfit
         self.fit_output = {}
         self.fitter = self.bfit.routine_mod.fitter()
         self.draw_components = bfit.draw_components
+        self.fit_data_tab = fit_data_tab
             
         # make top level frames
         mid_fit_frame = ttk.Labelframe(fit_data_tab,
@@ -229,7 +229,19 @@ class fit_files(object):
         self.fit_lines = {}
         self.fit_lines_old = {}
         
-   # ======================================================================= #
+    # ======================================================================= #
+    def __del__(self):
+        
+        del fit_lines
+        del fit_lines_old
+        del fitter
+        
+        # kill buttons and frame
+        for child in self.fetch_data_tab.winfo_children():
+            child.destroy()
+        self.fetch_data_tab.destroy()
+    
+    # ======================================================================= #
     def canvas_scroll(self,event):
         """Scroll canvas with files selected."""
         if event.num == 4:
@@ -305,6 +317,7 @@ class fit_files(object):
                 else:
                     self.fit_lines[k] = fitline(self.bfit,self.runframe,dl[k],n)
             self.fit_lines[k].grid(n)
+            if n==0 or n%10==0:  self.runframe.update_idletasks()
             n+=1
             
     # ======================================================================= #
@@ -919,8 +932,6 @@ class fitline(object):
             parentry    [parname][colname] of ttk.Entry objects saved for 
                             retrieval and destruction
             run_label   label for showing which run is selected
-            runlist     list of run numbers to fit
-            selected    index of selected run in runbox (int)
             fitframe    mainframe for this tab. 
     """
     
@@ -1063,6 +1074,16 @@ class fitline(object):
         # save frame 
         self.fitframe = fitframe
         
+    # ======================================================================= #
+    def __del__(self):
+        
+        del parlabels
+        
+        # kill buttons and frame
+        for child in self.parent.winfo_children():
+            child.destroy()
+        self.parent.destroy()
+    
     # ======================================================================= #
     def get_new_parameters(self):
         """

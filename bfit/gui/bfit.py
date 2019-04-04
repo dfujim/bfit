@@ -790,7 +790,7 @@ class bfit(object):
         
         # the thing to switch on
         select = self.label_default.get()
-        self.logger.debug('Fetching plot label for "%s"',select)
+        self.logger.debug('Fetching plot label for "%s" (run %d)',select,data.run)
         
         # Data file options
         if select == 'Temperature (K)':
