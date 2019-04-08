@@ -131,7 +131,7 @@ class fit_files(object):
         
         c = 0
         self.fit_function_title_box.grid(column=c,row=0); c+=1
-        ttk.Label(fn_select_frame,text="Number of Components:").grid(column=c,
+        ttk.Label(fn_select_frame,text="Number of Terms:").grid(column=c,
                 row=0,sticky=(E),padx=5,pady=5); c+=1
         n_component_box.grid(column=c,row=0,padx=5,pady=5); c+=1
         fit_button.grid(column=c,row=0,padx=1,pady=1); c+=1

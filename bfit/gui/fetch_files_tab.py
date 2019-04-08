@@ -424,11 +424,8 @@ class fetch_files(object):
             messagebox.showinfo(message=s)
         
         # check that data is all the same runtype
-        run_types = []
-        for k in self.bfit.data.keys():
-            run_types.append(self.bfit.data[k].mode)
-        for k in data.keys():
-            run_types.append(data[k].mode)
+        run_types = [self.bfit.data[k].mode for k in self.bfit.data.keys()]
+        run_types = run_types + [data[k].mode for k in data.keys()]
         
         # different run types: select all runs of same type
         if not all([r==run_types[0] for r in run_types]):
@@ -446,9 +443,11 @@ class fetch_files(object):
             
         # get only run_types[0]
         self.logger.debug('Fetching runs of mode %s',run_types[0])
-        for k in data.keys():
+        for k in tuple(data.keys()):
             if data[k].mode == run_types[0]:
                 self.bfit.data[k] = data[k]
+            else:
+                del data[k]
         
         try:
             self.runmode = run_types[0]
@@ -465,7 +464,7 @@ class fetch_files(object):
         
         # make lines
         n = 1
-        for r in run_numbers:
+        for r in self.bfit.data.keys():
             
             # new line
             if r not in self.data_lines.keys():
@@ -481,7 +480,12 @@ class fetch_files(object):
             if n==1 or n%20==0:  self.dataline_frame.update_idletasks()
             n+=1
             
-        self.logger.info('Fetched runs %s',list(self.bfit.data.keys()))
+        # remove old runs, modes not selected
+        for r in tuple(self.data_lines.keys()):
+            if self.data_lines[r].bdfit.mode != self.runmode:
+                self.data_lines[r].degrid()
+            
+        self.logger.info('Fetched runs %s',list(data.keys()))
         
     # ======================================================================= #
     def remove_all(self):
