@@ -1062,13 +1062,12 @@ class fitline(object):
             self.parlabels[-1].grid(column=c,row=2+i,padx=5,sticky=E)
         
         # move all parameters entries and values to new key set
+        new_parentry = {}
         for i in range(min_n_par):
             p = plist[i]
             p_old = parkeys[i]
-            
-            if p != p_old:
-                self.parentry[p] = self.parentry[p_old]
-                del self.parentry[p_old]
+            new_parentry[p] = self.parentry[p_old]
+        self.parentry = new_parentry
         
         # initial parameters ------------------------------------------------- 
         
@@ -1185,7 +1184,6 @@ class fitline(object):
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
             self.parentry[p][self.collist[7]] = (value,entry)
             
-    
     # ======================================================================= #
     def get_new_parameters(self):
         """
