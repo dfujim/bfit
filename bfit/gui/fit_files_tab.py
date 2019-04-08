@@ -101,8 +101,8 @@ class fit_files(object):
         # fit and residual button
         fit_button = ttk.Button(fn_select_frame,text='Fit',command=self.do_fit,\
                                 pad=1)
-        residual_button = ttk.Button(fn_select_frame,text=' Draw Residual ',
-                        command=self.do_draw_residual,pad=1)
+        set_param_button = ttk.Button(fn_select_frame,text='Set Result as Initial',
+                        command=self.do_set_result_as_initial,pad=1)
                                 
         # set as group checkbox
         self.set_as_group = BooleanVar()
@@ -135,7 +135,7 @@ class fit_files(object):
                 row=0,sticky=(E),padx=5,pady=5); c+=1
         n_component_box.grid(column=c,row=0,padx=5,pady=5); c+=1
         fit_button.grid(column=c,row=0,padx=1,pady=1); c+=1
-        residual_button.grid(column=c,row=0,padx=1,pady=1); c+=1
+        set_param_button.grid(column=c,row=0,padx=1,pady=1); c+=1
         set_group_check.grid(column=c,row=0,padx=1,pady=1); c+=1
         
         # run mode gridding
@@ -498,18 +498,19 @@ class fit_files(object):
         self.bfit.draw_style.set(style)
             
     # ======================================================================= #
-    def do_draw_residual(self,*args):
-        """Draw the residual of the actively selected run."""
-        
-        # get fitinputtab
-        tab = self.file_tabs
-        
-        # get run number
-        run = int(tab.runbox.get(tab.selected))
-        rebin = self.bfit.fetch_files.data_lines[run].rebin.get()
-        
-        # draw
-        self.draw_residual(run=run,rebin=rebin)
+    def do_set_result_as_initial(self,*args):
+        """Set initial parmeters as the fitting results"""
+        for k in self.fit_lines.keys():
+            
+            # get line
+            line = self.fit_lines[k]
+            
+            # get parameters
+            parentry = line.parentry
+            
+            # set 
+            for p in parentry.keys():
+                parentry[p]['p0'][0].set(parentry[p]['res'][0].get()) 
     
     # ======================================================================= #
     def draw_residual(self,run,rebin=1,**drawargs):
@@ -895,7 +896,7 @@ class fit_files(object):
         """
         for k in self.fit_lines.keys():
             line = self.fit_lines[k]
-            line.parentry[p][line.collist[7]][0].set(var.get())
+            line.parentry[p]['shared'][0].set(var.get())
     
     # ======================================================================= #
     def show_all_results(self):
@@ -1079,10 +1080,10 @@ class fitline(object):
             r += 1
             
             # clear entry and insert new text
-            for j in range(3):                
-                entry = self.parentry[p][self.collist[j]][1]
+            for col in ('p0','blo','bhi'):                
+                entry = self.parentry[p][col][1]
                 entry.delete(0,'end')
-                entry.insert(0,str(fitdat.fitpar[self.collist[j]][p]))
+                entry.insert(0,str(fitdat.fitpar[col][p]))
                 entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
                     
         r = min_n_par+1
@@ -1095,14 +1096,14 @@ class fitline(object):
             c = 0               # gridding column         
             r += 1              # gridding row         
             
-            for i in range(3):
+            for col in ('p0','blo','bhi'):
                 c += 1
                 
                 value = StringVar()
                 entry = ttk.Entry(fitframe,textvariable=value,width=10)
-                entry.insert(0,str(fitdat.fitpar[self.collist[i]][p]))
+                entry.insert(0,str(fitdat.fitpar[col][p]))
                 entry.grid(column=c,row=r,padx=5,sticky=E)
-                self.parentry[p][self.collist[i]] = (value,entry)
+                self.parentry[p][col] = (value,entry)
         
         # fit results ------------------------------------------------------- 
         
@@ -1114,24 +1115,24 @@ class fitline(object):
             p = plist[i]
             
             # clear text in parentry fields
-            for j in range(3,6):
-                if self.collist[j] in self.parentry[p].keys():  # exception needed for chi
-                    par = self.parentry[p][self.collist[j]][1]
+            for col in ('res','dres','chi'):
+                if col in self.parentry[p].keys():  # exception needed for chi
+                    par = self.parentry[p][col][1]
                     par.delete(0,'end')
                     
-                    if self.collist[j] == 'chi':
+                    if col == 'chi':
                         par.grid(column=c,row=r,padx=5,sticky=E,rowspan=len(plist))
                     else:
                         par.grid(column=c,row=r,padx=5,sticky=E)
                 c += 1
                     
             # do fixed box
-            self.parentry[p][self.collist[6]][0].set(False)
-            self.parentry[p][self.collist[6]][1].grid(column=c,row=r,padx=5,sticky=E); c += 1
+            self.parentry[p]['fixed'][0].set(False)
+            self.parentry[p]['fixed'][1].grid(column=c,row=r,padx=5,sticky=E); c += 1
             
             # do shared box
-            self.parentry[p][self.collist[7]][0].set(False)
-            self.parentry[p][self.collist[7]][1].grid(column=c,row=r,padx=5,sticky=E); c += 1
+            self.parentry[p]['shared'][0].set(False)
+            self.parentry[p]['shared'][1].grid(column=c,row=r,padx=5,sticky=E); c += 1
         
         # make new result fields
         r = min_n_par+1
@@ -1162,19 +1163,19 @@ class fitline(object):
                 chi['foreground'] = 'black'
                 
                 chi.grid(column=c,row=r,padx=5,sticky=E,rowspan=len(plist)); 
-                self.parentry[p][self.collist[5]] = (chi_val,chi)
+                self.parentry[p]['chi'] = (chi_val,chi)
             c += 1
             
             # save ttk.Entry objects in dictionary [parname][colname]
-            self.parentry[p][self.collist[3]] = (par_val,par)
-            self.parentry[p][self.collist[4]] = (dpar_val,dpar)
+            self.parentry[p]['res'] = (par_val,par)
+            self.parentry[p]['dres'] = (dpar_val,dpar)
             
             # do fixed box
             value = BooleanVar()
             entry = ttk.Checkbutton(fitframe,text='',\
                                      variable=value,onvalue=True,offvalue=False)
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
-            self.parentry[p][self.collist[6]] = (value,entry)
+            self.parentry[p]['fixed'] = (value,entry)
             
             # do shared box
             value = BooleanVar()
@@ -1182,7 +1183,7 @@ class fitline(object):
                         onvalue=True,offvalue=False,\
                         command=partial(self.bfit.fit_files.link_shared,p=p,var=value))
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
-            self.parentry[p][self.collist[7]] = (value,entry)
+            self.parentry[p]['shared'] = (value,entry)
             
     # ======================================================================= #
     def get_new_parameters(self):
@@ -1235,13 +1236,10 @@ class fitline(object):
         other_parentry = other_fitline.parentry
         
         for p in self.parentry.keys():  # parentry = [parname][colname][value,entry]
-            for i in range(3):          # iterate input columns
-                
-                col = self.collist[i]   # column title
+            for col in ('p0','blo','bhi'):
                 
                 self.parentry[p][col][0].delete(0,'end')
                 self.parentry[p][col][0].set(other_parentry[p][col][0].get())
-        
         
             self.parentry[p]['shared'][0].set(other_parentry[p]['shared'][0].get())
             self.parentry[p]['fixed'][0].set(other_parentry[p]['fixed'][0].get())
