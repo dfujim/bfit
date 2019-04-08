@@ -894,9 +894,10 @@ class fit_files(object):
             p = parentry key to link
             var: boolean var to get data from
         """
-        for k in self.fit_lines.keys():
-            line = self.fit_lines[k]
-            line.parentry[p]['shared'][0].set(var.get())
+        val = var.get()
+        lines = self.fit_lines
+        for k in lines.keys():
+            lines[k].parentry[p]['shared'][0].set(val)
     
     # ======================================================================= #
     def show_all_results(self):

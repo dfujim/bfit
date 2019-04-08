@@ -41,10 +41,11 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
-        Returns: (par,cov,chi)
+        Returns: (par,cov,ch,gchi)
             par: best fit parameters
             cov: covariance matrix
             chi: chisquared of fits
+            gchi:global chisquared of fits
     """
     
     nruns = len(runs)
@@ -109,12 +110,17 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         else:
             bounds = [(-np.inf,np.inf)]*nruns 
             
+        # check p0 dimensionality
+        if len(np.array(p0).shape) < 2:
+            p0 = [p0]*nruns
+        
         # check xlims shape - should match number of runs
         if len(np.array(xlims).shape) < 2:
             xlims = [xlims for i in range(len(runs))]
         else:
             xlims = list(xlims)
             xlims.extend([xlims[-1] for i in range(len(runs)-len(xlims))])
+        
         
         pars = []
         covs = []
