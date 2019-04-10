@@ -42,6 +42,7 @@ class fit_files(object):
             runframe:       frame for displaying fit results and inputs
             runmode_label:  display run mode 
             set_as_group:   BooleanVar() if true, set fit parfor whole group
+            share_var:      BooleanVar() holds share checkbox for all fitlines
             xaxis:          StringVar() for parameter to draw on x axis
             yaxis:          StringVar() for parameter to draw on y axis
             xaxis_combobox: box for choosing x axis draw parameter
@@ -64,6 +65,7 @@ class fit_files(object):
         # initialize
         self.bfit = bfit
         self.fit_output = {}
+        self.share_var = {}
         self.fitter = self.bfit.routine_mod.fitter()
         self.draw_components = bfit.draw_components
         self.fit_data_tab = fit_data_tab
@@ -241,6 +243,32 @@ class fit_files(object):
             pass
             
     # ======================================================================= #
+    def _make_shared_var_dict(self):
+        """Make the dictionary to make sure all shared checkboxes are synched"""
+        
+        # get parameter list
+        try:
+            parlst = [p for p in self.fitter.gen_param_names(
+                                                self.fit_function_title.get(),
+                                                self.n_component.get())]
+        # no paramteters: empty out the variable list
+        except KeyError:
+            share_var = {}
+        
+        # make new shared list
+        else:
+            # re-initialize
+            share_var = {p:BooleanVar() for p in parlst}    
+            
+            # set to old values if they exist
+            for p in parlst:
+                if p in self.share_var.keys():
+                    share_var[p].set(self.share_var[p].get())
+                    
+        # save to object
+        self.share_var = share_var
+            
+    # ======================================================================= #
     def canvas_scroll(self,event):
         """Scroll canvas with files selected."""
         if event.num == 4:
@@ -300,6 +328,9 @@ class fit_files(object):
             self.fit_runmode_label['text'] = ""
             self.mode = ""
         
+        # make shared_var dictionary
+        self._make_shared_var_dict()
+        
         # delete unused fitline objects
         for k in list(self.fit_lines.keys()):       # iterate fit list
             if k not in keylist:                    # check data list
@@ -346,7 +377,9 @@ class fit_files(object):
         self.xaxis_combobox['values'] = ['']+parlst+lst
         self.yaxis_combobox['values'] = ['']+parlst+lst
         self.annotation_combobox['values'] = ['']+parlst+lst
-        
+
+        self._make_shared_var_dict()
+            
         # regenerate fitlines
         for k in self.fit_lines.keys():
             self.fit_lines[k].populate()
@@ -889,17 +922,6 @@ class fit_files(object):
             raise AttributeError('Selection "%s" not found' % select)
     
     # ======================================================================= #
-    def link_shared(self,p,var):
-        """Ensure all of the share parameter tick boxes are synchronized.
-            p = parentry key to link
-            var: boolean var to get data from
-        """
-        val = var.get()
-        lines = self.fit_lines
-        for k in lines.keys():
-            lines[k].parentry[p]['shared'][0].set(val)
-    
-    # ======================================================================= #
     def show_all_results(self):
         """Make a window to display table of fit results"""
         
@@ -1128,11 +1150,9 @@ class fitline(object):
                 c += 1
                     
             # do fixed box
-            self.parentry[p]['fixed'][0].set(False)
             self.parentry[p]['fixed'][1].grid(column=c,row=r,padx=5,sticky=E); c += 1
             
             # do shared box
-            self.parentry[p]['shared'][0].set(False)
             self.parentry[p]['shared'][1].grid(column=c,row=r,padx=5,sticky=E); c += 1
         
         # make new result fields
@@ -1179,12 +1199,15 @@ class fitline(object):
             self.parentry[p]['fixed'] = (value,entry)
             
             # do shared box
-            value = BooleanVar()
-            entry = ttk.Checkbutton(fitframe,text='',variable=value,\
-                        onvalue=True,offvalue=False,\
-                        command=partial(self.bfit.fit_files.link_shared,p=p,var=value))
+            entry = ttk.Checkbutton(fitframe,text='',onvalue=True,offvalue=False)
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
-            self.parentry[p]['shared'] = (value,entry)
+            self.parentry[p]['shared'] = [value,entry]
+            
+        # shared box value synchronization
+        for p in self.parentry.keys():
+            var = self.bfit.fit_files.share_var[p]
+            self.parentry[p]['shared'][0] = var
+            self.parentry[p]['shared'][1].config(variable=var)
             
     # ======================================================================= #
     def get_new_parameters(self):
