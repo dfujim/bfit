@@ -533,6 +533,12 @@ class fit_files(object):
     # ======================================================================= #
     def do_set_result_as_initial(self,*args):
         """Set initial parmeters as the fitting results"""
+        
+        # turn off modify all 
+        modify_all_value = self.set_as_group.get()
+        self.set_as_group.set(False)
+        
+        # set result to initial value
         for k in self.fit_lines.keys():
             
             # get line
@@ -545,6 +551,9 @@ class fit_files(object):
             for p in parentry.keys():
                 parentry[p]['p0'][0].set(parentry[p]['res'][0].get()) 
     
+        # reset modify all setting
+        self.set_as_group.set(modify_all_value)
+        
     # ======================================================================= #
     def draw_residual(self,run,rebin=1,**drawargs):
         """Draw fitting residuals for a single run"""
