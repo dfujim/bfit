@@ -109,7 +109,7 @@ class fit_files(object):
         # set as group checkbox
         self.set_as_group = BooleanVar()
         set_group_check = ttk.Checkbutton(fn_select_frame,
-                text='Set All Parameters',\
+                text='Modify For All',\
                 variable=self.set_as_group,onvalue=True,offvalue=False)
         self.set_as_group.set(True)
         
@@ -922,6 +922,22 @@ class fit_files(object):
             raise AttributeError('Selection "%s" not found' % select)
     
     # ======================================================================= #
+    def modify_all(self,*args,source=None,par='',column=''):
+        """
+            Modify all input fields of each line to match the altered one, 
+            conditional on self.set_as_group
+            
+            source_line: the fitline to copy
+            parameter:   name of the parameter to copy
+            column:      name of the column to copy            
+        """
+        
+        setall = self.set_as_group.get()
+        
+        for k in self.fit_lines.keys():
+            self.fit_lines[k].set_input(source,par,column,setall)        
+    
+    # ======================================================================= #
     def show_all_results(self):
         """Make a window to display table of fit results"""
         
@@ -1203,12 +1219,30 @@ class fitline(object):
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
             self.parentry[p]['shared'] = [value,entry]
             
-        # shared box value synchronization
+        
         for p in self.parentry.keys():
-            var = self.bfit.fit_files.share_var[p]
-            self.parentry[p]['shared'][0] = var
-            self.parentry[p]['shared'][1].config(variable=var)
             
+            parentry = self.parentry[p]
+            
+            # shared box value synchronization
+            var = self.bfit.fit_files.share_var[p]
+            parentry['shared'][0] = var
+            parentry['shared'][1].config(variable=var)
+            
+            # set parameter entry synchronization
+            for k in ('p0','blo','bhi','fixed'):
+                
+                # make callback function
+                callback = partial(self.bfit.fit_files.modify_all,
+                                   source=self,par=p,column=k)
+                
+                # remove old trace callbacks
+                for t in parentry[k][0].trace_vinfo():
+                    parentry[k][0].trace_vdelete(*t)
+                
+                # set new trace callback
+                parentry[k][0].trace("w", callback)
+        
     # ======================================================================= #
     def get_new_parameters(self):
         """
@@ -1252,22 +1286,26 @@ class fitline(object):
         self.fitframe.grid_forget()
     
     # ======================================================================= #
-    def set_new_init_param(self,other_fitline):
+    def set_input(self,source_line,parameter,column,set_all):
         """
-            Set the initial parameters of this fitline to match those of another. 
+            Set the input value for a given parameter to match the value in 
+            another fitline
+            
+            source_line: the fitline to copy
+            parameter:   name of the parameter to copy
+            column:      name of the column to copy
+            set_all:     boolean corresponding to fit_files.set_as_group    
         """
         
-        other_parentry = other_fitline.parentry
+        if set_all or self.parentry[parameter]['shared'][0].get():
         
-        for p in self.parentry.keys():  # parentry = [parname][colname][value,entry]
-            for col in ('p0','blo','bhi'):
-                
-                self.parentry[p][col][0].delete(0,'end')
-                self.parentry[p][col][0].set(other_parentry[p][col][0].get())
-        
-            self.parentry[p]['shared'][0].set(other_parentry[p]['shared'][0].get())
-            self.parentry[p]['fixed'][0].set(other_parentry[p]['fixed'][0].get())
-                
+            # get parameter entries
+            this = self.parentry[parameter][column]
+            source = source_line.parentry[parameter][column]
+            
+            # set value
+            this[0].set(source[0].get())
+    
     # ======================================================================= #
     def show_fit_result(self):
         
