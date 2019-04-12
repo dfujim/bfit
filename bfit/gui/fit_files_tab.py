@@ -392,9 +392,16 @@ class fit_files(object):
 
         self._make_shared_var_dict()
             
+        # turn off modify all so we don't cause an infinite loop
+        modify_all_value = self.set_as_group.get()
+        self.set_as_group.set(False)
+            
         # regenerate fitlines
         for k in self.fit_lines.keys():
             self.fit_lines[k].populate()
+            
+        # reset modify all value
+        self.set_as_group.set(modify_all_value)
             
     # ======================================================================= #
     def do_fit(self,*args):
@@ -569,6 +576,7 @@ class fit_files(object):
     # ======================================================================= #
     def do_reset_initial(self,*args):
         """Reset initial parmeters to defaults"""
+                
         for k in self.fit_lines.keys():
             self.fit_lines[k].populate()
     
@@ -960,7 +968,6 @@ class fit_files(object):
         """
         
         setall = self.set_as_group.get()
-        
         for k in self.fit_lines.keys():
             self.fit_lines[k].set_input(source,par,column,setall)        
     
@@ -1328,14 +1335,17 @@ class fitline(object):
             set_all:     boolean corresponding to fit_files.set_as_group    
         """
         
-        if set_all or self.parentry[parameter]['shared'][0].get():
+        # get parameter entry line and sharing
+        try:
+            parentry = self.parentry[parameter]
+            shared = parentry['shared'][0].get()
+            source_entry = source_line.parentry[parameter]
+        except KeyError:
+            return
         
-            # get parameter entries
-            this = self.parentry[parameter][column]
-            source = source_line.parentry[parameter][column]
-            
-            # set value
-            this[0].set(source[0].get())
+        # set value
+        if set_all or shared:
+            parentry[column][0].set(source_entry[column][0].get())
     
     # ======================================================================= #
     def show_fit_result(self):
