@@ -29,8 +29,8 @@ __doc__ = """
 class fileviewer(object):
     """
         Data fields:
-            year: year of exp
-            runn: run number
+            year: IntVar() year of exp 
+            runn: IntVar() run number
             entry_asym_type: combobox for asym calculations
             text: Text widget for displaying run information
             bfit: bfit object
@@ -73,7 +73,7 @@ class fileviewer(object):
         # year and filenumber entry ------------------------------------------
         entry_frame = ttk.Frame(file_tab,borderwidth=1)
         self.year = IntVar()
-        self.runn = StringVar()
+        self.runn = IntVar()
         self.rebin = IntVar()
         self.bfit = bfit
         
@@ -83,8 +83,10 @@ class fileviewer(object):
         entry_year = Spinbox(entry_frame,\
                 from_=2000,to=datetime.datetime.today().year,
                 textvariable=self.year,width=5)
-        self.entry_runn = ttk.Entry(entry_frame,\
+        self.entry_runn = Spinbox(entry_frame,\
+                from_=0,to=50000,
                 textvariable=self.runn,width=7)
+        self.runn.set(40000)
         
         # fetch button
         fetch = ttk.Button(entry_frame,text='Fetch',command=self.get_data)
@@ -218,7 +220,7 @@ class fileviewer(object):
         
         # fetch year
         try:
-            year = int(self.year.get())
+            year = self.year.get()
         except ValueError:
             for t in [self.text_nw,self.text_ne,self.text_sw,self.text_se]:
                 self.set_textbox_text(t,'Year input must be integer valued')  
@@ -230,32 +232,22 @@ class fileviewer(object):
         
         self.logger.debug('Parsing run input %s',run)
         
-        if run.isdigit() and int(run) > 40000:
-            run = int(run)
-        else:
-            # globbing
-            if run != '' and run[0] != '0':             run = '0'+run       
-            if not any([key in run for key in '*?']):   run = run+'*'
-            if '.msr' not in run:                       run = run + '.msr'
+        if run < 40000:
             
             # look for latest run by run number
             runlist = []
             for d in [self.bfit.bnmr_archive_label,self.bfit.bnqr_archive_label]:
                 dirloc = os.environ[d]
-                runlist.extend(glob.glob(os.path.join(dirloc,str(year),run)))
-            
+                runlist.extend(glob.glob(os.path.join(dirloc,str(year),'0'+str(run))+'*.msr'))
             runlist = [int(os.path.splitext(os.path.basename(r))[0]) for r in runlist]
             
             # get latest run by max run number
             try:
                 run = max(runlist)
             except ValueError:
-                self.logger.exception('Run fetch from glob input failed')
+                self.logger.exception('Run fetch failed')
                 for t in [self.text_nw,self.text_ne,self.text_sw,self.text_se]:
-                    self.set_textbox_text(t,'Run not found.\n\n'+\
-                    'Run input must be integer valued, or have unix-style '+\
-                    'pathname pattern extension which corresponds to an '+\
-                    'existing run number (see glob module).')  
+                    self.set_textbox_text(t,'Run not found.')  
                 return False
         
         self.logger.info('Fetching run %s from %s',run,year)
