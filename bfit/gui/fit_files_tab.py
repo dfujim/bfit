@@ -138,10 +138,10 @@ class fit_files(object):
         ttk.Label(fn_select_frame,text="Number of Terms:").grid(column=c,
                 row=0,sticky=(E),padx=5,pady=5); c+=1
         n_component_box.grid(column=c,row=0,padx=5,pady=5); c+=1
-        fit_button.grid(column=c,row=0,padx=1,pady=1); c+=1
-        set_param_button.grid(column=c,row=0,padx=1,pady=1); c+=1
-        reset_param_button.grid(column=c,row=0,padx=1,pady=1); c+=1
-        set_group_check.grid(column=c,row=0,padx=1,pady=1); c+=1
+        fit_button.grid(column=c,row=0,padx=5,pady=1); c+=1
+        set_param_button.grid(column=c,row=0,padx=5,pady=1); c+=1
+        reset_param_button.grid(column=c,row=0,padx=5,pady=1); c+=1
+        set_group_check.grid(column=c,row=0,padx=5,pady=1); c+=1
         
         # run mode gridding
         fit_runmode_label_frame.grid(column=1,row=0,sticky=(E,W))
@@ -221,7 +221,9 @@ class fit_files(object):
         
         # fn select
         fn_select_frame_border.grid_columnconfigure(0,weight=1)
-        fn_select_frame.grid_columnconfigure(1,weight=1)
+        fn_select_frame.grid_columnconfigure(1,weight=10)   # Nterms
+        fn_select_frame.grid_columnconfigure(4,weight=1)    # Set result to p0
+        fn_select_frame.grid_columnconfigure(5,weight=1)    # reset p0
         
         # fitting frame
         self.fit_canvas.grid_columnconfigure(0,weight=1)    # fetch frame 
