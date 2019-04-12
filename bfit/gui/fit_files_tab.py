@@ -171,6 +171,13 @@ class fit_files(object):
         self.fit_canvas.grid(column=0,row=0,sticky=(E,W,S,N))
         yscrollbar.grid(column=1,row=0,sticky=(W,S,N))
         
+        self.runframe.grid_columnconfigure(0,weight=1) 
+        self.fit_canvas.grid_columnconfigure(0,weight=1) 
+        self.fit_canvas.grid_rowconfigure(0,weight=1)
+        
+        self.runframe.bind("<Configure>",self.config_canvas) # bind resize to alter scrollable region
+        self.fit_canvas.bind("<Configure>",self.config_runframe) # bind resize to change size of contained frame
+        
         # RIGHT FRAME ---------------------------------------------------------
         
         # draw and export buttons
@@ -1040,21 +1047,25 @@ class fitline(object):
      
         # Parameter input labels
         c = 0
-        ttk.Label(fitframe,text='Parameter').grid(      column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='Initial Value').grid(  column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='Low Bound').grid(      column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='High Bound').grid(     column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='Result').grid(         column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='Result Error').grid(   column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='ChiSq').grid(          column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='Fixed').grid(          column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='Shared').grid(         column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Parameter').grid(    column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Initial Value').grid(column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Low Bound').grid(    column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='High Bound').grid(   column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Result').grid(       column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Result Error').grid( column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='ChiSq').grid(        column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Fixed').grid(        column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Shared').grid(       column=c,row=1,padx=5); c+=1
         
         # grid the run_label
         self.run_label.grid(column=0,row=0,padx=5,pady=5,columnspan=c-1)
         
         # save frame 
         self.fitframe = fitframe
+        
+        # resizing
+        for i in range(c):
+            self.fitframe.grid_columnconfigure(i,weight=1)
         
         # fill with initial parameters
         self.parlabels = []     # track all labels and inputs
