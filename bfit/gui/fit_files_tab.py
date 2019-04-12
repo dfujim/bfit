@@ -103,7 +103,7 @@ class fit_files(object):
         # fit and other buttons
         fit_button = ttk.Button(fn_select_frame,text='Fit',command=self.do_fit,\
                                 pad=1)
-        set_param_button = ttk.Button(fn_select_frame,text='Set Result as p0',
+        set_param_button = ttk.Button(fn_select_frame,text='Set Result as P0',
                         command=self.do_set_result_as_initial,pad=1)                        
         reset_param_button = ttk.Button(fn_select_frame,text='Reset Inputs',
                         command=self.do_reset_initial,pad=1)
@@ -1054,7 +1054,7 @@ class fitline(object):
         ttk.Label(fitframe,text='Low Bound').grid(    column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='High Bound').grid(   column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Result').grid(       column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='Result Error').grid( column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Error').grid(        column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='ChiSq').grid(        column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Fixed').grid(        column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Shared').grid(       column=c,row=1,padx=5); c+=1
