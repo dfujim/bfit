@@ -100,11 +100,13 @@ class fit_files(object):
         n_component_box = Spinbox(fn_select_frame,from_=1,to=20, 
                 textvariable=self.n_component,width=5,command=self.populate_param)
         
-        # fit and residual button
+        # fit and other buttons
         fit_button = ttk.Button(fn_select_frame,text='Fit',command=self.do_fit,\
                                 pad=1)
-        set_param_button = ttk.Button(fn_select_frame,text='Set Result as Initial',
-                        command=self.do_set_result_as_initial,pad=1)
+        set_param_button = ttk.Button(fn_select_frame,text='Set Result as p0',
+                        command=self.do_set_result_as_initial,pad=1)                        
+        reset_param_button = ttk.Button(fn_select_frame,text='Reset Inputs',
+                        command=self.do_reset_initial,pad=1)
                                 
         # set as group checkbox
         self.set_as_group = BooleanVar()
@@ -138,6 +140,7 @@ class fit_files(object):
         n_component_box.grid(column=c,row=0,padx=5,pady=5); c+=1
         fit_button.grid(column=c,row=0,padx=1,pady=1); c+=1
         set_param_button.grid(column=c,row=0,padx=1,pady=1); c+=1
+        reset_param_button.grid(column=c,row=0,padx=1,pady=1); c+=1
         set_group_check.grid(column=c,row=0,padx=1,pady=1); c+=1
         
         # run mode gridding
@@ -554,6 +557,12 @@ class fit_files(object):
         # reset modify all setting
         self.set_as_group.set(modify_all_value)
         
+    # ======================================================================= #
+    def do_reset_initial(self,*args):
+        """Reset initial parmeters to defaults"""
+        for k in self.fit_lines.keys():
+            self.fit_lines[k].populate()
+    
     # ======================================================================= #
     def draw_residual(self,run,rebin=1,**drawargs):
         """Draw fitting residuals for a single run"""
