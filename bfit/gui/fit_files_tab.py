@@ -525,8 +525,8 @@ class fit_files(object):
             fit_status_window.destroy()
         
         # set output results
-        for run in fit_output.keys():
-            self.bfit.data[run].set_fitresult(fit_output[run])
+        for key in fit_output.keys():
+            self.bfit.data[key].set_fitresult(fit_output[key])
             
         # display run results
         for key in self.fit_lines.keys():
@@ -581,11 +581,11 @@ class fit_files(object):
             self.fit_lines[k].populate()
     
     # ======================================================================= #
-    def draw_residual(self,run,rebin=1,**drawargs):
+    def draw_residual(self,id,rebin=1,**drawargs):
         """Draw fitting residuals for a single run"""
         
-        self.logger.info('Drawing residual for run %d, rebin %d, '+\
-                         'standardized: %s, %s',run,rebin,
+        self.logger.info('Drawing residual for run %s, rebin %d, '+\
+                         'standardized: %s, %s',id,rebin,
                          self.bfit.draw_standardized_res.get(),drawargs)
         
         # Settings
@@ -600,7 +600,7 @@ class fit_files(object):
         plt.ion()
         
         # get data and fit results
-        data = self.bfit.data[run]
+        data = self.bfit.data[id]
         fit_par = [data.fitpar['res'][p] for p in data.parnames]
         fn = data.fitfn
         data = data.bd
@@ -681,10 +681,10 @@ class fit_files(object):
         plt.legend()
         
     # ======================================================================= #
-    def draw_fit(self,run,**drawargs):
+    def draw_fit(self,id,**drawargs):
         """Draw fit for a single run"""
         
-        self.logger.info('Drawing fit for run %d. %s',run,drawargs)
+        self.logger.info('Drawing fit for run %s. %s',id,drawargs)
         
         # Settings
         xlabel_dict={'20':"Time (s)",
@@ -694,7 +694,7 @@ class fit_files(object):
                      '1n':'Voltage (V)'}
                      
         # get data and fit results
-        data = self.bfit.data[run]
+        data = self.bfit.data[id]
         fit_par = [data.fitpar['res'][p] for p in data.parnames]
         fn = data.fitfn
         data = data.bd
@@ -704,7 +704,7 @@ class fit_files(object):
         
         # label reset
         if 'label' not in drawargs.keys():
-            drawargs['label'] = self.bfit.data[run].label.get()
+            drawargs['label'] = self.bfit.data[id].label.get()
         drawargs['label'] += ' (fit)'
         label = drawargs['label']
         
@@ -1289,7 +1289,7 @@ class fitline(object):
             plist: Dictionary of initial parameters {par_name:par_value}
         """
         
-        run = self.dataline.run
+        run = self.dataline.id
         
         # get pointer to fit files object
         fit_files = self.bfit.fit_files

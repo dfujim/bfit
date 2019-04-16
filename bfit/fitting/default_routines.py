@@ -142,7 +142,7 @@ class fitter(object):
         stds = [np.sqrt(np.diag(c)) for c in covs]
         
         # collect results
-        return {d[0].run:[keylist,p,s,c,f] \
+        return {'.'.join(map(str,(d[0].year,d[0].run))):[keylist,p,s,c,f] \
                     for d,p,s,c,f in zip(data_list,pars,stds,chis,fn)}
 
     # ======================================================================= #

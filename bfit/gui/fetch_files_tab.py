@@ -388,33 +388,39 @@ class fetch_files(object):
         """Split data into parts, and assign to dictionary."""
         
         self.logger.debug('Fetching runs')
-        
+    
         # make list of run numbers, replace possible deliminators
         try:
             run_numbers = self.string2run(self.run.get())
         except ValueError:
             self.logger.exception('Bad run number string')
             return
+            
+        # get the selected year
+        year = int(self.year.get())
         
         # get data
         data = {}
         s = ['Failed to open run']
         for r in run_numbers:
             
+            # get key for data storage
+            runkey = self.bfit.get_run_key(r=r,y=year)
+            
             # read from archive
             try:
-                new_data = bdata(r,year=int(self.year.get()))
+                new_data = bdata(r,year=year)
             except (RuntimeError,ValueError):
-                s.append("%d (%d)" % (r,int(self.year.get())))
+                s.append("%d (%d)" % (r,year))
             else:
                 
                 # update data
-                if r in self.bfit.data.keys():
-                    self.bfit.data[r].bd = new_data
+                if runkey in self.bfit.data.keys():
+                    self.bfit.data[runkey].bd = new_data
                     
                 # new data
                 else:
-                    data[r] = fitdata(self.bfit,new_data)
+                    data[runkey] = fitdata(self.bfit,new_data)
             
         # print error message
         if len(s)>1:
@@ -473,9 +479,13 @@ class fetch_files(object):
                     self.data_lines[r] = self.data_lines_old[r]
                     del self.data_lines_old[r]
                 else:
-                    self.data_lines[r] = dataline(self.bfit,\
-                        self.data_lines,self.data_lines_old,
-                        self.dataline_frame,r,n)
+                    self.data_lines[r] = dataline(\
+                                            bfit = self.bfit,\
+                                            lines_list = self.data_lines,\
+                                            lines_list_old = self.data_lines_old,
+                                            fetch_tab_frame = self.dataline_frame,\
+                                            bdfit = self.bfit.data[r],\
+                                            row = n)
             self.data_lines[r].grid(n)
             if n==1 or n%20==0:  self.dataline_frame.update_idletasks()
             n+=1
@@ -613,6 +623,7 @@ class dataline(object):
         check_state:    BooleanVar for specifying check state
         draw_fit_checkbox: Checkbutton linked to check_fit
         draw_res_checkbox: Checkbutton linked to check_res
+        id:             Str key for unique idenfication
         label:          StringVar for labelling runs in legends
         label_entry:    Entry object for labelling runs in legends
         line_frame:     Frame that object is placed in
@@ -628,7 +639,7 @@ class dataline(object):
     bin_remove_starter_line = '1 5 100-200 (omit bins)'
     
     # ======================================================================= #
-    def __init__(self,bfit,lines_list,lines_list_old,fetch_tab_frame,run,row):
+    def __init__(self,bfit,lines_list,lines_list_old,fetch_tab_frame,bdfit,row):
         """
             Inputs:
                 fetch_tab_frame: parent in which to place line
@@ -638,7 +649,6 @@ class dataline(object):
         
         # get logger
         self.logger = logging.getLogger(logger_name)
-        bdfit = bfit.data[run]
         self.logger.debug('Initializing run %d (%d)',bdfit.run,bdfit.year)
         
         # variables
@@ -655,6 +665,7 @@ class dataline(object):
         self.lines_list_old = lines_list_old
         bd = bdfit.bd
         self.bdfit = bdfit
+        self.id = bdfit.id
         
         # temperature
         try:
@@ -776,7 +787,7 @@ class dataline(object):
         """Re-grid a dataline object so that it is in order by run number"""
         self.row = row
         self.line_frame.grid(column=0,row=row,columnspan=2, sticky=(W,N))
-        self.bfit.data[self.run] = self.bdfit
+        self.bfit.data[self.id] = self.bdfit
         
     # ======================================================================= #
     def degrid(self):
@@ -786,9 +797,9 @@ class dataline(object):
         
         self.line_frame.grid_forget()
         
-        self.lines_list_old[self.run] = self.lines_list[self.run]
-        del self.lines_list[self.run]
-        del self.bfit.data[self.run]
+        self.lines_list_old[self.id] = self.lines_list[self.id]
+        del self.lines_list[self.id]
+        del self.bfit.data[self.id]
         
         # repopulate fit files tab
         self.bfit.fit_files.populate()
@@ -822,11 +833,11 @@ class dataline(object):
 
         # draw fit
         if self.check_fit.get():
-            self.bfit.fit_files.draw_fit(run=self.run),
+            self.bfit.fit_files.draw_fit(id=self.id),
         
         # draw residual
         if self.check_res.get():
-            self.bfit.fit_files.draw_residual(run=self.run,
+            self.bfit.fit_files.draw_residual(id=self.id,
                                               rebin=self.rebin.get())
 
     # ======================================================================= #
@@ -837,7 +848,7 @@ class dataline(object):
         self.label_entry.delete(0,'end')
         
         # get default label
-        label = self.bfit.get_label(self.bfit.data[self.run])
+        label = self.bfit.get_label(self.bfit.data[self.id])
         self.label_entry.insert(0,label)
         
         # make function to clear and replace with default text

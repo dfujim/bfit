@@ -33,6 +33,7 @@ class fitdata(object):
             bias:       platform bias in kV (float)
             bias_std:   platform bias in kV (float)
             
+            id:         key for unique idenfication (str)    
             fitfnname:  function (str)
             fitfn:      function (function pointer)
             fitpar:     initial parameters {column:{parname:float}} 
@@ -70,6 +71,9 @@ class fitdata(object):
         
         # fit parameters dictionary
         self.fitpar = {}
+        
+        # key for IDing file 
+        self.id = self.bfit.get_run_key(data=bd)
         
         # initialize fitpar with fitinputtab.collist
         for k in ['p0','blo','bhi','res','dres','chi','fixed','shared']:

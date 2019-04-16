@@ -854,6 +854,17 @@ class bfit(object):
         return year
     
     # ======================================================================= #
+    def get_run_key(self,data=None,r=-1,y=-1):
+        """For indexing data dictionary"""
+        
+        if data is not None:
+            return '.'.join(map(str,(data.year,data.run)))
+        elif r>0 and y>0:
+            return '.'.join(map(str,(y,r)))
+        else:
+            raise RuntimeError('Bad run key input')
+    
+    # ======================================================================= #
     def help(self):
         """Display help wiki"""
         self.logger.info('Opening help wiki')
