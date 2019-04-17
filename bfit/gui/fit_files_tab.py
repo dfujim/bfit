@@ -92,14 +92,15 @@ class fit_files(object):
         self.fit_function_title.set("")
         self.fit_function_title_box = ttk.Combobox(fn_select_frame, 
                 textvariable=self.fit_function_title,state='readonly')
-        self.fit_function_title_box.bind('<<ComboboxSelected>>',self.populate_param)
+        self.fit_function_title_box.bind('<<ComboboxSelected>>',
+            lambda x :self.populate_param(force_modify=True))
         
         # number of components in fit spinbox
         self.n_component = IntVar()
         self.n_component.set(1)
         n_component_box = Spinbox(fn_select_frame,from_=1,to=20, 
                 textvariable=self.n_component,width=5,
-                command=lambda : self.populate_param(force_modify=True))
+                command=lambda:self.populate_param(force_modify=True))
         
         # fit and other buttons
         fit_button = ttk.Button(fn_select_frame,text='Fit',command=self.do_fit,\

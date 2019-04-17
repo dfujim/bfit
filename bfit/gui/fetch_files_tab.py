@@ -470,7 +470,7 @@ class fetch_files(object):
         
         # make lines
         n = 1
-        for r in self.bfit.data.keys():
+        for r in keys_list:
             
             # new line
             if r not in self.data_lines.keys():
