@@ -986,6 +986,34 @@ class fit_files(object):
         show_param_popup(df)
         
     # ======================================================================= #
+    def return_binder(self):
+        """
+            Binding to entery key press, depending on focus. 
+            
+            FOCUS                   ACTION
+            
+            comboboxes or buttons   draw_param
+                in right frame
+            else                    do_fit
+        """
+    
+        # get focus
+        focus = self.bfit.root.focus_get()
+        
+        # right frame items
+        draw_par_items = (  self.xaxis_combobox,
+                            self.yaxis_combobox,
+                            self.annotation_combobox)
+                            
+        # do action 
+        if focus in draw_par_items:
+            self.draw_param()
+        elif focus == self.bfit.root:
+            pass
+        else:
+            self.do_fit()
+            
+    # ======================================================================= #
     def _annotate(self,x,y,ptlabels,color='k'):
         """Add annotation"""
         
