@@ -98,7 +98,8 @@ class fit_files(object):
         self.n_component = IntVar()
         self.n_component.set(1)
         n_component_box = Spinbox(fn_select_frame,from_=1,to=20, 
-                textvariable=self.n_component,width=5,command=self.populate_param)
+                textvariable=self.n_component,width=5,
+                command=lambda : self.populate_param(force_modify=True))
         
         # fit and other buttons
         fit_button = ttk.Button(fn_select_frame,text='Fit',command=self.do_fit,\
@@ -365,8 +366,12 @@ class fit_files(object):
         self.populate_param()
             
     # ======================================================================= #
-    def populate_param(self,*args):
-        """Populate the list of parameters"""
+    def populate_param(self,*args,force_modify=False):
+        """
+            Populate the list of parameters
+            
+            force_modify: passed to line.populate
+        """
         
         self.logger.debug('Populating fit parameters')
         
@@ -398,7 +403,7 @@ class fit_files(object):
             
         # regenerate fitlines
         for k in self.fit_lines.keys():
-            self.fit_lines[k].populate()
+            self.fit_lines[k].populate(force_modify=force_modify)
             
         # reset modify all value
         self.set_as_group.set(modify_all_value)
@@ -578,7 +583,7 @@ class fit_files(object):
         """Reset initial parmeters to defaults"""
                 
         for k in self.fit_lines.keys():
-            self.fit_lines[k].populate()
+            self.fit_lines[k].populate(force_modify=True)
     
     # ======================================================================= #
     def draw_residual(self,id,rebin=1,**drawargs):
@@ -1095,8 +1100,12 @@ class fitline(object):
         if hasattr(self,'parentry'):    del self.parentry
     
     # ======================================================================= #
-    def populate(self):
-        """Fill and grid new parameters. Reuse old fields if possible"""
+    def populate(self,force_modify=False):
+        """
+            Fill and grid new parameters. Reuse old fields if possible
+            
+            force_modify: if true, clear and reset parameter inputs. 
+        """
         
         # get list of parameters and initial values
         try:
@@ -1159,8 +1168,12 @@ class fitline(object):
             # clear entry and insert new text
             for col in ('p0','blo','bhi'):                
                 entry = self.parentry[p][col][1]
-                entry.delete(0,'end')
-                entry.insert(0,str(fitdat.fitpar[col][p]))
+                
+                if force_modify:
+                    entry.delete(0,'end')
+                    
+                if not entry.get():
+                    entry.insert(0,str(fitdat.fitpar[col][p]))
                 entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
                     
         r = min_n_par+1
@@ -1257,7 +1270,6 @@ class fitline(object):
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
             self.parentry[p]['shared'] = [value,entry]
             
-        
         for p in self.parentry.keys():
             
             parentry = self.parentry[p]
