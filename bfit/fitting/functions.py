@@ -22,7 +22,7 @@ class code_wrapper(object):
 # TYPE 1 FUNCTIONS
 # =========================================================================== #
 def lorentzian(freq,peak,width,amp):
-    return -amp*0.25*np.square(width)/(np.square(freq-peak)+np.square(0.5*width))
+    return -amp*0.5*abs(width)/(np.square(freq-peak)+0.25*np.square(width))
 
 def gaussian(freq,mean,sigma,amp):
     return -amp*np.exp(-np.square((freq-mean)/(sigma))/2)
