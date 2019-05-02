@@ -15,28 +15,34 @@ class FunctionPlacer(object):
     tau = bd.life.Li8   # lifetime of probe 
     
     # ======================================================================= #
-    def __init__(self,fig,data,fn,p0):
+    def __init__(self,fig,data,fn,p0,endfn,base=0):
         """
+            fig:    pointer to matplotlib figure object to draw in
+            data:   bdata object 
+            fn:     function to draw and get the parameters for
+            p0:     dictionary of StringVar corresponding to input parameters
+            endfn:  function pointer to function to call at end of sequence. 
+                        Called with no inputs
+            base:   value of the baseline when we're not altering it
+        
             fn needs input parameters with keys: 
             
                 1F
-                    peak,width,amp,base
+                    peak, width, amp, base (optional)
                 20/2H
-                    amp,lam,beta (optional), base (optional)
+                    amp, lam, beta (optional), base (optional)
         """
         # save input
         self.fig = fig
         self.fn = fn
         self.p0_variable = p0
         self.p0 = {k:float(p0[k].get()) for k in p0.keys()}
+        self.endfn = endfn
+        self.base = base
         
         self.mode = data.mode
         x = data.asym('c')[0]
         self.x = np.linspace(min(x),max(x),self.npts)
-        
-        # get pulse length
-        # ~ if self.mode in ('20','2h'):
-            # ~ self.pulse = data.get_pulse_s()
         
         # get axes for drawing
         self.ax = fig.axes
@@ -46,7 +52,7 @@ class FunctionPlacer(object):
             self.ax = self.ax[0]
         
         # draw line with initial parameters
-        self.line = self.ax.plot(self.x,fn(self.x,**self.p0,),zorder=20)[0]
+        self.line = self.ax.plot(self.x,fn(self.x,**self.p0),zorder=20)[0]
         
         # start step
         self.step = 0
@@ -115,8 +121,14 @@ class FunctionPlacer(object):
             self.line.figure.canvas.mpl_disconnect(self.cidrelease)
             
             self.ax.set_title('')
+            
+            # display new parameters
             for k in self.p0.keys():
                 self.p0_variable[k].set(str(self.p0[k]))
+                
+            # end the sequence
+            self.endfn()
+            
         self.step += 1
         self.fig.show()
     
@@ -134,16 +146,22 @@ class FunctionPlacer(object):
         # connect motion to setting the base
         elif self.step == 1:
             
-            self.ax.set_title('Click to set baseline',fontsize='small')
-            self.line.figure.canvas.mpl_disconnect(self.cidmotion)
-            self.cidmotion = self.line.figure.canvas.mpl_connect(
-                'motion_notify_event', self.on_motion_1fbase)
+            if 'base' in self.p0.keys():
+                self.ax.set_title('Click to set baseline',fontsize='small')
+                self.line.figure.canvas.mpl_disconnect(self.cidmotion)
+                self.cidmotion = self.line.figure.canvas.mpl_connect(
+                    'motion_notify_event', self.on_motion_1fbase)
+            else:
+                self.step += 1
+                self.connect_motion_1f()
                 
          # connect motion to setting the width
         elif self.step == 2:
             
             self.ax.set_title('Click to set width',fontsize='small')
-            self.line.figure.canvas.mpl_disconnect(self.cidmotion)
+            
+            if hasattr(self,'cidmotion'):
+                self.line.figure.canvas.mpl_disconnect(self.cidmotion)
             self.cidmotion = self.line.figure.canvas.mpl_connect(
                 'motion_notify_event', self.on_motion_1fwidth)
             
@@ -152,10 +170,16 @@ class FunctionPlacer(object):
             self.ax.set_title('')
             self.line.figure.canvas.mpl_disconnect(self.cidmotion)
             self.line.figure.canvas.mpl_disconnect(self.cidrelease)
+            
+            # display new parameters
             for k in self.p0.keys():
                 self.p0_variable[k].set(str(self.p0[k]))
             
+            # end the sequence
+            self.endfn()
+        
         self.step += 1
+        self.fig.show()
     
     # ======================================================================= #
     def on_motion_20base(self,event):
@@ -211,12 +235,16 @@ class FunctionPlacer(object):
     # ======================================================================= #
     def on_motion_1fpeak(self,event):
         """Updated the peak position on mouse movement"""
-        
+    
         # check event data
         if event.xdata is not None and event.ydata is not None:
             
             self.p0['peak'] = event.xdata
-            self.p0['base'] = event.ydata+self.p0['amp']
+            
+            if 'base' in self.p0.keys():
+                self.p0['base'] = event.ydata+self.p0['amp']
+            else:
+                self.p0['amp'] = self.base-event.ydata
             
             self.line.set_ydata(self.fn(self.x,**self.p0))
             self.line.figure.canvas.draw()

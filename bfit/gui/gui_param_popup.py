@@ -10,15 +10,24 @@ import logging
 import bdata as bd
 from bfit.fitting.FunctionPlacer import FunctionPlacer
 
+import numpy as np
 
 # ========================================================================== #
 class gui_param_popup(object):
     """
         Popup window for graphically finding input parameters. 
         
-        logger:     logging variable
-        selection:  StringVar, track run selection
-        win:        TopLevel window
+        data:           bdata object 
+        fig:            maplotlib figure object
+        fitter:         fit_tab.fitter obje (defined in default_routines.py)
+        fname:          name of the function 
+        logger:         logging variable
+        mode:           1 or 2 to switch between run modes
+        n_components:   number of components in the fit function
+        parnames:       tuple of names of the parameters
+        p0:             dictionary of StringVar objects to link parameters
+        selection:      StringVar, track run selection
+        win:            TopLevel window
     """
 
     # parameter mapping
@@ -53,7 +62,7 @@ class gui_param_popup(object):
         self.selection = StringVar()
         select_box = ttk.Combobox(frame,textvariable=self.selection,
                                   state='readonly')
-        select_box.bind('<<ComboboxSelected>>',self.run)
+        select_box.bind('<<ComboboxSelected>>',self.setup)
         
         # get run list
         runlist = list(self.bfit.fit_files.fit_lines.keys())
@@ -66,77 +75,160 @@ class gui_param_popup(object):
         select_box.grid(column=0,row=1,sticky=E)
                 
     # ====================================================================== #
-    def run(self,*args):
-        """Main run function"""
+    def setup(self,*args):
+        """Get parameters for placing function and start the run squence"""
         
         # get run selection 
         run_id = self.selection.get()
         self.logger.info('Running P0 GUI finder on run %s',run_id)
         
         # get data
-        data = self.bfit.data[run_id]
-        mode = data.mode
+        self.data = self.bfit.data[run_id]
+        mode = self.data.mode
         
         # mode switching
-        if mode in ('20','2h'): mode = 2
-        elif mode in ('1f',):   mode = 1
+        if mode in ('20','2h'): self.mode = 2
+        elif mode in ('1f',):   self.mode = 1
         else:
             self.logger.warning('P0 Finder not configured for run mode %s',mode)
             print('P0 Finder not configured for run mode %s'%mode)
         
         # make new window 
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
+        self.fig = plt.figure()
+        ax = self.fig.add_subplot(111)
         
         # draw data
-        omit = data.omit.get()
+        omit = self.data.omit.get()
         if omit == self.bfit.fetch_files.bin_remove_starter_line:
             omit = ''
-        x,a,da = data.asym('c',rebin=data.rebin.get(),omit=omit)
+        x,a,da = self.data.asym('c',rebin=self.data.rebin.get(),omit=omit)
         ax.errorbar(x,a,da,fmt='.')
         
-        # plot elements
-        plt.ylabel('Asymmetry')
-        if mode == 2:     plt.xlabel('Time (s)')
-        elif mode == 1:   plt.xlabel('Frequency (MHz)')
-        plt.tight_layout()
-        
-        fig.show()
+        # plot elements - don't do tight_layout here - blocks matplotlib signals
+        ax.set_ylabel('Asymmetry')
+        if self.mode == 2:     ax.set_xlabel('Time (s)')
+        elif self.mode == 1:   ax.set_xlabel('Frequency (MHz)')
+        self.fig.show()
         
         # get parameters list and run finder 
         fit_tab = self.bfit.fit_files
-        fitter = fit_tab.fitter
-        n_components = fit_tab.n_component.get()
-        fname = fit_tab.fit_function_title.get()
-        parnames = fitter.gen_param_names(fn_name=fname,
-                                                  ncomp=n_components)
-        parentry = self.bfit.fit_files.fit_lines[run_id].parentry
-        p0 = {self.parmap[k]:parentry[k]['p0'][0] for k in parnames}
+        self.fitter = fit_tab.fitter
+        self.n_components = fit_tab.n_component.get()
+        self.fname = fit_tab.fit_function_title.get()
+        self.parnames = self.fitter.gen_param_names(fn_name=self.fname,
+                                          ncomp=self.n_components)
+        parentry = fit_tab.fit_lines[run_id].parentry
         
-        # get fitting function 
-        if mode == 1:
-            f1 = fitter.get_fn(fname,1)
-            fn = lambda x,peak,width,amp,base : f1(x,peak,width,amp,base)
+        # make initial paramter list
+        self.p0 = {k:parentry[k]['p0'][0] for k in parentry.keys()}
+        
+        self.run()
+        
+    # ====================================================================== #
+    def run(self,comp=0):
+        """
+            Run the function placer
+            
+            comp = component number to run
+        """
+        
+        try:
+            del self.fplace
+        except AttributeError:
+            pass
+        
+        # end condition
+        if comp >= self.n_components: return
+        
+        # ensure matplotlib signals work. Not sure why this is needed.
+        self.fig.tight_layout()
+    
+        # get parameter names and fitting functions - multi component
+        if self.n_components > 1:
+            
+            # get parameter names of all previously set components 
+            parnames_prev = []
+            for c in range(comp):
+                parnames_prev.extend([p for p in self.parnames if str(c) in p])
+            
+            # get parameter names of components to set now
+            parnames_now = [p for p in self.parnames if str(comp) in p]
+            
+            # baseline name 
+            if comp == 0:   parnames_now.append('baseline')
+            else:           parnames_prev.append('baseline')
+            
+            # translate keynames: input to original
+            parnames_now_conv = {self.parmap[k.split('_')[0]]:k for k in parnames_now}
+            
+            # static values 
+            p = {p:float(self.p0[p].get()) for p in parnames_prev}  
+            
+            # p0 from current iteration
+            p0 = {self.parmap[p.split('_')[0]]:self.p0[p] for p in parnames_now}
+            
+            # get fitting function 
+            if self.mode == 1:
+                f1 = self.fitter.get_fn(self.fname,ncomp=comp+1)
                 
-        elif mode == 2:
-            f1 = fit_tab.fitter.get_fn(fname,ncomp=1,pulse_len=data.get_pulse_s(),lifetime=bd.life.Li8)
-            if 'beta' in parnames:
-                fn = lambda x,lam,amp,beta,base : f1(x,lam,amp,beta,base)
-            else:
-                fn = lambda x,lam,amp,base : f1(x,lam,amp,base)
+                # make decorator for fitting function
+                if comp == 0:
+                    def fn(x,peak,width,amp,base):
+                        
+                        # add to input dictionary
+                        p[parnames_now_conv['peak']] = peak
+                        p[parnames_now_conv['width']] = width
+                        p[parnames_now_conv['amp']] = amp
+                        p[parnames_now_conv['base']] = base
+                        
+                        # get the order right
+                        p_in = [p[k] for k in self.parnames if k in p.keys()]
+                        return f1(x,*p_in)
+                else:
+                    def fn(x,peak,width,amp):
+                        
+                        # add to input dictionary
+                        p[parnames_now_conv['peak']] = peak
+                        p[parnames_now_conv['width']] = width
+                        p[parnames_now_conv['amp']] = amp
+                        
+                        # get the order right
+                        p_in = [p[k] for k in self.parnames if k in p.keys()]
+                        return f1(x,*p_in)
+                        
+        # get parameter names and fitting functions - single component
+        else:
+            
+            # get paramters, translating the names
+            p0 = {self.parmap[k]:self.p0[k] for k in self.p0.keys()}
+    
+            # get fitting function 
+            if self.mode == 1:
+                f1 = self.fitter.get_fn(self.fname,ncomp=comp+1)
+                fn = lambda x,peak,width,amp,base : f1(x,peak,width,amp,base)
+                    
+            elif self.mode == 2:
+                f1 = self.fitter.get_fn(self.fname,ncomp=comp+1,
+                                           pulse_len=self.data.get_pulse_s(),
+                                           lifetime=bd.life.Li8)
                 
-        # start function placement
-        fplace = FunctionPlacer(fig,data,fn,p0)
+                if 'beta' in self.parnames:
+                    fn = lambda x,lam,amp,beta,base : f1(x,lam,amp,beta,base)
+                else:
+                    fn = lambda x,lam,amp,base : f1(x,lam,amp,base)
+            
+        # start recursive function placement
+        comp += 1
+        self.fplace = FunctionPlacer(fig=self.fig,
+                                     data=self.data,
+                                     fn=fn,
+                                     p0=p0,
+                                     endfn=lambda:self.run(comp),
+                                     base = float(self.p0['baseline'].get()))
         
     # ====================================================================== #
     def cancel(self):
         self.win.destroy()
-
-
-
-
-
-
 
 
 

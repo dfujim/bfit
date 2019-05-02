@@ -113,7 +113,6 @@ class fit_files(object):
         gui_param_button = ttk.Button(fn_select_frame,text='P0 Finder',
                         command=self.do_gui_param,pad=1)
         
-        
         # set as group checkbox
         self.set_as_group = BooleanVar()
         set_group_check = ttk.Checkbutton(fn_select_frame,
@@ -1310,7 +1309,6 @@ class fitline(object):
             self.parentry[p]['shared'] = [value,entry]
             
         for p in self.parentry.keys():
-            
             parentry = self.parentry[p]
             
             # shared box value synchronization
