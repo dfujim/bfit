@@ -7,6 +7,7 @@ from tkinter import ttk, messagebox, filedialog
 from functools import partial
 from bfit.gui.zahersCalculator import current2field
 from bfit.gui.show_param_popup import show_param_popup
+from bfit.gui.gui_param_popup import gui_param_popup
 from bdata import bdata
 from bfit import logger_name
 
@@ -109,7 +110,10 @@ class fit_files(object):
                         command=self.do_set_result_as_initial,pad=1)                        
         reset_param_button = ttk.Button(fn_select_frame,text='Reset Inputs',
                         command=self.do_reset_initial,pad=1)
-                                
+        gui_param_button = ttk.Button(fn_select_frame,text='P0 Finder',
+                        command=self.do_gui_param,pad=1)
+        
+        
         # set as group checkbox
         self.set_as_group = BooleanVar()
         set_group_check = ttk.Checkbutton(fn_select_frame,
@@ -143,6 +147,7 @@ class fit_files(object):
         fit_button.grid(column=c,row=0,padx=5,pady=1); c+=1
         set_param_button.grid(column=c,row=0,padx=5,pady=1); c+=1
         reset_param_button.grid(column=c,row=0,padx=5,pady=1); c+=1
+        gui_param_button.grid(column=c,row=0,padx=5,pady=1); c+=1
         set_group_check.grid(column=c,row=0,padx=5,pady=1); c+=1
         
         # run mode gridding
@@ -555,6 +560,11 @@ class fit_files(object):
         
         self.bfit.draw_style.set(style)
             
+    # ======================================================================= #
+    def do_gui_param(self,*args):
+        """Set initial parmeters with GUI"""
+        gui_param_popup(self.bfit)
+        
     # ======================================================================= #
     def do_set_result_as_initial(self,*args):
         """Set initial parmeters as the fitting results"""
