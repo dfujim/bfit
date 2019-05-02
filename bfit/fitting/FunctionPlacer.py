@@ -27,7 +27,8 @@ class FunctionPlacer(object):
         # save input
         self.fig = fig
         self.fn = fn
-        self.p0 = p0
+        self.p0_variable = p0
+        self.p0 = {k:float(p0[k].get()) for k in p0.keys()}
         
         self.mode = data.mode
         x = data.asym('c')[0]
@@ -45,7 +46,7 @@ class FunctionPlacer(object):
             self.ax = self.ax[0]
         
         # draw line with initial parameters
-        self.line = self.ax.plot(self.x,fn(self.x,**p0,),zorder=20)[0]
+        self.line = self.ax.plot(self.x,fn(self.x,**self.p0,),zorder=20)[0]
         
         # start step
         self.step = 0
@@ -114,6 +115,8 @@ class FunctionPlacer(object):
             self.line.figure.canvas.mpl_disconnect(self.cidrelease)
             
             self.ax.set_title('')
+            for k in self.p0.keys():
+                self.p0_variable[k].set(str(self.p0[k]))
         self.step += 1
         self.fig.show()
     
@@ -149,6 +152,8 @@ class FunctionPlacer(object):
             self.ax.set_title('')
             self.line.figure.canvas.mpl_disconnect(self.cidmotion)
             self.line.figure.canvas.mpl_disconnect(self.cidrelease)
+            for k in self.p0.keys():
+                self.p0_variable[k].set(str(self.p0[k]))
             
         self.step += 1
     

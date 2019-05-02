@@ -13,7 +13,7 @@ class fitter(object):
     # needed to tell users what routine this is
     __name__ = 'default'
     
-    # Define possible fit functions for given run modes:
+    # Define possible fit functions for given run modes
     function_names = {  '20':('Exp','Str Exp'),
                         '2h':('Exp','Str Exp'),
                         '1f':('Lorentzian','Gaussian'),
