@@ -7,7 +7,9 @@ from tkinter import ttk
 from bfit import logger_name
 import matplotlib.pyplot as plt
 import logging
+import bdata as bd
 from bfit.fitting.FunctionPlacer import FunctionPlacer
+
 
 # ========================================================================== #
 class gui_param_popup(object):
@@ -117,7 +119,7 @@ class gui_param_popup(object):
             fn = lambda x,peak,width,amp,base : f1(x,peak,width,amp,base)
                 
         elif mode == 2:
-            f1 = fit_tab.fitter.get_fn(fname,1)
+            f1 = fit_tab.fitter.get_fn(fname,ncomp=1,pulse_len=data.get_pulse_s(),lifetime=bd.life.Li8)
             if 'beta' in parnames:
                 fn = lambda x,lam,amp,beta,base : f1(x,lam,amp,beta,base)
             else:

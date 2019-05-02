@@ -35,8 +35,8 @@ class FunctionPlacer(object):
         self.x = np.linspace(min(x),max(x),self.npts)
         
         # get pulse length
-        if self.mode in ('20','2h'):
-            self.pulse = data.get_pulse_s()
+        # ~ if self.mode in ('20','2h'):
+            # ~ self.pulse = data.get_pulse_s()
         
         # get axes for drawing
         self.ax = fig.axes
@@ -204,7 +204,7 @@ class FunctionPlacer(object):
         
         # set lambda
         if event.xdata is not None:
-            self.p0['lam'] = event.xdata*2
+            self.p0['lam'] = 1/(event.xdata*2)
             self.line.set_ydata(self.fn(self.x,**self.p0))
             self.line.figure.canvas.draw()
                 
