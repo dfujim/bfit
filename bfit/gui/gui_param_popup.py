@@ -195,7 +195,64 @@ class gui_param_popup(object):
                         # get the order right
                         p_in = [p[k] for k in self.parnames if k in p.keys()]
                         return f1(x,*p_in)
-                        
+               
+            elif self.mode == 2:
+                f1 = self.fitter.get_fn(self.fname,ncomp=comp+1,
+                                           pulse_len=self.data.get_pulse_s(),
+                                           lifetime=bd.life.Li8)
+                                           
+                # make decorator for fitting function
+                if comp == 0:
+                    
+                    if 'beta' in parnames_now_conv.keys():
+                        def fn(x,lam,amp,beta,base):
+                            
+                            # add to input dictionary
+                            p[parnames_now_conv['lam']] = lam
+                            p[parnames_now_conv['amp']] = amp
+                            p[parnames_now_conv['beta']] = beta
+                            p[parnames_now_conv['base']] = base
+                            
+                            # get the order right
+                            p_in = [p[k] for k in self.parnames if k in p.keys()]
+                            return f1(x,*p_in)
+                    else:
+                        def fn(x,lam,amp,base):
+                            
+                            # add to input dictionary
+                            p[parnames_now_conv['lam']] = lam
+                            p[parnames_now_conv['amp']] = amp
+                            p[parnames_now_conv['base']] = base
+                            
+                            # get the order right
+                            p_in = [p[k] for k in self.parnames if k in p.keys()]
+                            return f1(x,*p_in)               
+                            
+                else:
+                    
+                    if 'beta' in parnames_now_conv.keys():
+                        def fn(x,lam,amp,beta):
+                            
+                            # add to input dictionary
+                            p[parnames_now_conv['lam']] = lam
+                            p[parnames_now_conv['amp']] = amp
+                            p[parnames_now_conv['beta']] = beta
+                            
+                            # get the order right
+                            p_in = [p[k] for k in self.parnames if k in p.keys()]
+                            return f1(x,*p_in)
+                    else:
+                        def fn(x,lam,amp):
+                            
+                            # add to input dictionary
+                            p[parnames_now_conv['lam']] = lam
+                            p[parnames_now_conv['amp']] = amp
+                            
+                            # get the order right
+                            p_in = [p[k] for k in self.parnames if k in p.keys()]
+                            return f1(x,*p_in)               
+                            
+                                    
         # get parameter names and fitting functions - single component
         else:
             
