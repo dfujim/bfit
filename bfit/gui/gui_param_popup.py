@@ -286,6 +286,8 @@ class gui_param_popup(object):
         
     # ====================================================================== #
     def cancel(self,*args):
+        if hasattr(self,'fplace'):  del self.fplace
+        if hasattr(self,'fig'):     del self.fig
         self.win.destroy()
 
 

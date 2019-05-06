@@ -272,39 +272,3 @@ class FunctionPlacer(object):
             self.p0['width'] = abs(self.p0['peak']-event.xdata)
             self.line.set_ydata(self.fn(self.x,**self.p0))
             self.line.figure.canvas.draw()
-        
-# RUN ======================================================================= #
-
-# get and draw data
-# ~ fig = plt.figure()
-
-# 1F version
-# ~ data = bd.bdata(40142,2018)
-# ~ fn = lambda freq,peak,width,amp,base : lorentzian(freq,peak,width,amp) + base
-# ~ p0 = {'peak':43075800,'width':3200,'amp':0.032,'base':0.04}
-
-# SLR version - normal exp
-# ~ data = bd.bdata(40123,2018)
-# ~ pexp = pulsed_exp(lifetime=bd.life.Li8,pulse_len=data.get_pulse_s())
-# ~ fn = lambda time,lam,amp,base : pexp(time,lam,amp) + base
-# ~ p0 = {'lam':0.8,'amp':0.07,'base':0}
-
-# SLR version - str exp
-# ~ data = bd.bdata(40123,2018)
-# ~ pexp = pulsed_strexp(lifetime=bd.life.Li8,pulse_len=data.get_pulse_s())
-# ~ fn = lambda time,lam,amp,beta,base : pexp(time,lam,beta,amp) + base
-# ~ p0 = {'lam':0.8,'amp':0.07,'base':0,'beta':0.5}
-
-# SLR version - str exp - no baseline
-# ~ data = bd.bdata(40123,2018)
-# ~ pexp = pulsed_strexp(lifetime=bd.life.Li8,pulse_len=data.get_pulse_s())
-# ~ fn = lambda time,lam,amp,beta : pexp(time,lam,beta,amp)
-# ~ p0 = {'lam':0.8,'amp':0.07,'beta':0.5}
-
-# draw
-# ~ x,y,dy = data.asym('c',rebin=10)
-# ~ plt.errorbar(x,y,dy,fmt='.')
-
-# make placer
-# ~ f = FunctionPlacer(fig,data,fn,p0)
-
