@@ -20,6 +20,7 @@ class gui_param_popup(object):
         data:           bdata object 
         fig:            maplotlib figure object
         fitter:         fit_tab.fitter obje (defined in default_routines.py)
+        first:          if True, first time through fixing parameters
         fname:          name of the function 
         logger:         logging variable
         mode:           1 or 2 to switch between run modes
@@ -28,6 +29,7 @@ class gui_param_popup(object):
         p0:             dictionary of StringVar objects to link parameters
         selection:      StringVar, track run selection
         win:            TopLevel window
+        xy:             (x,asym,dasym) tuple
     """
 
     # parameter mapping
@@ -45,6 +47,7 @@ class gui_param_popup(object):
     # ====================================================================== #
     def __init__(self,bfit):
         self.bfit = bfit
+        self.first = True   # default
         
         # get logger
         self.logger = logging.getLogger(logger_name)
@@ -101,8 +104,8 @@ class gui_param_popup(object):
         omit = self.data.omit.get()
         if omit == self.bfit.fetch_files.bin_remove_starter_line:
             omit = ''
-        x,a,da = self.data.asym('c',rebin=self.data.rebin.get(),omit=omit)
-        ax.errorbar(x,a,da,fmt='.')
+        self.xy = self.data.asym('c',rebin=self.data.rebin.get(),omit=omit)
+        ax.errorbar(*self.xy,fmt='.')
         
         # plot elements - don't do tight_layout here - blocks matplotlib signals
         ax.set_ylabel('Asymmetry')
@@ -136,9 +139,21 @@ class gui_param_popup(object):
             del self.fplace
         except AttributeError:
             pass
+        else:
+            self.fig.axes[0].cla()
+            self.fig.axes[0].errorbar(*self.xy,fmt='.')
         
-        # end condition
-        if comp >= self.n_components: return
+        # end condition, or start the cycle again
+        if comp >= self.n_components:
+            if self.n_components > 1: 
+                self.first = False
+                comp = 0
+            else: 
+                return
+        
+        # get the number of components in the line (after first round, keep all)
+        if self.first:  ncomp = comp+1
+        else:           ncomp = self.n_components
         
         # ensure matplotlib signals work. Not sure why this is needed.
         self.fig.tight_layout()
@@ -148,15 +163,16 @@ class gui_param_popup(object):
             
             # get parameter names of all previously set components 
             parnames_prev = []
-            for c in range(comp):
+            for c in range(ncomp-1 if self.first else ncomp):
+                if c == comp: continue
                 parnames_prev.extend([p for p in self.parnames if str(c) in p])
             
             # get parameter names of components to set now
             parnames_now = [p for p in self.parnames if str(comp) in p]
             
             # baseline name 
-            if comp == 0:   parnames_now.append('baseline')
-            else:           parnames_prev.append('baseline')
+            if comp == 0 and self.first:    parnames_now.append('baseline')
+            else:                           parnames_prev.append('baseline')
             
             # translate keynames: input to original
             parnames_now_conv = {self.parmap[k.split('_')[0]]:k for k in parnames_now}
@@ -169,10 +185,10 @@ class gui_param_popup(object):
             
             # get fitting function 
             if self.mode == 1:
-                f1 = self.fitter.get_fn(self.fname,ncomp=comp+1)
+                f1 = self.fitter.get_fn(self.fname,ncomp=ncomp)
                 
                 # make decorator for fitting function
-                if comp == 0:
+                if comp == 0 and self.first:
                     def fn(x,peak,width,amp,base):
                         
                         # add to input dictionary
@@ -197,12 +213,12 @@ class gui_param_popup(object):
                         return f1(x,*p_in)
                
             elif self.mode == 2:
-                f1 = self.fitter.get_fn(self.fname,ncomp=comp+1,
+                f1 = self.fitter.get_fn(self.fname,ncomp=ncomp,
                                            pulse_len=self.data.get_pulse_s(),
                                            lifetime=bd.life.Li8)
                                            
                 # make decorator for fitting function
-                if comp == 0:
+                if comp == 0 and self.first:
                     
                     if 'beta' in parnames_now_conv.keys():
                         def fn(x,lam,amp,beta,base):
@@ -261,11 +277,11 @@ class gui_param_popup(object):
     
             # get fitting function 
             if self.mode == 1:
-                f1 = self.fitter.get_fn(self.fname,ncomp=comp+1)
+                f1 = self.fitter.get_fn(self.fname,ncomp=ncomp)
                 fn = lambda x,peak,width,amp,base : f1(x,peak,width,amp,base)
                     
             elif self.mode == 2:
-                f1 = self.fitter.get_fn(self.fname,ncomp=comp+1,
+                f1 = self.fitter.get_fn(self.fname,ncomp=ncomp,
                                            pulse_len=self.data.get_pulse_s(),
                                            lifetime=bd.life.Li8)
                 
@@ -275,19 +291,19 @@ class gui_param_popup(object):
                     fn = lambda x,lam,amp,base : f1(x,lam,amp,base)
             
         # start recursive function placement
-        comp += 1
         self.fig.canvas.mpl_connect('close_event',self.cancel)
         self.fplace = FunctionPlacer(fig=self.fig,
                                      data=self.data,
                                      fn=fn,
                                      p0=p0,
-                                     endfn=lambda:self.run(comp),
+                                     endfn=lambda:self.run(comp+1),
                                      base = float(self.p0['baseline'].get()))
         
     # ====================================================================== #
     def cancel(self,*args):
         if hasattr(self,'fplace'):  del self.fplace
         if hasattr(self,'fig'):     del self.fig
+        
         self.win.destroy()
 
 
