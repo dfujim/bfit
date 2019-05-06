@@ -276,6 +276,7 @@ class gui_param_popup(object):
             
         # start recursive function placement
         comp += 1
+        self.fig.canvas.mpl_connect('close_event',self.cancel)
         self.fplace = FunctionPlacer(fig=self.fig,
                                      data=self.data,
                                      fn=fn,
@@ -284,7 +285,7 @@ class gui_param_popup(object):
                                      base = float(self.p0['baseline'].get()))
         
     # ====================================================================== #
-    def cancel(self):
+    def cancel(self,*args):
         self.win.destroy()
 
 
