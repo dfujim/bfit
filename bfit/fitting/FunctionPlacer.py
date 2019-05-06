@@ -222,13 +222,13 @@ class FunctionPlacer(object):
         self.line.set_ydata(self.fn(self.x,**self.p0))
         self.line.figure.canvas.draw()
         
-    # ======q================================================================= #
+    # ======================================================================= #
     def on_motion_20lam(self,event):
         """Updated 1/T1 on mouse movement"""
         
         # set lambda
         if event.xdata is not None:
-            self.p0['lam'] = 1/(event.xdata*2)
+            self.p0['lam'] = max(0,1/(event.xdata*2))
             self.line.set_ydata(self.fn(self.x,**self.p0))
             self.line.figure.canvas.draw()
                 
