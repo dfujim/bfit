@@ -51,8 +51,14 @@ class FunctionPlacer(object):
         else:
             self.ax = self.ax[0]
         
+        # get ylims
+        ylims = self.ax.get_ylim()
+        
         # draw line with initial parameters
         self.line = self.ax.plot(self.x,fn(self.x,**self.p0),zorder=20)[0]
+        
+        # reset ylims
+        self.ax.set_ylim(ylims)
         
         # start step
         self.step = 0
@@ -139,7 +145,7 @@ class FunctionPlacer(object):
         # connect motion to setting the peak
         if self.step == 0:
 
-            self.ax.set_title('Click to set peak position',fontsize='small')
+            self.ax.set_title('Click to set peak position (x and y)',fontsize='small')
             self.cidmotion = self.line.figure.canvas.mpl_connect(
                 'motion_notify_event', self.on_motion_1fpeak)
         
