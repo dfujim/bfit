@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import bdata as bd
 import webbrowser
 import subprocess
 import importlib
@@ -82,23 +83,22 @@ class bfit(object):
             draw_components: list of titles for labels, options to export, draw.
             draw_ppm: BoolVar for drawing as ppm shift
             draw_standardized_res: BoolVar for drawing residuals as standardized
-            root: tkinter root instance
+            freq_unit_conv: conversion rate from original to display units
+            hist_select: histogram selection for asym calcs (blank for defaults)
+            label_default: StringVar() name of label defaults for fetch
+            logger: logging object 
+            logger_name: string of unique logger name
+            ppm_reference: reference freq in Hz for ppm calulations
+            probe_species: StringVar() name of probe species, bdata.life key.
             mainframe: main frame for the object
-            routine_mod: module with fitting routines
-            
             notebook: contains all tabs for operations:
                 fileviewer
                 fetch_files
                 fit_files
-            
-            label_default: StringVar() name of label defaults for fetch
-            logger: logging object 
-            logger_name: string of unique logger name
-            update_period: update spacing in s. 
+            root: tkinter root instance
             rounding: number of decimal places to round results to in display
-            hist_select: histogram selection for asym calcs (blank for defaults)
-            freq_unit_conv: conversion rate from original to display units
-            ppm_reference: reference freq in Hz for ppm calulations
+            routine_mod: module with fitting routines
+            update_period: update spacing in s. 
             volt_unit_conv: conversion rate from original to display units
     """
     probe_species = "8Li" # unused
@@ -233,22 +233,24 @@ class bfit(object):
         menubar.add_cascade(menu=menu_settings, label='Settings')
         menu_settings_dir = Menu(menu_settings)
         menu_settings_lab = Menu(menu_settings)
+        menu_settings_probe = Menu(menu_settings)
         
         # Settings cascade commands
-        menu_settings.add_cascade(menu=menu_settings_dir,label='Set data directory')
-        menu_settings.add_cascade(menu=menu_settings_lab,label='Set label default')
-        menu_settings.add_command(label="Set matplotlib global defaults",\
-                command=self.set_matplotlib)
-        menu_settings.add_command(label='Set drawing style',
+        menu_settings.add_cascade(menu=menu_settings_dir,label='Data directory')
+        menu_settings.add_cascade(menu=menu_settings_lab,label='Default labels')
+        menu_settings.add_command(label='Drawing style',
                 command=self.set_draw_style)
-        menu_settings.add_command(label='Set fitting routines',
+        menu_settings.add_command(label='Fitting routines',
                 command=self.set_fit_routines)
-        menu_settings.add_command(label='Set redraw period',
-                command=self.set_redraw_period)
-        menu_settings.add_command(label='Set PPM Reference Frequecy',
-                command=self.set_ppm_reference)
-        menu_settings.add_command(label='Set histograms',
+        menu_settings.add_command(label='Histograms',
                 command=self.set_histograms)
+        menu_settings.add_command(label='PPM Reference Frequecy',
+                command=self.set_ppm_reference)
+        menu_settings.add_cascade(menu=menu_settings_probe,label='Probe Species')
+        menu_settings.add_command(label='Redraw period',
+                command=self.set_redraw_period)
+        menu_settings.add_command(label="System matplotlibrc",\
+                command=self.set_matplotlib)
         
         # Settings: data directory
         menu_settings_dir.add_command(label="BNMR",command=self.set_bnmr_dir)
@@ -260,6 +262,16 @@ class bfit(object):
         for dc in self.draw_components:
             menu_settings_lab.add_radiobutton(label=dc,
                 variable=self.label_default,value=dc,command=self.set_all_labels)
+        
+        # Settings: set probe species
+        self.probe_species = StringVar()
+        self.probe_species.set('Li8')
+        for k in bd.life.keys():
+            if 'err' not in k: 
+                menu_settings_probe.add_radiobutton(label=k,
+                        variable=self.probe_species,
+                        value=k,
+                        command=self.set_probe_species)
         
         # Draw style
         self.draw_style = StringVar()
@@ -984,7 +996,7 @@ class bfit(object):
             
             # repopuate fitter
             self.logger.info('Repopulating fitter...')
-            self.fit_files.fitter = self.routine_mod.fitter()
+            self.fit_files.fitter = self.routine_mod.fitter(self.probe_species.get())
             self.fit_files.populate()
         else:
             self.logger.error('Input was not of type string.')    
@@ -1027,6 +1039,13 @@ class bfit(object):
         self.fetch_files.check_state.set(not state)
         self.fetch_files.check_all()
     def set_draw_style(self):       drawstyle_popup(self)
+    def set_histograms(self,*a):    set_histograms_popup(self)
+    def set_focus_tab(self,idn,*a): self.notebook.select(idn)
+    def set_ppm_reference(self,*a): set_ppm_reference_popup(self)
+    def set_probe_species(self, *a): 
+        self.fit_files.fitter.probe_species = self.probe_species.get()
+        self.logger.info('Probe species changed to %s',self.probe_species.get())
+    def set_redraw_period(self,*a): redraw_period_popup(self)
     def set_style_new(self,x):      
         self.logger.info('Setting draw style to "new"')
         self.draw_style.set('new')
@@ -1036,10 +1055,6 @@ class bfit(object):
     def set_style_redraw(self,x):   
         self.logger.info('Setting draw style to "redraw"')
         self.draw_style.set('redraw')
-    def set_focus_tab(self,idn,*a): self.notebook.select(idn)
-    def set_redraw_period(self,*a): redraw_period_popup(self)
-    def set_ppm_reference(self,*a): set_ppm_reference_popup(self)
-    def set_histograms(self,*a):    set_histograms_popup(self)
     def set_tab_change(self,tab_id):
         
         self.logger.debug('Changing to tab %d',tab_id)

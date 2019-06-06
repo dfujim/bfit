@@ -67,7 +67,7 @@ class fit_files(object):
         self.bfit = bfit
         self.fit_output = {}
         self.share_var = {}
-        self.fitter = self.bfit.routine_mod.fitter()
+        self.fitter = self.bfit.routine_mod.fitter(bfit.probe_species.get())
         self.draw_components = bfit.draw_components
         self.fit_data_tab = fit_data_tab
             

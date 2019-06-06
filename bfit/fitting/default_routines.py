@@ -31,8 +31,12 @@ class fitter(object):
     epsilon = 1e-9  # for fixing parameters
 
     # ======================================================================= #
-    def __init__(self):
-        pass
+    def __init__(self,probe_species='8Li'):
+        """
+            probe_species: one of the keys in the bdata.life dictionary.
+        """
+        
+        self.probe_species = probe_species
         
     # ======================================================================= #
     def __call__(self,fn_name,ncomp,data_list,hist_select):
@@ -86,14 +90,10 @@ class fitter(object):
             doptions = data[2]
             
             # get fitting function
-            if dat.mode in ['20','2h']:
-                pulse = dat.get_pulse_s()
-                life = bd.life.Li8
-            else:
-                pulse = -1
-                life = -1
+            if dat.mode in ['20','2h']: pulse = dat.get_pulse_s()
+            else:                       pulse = -1
+            life = bd.life[self.probe_species]
             fn.append(self.get_fn(fn_name,ncomp,pulse,life))
-            
             
             # get year and run
             runs.append(dat.run)
