@@ -20,8 +20,8 @@ class fitter(object):
                         '1n':('Lorentzian','Gaussian')}
      
     # Define names of fit parameters:
-    param_names = {     'Exp'       :('1/T1','amp','baseline'),
-                        'Str Exp'   :('1/T1','beta','amp','baseline'),
+    param_names = {     'Exp'       :('1/T1','amp'),
+                        'Str Exp'   :('1/T1','beta','amp'),
                         'Lorentzian':('peak','width','height','baseline'),
                         'Gaussian'  :('mean','sigma','height','baseline'),}
 
@@ -283,7 +283,9 @@ class fitter(object):
         
         # Make final function based on number of components
         fnlist = [fn]*ncomp
-        fnlist.append(lambda x,b: b)
+        
+        if self.mode in ['1f']:
+            fnlist.append(lambda x,b: b)
         fn = fns.get_fn_superpos(fnlist)
         
         return fn

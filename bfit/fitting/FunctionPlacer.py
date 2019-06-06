@@ -88,12 +88,6 @@ class FunctionPlacer(object):
         if self.step == 0:
             
             titlestr = ''
-            
-            # do baseline, if it exists    
-            if 'base' in self.p0.keys():
-                self.cidmotion_y = self.line.figure.canvas.mpl_connect(
-                    'motion_notify_event', self.on_motion_20base)
-                titlestr += 'base (ymove), '
                     
             # do T1
             self.cidmotion_x = self.line.figure.canvas.mpl_connect(
@@ -101,15 +95,15 @@ class FunctionPlacer(object):
             titlestr += '1/T1 (xmove)'
             
             # do initial asymmetry
-            self.cidscroll = self.line.figure.canvas.mpl_connect(
-                    'scroll_event', self.on_scroll_20amp)
-            titlestr += ', amp (scroll)'
+            self.cidmotion_y = self.line.figure.canvas.mpl_connect(
+                    'motion_notify_event', self.on_motion_20amp)
+            titlestr += ', amp (ymove)'
             
             # do beta
             if 'beta' in self.p0.keys():
-                self.cidkey = self.line.figure.canvas.mpl_connect(
-                    'key_press_event', self.on_key_20beta)
-                titlestr += ', beta (arrow keys)'
+                self.cidscroll = self.line.figure.canvas.mpl_connect(
+                    'scroll_event', self.on_scroll_20beta)
+                titlestr += ', beta (scroll)'
             
             self.ax.set_title(titlestr,fontsize='small')
             
@@ -123,7 +117,7 @@ class FunctionPlacer(object):
             if hasattr(self,'cidscroll'):   
                 self.line.figure.canvas.mpl_disconnect(self.cidscroll)
             if hasattr(self,'cidkey'):   
-                self.line.figure.canvas.mpl_disconnect(self.cidscroll)
+                self.line.figure.canvas.mpl_disconnect(self.cidkey)
             self.line.figure.canvas.mpl_disconnect(self.cidrelease)
             
             self.ax.set_title('')
@@ -188,45 +182,26 @@ class FunctionPlacer(object):
         self.fig.show()
     
     # ======================================================================= #
-    def on_motion_20base(self,event):
-        """Updated the baseline on mouse movement"""
-        
-        # check event data
-        if event.ydata is not None:
-            
-            self.p0['base'] = event.ydata
-            self.line.set_ydata(self.fn(self.x,**self.p0))
-            self.line.figure.canvas.draw()
-     
-    # ======================================================================= #
-    def on_scroll_20amp(self,event):
+    def on_motion_20amp(self,event):
         """Updated the initial asymmetry on mouse movement"""
      
         # check event data
-        if event.step is not None:
+        if event.ydata is not None:
             
-            self.p0['amp'] += self.p0['amp']*0.05*event.step
+            self.p0['amp'] = max(0,event.ydata)
             self.line.set_ydata(self.fn(self.x,**self.p0))
             self.line.figure.canvas.draw()
  
     # ======================================================================= #
-    def on_key_20beta(self,event):
-        """Updated the initial asymmetry on mouse movement"""
+    def on_scroll_20beta(self,event):
+        """Updated the initial asymmetry on mouse scroll"""
      
-        beta = self.p0['beta']
-     
-        # check event data
-        if event.key in ('up','right'):
-            beta += beta*0.05
-            
-        elif event.key in ('down','left'):
-            beta -= beta*0.05            
-        else:
-             return
-
-        self.p0['beta'] = min(max(beta,0),1)
-        self.line.set_ydata(self.fn(self.x,**self.p0))
-        self.line.figure.canvas.draw()
+        if event.step is not None:
+            beta = self.p0['beta']
+            beta += beta*0.05*event.step
+            self.p0['beta'] = min(max(beta,0),1)
+            self.line.set_ydata(self.fn(self.x,**self.p0))
+            self.line.figure.canvas.draw()
         
     # ======================================================================= #
     def on_motion_20lam(self,event):

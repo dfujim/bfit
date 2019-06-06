@@ -171,8 +171,9 @@ class gui_param_popup(object):
             parnames_now = [p for p in self.parnames if str(comp) in p]
             
             # baseline name 
-            if comp == 0 and self.first:    parnames_now.append('baseline')
-            else:                           parnames_prev.append('baseline')
+            if self.mode == 1:
+                if comp == 0 and self.first:    parnames_now.append('baseline')
+                else:                           parnames_prev.append('baseline')
             
             # translate keynames: input to original
             parnames_now_conv = {self.parmap[k.split('_')[0]]:k for k in parnames_now}
@@ -221,13 +222,12 @@ class gui_param_popup(object):
                 if comp == 0 and self.first:
                     
                     if 'beta' in parnames_now_conv.keys():
-                        def fn(x,lam,amp,beta,base):
+                        def fn(x,lam,amp,beta):
                             
                             # add to input dictionary
                             p[parnames_now_conv['lam']] = lam
                             p[parnames_now_conv['amp']] = amp
                             p[parnames_now_conv['beta']] = beta
-                            p[parnames_now_conv['base']] = base
                             
                             # get the order right
                             p_in = [p[k] for k in self.parnames if k in p.keys()]
@@ -286,18 +286,23 @@ class gui_param_popup(object):
                                            lifetime=bd.life.Li8)
                 
                 if 'beta' in self.parnames:
-                    fn = lambda x,lam,amp,beta,base : f1(x,lam,amp,beta,base)
+                    fn = lambda x,lam,amp,beta : f1(x,lam,amp,beta)
                 else:
-                    fn = lambda x,lam,amp,base : f1(x,lam,amp,base)
+                    fn = lambda x,lam,amp : f1(x,lam,amp)
             
         # start recursive function placement
+        try:
+            base = float(self.p0['baseline'].get())
+        except KeyError:
+            base = 0
+        
         self.fig.canvas.mpl_connect('close_event',self.cancel)
         self.fplace = FunctionPlacer(fig=self.fig,
                                      data=self.data,
                                      fn=fn,
                                      p0=p0,
                                      endfn=lambda:self.run(comp+1),
-                                     base = float(self.p0['baseline'].get()))
+                                     base = base)
         
     # ====================================================================== #
     def cancel(self,*args):
