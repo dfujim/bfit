@@ -5,6 +5,7 @@
 from bfit.fitting.fit_bdata import fit_list
 import bfit.fitting.functions as fns
 from functools import partial
+from decay_31mg import fa_31Mg
 import numpy as np
 import bdata as bd
 
@@ -89,11 +90,30 @@ class fitter(object):
             pdict = data[1]
             doptions = data[2]
             
-            # get fitting function
-            if dat.mode in ['20','2h']: pulse = dat.get_pulse_s()
-            else:                       pulse = -1
+            # probe lifetime
             life = bd.life[self.probe_species]
-            fn.append(self.get_fn(fn_name,ncomp,pulse,life))
+            
+            # get fitting function for 20 and 2h
+            if dat.mode in ['20','2h']: 
+                pulse = dat.get_pulse_s()
+                
+                # estimate pulse rate from peak pulse time
+                rate = lambda h : max(dat.hist[h].data)/dat.ppg.dwelltime.mean*1000
+                rate_est = np.mean((rate('L+')+rate('R+')+rate('F+')+rate('B+'),
+                                    rate('L-')+rate('R-')+rate('F-')+rate('B-')))
+                
+                # fit function
+                fn1 = self.get_fn(fn_name,ncomp,pulse,life)
+                
+                # add corrections for probe daughters
+                if self.probe_species == 'Mg31':
+                    fn.append(lambda x,*par : fa_31Mg(x,pulse,rate_est)*fn1(x,*par))
+                else:
+                    fn.append(fn1)
+                
+            # 1f functions
+            else:                       
+                fn.append(self.get_fn(fn_name,ncomp,-1,life))
             
             # get year and run
             runs.append(dat.run)
