@@ -30,7 +30,7 @@ class FunctionPlacer(object):
                 1F
                     peak, width, amp, base (optional)
                 20/2H
-                    amp, lam, beta (optional), base (optional)
+                    amp, lam, beta (optional)
         """
         # save input
         self.fig = fig

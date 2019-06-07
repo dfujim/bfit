@@ -5,11 +5,12 @@
 from tkinter import *
 from tkinter import ttk
 from bfit import logger_name
+from bfit.fitting.FunctionPlacer import FunctionPlacer
+from decay_31mg import fa_31Mg
+
 import matplotlib.pyplot as plt
 import logging
 import bdata as bd
-from bfit.fitting.FunctionPlacer import FunctionPlacer
-
 import numpy as np
 
 # ========================================================================== #
@@ -158,6 +159,12 @@ class gui_param_popup(object):
         # ensure matplotlib signals work. Not sure why this is needed.
         self.fig.tight_layout()
     
+        # estimate pulse rate from peak pulse time
+        if self.mode == 2:            
+            rate = lambda h : max(self.data.hist[h].data)/self.data.ppg.dwelltime.mean*1000
+            rate_est = np.mean((rate('L+')+rate('R+')+rate('F+')+rate('B+'),
+                                rate('L-')+rate('R-')+rate('F-')+rate('B-')))
+    
         # get parameter names and fitting functions - multi component
         if self.n_components > 1:
             
@@ -183,7 +190,7 @@ class gui_param_popup(object):
             
             # p0 from current iteration
             p0 = {self.parmap[p.split('_')[0]]:self.p0[p] for p in parnames_now}
-            
+                        
             # get fitting function 
             if self.mode == 1:
                 f1 = self.fitter.get_fn(self.fname,ncomp=ncomp)
@@ -214,10 +221,17 @@ class gui_param_popup(object):
                         return f1(x,*p_in)
                
             elif self.mode == 2:
-                f1 = self.fitter.get_fn(self.fname,ncomp=ncomp,
-                                           pulse_len=self.data.get_pulse_s(),
-                                           lifetime=bd.life.Li8)
-                                           
+                pulse = self.data.get_pulse_s()
+                f2 = self.fitter.get_fn(self.fname,ncomp=ncomp,
+                                           pulse_len=pulse,
+                                           lifetime=bd.life[self.bfit.probe_species.get()])
+                
+                # make new fit function if needed to account for daughters
+                if self.bfit.probe_species.get() == 'Mg31':
+                    f1 = lambda x,*par : fa_31Mg(x,pulse,rate_est)*f2(x,*par)
+                else:
+                    f1 = f2
+                
                 # make decorator for fitting function
                 if comp == 0 and self.first:
                     
@@ -232,7 +246,7 @@ class gui_param_popup(object):
                             # get the order right
                             p_in = [p[k] for k in self.parnames if k in p.keys()]
                             return f1(x,*p_in)
-                    else:
+                    elif 'base' in parnames_now_conv.keys():
                         def fn(x,lam,amp,base):
                             
                             # add to input dictionary
@@ -243,7 +257,16 @@ class gui_param_popup(object):
                             # get the order right
                             p_in = [p[k] for k in self.parnames if k in p.keys()]
                             return f1(x,*p_in)               
+                    else:
+                        def fn(x,lam,amp):
                             
+                            # add to input dictionary
+                            p[parnames_now_conv['lam']] = lam
+                            p[parnames_now_conv['amp']] = amp
+                            
+                            # get the order right
+                            p_in = [p[k] for k in self.parnames if k in p.keys()]
+                            return f1(x,*p_in)               
                 else:
                     
                     if 'beta' in parnames_now_conv.keys():
@@ -268,7 +291,6 @@ class gui_param_popup(object):
                             p_in = [p[k] for k in self.parnames if k in p.keys()]
                             return f1(x,*p_in)               
                             
-                                    
         # get parameter names and fitting functions - single component
         else:
             
@@ -281,9 +303,16 @@ class gui_param_popup(object):
                 fn = lambda x,peak,width,amp,base : f1(x,peak,width,amp,base)
                     
             elif self.mode == 2:
-                f1 = self.fitter.get_fn(self.fname,ncomp=ncomp,
-                                           pulse_len=self.data.get_pulse_s(),
-                                           lifetime=bd.life.Li8)
+                pulse = self.data.get_pulse_s()
+                f2 = self.fitter.get_fn(self.fname,ncomp=ncomp,
+                                        pulse_len=pulse,
+                                        lifetime=bd.life[self.bfit.probe_species.get()])
+                
+                # make new fit function if needed to account for daughters
+                if self.bfit.probe_species.get() == 'Mg31':
+                    f1 = lambda x,*par : fa_31Mg(x,pulse,rate_est)*f2(x,*par)
+                else:
+                    f1 = f2
                 
                 if 'beta' in self.parnames:
                     fn = lambda x,lam,amp,beta : f1(x,lam,amp,beta)
@@ -297,6 +326,7 @@ class gui_param_popup(object):
             base = 0
         
         self.fig.canvas.mpl_connect('close_event',self.cancel)
+        
         self.fplace = FunctionPlacer(fig=self.fig,
                                      data=self.data,
                                      fn=fn,

@@ -186,9 +186,12 @@ class fitter(object):
         # multicomponent: make copies of everything other than the baselines
         names = []
         for c in range(ncomp): 
-            for n in names_orig[:-1]:
+            for n in names_orig:
+                if 'base' in n: continue
                 names.append(n+'_%d' % c)
-        names.append(names_orig[-1])
+                
+        if 'base' in names_orig[-1]:
+            names.append(names_orig[-1])
         
         return tuple(names)
         

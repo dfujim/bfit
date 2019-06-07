@@ -5,12 +5,11 @@
 # General solutions to the rate equations computed with:
 # Maxima, a Computer Algebra System
 # http://maxima.sourceforge.net/
+# 
 # Original Author: Ryan M. L. McFadden
-#
-# Transcribed: Derek Fujimoto
+# Transcribed to python by: Derek Fujimoto
 # June 2019
 
-import scipy.stats.mstats as mstats
 import numpy as np
 
 # GLOBAL CONSTANTS ===========================================================
@@ -59,8 +58,7 @@ Q_31Si = Q_31Si_b
 Q_30Al = Q_30Al_b
 
 # find the maximum effective Q value
-Q = np.array((Q_31Mg, Q_31Al, Q_31Si, Q_30Al))
-Q_max = max(Q)
+Q_max = max((Q_31Mg, Q_31Al, Q_31Si, Q_30Al))
 
 # naive detection efficiencies based on effective Q values
 e_31Mg = Q_31Mg / Q_max
