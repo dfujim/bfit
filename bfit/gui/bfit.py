@@ -266,7 +266,9 @@ class bfit(object):
         # Settings: set probe species
         self.probe_species = StringVar()
         self.probe_species.set('Li8')
-        for k in bd.life.keys():
+        lifekeys = list(bd.life.keys())
+        lifekeys.sort()
+        for k in lifekeys:
             if 'err' not in k: 
                 menu_settings_probe.add_radiobutton(label=k,
                         variable=self.probe_species,

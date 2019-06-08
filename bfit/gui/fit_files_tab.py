@@ -87,8 +87,7 @@ class fit_files(object):
         # TOP FRAME -----------------------------------------------------------
         
         # fit function select 
-        fn_select_frame_border = ttk.Labelframe(fit_data_tab,text='Fit Function')
-        fn_select_frame = ttk.Frame(fn_select_frame_border)
+        fn_select_frame = ttk.Labelframe(fit_data_tab,text='Fit Function')
         self.fit_function_title = StringVar()
         self.fit_function_title.set("")
         self.fit_function_title_box = ttk.Combobox(fn_select_frame, 
@@ -135,8 +134,7 @@ class fit_files(object):
         # GRIDDING
             
         # top frame gridding
-        fn_select_frame_border.grid(column=0,row=0,sticky=(W,E))
-        fn_select_frame.grid(column=0,row=0,sticky=(W))
+        fn_select_frame.grid(column=0,row=0,sticky=(W,E))
         
         c = 0
         self.fit_function_title_box.grid(column=c,row=0); c+=1
@@ -226,7 +224,6 @@ class fit_files(object):
         # resizing
         
         # fn select
-        fn_select_frame_border.grid_columnconfigure(0,weight=1)
         fn_select_frame.grid_columnconfigure(1,weight=10)   # Nterms
         fn_select_frame.grid_columnconfigure(4,weight=1)    # Set result to p0
         fn_select_frame.grid_columnconfigure(5,weight=1)    # reset p0
@@ -1328,7 +1325,8 @@ class fitline(object):
                     parentry[k][0].trace_vdelete(*t)
                 
                 # set new trace callback
-                parentry[k][0].trace("w", callback)
+                parentry[k][0].trace_id = parentry[k][0].trace("w", callback)
+                parentry[k][0].trace_callback = callback
         
     # ======================================================================= #
     def get_new_parameters(self):
@@ -1394,7 +1392,17 @@ class fitline(object):
         
         # set value
         if set_all or shared:
-            parentry[column][0].set(source_entry[column][0].get())
+            
+            p = parentry[column][0]
+            
+            # remove the trace
+            p.trace_vdelete("w",p.trace_id)
+            
+            # set the value
+            p.set(source_entry[column][0].get())
+    
+            # add the trace back
+            p.trace_id = p.trace("w", p.trace_callback)
     
     # ======================================================================= #
     def show_fit_result(self):

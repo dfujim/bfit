@@ -6,7 +6,7 @@ from tkinter import *
 from tkinter import ttk
 from bfit import logger_name
 from bfit.fitting.FunctionPlacer import FunctionPlacer
-from decay_31mg import fa_31Mg
+from bfit.fitting.decay_31mg import fa_31Mg
 
 import matplotlib.pyplot as plt
 import logging
@@ -159,12 +159,6 @@ class gui_param_popup(object):
         # ensure matplotlib signals work. Not sure why this is needed.
         self.fig.tight_layout()
     
-        # estimate pulse rate from peak pulse time
-        if self.mode == 2:            
-            rate = lambda h : max(self.data.hist[h].data)/self.data.ppg.dwelltime.mean*1000
-            rate_est = np.mean((rate('L+')+rate('R+')+rate('F+')+rate('B+'),
-                                rate('L-')+rate('R-')+rate('F-')+rate('B-')))
-    
         # get parameter names and fitting functions - multi component
         if self.n_components > 1:
             
@@ -228,7 +222,7 @@ class gui_param_popup(object):
                 
                 # make new fit function if needed to account for daughters
                 if self.bfit.probe_species.get() == 'Mg31':
-                    f1 = lambda x,*par : fa_31Mg(x,pulse,rate_est)*f2(x,*par)
+                    f1 = lambda x,*par : fa_31Mg(x,pulse)*f2(x,*par)
                 else:
                     f1 = f2
                 
@@ -310,7 +304,7 @@ class gui_param_popup(object):
                 
                 # make new fit function if needed to account for daughters
                 if self.bfit.probe_species.get() == 'Mg31':
-                    f1 = lambda x,*par : fa_31Mg(x,pulse,rate_est)*f2(x,*par)
+                    f1 = lambda x,*par : fa_31Mg(x,pulse)*f2(x,*par)
                 else:
                     f1 = f2
                 
