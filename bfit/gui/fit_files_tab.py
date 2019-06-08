@@ -40,6 +40,7 @@ class fit_files(object):
             fitter:         fitting object from self.bfit.routine_mod
             mode:           what type of run is this. 
             n_component:    number of fitting components (IntVar)
+            probe_label:    Label for probe species
             runframe:       frame for displaying fit results and inputs
             runmode_label:  display run mode 
             set_as_group:   BooleanVar() if true, set fit parfor whole group
@@ -72,22 +73,26 @@ class fit_files(object):
         self.fit_data_tab = fit_data_tab
             
         # make top level frames
-        mid_fit_frame = ttk.Labelframe(fit_data_tab,
+        left_frame = ttk.Frame(fit_data_tab)
+        right_frame = ttk.Frame(fit_data_tab)
+    
+        mid_fit_frame = ttk.Labelframe(left_frame,
                     text='Set Initial Parameters',pad=5)
-        right_frame = ttk.Labelframe(fit_data_tab,
-            text='Fit Results and Run Conditions',pad=5)     # draw fit results
-        
+                    
         mid_fit_frame.grid(column=0,row=1,sticky=(N,W,E,S))
-        right_frame.grid(column=1,row=1,columnspan=2,sticky=(N,E,W))
+        right_frame.grid(column=1,row=0,sticky=(N,E,W))
+        left_frame.grid(column=0,row=0,sticky=(N,E,W))
         
         fit_data_tab.grid_columnconfigure(0,weight=1)   # fitting space
         mid_fit_frame.grid_columnconfigure(0,weight=1)
         mid_fit_frame.grid_rowconfigure(0,weight=1)
+        left_frame.grid_rowconfigure(0,weight=1)
+        left_frame.grid_columnconfigure(0,weight=1)
         
         # TOP FRAME -----------------------------------------------------------
         
         # fit function select 
-        fn_select_frame = ttk.Labelframe(fit_data_tab,text='Fit Function')
+        fn_select_frame = ttk.Labelframe(left_frame,text='Fit Function')
         self.fit_function_title = StringVar()
         self.fit_function_title.set("")
         self.fit_function_title_box = ttk.Combobox(fn_select_frame, 
@@ -118,18 +123,6 @@ class fit_files(object):
                 text='Modify For All',\
                 variable=self.set_as_group,onvalue=True,offvalue=False)
         self.set_as_group.set(True)
-        
-        # run mode 
-        fit_runmode_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
-                text='Run Mode',)
-        self.fit_runmode_label = ttk.Label(fit_runmode_label_frame,text="",
-                font='bold',justify=CENTER)
-        
-        # fitting routine
-        fit_routine_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
-                text='Fitting Routine',)
-        self.fit_routine_label = ttk.Label(fit_routine_label_frame,text="",
-                font='bold',justify=CENTER)
                 
         # GRIDDING
             
@@ -146,14 +139,6 @@ class fit_files(object):
         reset_param_button.grid(column=c,row=0,padx=5,pady=1); c+=1
         gui_param_button.grid(column=c,row=0,padx=5,pady=1); c+=1
         set_group_check.grid(column=c,row=0,padx=5,pady=1); c+=1
-        
-        # run mode gridding
-        fit_runmode_label_frame.grid(column=1,row=0,sticky=(E,W))
-        self.fit_runmode_label.grid(column=0,row=0,sticky=(E,W))
-        
-        # routine label gridding
-        fit_routine_label_frame.grid(column=2,row=0,sticky=(E,W))
-        self.fit_routine_label.grid(column=0,row=0,sticky=(E,W))
         
         # MID FRAME -----------------------------------------------------------
         
@@ -184,16 +169,40 @@ class fit_files(object):
         
         # RIGHT FRAME ---------------------------------------------------------
         
+        # run mode 
+        fit_runmode_label_frame = ttk.Labelframe(right_frame,pad=(10,5,10,5),
+                text='Run Mode',)
+        self.fit_runmode_label = ttk.Label(fit_runmode_label_frame,text="",
+                font='bold',justify=CENTER)
+        
+        # fitting routine
+        fit_routine_label_frame = ttk.Labelframe(right_frame,pad=(10,5,10,5),
+                text='Fitting Routine',)
+        self.fit_routine_label = ttk.Label(fit_routine_label_frame,text="",
+                font='bold',justify=CENTER)
+        
+        # probe species
+        probe_label_frame = ttk.Labelframe(right_frame,pad=(10,5,10,5),
+                text='Probe',)
+        self.probe_label = ttk.Label(probe_label_frame,
+                                     text=self.bfit.probe_species.get(),
+                                     font='bold',justify=CENTER)
+        
+        # fit results -----------------------
+        results_frame = ttk.Labelframe(right_frame,
+            text='Fit Results and Run Conditions',pad=5)     # draw fit results
+        results_frame.grid(column=0,row=1,sticky=(N,E,W))
+        
         # draw and export buttons
-        button_frame = ttk.Frame(right_frame)
+        button_frame = ttk.Frame(results_frame)
         draw_button = ttk.Button(button_frame,text='Draw',command=self.draw_param)
         export_button = ttk.Button(button_frame,text='Export',command=self.export)
         show_button = ttk.Button(button_frame,text='Show All',command=self.show_all_results)
         
         # menus for x and y values
-        ttk.Label(right_frame,text="x axis:").grid(column=0,row=1)
-        ttk.Label(right_frame,text="y axis:").grid(column=0,row=2)
-        ttk.Label(right_frame,text="Annotation:").grid(column=0,row=3)
+        ttk.Label(results_frame,text="x axis:").grid(column=0,row=1)
+        ttk.Label(results_frame,text="y axis:").grid(column=0,row=2)
+        ttk.Label(results_frame,text="Annotation:").grid(column=0,row=3)
         
         self.xaxis = StringVar()
         self.yaxis = StringVar()
@@ -203,11 +212,11 @@ class fit_files(object):
         self.yaxis.set('')
         self.annotation.set('')
         
-        self.xaxis_combobox = ttk.Combobox(right_frame,textvariable=self.xaxis,
+        self.xaxis_combobox = ttk.Combobox(results_frame,textvariable=self.xaxis,
                                       state='readonly',width=15)
-        self.yaxis_combobox = ttk.Combobox(right_frame,textvariable=self.yaxis,
+        self.yaxis_combobox = ttk.Combobox(results_frame,textvariable=self.yaxis,
                                       state='readonly',width=15)
-        self.annotation_combobox = ttk.Combobox(right_frame,
+        self.annotation_combobox = ttk.Combobox(results_frame,
                                       textvariable=self.annotation,
                                       state='readonly',width=15)
         
@@ -220,6 +229,18 @@ class fit_files(object):
         self.xaxis_combobox.grid(column=1,row=1,pady=5)
         self.yaxis_combobox.grid(column=1,row=2,pady=5)
         self.annotation_combobox.grid(column=1,row=3,pady=5)
+        
+        # gridding
+        fit_runmode_label_frame.grid(column=0,row=0,sticky=(E,W))
+        self.fit_runmode_label.grid(column=0,row=0)
+        
+        fit_routine_label_frame.grid(column=1,row=0,sticky=(E,W))
+        self.fit_routine_label.grid(column=0,row=0)
+        
+        probe_label_frame.grid(column=0,row=1,columnspan=2,sticky=(E,W,N))
+        self.probe_label.grid(column=0,row=0)
+        
+        results_frame.grid(column=0,row=2,columnspan=2,sticky=(E,W,N))
         
         # resizing
         
@@ -236,7 +257,7 @@ class fit_files(object):
         
         # right frame
         for i in range(2):
-            right_frame.grid_columnconfigure(i,weight=0)
+            results_frame.grid_columnconfigure(i,weight=0)
         
         # store lines for fitting
         self.fit_lines = {}

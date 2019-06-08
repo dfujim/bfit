@@ -1045,8 +1045,10 @@ class bfit(object):
     def set_focus_tab(self,idn,*a): self.notebook.select(idn)
     def set_ppm_reference(self,*a): set_ppm_reference_popup(self)
     def set_probe_species(self, *a): 
-        self.fit_files.fitter.probe_species = self.probe_species.get()
-        self.logger.info('Probe species changed to %s',self.probe_species.get())
+        species = self.probe_species.get()
+        self.fit_files.fitter.probe_species = species
+        self.fit_files.probe_label['text'] = species
+        self.logger.info('Probe species changed to %s',species)
     def set_redraw_period(self,*a): redraw_period_popup(self)
     def set_style_new(self,x):      
         self.logger.info('Setting draw style to "new"')
