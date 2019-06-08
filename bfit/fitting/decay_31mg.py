@@ -349,7 +349,7 @@ def a_30Si(time, beam_pulse, beam_rate):
     return e_30Si * lambda_30Si * n_30Si(time, beam_pulse, beam_rate)
 
 # total atoms
-def n_total(time, beam_pulse, beam_rate):
+def n_total(time, beam_pulse, beam_rate=1e6):
     return  n_31Mg(time, beam_pulse, beam_rate) + \
             n_31Al(time, beam_pulse, beam_rate) + \
             n_31Si(time, beam_pulse, beam_rate) + \
@@ -358,36 +358,36 @@ def n_total(time, beam_pulse, beam_rate):
             n_30Si(time, beam_pulse, beam_rate);
 
 # fractions of total atoms
-def fn_31Mg(time, beam_pulse, beam_rate): 
+def fn_31Mg(time, beam_pulse, beam_rate=1e6): 
     return  n_31Mg(time, beam_pulse, beam_rate) / \
             n_total(time, beam_pulse, beam_rate)
 
-def fn_31Al(time, beam_pulse, beam_rate):
+def fn_31Al(time, beam_pulse, beam_rate=1e6):
     return n_31Al(time, beam_pulse, beam_rate) / \
             n_total(time, beam_pulse, beam_rate)
 
-def fn_31Si(time, beam_pulse, beam_rate):
+def fn_31Si(time, beam_pulse, beam_rate=1e6):
   return n_31Si(time, beam_pulse, beam_rate) / \
          n_total(time, beam_pulse, beam_rate)
 
-def fn_31P(time, beam_pulse, beam_rate):
+def fn_31P(time, beam_pulse, beam_rate=1e6):
   return n_31P(time, beam_pulse, beam_rate) / \
          n_total(time, beam_pulse, beam_rate)
 
-def fn_30Al(time, beam_pulse, beam_rate):
+def fn_30Al(time, beam_pulse, beam_rate=1e6):
   return n_30Al(time, beam_pulse, beam_rate) / \
          n_total(time, beam_pulse, beam_rate)
 
-def fn_30Al(time, beam_pulse, beam_rate):
+def fn_30Al(time, beam_pulse, beam_rate=1e6):
   return n_30Al(time, beam_pulse, beam_rate) / \
          n_total(time, beam_pulse, beam_rate)
 
-def fn_30Si(time, beam_pulse, beam_rate):
+def fn_30Si(time, beam_pulse, beam_rate=1e6):
   return n_30Si(time, beam_pulse, beam_rate) / \
          n_total(time, beam_pulse, beam_rate)
 
 # total activity
-def a_total(time, beam_pulse, beam_rate):
+def a_total(time, beam_pulse, beam_rate=1e6):
   return a_31Mg(time, beam_pulse, beam_rate) + \
          a_31Al(time, beam_pulse, beam_rate) + \
          a_31Si(time, beam_pulse, beam_rate) + \
@@ -396,26 +396,26 @@ def a_total(time, beam_pulse, beam_rate):
          a_30Si(time, beam_pulse, beam_rate)
 
 # fractional activities
-def fa_31Mg(time, beam_pulse, beam_rate):
+def fa_31Mg(time, beam_pulse, beam_rate=1e6):
   return a_31Mg(time, beam_pulse, beam_rate) / \
          a_total(time, beam_pulse, beam_rate)
 
-def fa_31Al(time, beam_pulse, beam_rate):
+def fa_31Al(time, beam_pulse, beam_rate=1e6):
   return a_31Al(time, beam_pulse, beam_rate) / \
          a_total(time, beam_pulse, beam_rate)
 
-def fa_31Si(time, beam_pulse, beam_rate):
+def fa_31Si(time, beam_pulse, beam_rate=1e6):
   return a_31Si(time, beam_pulse, beam_rate) / \
          a_total(time, beam_pulse, beam_rate)
 
-def fa_31P(time, beam_pulse, beam_rate):
+def fa_31P(time, beam_pulse, beam_rate=1e6):
   return a_31P(time, beam_pulse, beam_rate) / \
          a_total(time, beam_pulse, beam_rate)
 
-def fa_30Al(time, beam_pulse, beam_rate):
+def fa_30Al(time, beam_pulse, beam_rate=1e6):
   return a_30Al(time, beam_pulse, beam_rate) / \
          a_total(time, beam_pulse, beam_rate)
 
-def fa_30Si(time, beam_pulse, beam_rate):
+def fa_30Si(time, beam_pulse, beam_rate=1e6):
   return a_30Si(time, beam_pulse, beam_rate) / \
          a_total(time, beam_pulse, beam_rate)

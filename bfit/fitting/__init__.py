@@ -5,4 +5,5 @@ __all__=['functions',
          'pulsed',
          'continuous',
          'fitter',
-         'fit_bdata']
+         'fit_bdata',
+         'decay_31mg']
