@@ -974,6 +974,15 @@ class fit_files(object):
             err = [1000*data[r].temperature.std/(data[r].temperature.mean**2) \
                    for r in runs]
         
+        elif select == 'Chi-Squared':
+            val = []
+            for r in runs:
+                try:
+                    val.append(data[r].chi)
+                except KeyError:
+                    val.append(np.nan)
+            err = [np.nan for r in runs]
+        
         # fitted parameter options
         elif select in self.fitter.gen_param_names(self.fit_function_title.get(),
                                                    self.n_component.get()):
@@ -982,8 +991,8 @@ class fit_files(object):
             
             for r in runs:
                 try:
-                    val.append(self.bfit.data[r].fitpar['res'][select])
-                    err.append(self.bfit.data[r].fitpar['dres'][select])
+                    val.append(data[r].fitpar['res'][select])
+                    err.append(data[r].fitpar['dres'][select])
                 except KeyError:
                     val.append(np.nan)
                     err.append(np.nan)
