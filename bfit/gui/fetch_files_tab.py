@@ -204,22 +204,16 @@ class fetch_files(object):
         
         right_frame.grid(           column=0,row=0,sticky=(N,E,W))
         r = 0
-        check_all_box.grid(         column=0,row=r,sticky=(N)); r+= 1
-        right_checkbox_frame.grid(  column=0,row=r,sticky=(N)); r+= 1
-        check_toggle_button.grid(   column=0,row=r,sticky=(N,E,W),pady=1); r+= 1
+        check_all_box.grid(         column=0,row=r,sticky=(N),columnspan=2); r+= 1
+        right_checkbox_frame.grid(  column=0,row=r,sticky=(N),columnspan=2); r+= 1
+        check_toggle_button.grid(   column=0,row=r,sticky=(N,E,W),columnspan=2,pady=1); r+= 1
         check_draw.grid(            column=0,row=r,sticky=(N,W));
         check_remove.grid(          column=1,row=r,sticky=(N,E)); r+= 1
         check_rebin_label.grid(     column=0,row=r)
         check_rebin_box.grid(       column=1,row=r); r+= 1
-        check_bin_remove_entry.grid(column=0,row=r,sticky=(N)); r+= 1
-        check_set.grid(             column=0,row=r,sticky=(N,E,W))
-        
+        check_bin_remove_entry.grid(column=0,row=r,sticky=(N),columnspan=2); r+= 1
+        check_set.grid(             column=0,row=r,sticky=(N,E,W),columnspan=2)
         bigright_frame.grid(        rowspan=2,sticky=(N,E,W))
-        check_all_box.grid(         columnspan=2)
-        right_checkbox_frame.grid(  columnspan=2)
-        check_toggle_button.grid(   columnspan=2)
-        check_bin_remove_entry.grid(columnspan=2)
-        check_set.grid(             columnspan=2)
         
         check_rebin_box.grid_configure(padx=5,pady=5,sticky=(E,W))
         check_rebin_label.grid_configure(padx=5,pady=5,sticky=(E,W))

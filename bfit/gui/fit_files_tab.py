@@ -79,15 +79,17 @@ class fit_files(object):
         mid_fit_frame = ttk.Labelframe(left_frame,
                     text='Set Initial Parameters',pad=5)
                     
+        right_frame.grid(column=1,row=0,sticky=(N,E,W,S))
+        left_frame.grid(column=0,row=0,sticky=(N,E,W,S))
         mid_fit_frame.grid(column=0,row=1,sticky=(N,W,E,S))
-        right_frame.grid(column=1,row=0,sticky=(N,E,W))
-        left_frame.grid(column=0,row=0,sticky=(N,E,W))
         
         fit_data_tab.grid_columnconfigure(0,weight=1)   # fitting space
+        fit_data_tab.grid_rowconfigure(0,weight=1)
+        fit_data_tab.grid_rowconfigure(1,weight=1)
         mid_fit_frame.grid_columnconfigure(0,weight=1)
         mid_fit_frame.grid_rowconfigure(0,weight=1)
-        left_frame.grid_rowconfigure(0,weight=1)
         left_frame.grid_columnconfigure(0,weight=1)
+        left_frame.grid_rowconfigure(1,weight=1)
         
         # TOP FRAME -----------------------------------------------------------
         
@@ -132,7 +134,7 @@ class fit_files(object):
         c = 0
         self.fit_function_title_box.grid(column=c,row=0); c+=1
         ttk.Label(fn_select_frame,text="Number of Terms:").grid(column=c,
-                row=0,sticky=(E),padx=5,pady=5); c+=1
+                  row=0,sticky=(E),padx=5,pady=5); c+=1
         n_component_box.grid(column=c,row=0,padx=5,pady=5); c+=1
         fit_button.grid(column=c,row=0,padx=5,pady=1); c+=1
         set_param_button.grid(column=c,row=0,padx=5,pady=1); c+=1
@@ -160,7 +162,6 @@ class fit_files(object):
         self.fit_canvas.grid(column=0,row=0,sticky=(E,W,S,N))
         yscrollbar.grid(column=1,row=0,sticky=(W,S,N))
         
-        self.runframe.grid_columnconfigure(0,weight=1) 
         self.fit_canvas.grid_columnconfigure(0,weight=1) 
         self.fit_canvas.grid_rowconfigure(0,weight=1)
         
@@ -400,7 +401,6 @@ class fit_files(object):
         
         # populate axis comboboxes
         lst = self.draw_components.copy()
-        lst.sort()
         
         try:
             parlst = [p for p in self.fitter.gen_param_names(
@@ -968,6 +968,11 @@ class fit_files(object):
         elif select == 'Title':
             val = [data[r].bd.title for r in runs]
             err = [np.nan for r in runs]
+        
+        elif select == '1000/T (1/K)':
+            val = [1000/data[r].temperature.mean for r in runs]
+            err = [1000*data[r].temperature.std/(data[r].temperature.mean**2) \
+                   for r in runs]
         
         # fitted parameter options
         elif select in self.fitter.gen_param_names(self.fit_function_title.get(),
