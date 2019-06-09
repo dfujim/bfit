@@ -608,6 +608,7 @@ class dataline(object):
     """
         A line of objects to display run properties and remove bins and whatnot.
         
+        bdfit:          fitdata object 
         bfit:           pointer to root 
         bin_remove:     StringVar for specifying which bins to remove in 1f runs
         bin_remove_entry: Entry object for bin remove 

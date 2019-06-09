@@ -1084,14 +1084,15 @@ class fitline(object):
     """
         Instance variables 
         
-            bfit        pointer to top class
-            dataline    pointer to dataline object in fetch_files_tab
-            parent      pointer to parent object (frame)
-            parlabels   label objects, saved for later destruction
-            parentry    [parname][colname] of ttk.Entry objects saved for 
+            bfit            pointer to top class
+            dataline        pointer to dataline object in fetch_files_tab
+            parent          pointer to parent object (frame)
+            parlabels       label objects, saved for later destruction
+            parentry        [parname][colname] of ttk.Entry objects saved for 
                             retrieval and destruction
-            run_label   label for showing which run is selected
-            fitframe    mainframe for this tab. 
+            run_label       label for showing which run is selected
+            run_label_title label for showing which run is selected
+            fitframe        mainframe for this tab. 
     """
     
     n_runs_max = 5      # number of runs before scrollbar appears
@@ -1126,8 +1127,10 @@ class fitline(object):
         fitframe = ttk.Frame(self.parent,pad=(5,0))
         
         # label for displyaing run number
-        self.run_label = ttk.Label(fitframe,text='[ %d ]' % (self.dataline.run),
-                                    font='bold')
+        self.run_label = Label(fitframe,text='[ %d ]' % (self.dataline.run),
+                                    font='bold',bg='black',fg='white')
+        self.run_label_title = Label(fitframe,text=self.dataline.bdfit.title,
+                                        justify='right',fg='red4')
      
         # Parameter input labels
         c = 0
@@ -1140,9 +1143,9 @@ class fitline(object):
         ttk.Label(fitframe,text='ChiSq').grid(        column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Fixed').grid(        column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Shared').grid(       column=c,row=1,padx=5); c+=1
-        
-        # grid the run_label
-        self.run_label.grid(column=0,row=0,padx=5,pady=5,columnspan=c-1)
+    
+        self.run_label.grid(column=0,row=0,padx=5,pady=5,columnspan=1)
+        self.run_label_title.grid(column=1,row=0,padx=5,pady=5,columnspan=c-1,sticky=E)
         
         # save frame 
         self.fitframe = fitframe
