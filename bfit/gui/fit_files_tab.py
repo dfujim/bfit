@@ -162,6 +162,7 @@ class fit_files(object):
         self.fit_canvas.grid(column=0,row=0,sticky=(E,W,S,N))
         yscrollbar.grid(column=1,row=0,sticky=(W,S,N))
         
+        self.runframe.grid_columnconfigure(0,weight=1) 
         self.fit_canvas.grid_columnconfigure(0,weight=1) 
         self.fit_canvas.grid_rowconfigure(0,weight=1)
         
@@ -1309,7 +1310,7 @@ class fitline(object):
             par['foreground'] = 'black'
             
             dpar_val = StringVar()
-            dpar = ttk.Entry(fitframe,textvariable=dpar_val,width=10)
+            dpar = ttk.Entry(fitframe,textvariable=dpar_val,width=15)
             dpar['state'] = 'readonly'
             dpar['foreground'] = 'black'
                                      
