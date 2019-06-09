@@ -2,7 +2,7 @@
 
 Submodules and function signatures: 
 
-* `bfit.fitting.functions` (base functions module)
+* **`bfit.fitting.functions`** (base functions module)
     * `lorentzian(freq,peak,width,amp)`
     * `gaussian(freq,mean,sigma,amp)`
     * `pulsed_exp`
@@ -12,17 +12,21 @@ Submodules and function signatures:
         * constructor: `pulsed_strexp(lifetime,pulse_len)`
         * call:`pulsed_strexp(time,lambda_s,beta,amp)`
     * `get_fn_superpos(fn_handles)`
-* `bfit.fitting.fit_bdata` (fitting bdata files module)
+* **`bfit.fitting.fit_bdata`** (fitting bdata files module)
     * `fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,hist_select='',**kwargs)`
     * `fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs)`
-* `bfit.fitting.global_fitter` (general global fitting)
+* **`bfit.fitting.global_fitter`** (general global fitting)
     * constructor: `global_fitter(x,y,dy,fn,sharelist,npar=-1)`
     * `draw(mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,savefig='',**errorbar_args`
     * `fit(**fitargs)`
     * `get_chi()`
     * `get_par()`
-* `bfit.fitting.global_bdata_fitter` (global fitting of bdata objects, inherits from `global_fitter`)
+* **`bfit.fitting.global_bdata_fitter`** (global fitting of bdata objects, inherits from `global_fitter`)
     * constructor: `global_bdata_fitter(runs,years,fn,sharelist,npar=-1)`
+* **`bfit.fitting.decay_31mg`** (fractional activity of 31Mg probe and decay products)
+   * `fn_31Mg(time,beam_pulse,beam_rate=1e6)` (fractions of total atoms. Similar for 31Al, 31Si, 31P, 30Al, 30Si.)
+   * `fa_31Mg(time,beam_pulse,beam_rate=1e6)` (fractional activity. Similar for 31Al, 31Si, 31P, 30Al, 30Si.)
+   
 
 # Module Details
 
@@ -240,3 +244,17 @@ global_bdata_fitter(runs,years,fn,sharelist,npar=-1):
                         Set if number of parameters is not intuitable from function code.            
         """
 ```
+
+## `bfit.fitting.decay_31mg`
+
+Functions to calculate the fraction activity and populations of 31Mg and decay products. To fit 31Mg data, multiply pulsed fitting function with the fractional activity. For example: 
+
+```python 
+from bfit.fitting.decay31mg import fa_31Mg
+from bfit.fitting.functions import pulsed_exp 
+from bdata import life
+
+pexp = pulsed_exp(lifetime=life.Mg31,pulse_len=4)
+fitfn = lambda time,*par : pexp(time,*par) * fa_31Mg(time,beam_pulse=4,beam_rate=1e6)
+```
+Note that the fractional activity is independent of the beam_rate to 14 decimal places, as long as it is non-zero. 
