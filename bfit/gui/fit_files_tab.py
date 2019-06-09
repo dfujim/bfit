@@ -1319,7 +1319,7 @@ class fitline(object):
             # do chi only once
             if i==0:
                 chi_val = StringVar()
-                chi = ttk.Entry(fitframe,textvariable=chi_val,width=7)
+                chi = Entry(fitframe,textvariable=chi_val,width=7)
                 chi['state'] = 'readonly'
                 chi['foreground'] = 'black'
                 
@@ -1468,6 +1468,9 @@ class fitline(object):
             disp['dres'][0].set(showstr % data.fitpar['dres'][parname])
             
             if 'chi' in disp.keys():
-                disp['chi'][0].set(showstr % chi)
-         
+                disp['chi'][0].set('%.2f' % chi)
+                if float(chi) > self.bfit.fit_files.chi_threshold:
+                    disp['chi'][1]['readonlybackground']='red'
+                else:
+                    disp['chi'][1]['readonlybackground']='#d9d9d9'
     
