@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-import datetime, os, traceback
+import datetime, os, traceback, warnings
 import logging
 
 """
@@ -570,11 +570,18 @@ class fit_files(object):
             dline.check_fit.set(True)
         
         # draw fit results
-        self.bfit.fetch_files.draw_all(ignore_check=False)
         style = self.bfit.draw_style.get()
         
         if style in ['redraw','new']:
             self.bfit.draw_style.set('stack')
+        
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.bfit.fetch_files.draw_all(ignore_check=False)
+        
+        if len(self.fit_lines.keys())>8:
+            plt.gca().get_legend().remove()
+            plt.tight_layout()
         
         self.bfit.draw_style.set(style)
             

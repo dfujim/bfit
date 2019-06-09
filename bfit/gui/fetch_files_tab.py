@@ -328,7 +328,7 @@ class fetch_files(object):
         
         # condense drawing into a funtion
         def draw_lines():
-            for r in self.data_lines.keys():
+            for i,r in enumerate(self.data_lines.keys()):
                 if self.data_lines[r].check_state.get() or ignore_check:
                     self.data_lines[r].draw()
                 
