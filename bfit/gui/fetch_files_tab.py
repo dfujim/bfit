@@ -91,7 +91,7 @@ class fetch_files(object):
                             entry=entry_run)
         entry_run.bind('<FocusIn>', entry_fn)
         entry_run.bind('<FocusOut>', on_focusout_fn)
-        entry_run.config(foreground='grey')
+        entry_run.config(foreground='grey20')
         
         # fetch button
         fetch = ttk.Button(fet_entry_frame,text='Fetch',command=self.get_data)
@@ -187,7 +187,7 @@ class fetch_files(object):
         
         check_bin_remove_entry.bind('<FocusIn>', check_entry_fn)
         check_bin_remove_entry.bind('<FocusOut>', check_on_focusout_fn)
-        check_bin_remove_entry.config(foreground='grey')
+        check_bin_remove_entry.config(foreground='grey20')
                 
         # grid
         runmode_label_frame.grid(column=2,row=0,sticky=(N,W,E))
@@ -733,7 +733,7 @@ class dataline(object):
                 text=self.bin_remove_starter_line,entry=bin_remove_entry)
         bin_remove_entry.bind('<FocusIn>', entry_fn)
         bin_remove_entry.bind('<FocusOut>', on_focusout_fn)
-        bin_remove_entry.config(foreground='grey')
+        bin_remove_entry.config(foreground='grey20')
              
         # add grey text to label
         self.set_label()
@@ -856,7 +856,7 @@ class dataline(object):
         # bindings
         self.label_entry.bind('<FocusIn>', entry_fn_lab)
         self.label_entry.bind('<FocusOut>', on_focusout_fn_lab)
-        self.label_entry.config(foreground='grey')
+        self.label_entry.config(foreground='gray20')
         
 # =========================================================================== #
 def on_entry_click(event,entry,text):
@@ -864,16 +864,16 @@ def on_entry_click(event,entry,text):
     if entry.get() == text:
         entry.delete(0, "end") # delete all the text in the entry
         entry.insert(0, '') #Insert blank for user input
-        entry.config(foreground = 'black')
+        entry.config(foreground = 'gray92')
 
 # =========================================================================== #
 def on_focusout(event,entry,text):
     """Set grey text for boxes on exit"""
     if entry.get() == '':
         entry.insert(0,text)
-        entry.config(foreground = 'grey')
+        entry.config(foreground = 'gray20')
     else:
-        entry.config(foreground = 'black')
+        entry.config(foreground = 'gray92')
 
 
 

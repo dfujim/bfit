@@ -214,12 +214,12 @@ class fit_files(object):
         self.annotation.set('')
         
         self.xaxis_combobox = ttk.Combobox(results_frame,textvariable=self.xaxis,
-                                      state='readonly',width=15)
+                                      state='readonly',width=19)
         self.yaxis_combobox = ttk.Combobox(results_frame,textvariable=self.yaxis,
-                                      state='readonly',width=15)
+                                      state='readonly',width=19)
         self.annotation_combobox = ttk.Combobox(results_frame,
                                       textvariable=self.annotation,
-                                      state='readonly',width=15)
+                                      state='readonly',width=19)
         
         # gridding
         button_frame.grid(column=0,row=0,columnspan=2)
@@ -1135,9 +1135,9 @@ class fitline(object):
         
         # label for displyaing run number
         self.run_label = Label(fitframe,text='[ %d ]' % (self.dataline.run),
-                               bg='black',fg='white')
+                               bg='white',fg='black')
         self.run_label_title = Label(fitframe,text=self.dataline.bdfit.title,
-                                        justify='right',fg='red4')
+                                        justify='right',fg='red3')
      
         # Parameter input labels
         c = 0
@@ -1313,12 +1313,12 @@ class fitline(object):
             par_val = StringVar()
             par = ttk.Entry(fitframe,textvariable=par_val,width=15)
             par['state'] = 'readonly'
-            par['foreground'] = 'black'
+            par['foreground'] = 'white'
             
             dpar_val = StringVar()
             dpar = ttk.Entry(fitframe,textvariable=dpar_val,width=15)
             dpar['state'] = 'readonly'
-            dpar['foreground'] = 'black'
+            dpar['foreground'] = 'white'
                                      
             par. grid(column=c,row=r,padx=5,sticky=E); c += 1
             dpar.grid(column=c,row=r,padx=5,sticky=E); c += 1
@@ -1328,7 +1328,7 @@ class fitline(object):
                 chi_val = StringVar()
                 chi = Entry(fitframe,textvariable=chi_val,width=7)
                 chi['state'] = 'readonly'
-                chi['foreground'] = 'black'
+                chi['foreground'] = 'white'
                 
                 chi.grid(column=c,row=r,padx=5,sticky=E,rowspan=len(plist)); 
                 self.parentry[p]['chi'] = (chi_val,chi)
@@ -1481,5 +1481,5 @@ class fitline(object):
                 if float(chi) > self.bfit.fit_files.chi_threshold:
                     disp['chi'][1]['readonlybackground']='red'
                 else:
-                    disp['chi'][1]['readonlybackground']='#d9d9d9'
+                    disp['chi'][1]['readonlybackground']='grey10'
     

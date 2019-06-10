@@ -135,7 +135,7 @@ class fileviewer(object):
         # update check box
         self.is_updating = BooleanVar()
         self.is_updating.set(False)
-        update_box = Checkbutton(details_frame,text='Periodic Redraw',
+        update_box = ttk.Checkbutton(details_frame,text='Periodic Redraw',
                 command=self.do_update,variable=self.is_updating,onvalue=True,
                 offvalue=False)
 

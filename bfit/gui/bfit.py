@@ -163,14 +163,45 @@ class bfit(object):
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
         
-        # fonts
+        # styling
         root.option_add("*Font", "TkFixedFont")
-        # ~ ttk.Style().configure('TButton', font='TkFixedFont')
-        ttk.Style().configure('.', font='TkFixedFont')
-        # ~ ttk.Style().configure('TCombobox', font='TkFixedFont')
-        # ~ ttk.Style().configure('TCheckbutton', font='TkFixedFont')
-        # ~ ttk.Style().configure('TLabelframe', font='TkFixedFont')
-        # ~ ttk.Style().configure('TNotebook', font='TkFixedFont')
+        root.option_add("*Background", "black")
+        root.option_add("*DisabledBackground", "black")
+        root.option_add("*ReadonlyBackground", "grey10")
+        root.option_add("*highlightcolor", "black")
+        root.option_add("*Foreground", "white")
+        # ~ root.option_add("*Menu*activeforeground*", "green2")
+        
+        ttk.Style().configure('.', font='TkFixedFont',
+                                   background='black',
+                                   foreground='white',
+                                   arrowcolor='white',
+                                   bordercolor='white')
+                                   
+        ttk.Style().map('.', background=[('disabled','black')],
+                             fieldbackground=[('selected','green2')])
+                                   
+                                   
+        ttk.Style().configure("TNotebook.Tab", 
+                                background='black')
+        ttk.Style().map("TNotebook.Tab",background=[("selected",'grey')])
+                        
+        ttk.Style().configure("TEntry",
+                        foreground='white',
+                        fieldbackground="grey50")
+        
+        ttk.Style().map("TEntry",
+                        foreground=[('active',"white"),
+                                    ('disabled','black')],
+                        fieldbackground=[('active',"grey50"),
+                                         ('disabled','grey10'),
+                                         ('readonly','grey10')])
+                                                                         
+        ttk.Style().map("TCheckbutton",foreground=[('selected','green2')])
+        ttk.Style().configure('TCombobox', 
+                                arrowcolor='white',
+                                background='black')
+        ttk.Style().map('TCombobox', fieldbackground=[('readonly', 'black')])
         
         # icon
         try:
@@ -242,7 +273,7 @@ class bfit(object):
         menubar.add_cascade(menu=menu_settings, label='Settings')
         menu_settings_dir = Menu(menu_settings)
         menu_settings_lab = Menu(menu_settings)
-        menu_settings_probe = Menu(menu_settings)
+        menu_settings_probe = Menu(menu_settings,selectcolor='green2')
         
         # Settings cascade commands
         menu_settings.add_cascade(menu=menu_settings_dir,label='Data directory')
@@ -270,7 +301,8 @@ class bfit(object):
         self.label_default.set('Run Number')
         for dc in self.draw_components:
             menu_settings_lab.add_radiobutton(label=dc,
-                variable=self.label_default,value=dc,command=self.set_all_labels)
+                variable=self.label_default,value=dc,command=self.set_all_labels,
+                selectcolor='green2')
         
         # Settings: set probe species
         self.probe_species = StringVar()
@@ -295,17 +327,20 @@ class bfit(object):
         menu_draw = Menu(menubar)
         menubar.add_cascade(menu=menu_draw,label='Draw Mode')
         menu_draw.add_radiobutton(label="Draw in new window",\
-                variable=self.draw_style,value='new',underline=8)
+                variable=self.draw_style,value='new',underline=8,
+                selectcolor='green2')
         menu_draw.add_radiobutton(label="Stack in existing window",\
-                variable=self.draw_style,value='stack',underline=0)
+                variable=self.draw_style,value='stack',underline=0,
+                selectcolor='green2')
         menu_draw.add_radiobutton(label="Redraw in existing window",\
-                variable=self.draw_style,value='redraw',underline=0)
+                variable=self.draw_style,value='redraw',underline=0,
+                selectcolor='green2')
         
         menu_draw.add_separator()
         menu_draw.add_checkbutton(label="Draw 1f as PPM shift",\
-                variable=self.draw_ppm,underline=0)
+                variable=self.draw_ppm,selectcolor='green2')
         menu_draw.add_checkbutton(label="Draw residuals as standardized",\
-                variable=self.draw_standardized_res,underline=0)
+                variable=self.draw_standardized_res,selectcolor='green2')
         
         # Help
         menu_help = Menu(menubar)
