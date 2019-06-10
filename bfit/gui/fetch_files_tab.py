@@ -112,7 +112,7 @@ class fetch_files(object):
         runmode_label_frame = ttk.Labelframe(fetch_data_tab,pad=(10,5,10,5),\
                 text='Run Mode',)
         
-        self.runmode_label = ttk.Label(runmode_label_frame,text="",font='bold',justify=CENTER)
+        self.runmode_label = ttk.Label(runmode_label_frame,text="",justify=CENTER)
         
         # Scrolling frame to hold datalines
         yscrollbar = Scrollbar(fetch_data_tab, orient=VERTICAL)         

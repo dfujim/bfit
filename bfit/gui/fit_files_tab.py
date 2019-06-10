@@ -174,21 +174,20 @@ class fit_files(object):
         # run mode 
         fit_runmode_label_frame = ttk.Labelframe(right_frame,pad=(10,5,10,5),
                 text='Run Mode',)
-        self.fit_runmode_label = ttk.Label(fit_runmode_label_frame,text="",
-                font='bold',justify=CENTER)
+        self.fit_runmode_label = ttk.Label(fit_runmode_label_frame,text="",justify=CENTER)
         
         # fitting routine
         fit_routine_label_frame = ttk.Labelframe(right_frame,pad=(10,5,10,5),
                 text='Fitting Routine',)
         self.fit_routine_label = ttk.Label(fit_routine_label_frame,text="",
-                font='bold',justify=CENTER)
+                                           justify=CENTER)
         
         # probe species
         probe_label_frame = ttk.Labelframe(right_frame,pad=(10,5,10,5),
                 text='Probe',)
         self.probe_label = ttk.Label(probe_label_frame,
                                      text=self.bfit.probe_species.get(),
-                                     font='bold',justify=CENTER)
+                                     justify=CENTER)
         
         # fit results -----------------------
         results_frame = ttk.Labelframe(right_frame,
@@ -196,15 +195,15 @@ class fit_files(object):
         results_frame.grid(column=0,row=1,sticky=(N,E,W))
         
         # draw and export buttons
-        button_frame = ttk.Frame(results_frame)
-        draw_button = ttk.Button(button_frame,text='Draw',command=self.draw_param)
-        export_button = ttk.Button(button_frame,text='Export',command=self.export)
-        show_button = ttk.Button(button_frame,text='Show All',command=self.show_all_results)
+        button_frame = Frame(results_frame)
+        draw_button = Button(button_frame,text='Draw',command=self.draw_param)
+        export_button = Button(button_frame,text='Export',command=self.export)
+        show_button = Button(button_frame,text='Show All',command=self.show_all_results)
         
         # menus for x and y values
-        ttk.Label(results_frame,text="x axis:").grid(column=0,row=1)
-        ttk.Label(results_frame,text="y axis:").grid(column=0,row=2)
-        ttk.Label(results_frame,text="Annotation:").grid(column=0,row=3)
+        Label(results_frame,text="x axis:").grid(column=0,row=1)
+        Label(results_frame,text="y axis:").grid(column=0,row=2)
+        Label(results_frame,text="Annotation:").grid(column=0,row=3)
         
         self.xaxis = StringVar()
         self.yaxis = StringVar()
@@ -1136,7 +1135,7 @@ class fitline(object):
         
         # label for displyaing run number
         self.run_label = Label(fitframe,text='[ %d ]' % (self.dataline.run),
-                                    font='bold',bg='black',fg='white')
+                               bg='black',fg='white')
         self.run_label_title = Label(fitframe,text=self.dataline.bdfit.title,
                                         justify='right',fg='red4')
      

@@ -163,6 +163,15 @@ class bfit(object):
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
         
+        # fonts
+        root.option_add("*Font", "TkFixedFont")
+        # ~ ttk.Style().configure('TButton', font='TkFixedFont')
+        ttk.Style().configure('.', font='TkFixedFont')
+        # ~ ttk.Style().configure('TCombobox', font='TkFixedFont')
+        # ~ ttk.Style().configure('TCheckbutton', font='TkFixedFont')
+        # ~ ttk.Style().configure('TLabelframe', font='TkFixedFont')
+        # ~ ttk.Style().configure('TNotebook', font='TkFixedFont')
+        
         # icon
         try:
             img = PhotoImage(file=os.path.dirname(__file__)+'/../images/icon.gif')
