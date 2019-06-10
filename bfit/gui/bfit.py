@@ -164,44 +164,42 @@ class bfit(object):
         root.rowconfigure(0, weight=1)
         
         # styling
+        root.option_add('*tearOff', FALSE)
         root.option_add("*Font", "TkFixedFont")
         root.option_add("*Background", "black")
         root.option_add("*DisabledBackground", "black")
         root.option_add("*ReadonlyBackground", "grey10")
-        root.option_add("*highlightcolor", "black")
         root.option_add("*Foreground", "white")
-        # ~ root.option_add("*Menu*activeforeground*", "green2")
+        root.option_add("*Borderwidth", 2)
         
-        ttk.Style().configure('.', font='TkFixedFont',
+        ttk_style = ttk.Style()
+        ttk_style.configure('.', font='TkFixedFont',
                                    background='black',
                                    foreground='white',
                                    arrowcolor='white',
-                                   bordercolor='white')
+                                   insertbackground='white',
+                                   borderwidth=2)
                                    
-        ttk.Style().map('.', background=[('disabled','black')],
-                             fieldbackground=[('selected','green2')])
-                                   
-                                   
-        ttk.Style().configure("TNotebook.Tab", 
-                                background='black')
-        ttk.Style().map("TNotebook.Tab",background=[("selected",'grey')])
+        ttk_style.map('.', background=[('disabled','black')],
+                           fieldbackground=[('selected','green2')])
+                                         
+        ttk_style.configure("TNotebook.Tab",background='black')
+        ttk_style.map("TNotebook.Tab",background=[("selected",'grey')])
                         
-        ttk.Style().configure("TEntry",
-                        foreground='white',
-                        fieldbackground="grey50")
+        ttk_style.configure("TEntry",foreground='white',
+                                     fieldbackground="grey30")
         
-        ttk.Style().map("TEntry",
-                        foreground=[('active',"white"),
-                                    ('disabled','black')],
-                        fieldbackground=[('active',"grey50"),
-                                         ('disabled','grey10'),
-                                         ('readonly','grey10')])
+        ttk_style.map("TEntry",foreground     =[('active',"white"),
+                                                ('disabled','black')],
+                               fieldbackground=[('active',"grey30"),
+                                                ('disabled','grey10'),
+                                                ('readonly','grey10')])
                                                                          
-        ttk.Style().map("TCheckbutton",foreground=[('selected','green2')])
-        ttk.Style().configure('TCombobox', 
-                                arrowcolor='white',
-                                background='black')
-        ttk.Style().map('TCombobox', fieldbackground=[('readonly', 'black')])
+        ttk_style.map("TCheckbutton",foreground=[('selected','green2'),
+                                                 ('disabled','grey40')])
+        ttk_style.map('TCombobox', fieldbackground=[('readonly', 'black')])
+        ttk_style.configure('TSpinbox', borderwidth=0)
+        ttk_style.map('TSpinbox', borderwidth=[('selected', 1)])
         
         # icon
         try:

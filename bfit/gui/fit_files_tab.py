@@ -145,7 +145,7 @@ class fit_files(object):
         # MID FRAME -----------------------------------------------------------
         
         # Scrolling frame to hold fitlines
-        yscrollbar = Scrollbar(mid_fit_frame, orient=VERTICAL)         
+        yscrollbar = ttk.Scrollbar(mid_fit_frame, orient=VERTICAL)         
         self.fit_canvas = Canvas(mid_fit_frame,bd=0,                # make a canvas for scrolling
                 yscrollcommand=yscrollbar.set,                      # scroll command receive
                 scrollregion=(0, 0, 5000, 5000),confine=True)       # default size

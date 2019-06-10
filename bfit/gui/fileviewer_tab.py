@@ -202,7 +202,8 @@ class fileviewer(object):
         
         # get filename 
         filename = filedialog.asksaveasfilename(
-                initialfile=self.default_export_filename%(data.year,data.run))
+                initialfile=self.default_export_filename%(data.year,data.run),
+                defaultextension='.csv')
         
         # write to file
         self.bfit.export(data,filename)
