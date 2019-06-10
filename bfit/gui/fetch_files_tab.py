@@ -48,11 +48,11 @@ class fetch_files(object):
             max_number_fetched: max number of files you can fetch
     """
     
-    runmode_relabel = {'20':'Spin-Lattice Relaxation (20)',
+    runmode_relabel = {'20':'SLR (20)',
                        '1f':'Frequency Scan (1f)',
                        '2e':'Randomized Frequency (2e)',
                        '1n':'Rb Cell Scan (1n)',
-                       '2h':'Alpha Tagging/Diffusion (2h)'}
+                       '2h':'Alpha Tagged (2h)'}
     run_number_starter_line = '40001 40005-40010 (run numbers)'
     bin_remove_starter_line = '1 5 100-200 (omit bins)'
     max_number_fetched = 500

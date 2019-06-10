@@ -1270,7 +1270,7 @@ class fitline(object):
                 c += 1
                 
                 value = StringVar()
-                entry = ttk.Entry(fitframe,textvariable=value,width=10)
+                entry = ttk.Entry(fitframe,textvariable=value,width=13)
                 entry.insert(0,str(fitdat.fitpar[col][p]))
                 entry.grid(column=c,row=r,padx=5,sticky=E)
                 self.parentry[p][col] = (value,entry)
