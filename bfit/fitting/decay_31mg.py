@@ -378,10 +378,6 @@ def fn_30Al(time, beam_pulse, beam_rate=1e6):
   return n_30Al(time, beam_pulse, beam_rate) / \
          n_total(time, beam_pulse, beam_rate)
 
-def fn_30Al(time, beam_pulse, beam_rate=1e6):
-  return n_30Al(time, beam_pulse, beam_rate) / \
-         n_total(time, beam_pulse, beam_rate)
-
 def fn_30Si(time, beam_pulse, beam_rate=1e6):
   return n_30Si(time, beam_pulse, beam_rate) / \
          n_total(time, beam_pulse, beam_rate)

@@ -481,7 +481,6 @@ class fetch_files(object):
                                             bdfit = self.bfit.data[r],\
                                             row = n)
             self.data_lines[r].grid(n)
-            if n==1 or n%20==0:  self.dataline_frame.update_idletasks()
             n+=1
             
         # remove old runs, modes not selected
@@ -782,6 +781,7 @@ class dataline(object):
         """Re-grid a dataline object so that it is in order by run number"""
         self.row = row
         self.line_frame.grid(column=0,row=row,columnspan=2, sticky=(W,N))
+        self.line_frame.update_idletasks()
         self.bfit.data[self.id] = self.bdfit
         
     # ======================================================================= #
@@ -791,6 +791,7 @@ class dataline(object):
         self.logger.info('Degridding run %d (%d)',self.run,self.year)
         
         self.line_frame.grid_forget()
+        self.line_frame.update_idletasks()
         
         self.lines_list_old[self.id] = self.lines_list[self.id]
         del self.lines_list[self.id]

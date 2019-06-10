@@ -371,10 +371,11 @@ class fit_files(object):
         
         # delete unused fitline objects
         for k in list(self.fit_lines.keys()):       # iterate fit list
+            self.fit_lines[k].degrid()
             if k not in keylist:                    # check data list
-                self.fit_lines[k].degrid()
                 self.fit_lines_old[k] = self.fit_lines[k]
                 del self.fit_lines[k]
+        
             
         # make or regrid fitline objects
         n = 0
@@ -385,7 +386,6 @@ class fit_files(object):
                 else:
                     self.fit_lines[k] = fitline(self.bfit,self.runframe,dl[k],n)
             self.fit_lines[k].grid(n)
-            if n==0 or n%5==0:  self.runframe.update_idletasks()
             n+=1
         
         self.populate_param()
@@ -1152,7 +1152,7 @@ class fitline(object):
         ttk.Label(fitframe,text='Fixed').grid(        column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Shared').grid(       column=c,row=1,padx=5); c+=1
     
-        self.run_label.grid(column=0,row=0,padx=5,pady=5,columnspan=1)
+        self.run_label.grid(column=0,row=0,padx=5,pady=5)
         self.run_label_title.grid(column=1,row=0,padx=5,pady=5,columnspan=c-1,sticky=E)
         
         # save frame 
@@ -1407,14 +1407,16 @@ class fitline(object):
         """Re-grid a dataline object so that it is in order by run number"""
         self.row = row
         self.fitframe.grid(column=0,row=row, sticky=(W,N))
+        self.fitframe.update_idletasks()
            
     # ======================================================================= #
     def degrid(self):
         """Remove displayed dataline object from file selection. """
         
-        self.logger.info('Degridding fitline for run %d (%d)',self.dataline.run,
+        self.logger.debug('Degridding fitline for run %d (%d)',self.dataline.run,
                                                           self.dataline.year)
         self.fitframe.grid_forget()
+        self.fitframe.update_idletasks()
     
     # ======================================================================= #
     def set_input(self,source_line,parameter,column,set_all):
