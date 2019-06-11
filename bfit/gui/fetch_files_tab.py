@@ -631,7 +631,7 @@ class dataline(object):
         year:           bdata year
     """
         
-    bin_remove_starter_line = '1 5 100-200 (omit bins)'
+    bin_remove_starter_line = '24 100-200 (bins)'
     
     # ======================================================================= #
     def __init__(self,bfit,lines_list,lines_list_old,fetch_tab_frame,bdfit,row):
@@ -691,11 +691,11 @@ class dataline(object):
                                               bias_text)
         info_label = ttk.Label(line_frame,text=info_str,pad=5)
         bin_remove_entry = ttk.Entry(line_frame,textvariable=self.bin_remove,\
-                width=20)
+                width=17)
                 
         label_label = ttk.Label(line_frame,text="Label:",pad=5)
         self.label_entry = ttk.Entry(line_frame,textvariable=self.label,\
-                width=20)
+                width=18)
                 
         remove_button = ttk.Button(line_frame,text='Remove',\
                 command=self.degrid,pad=1)
