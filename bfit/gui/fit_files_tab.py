@@ -196,14 +196,14 @@ class fit_files(object):
         
         # draw and export buttons
         button_frame = Frame(results_frame)
-        draw_button = Button(button_frame,text='Draw',command=self.draw_param)
-        export_button = Button(button_frame,text='Export',command=self.export)
-        show_button = Button(button_frame,text='Show All',command=self.show_all_results)
+        draw_button = ttk.Button(button_frame,text='Draw',command=self.draw_param)
+        export_button = ttk.Button(button_frame,text='Export',command=self.export)
+        show_button = ttk.Button(button_frame,text='Show All',command=self.show_all_results)
         
         # menus for x and y values
-        Label(results_frame,text="x axis:").grid(column=0,row=1)
-        Label(results_frame,text="y axis:").grid(column=0,row=2)
-        Label(results_frame,text="Annotation:").grid(column=0,row=3)
+        ttk.Label(results_frame,text="x axis:").grid(column=0,row=1)
+        ttk.Label(results_frame,text="y axis:").grid(column=0,row=2)
+        ttk.Label(results_frame,text="Annotation:").grid(column=0,row=3)
         
         self.xaxis = StringVar()
         self.yaxis = StringVar()
@@ -909,6 +909,7 @@ class fit_files(object):
             
             # get file name
             filename = filedialog.asksaveasfilename()
+            if not filename:    return
             self.logger.info('Exporting parameters to "%s"',filename)
             
             # check extension 
@@ -986,7 +987,7 @@ class fit_files(object):
             for r in runs:
                 try:
                     val.append(data[r].chi)
-                except KeyError:
+                except(KeyError,AttributeError):
                     val.append(np.nan)
             err = [np.nan for r in runs]
         

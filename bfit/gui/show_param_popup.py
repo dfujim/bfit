@@ -74,8 +74,8 @@ class show_param_popup(object):
         self.text.delete('1.0',END)
         self.text.insert('1.0',nice_output)
         
-        vsb = Scrollbar(mainframe, orient="vertical")
-        hsb = Scrollbar(mainframe, orient="horizontal")
+        vsb = ttk.Scrollbar(mainframe, orient="vertical")
+        hsb = ttk.Scrollbar(mainframe, orient="horizontal")
         
         self.text.configure(yscrollcommand=vsb.set)
         vsb.configure(command=self.text.yview)

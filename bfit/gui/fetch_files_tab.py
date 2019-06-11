@@ -365,6 +365,7 @@ class fetch_files(object):
         
         # filename
         filename = self.bfit.fileviewer.default_export_filename
+        if not filename: return
         self.logger.info('Exporting to file %s',filename)
         try:
             filename = filedialog.askdirectory()+'/'+filename

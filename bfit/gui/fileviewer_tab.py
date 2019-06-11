@@ -206,7 +206,8 @@ class fileviewer(object):
                 defaultextension='.csv')
         
         # write to file
-        self.bfit.export(data,filename)
+        if filename:
+            self.bfit.export(data,filename)
     
     # ======================================================================= #
     def get_data(self):
