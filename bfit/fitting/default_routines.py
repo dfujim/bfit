@@ -17,13 +17,15 @@ class fitter(object):
     # Define possible fit functions for given run modes
     function_names = {  '20':('Exp','Str Exp'),
                         '2h':('Exp','Str Exp'),
-                        '1f':('Lorentzian','Gaussian'),
-                        '1n':('Lorentzian','Gaussian')}
+                        '1f':('Lorentzian','Gaussian','BiLorentzian',),
+                        '1n':('Lorentzian','Gaussian''BiLorentzian',)}
      
     # Define names of fit parameters:
     param_names = {     'Exp'       :('1/T1','amp'),
                         'Str Exp'   :('1/T1','beta','amp'),
                         'Lorentzian':('peak','width','height','baseline'),
+                        'BiLorentzian':('peak','widthA','heightA',
+                                               'widthB','heightB','baseline'),
                         'Gaussian'  :('mean','sigma','height','baseline'),}
 
     # dictionary of initial parameters
@@ -228,7 +230,7 @@ class fitter(object):
                           'beta':(0.5,0,1)}
                          
         # set time integrated fit initial parameters
-        elif fn_name in ['Lorentzian','Gaussian']:
+        elif fn_name in ['Lorentzian','Gaussian','BiLorentzian']:
             
             f,a,da = bdataobj.asym('c')
             
@@ -253,6 +255,14 @@ class fitter(object):
                               'height':(height,0,np.inf),
                               'baseline':(base,-np.inf,np.inf)
                               }
+            if fn_name == 'BiLorentzian':
+                par_values = {'peak':(peak,min(f),max(f)),
+                              'widthA':(width,0,np.inf),
+                              'heightA':(height,0,np.inf),
+                              'widthB':(width,0,np.inf),
+                              'heightB':(height,0,np.inf),
+                              'baseline':(base,-np.inf,np.inf)
+                             }
         else:
             raise RuntimeError('Bad function name.')
         
@@ -286,6 +296,9 @@ class fitter(object):
         # set fitting function
         if fn_name == 'Lorentzian':
             fn =  fns.lorentzian
+            self.mode='1f'
+        elif fn_name == 'BiLorentzian':
+            fn =  fns.bilorentzian
             self.mode='1f'
         elif fn_name == 'Gaussian':
             fn =  fns.gaussian

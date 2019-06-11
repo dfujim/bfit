@@ -24,6 +24,10 @@ class code_wrapper(object):
 def lorentzian(freq,peak,width,amp):
     return -amp*0.25*np.square(width)/(np.square(freq-peak)+np.square(0.5*width))
 
+def bilorentzian(freq,peak,widthA,ampA,widthB,ampB):
+    return -ampA*0.25*np.square(widthA)/(np.square(freq-peak)+np.square(0.5*widthA))\
+           -ampB*0.25*np.square(widthB)/(np.square(freq-peak)+np.square(0.5*widthB))
+
 def gaussian(freq,mean,sigma,amp):
     return -amp*np.exp(-np.square((freq-mean)/(sigma))/2)
 
