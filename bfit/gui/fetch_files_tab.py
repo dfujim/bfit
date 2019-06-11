@@ -54,7 +54,7 @@ class fetch_files(object):
                        '1n':'Rb Cell Scan (1n)',
                        '2h':'Alpha Tagged (2h)'}
     run_number_starter_line = '40001 40005-40010 (run numbers)'
-    bin_remove_starter_line = '1 5 100-200 (omit bins)'
+    bin_remove_starter_line = '24 100-200 (bins)'
     max_number_fetched = 500
     
     # ======================================================================= #
