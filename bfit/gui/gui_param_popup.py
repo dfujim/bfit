@@ -7,6 +7,7 @@ from tkinter import ttk
 from bfit import logger_name
 from bfit.fitting.FunctionPlacer import FunctionPlacer
 from bfit.fitting.decay_31mg import fa_31Mg
+import bfit.fitting.functions as fns
 
 import matplotlib.pyplot as plt
 import logging
@@ -40,7 +41,11 @@ class gui_param_popup(object):
                 'baseline':'base',
                 'peak':'peak',
                 'width':'width',
+                'widthA':'widthA',
+                'widthB':'widthB',
                 'height':'amp',
+                'heightA':'ampA',
+                'heightB':'ampB',
                 'sigma':'width',
                 'mean':'peak',
              }
@@ -48,7 +53,6 @@ class gui_param_popup(object):
     # ====================================================================== #
     def __init__(self,bfit):
         self.bfit = bfit
-        self.first = True   # default
         
         # get logger
         self.logger = logging.getLogger(logger_name)
@@ -106,7 +110,7 @@ class gui_param_popup(object):
         if omit == self.bfit.fetch_files.bin_remove_starter_line:
             omit = ''
         self.xy = self.data.asym('c',rebin=self.data.rebin.get(),omit=omit)
-        ax.errorbar(*self.xy,fmt='.')
+        ax.errorbar(*self.xy,fmt='.',color='k',ecolor='k')
         
         # plot elements - don't do tight_layout here - blocks matplotlib signals
         ax.set_ylabel('Asymmetry')
@@ -129,7 +133,7 @@ class gui_param_popup(object):
         self.run()
         
     # ====================================================================== #
-    def run(self,comp=0):
+    def run(self):
         """
             Run the function placer
             
@@ -144,194 +148,88 @@ class gui_param_popup(object):
             self.fig.axes[0].cla()
             self.fig.axes[0].errorbar(*self.xy,fmt='.')
         
-        # end condition, or start the cycle again
-        if comp >= self.n_components:
-            if self.n_components > 1: 
-                self.first = False
-                comp = 0
-            else: 
-                return
-        
-        # get the number of components in the line (after first round, keep all)
-        if self.first:  ncomp = comp+1
-        else:           ncomp = self.n_components
-        
         # ensure matplotlib signals work. Not sure why this is needed.
         self.fig.tight_layout()
-    
-        # get parameter names and fitting functions - multi component
+                    
+        # get paramters, translating the names
+        p0 = []
         if self.n_components > 1:
-            
-            # get parameter names of all previously set components 
-            parnames_prev = []
-            for c in range(ncomp-1 if self.first else ncomp):
-                if c == comp: continue
-                parnames_prev.extend([p for p in self.parnames if str(c) in p])
-            
-            # get parameter names of components to set now
-            parnames_now = [p for p in self.parnames if str(comp) in p]
-            
-            # baseline name 
-            if self.mode == 1:
-                if comp == 0 and self.first:    parnames_now.append('baseline')
-                else:                           parnames_prev.append('baseline')
-            
-            # translate keynames: input to original
-            parnames_now_conv = {self.parmap[k.split('_')[0]]:k for k in parnames_now}
-            
-            # static values 
-            p = {p:float(self.p0[p].get()) for p in parnames_prev}  
-            
-            # p0 from current iteration
-            p0 = {self.parmap[p.split('_')[0]]:self.p0[p] for p in parnames_now}
-                        
-            # get fitting function 
-            if self.mode == 1:
-                f1 = self.fitter.get_fn(self.fname,ncomp=ncomp)
-                
-                # make decorator for fitting function
-                if comp == 0 and self.first:
-                    def fn(x,peak,width,amp,base):
-                        
-                        # add to input dictionary
-                        p[parnames_now_conv['peak']] = peak
-                        p[parnames_now_conv['width']] = width
-                        p[parnames_now_conv['amp']] = amp
-                        p[parnames_now_conv['base']] = base
-                        
-                        # get the order right
-                        p_in = [p[k] for k in self.parnames if k in p.keys()]
-                        return f1(x,*p_in)
-                else:
-                    def fn(x,peak,width,amp):
-                        
-                        # add to input dictionary
-                        p[parnames_now_conv['peak']] = peak
-                        p[parnames_now_conv['width']] = width
-                        p[parnames_now_conv['amp']] = amp
-                        
-                        # get the order right
-                        p_in = [p[k] for k in self.parnames if k in p.keys()]
-                        return f1(x,*p_in)
-               
-            elif self.mode == 2:
-                pulse = self.data.get_pulse_s()
-                f2 = self.fitter.get_fn(self.fname,ncomp=ncomp,
-                                           pulse_len=pulse,
-                                           lifetime=bd.life[self.bfit.probe_species.get()])
-                
-                # make new fit function if needed to account for daughters
-                if self.bfit.probe_species.get() == 'Mg31':
-                    f1 = lambda x,*par : fa_31Mg(x,pulse)*f2(x,*par)
-                else:
-                    f1 = f2
-                
-                # make decorator for fitting function
-                if comp == 0 and self.first:
-                    
-                    if 'beta' in parnames_now_conv.keys():
-                        def fn(x,lam,amp,beta):
-                            
-                            # add to input dictionary
-                            p[parnames_now_conv['lam']] = lam
-                            p[parnames_now_conv['amp']] = amp
-                            p[parnames_now_conv['beta']] = beta
-                            
-                            # get the order right
-                            p_in = [p[k] for k in self.parnames if k in p.keys()]
-                            return f1(x,*p_in)
-                    elif 'base' in parnames_now_conv.keys():
-                        def fn(x,lam,amp,base):
-                            
-                            # add to input dictionary
-                            p[parnames_now_conv['lam']] = lam
-                            p[parnames_now_conv['amp']] = amp
-                            p[parnames_now_conv['base']] = base
-                            
-                            # get the order right
-                            p_in = [p[k] for k in self.parnames if k in p.keys()]
-                            return f1(x,*p_in)               
-                    else:
-                        def fn(x,lam,amp):
-                            
-                            # add to input dictionary
-                            p[parnames_now_conv['lam']] = lam
-                            p[parnames_now_conv['amp']] = amp
-                            
-                            # get the order right
-                            p_in = [p[k] for k in self.parnames if k in p.keys()]
-                            return f1(x,*p_in)               
-                else:
-                    
-                    if 'beta' in parnames_now_conv.keys():
-                        def fn(x,lam,amp,beta):
-                            
-                            # add to input dictionary
-                            p[parnames_now_conv['lam']] = lam
-                            p[parnames_now_conv['amp']] = amp
-                            p[parnames_now_conv['beta']] = beta
-                            
-                            # get the order right
-                            p_in = [p[k] for k in self.parnames if k in p.keys()]
-                            return f1(x,*p_in)
-                    else:
-                        def fn(x,lam,amp):
-                            
-                            # add to input dictionary
-                            p[parnames_now_conv['lam']] = lam
-                            p[parnames_now_conv['amp']] = amp
-                            
-                            # get the order right
-                            p_in = [p[k] for k in self.parnames if k in p.keys()]
-                            return f1(x,*p_in)               
-                            
-        # get parameter names and fitting functions - single component
+            for i in range(self.n_components):
+                p0.append({self.parmap[k.split('_')[0]]:self.p0[k] \
+                            for k in self.p0.keys() if 'base' in k or str(i) in k})
         else:
+            p0.append({self.parmap[k]:self.p0[k] for k in self.p0.keys()})
+        
+        # get fitting function 
+        if self.fname == 'Lorentzian':
+            fn = fns.lorentzian     # freq,peak,width,amp
+        # ~ elif self.fname == 'BiLorentzian':
+            # ~ fn = fns.bilorentzian   # freq, peak,widthA,ampA,widthB,ampB
+        elif self.fname == 'Gaussian':
+            fn = lambda freq,peak,width,amp : fns.gaussian(freq,peak,width,amp)
+                
+        elif self.fname in ('Exp', 'Str Exp'):
             
-            # get paramters, translating the names
-            p0 = {self.parmap[k]:self.p0[k] for k in self.p0.keys()}
-    
-            # get fitting function 
-            if self.mode == 1:
-                f1 = self.fitter.get_fn(self.fname,ncomp=ncomp)
-                fn = lambda x,peak,width,amp,base : f1(x,peak,width,amp,base)
-                    
-            elif self.mode == 2:
-                pulse = self.data.get_pulse_s()
-                f2 = self.fitter.get_fn(self.fname,ncomp=ncomp,
-                                        pulse_len=pulse,
-                                        lifetime=bd.life[self.bfit.probe_species.get()])
+            # get function
+            pulse = self.data.get_pulse_s()
+            lifetime = bd.life[self.bfit.probe_species.get()]
+        
+            if self.fname == 'Exp':
+                f1 = fns.pulsed_exp(lifetime=lifetime,pulse_len=pulse)
                 
-                # make new fit function if needed to account for daughters
                 if self.bfit.probe_species.get() == 'Mg31':
-                    f1 = lambda x,*par : fa_31Mg(x,pulse)*f2(x,*par)
-                else:
-                    f1 = f2
-                
-                if 'beta' in self.parnames:
-                    fn = lambda x,lam,amp,beta : f1(x,lam,amp,beta)
+                    fn = lambda x,lam,amp : fa_31Mg(x,pulse)*f1(x,lam,amp)
                 else:
                     fn = lambda x,lam,amp : f1(x,lam,amp)
             
-        # start recursive function placement
-        try:
-            base = float(self.p0['baseline'].get())
-        except KeyError:
-            base = 0
+            elif self.fname == 'Str Exp':
+                f1 = fns.pulsed_strexp(lifetime=lifetime,pulse_len=pulse)
+                
+                if self.bfit.probe_species.get() == 'Mg31':
+                    fn = lambda x,lam,amp,beta : fa_31Mg(x,pulse)*f1(x,lam,beta,amp)
+                else:
+                    fn = lambda x,lam,amp,beta : f1(x,lam,beta,amp)
+        else:
+            self.cancel()
+            raise RuntimeError('Function not implemented')
         
         self.fig.canvas.mpl_connect('close_event',self.cancel)
         
         self.fplace = FunctionPlacer(fig=self.fig,
                                      data=self.data,
-                                     fn=fn,
+                                     fn_single=fn,
+                                     ncomp=self.n_components,
                                      p0=p0,
-                                     endfn=lambda:self.run(comp+1),
-                                     base = base)
+                                     fnname=self.fname,
+                                     endfn=self.endfn)
+        
+    # ====================================================================== #        
+    def endfn(self,p0,base):
+        """Set output fields"""
+        
+        # single component
+        if len(p0) == 1:
+            p0 = p0[0]
+            for k in self.p0.keys():
+                if 'base' not in k:
+                    self.p0[k].set(p0[self.parmap[k]])
+        # multi component
+        else:
+            for k in self.p0.keys():
+                if 'base' not in k:
+                    key,i = k.split('_')
+                    self.p0[k].set(p0[int(i)][self.parmap[key]])
+        
+        # baseline
+        if 'baseline' in self.p0.keys():
+            self.p0['baseline'].set(base)
         
     # ====================================================================== #
     def cancel(self,*args):
         if hasattr(self,'fplace'):  del self.fplace
-        if hasattr(self,'fig'):     del self.fig
+        if hasattr(self,'fig'):     
+            plt.close(self.fig.number)
+            del self.fig
         
         self.win.destroy()
 

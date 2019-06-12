@@ -164,10 +164,13 @@ class bfit(object):
         root.rowconfigure(0, weight=1)
         
         # styling
+        # ~ color_background = '#01010f'
+        color_background = 'black'
+        
         root.option_add('*tearOff', FALSE)
         root.option_add("*Font", "TkFixedFont")
-        root.option_add("*Background", "black")
-        root.option_add("*DisabledBackground", "black")
+        root.option_add("*Background", color_background)
+        root.option_add("*DisabledBackground", color_background)
         root.option_add("*ReadonlyBackground", "grey10")
         root.option_add("*Borderwidth", 2)
         
@@ -182,12 +185,12 @@ class bfit(object):
         
         ttk_style = ttk.Style()
         ttk_style.configure('.', font='TkFixedFont',
-                                   background='black',
+                                   background=color_background,
                                    foreground='white',
                                    arrowcolor='white',
                                    borderwidth=2)
                                    
-        ttk_style.map('.', background=[('disabled','black')],
+        ttk_style.map('.', background=[('disabled',color_background)],
                            fieldbackground=[('selected','green2')])
                                          
         ttk_style.configure("TNotebook.Tab",background='black')
@@ -207,7 +210,7 @@ class bfit(object):
                                      indicatorcolor=[('selected','green3')])
         ttk_style.map('TCombobox', fieldbackground=[('readonly', 'black')])
         
-        ttk_style.configure('TSpinbox', borderwidth=0)
+        ttk_style.configure('TSpinbox', borderwidth=0,background='black')
         ttk_style.map('TSpinbox', borderwidth=[('selected', 1)])
         
         # icon
