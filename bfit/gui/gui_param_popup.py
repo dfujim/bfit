@@ -191,7 +191,10 @@ class gui_param_popup(object):
                     fn = lambda x,lam,amp,beta : f1(x,lam,beta,amp)
         else:
             self.cancel()
-            raise RuntimeError('Function not implemented')
+            errormsg = 'Function "%s" not implemented in P0 Finder' % self.fname
+            self.logger.warning(errormsg)
+            messagebox.showerror("Error",errormsg)
+            raise RuntimeError(errormsg)
         
         self.fig.canvas.mpl_connect('close_event',self.cancel)
         
