@@ -8,6 +8,7 @@ from bfit import logger_name
 from bdata import bdata
 from functools import partial
 from bfit.gui.fitdata import fitdata
+import bfit.gui.colors as colors
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -91,7 +92,7 @@ class fetch_files(object):
                             entry=entry_run)
         entry_run.bind('<FocusIn>', entry_fn)
         entry_run.bind('<FocusOut>', on_focusout_fn)
-        entry_run.config(foreground='grey50')
+        entry_run.config(foreground=colors.entry_grey)
         
         # fetch button
         fetch = ttk.Button(fet_entry_frame,text='Fetch',command=self.get_data)
@@ -187,7 +188,7 @@ class fetch_files(object):
         
         check_bin_remove_entry.bind('<FocusIn>', check_entry_fn)
         check_bin_remove_entry.bind('<FocusOut>', check_on_focusout_fn)
-        check_bin_remove_entry.config(foreground='grey50')
+        check_bin_remove_entry.config(foreground=colors.entry_grey)
                 
         # grid
         runmode_label_frame.grid(column=2,row=0,sticky=(N,W,E))
@@ -734,7 +735,7 @@ class dataline(object):
                 text=self.bin_remove_starter_line,entry=bin_remove_entry)
         bin_remove_entry.bind('<FocusIn>', entry_fn)
         bin_remove_entry.bind('<FocusOut>', on_focusout_fn)
-        bin_remove_entry.config(foreground='grey50')
+        bin_remove_entry.config(foreground=colors.entry_grey)
              
         # add grey text to label
         self.set_label()
@@ -857,7 +858,7 @@ class dataline(object):
         # bindings
         self.label_entry.bind('<FocusIn>', entry_fn_lab)
         self.label_entry.bind('<FocusOut>', on_focusout_fn_lab)
-        self.label_entry.config(foreground='grey50')
+        self.label_entry.config(foreground=colors.entry_grey)
         
 # =========================================================================== #
 def on_entry_click(event,entry,text):
@@ -865,16 +866,16 @@ def on_entry_click(event,entry,text):
     if entry.get() == text:
         entry.delete(0, "end") # delete all the text in the entry
         entry.insert(0, '') #Insert blank for user input
-        entry.config(foreground = 'grey92')
+        entry.config(foreground = colors.entry_white)
 
 # =========================================================================== #
 def on_focusout(event,entry,text):
     """Set grey text for boxes on exit"""
     if entry.get() == '':
         entry.insert(0,text)
-        entry.config(foreground = 'grey50')
+        entry.config(foreground = colors.entry_grey)
     else:
-        entry.config(foreground = 'grey92')
+        entry.config(foreground = colors.entry_white)
 
 
 

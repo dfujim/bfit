@@ -14,6 +14,7 @@ from bfit import logger_name
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import bfit.gui.colors as colors
 
 import datetime, os, traceback, warnings
 import logging
@@ -1136,7 +1137,7 @@ class fitline(object):
         
         # label for displyaing run number
         self.run_label = Label(fitframe,text='[ %d ]' % (self.dataline.run),
-                               bg='white',fg='black')
+                               bg=colors.foreground,fg=colors.background)
         self.run_label_title = Label(fitframe,text=self.dataline.bdfit.title,
                                         justify='right',fg='red3')
      
@@ -1314,12 +1315,12 @@ class fitline(object):
             par_val = StringVar()
             par = ttk.Entry(fitframe,textvariable=par_val,width=15)
             par['state'] = 'readonly'
-            par['foreground'] = 'white'
+            par['foreground'] = colors.foreground
             
             dpar_val = StringVar()
             dpar = ttk.Entry(fitframe,textvariable=dpar_val,width=15)
             dpar['state'] = 'readonly'
-            dpar['foreground'] = 'white'
+            dpar['foreground'] = colors.foreground
                                      
             par. grid(column=c,row=r,padx=5,sticky=E); c += 1
             dpar.grid(column=c,row=r,padx=5,sticky=E); c += 1
@@ -1329,7 +1330,7 @@ class fitline(object):
                 chi_val = StringVar()
                 chi = Entry(fitframe,textvariable=chi_val,width=7)
                 chi['state'] = 'readonly'
-                chi['foreground'] = 'white'
+                chi['foreground'] = colors.foreground
                 
                 chi.grid(column=c,row=r,padx=5,sticky=E,rowspan=len(plist)); 
                 self.parentry[p]['chi'] = (chi_val,chi)
@@ -1482,5 +1483,5 @@ class fitline(object):
                 if float(chi) > self.bfit.fit_files.chi_threshold:
                     disp['chi'][1]['readonlybackground']='red'
                 else:
-                    disp['chi'][1]['readonlybackground']='grey10'
+                    disp['chi'][1]['readonlybackground']=colors.readonly
     

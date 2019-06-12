@@ -36,6 +36,7 @@ from bfit.gui.redraw_period_popup import redraw_period_popup
 from bfit.gui.set_ppm_reference_popup import set_ppm_reference_popup
 from bfit.gui.set_histograms_popup import set_histograms_popup
 from bfit.gui.fitdata import fitdata
+import bfit.gui.colors as colors
 
 __doc__="""
     BNMR/BNQR data visualization and curve fitting.
@@ -164,53 +165,49 @@ class bfit(object):
         root.rowconfigure(0, weight=1)
         
         # styling
-        # ~ color_background = '#01010f'
-        color_background = 'black'
-        
         root.option_add('*tearOff', FALSE)
         root.option_add("*Font", "TkFixedFont")
-        root.option_add("*Background", color_background)
-        root.option_add("*DisabledBackground", color_background)
-        root.option_add("*ReadonlyBackground", "grey10")
+        root.option_add("*Background",          colors.background)
+        root.option_add("*DisabledBackground",  colors.background)
+        root.option_add("*ReadonlyBackground",  colors.readonly)
         root.option_add("*Borderwidth", 2)
         
         # don't change all foregrounds or you will break the filedialog windows
-        root.option_add("*Menu*Foreground", "white")   
-        root.option_add("*Spinbox*Foreground", "white")
-        root.option_add("*Listbox*Foreground", "white")
-        root.option_add("*Text*Foreground", "white")
+        root.option_add("*Menu*Foreground",     colors.foreground)   
+        root.option_add("*Spinbox*Foreground",  colors.foreground)
+        root.option_add("*Listbox*Foreground",  colors.foreground)
+        root.option_add("*Text*Foreground",     colors.foreground)
         
-        root.option_add("*Scrollbar.Background", "white")
-        # ~ root.option_add("*Scrollbar*Foregrund", "black")
+        root.option_add("*Scrollbar.Background",colors.foreground)
         
         ttk_style = ttk.Style()
         ttk_style.configure('.', font='TkFixedFont',
-                                   background=color_background,
-                                   foreground='white',
-                                   arrowcolor='white',
+                                   background=colors.background,
+                                   foreground=colors.foreground,
+                                   arrowcolor=colors.foreground,
                                    borderwidth=2)
                                    
-        ttk_style.map('.', background=[('disabled',color_background)],
-                           fieldbackground=[('selected','green2')])
+        ttk_style.map('.', background=[('disabled',colors.background)],
+                           fieldbackground=[('selected',colors.selected)])
                                          
-        ttk_style.configure("TNotebook.Tab",background='black')
-        ttk_style.map("TNotebook.Tab",background=[("selected",'grey')])
+        ttk_style.configure("TNotebook.Tab",background=colors.background)
+        ttk_style.map("TNotebook.Tab",background=[("selected",colors.tab)])
         
-        ttk_style.configure("TEntry",foreground='white',
-                                     fieldbackground="grey30")
+        ttk_style.configure("TEntry",foreground=colors.foreground,
+                                     fieldbackground=colors.fieldbackground)
         
-        ttk_style.map("TEntry",foreground     =[('active',"white"),
-                                                ('disabled','black')],
-                               fieldbackground=[('active',"grey30"),
-                                                ('disabled','grey10'),
-                                                ('readonly','grey10')])
+        ttk_style.map("TEntry",foreground     =[('active',  colors.foreground),
+                                                ('disabled',colors.disabled)],
+                               fieldbackground=[('active',  colors.fieldbackground),
+                                                ('disabled',colors.disabled),
+                                                ('readonly',colors.readonly)])
                                                                          
-        ttk_style.map("TCheckbutton",foreground=[('selected','green2'),
-                                                 ('disabled','grey40')],
+        ttk_style.map("TCheckbutton",foreground=[('selected',colors.selected),
+                                                 ('disabled',colors.disabled)],
                                      indicatorcolor=[('selected','green3')])
-        ttk_style.map('TCombobox', fieldbackground=[('readonly', 'black')])
+        ttk_style.map('TCombobox', fieldbackground=[('readonly',colors.background)])
         
-        ttk_style.configure('TSpinbox', borderwidth=0,background='black')
+        ttk_style.configure('TSpinbox', borderwidth=0,background=colors.background)
         ttk_style.map('TSpinbox', borderwidth=[('selected', 1)])
         
         # icon
