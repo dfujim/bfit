@@ -10,7 +10,7 @@ import logging
 
 
 # ========================================================================== #
-class drawstyle_popup(object):
+class popup_drawstyle(object):
     """
         Popup window for setting drawing options. 
     """

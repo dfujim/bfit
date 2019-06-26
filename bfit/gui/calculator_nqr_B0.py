@@ -10,7 +10,7 @@ import logging
 from bfit import logger_name
 
 # =========================================================================== #
-class zahersCalculator(object):
+class calculator_nqr_B0(object):
     
     # ======================================================================= #
     def __init__(self):

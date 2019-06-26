@@ -10,7 +10,7 @@ import logging
 from bfit import logger_name
 
 
-class show_param_popup(object):
+class popup_show_param(object):
     """
         Display pandas dataframe object as pretty table in popup window.
     """

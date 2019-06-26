@@ -11,7 +11,7 @@ import os
 import logging
 
 # ========================================================================== #
-class set_histograms_popup(object):
+class popup_set_histograms(object):
     """
         Popup window for setting asymmetry calculation histograms. 
     """

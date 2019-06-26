@@ -5,7 +5,7 @@
 
 from tkinter import *
 from bdata import bdata
-from bfit.gui.zahersCalculator import current2field
+from bfit.gui.calculator_nqr_B0 import current2field
 from bfit import logger_name
 
 import numpy as np

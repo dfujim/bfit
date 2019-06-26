@@ -5,16 +5,16 @@
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from functools import partial
-from bfit.gui.zahersCalculator import current2field
-from bfit.gui.show_param_popup import show_param_popup
-from bfit.gui.gui_param_popup import gui_param_popup
+from bfit.gui.calculator_nqr_B0 import current2field
+from bfit.gui.popup_show_param import popup_show_param
+from bfit.gui.popup_param import popup_param
 from bdata import bdata
 from bfit import logger_name
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import bfit.gui.colors as colors
+import bfit.backend.colors as colors
 
 import datetime, os, traceback, warnings
 import logging
@@ -588,7 +588,7 @@ class fit_files(object):
     # ======================================================================= #
     def do_gui_param(self,*args):
         """Set initial parmeters with GUI"""
-        gui_param_popup(self.bfit)
+        popup_param(self.bfit)
         
     # ======================================================================= #
     def do_set_result_as_initial(self,*args):
@@ -1033,7 +1033,7 @@ class fit_files(object):
         
         # get fit results
         df = self.export(savetofile=False)
-        show_param_popup(df)
+        popup_show_param(df)
         
     # ======================================================================= #
     def return_binder(self):

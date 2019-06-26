@@ -11,11 +11,11 @@ import logging
 
 
 # =========================================================================== #
-class monikasCalculator(object):
+class calculator_nmr_B1(object):
     
     # ======================================================================= #
     def __init__(self):
-        """Draw window for Monika's calculator"""
+        """Draw window for calculating needed Vpp from desired H1 magnetic field."""
         
         # get logger
         self.logger = logging.getLogger(logger_name)

@@ -5,7 +5,7 @@
 from tkinter import *
 from tkinter import ttk
 from bfit import logger_name
-from bfit.fitting.FunctionPlacer import FunctionPlacer
+from bfit.backend.FunctionPlacer import FunctionPlacer
 from bfit.fitting.decay_31mg import fa_31Mg
 import bfit.fitting.functions as fns
 
@@ -15,7 +15,7 @@ import bdata as bd
 import numpy as np
 
 # ========================================================================== #
-class gui_param_popup(object):
+class popup_param(object):
     """
         Popup window for graphically finding input parameters. 
         

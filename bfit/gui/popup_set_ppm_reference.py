@@ -8,11 +8,10 @@ from bfit import logger_name
 import webbrowser
 import logging
 
-
 # ========================================================================== #
-class redraw_period_popup(object):
+class popup_set_ppm_reference(object):
     """
-        Popup window for setting redraw period. 
+        Popup window for setting ppm reference frequency. 
     """
 
     # ====================================================================== #
@@ -25,7 +24,7 @@ class redraw_period_popup(object):
         
         # make a new window
         self.win = Toplevel(parent.mainframe)
-        self.win.title('Set Redraw Period')
+        self.win.title('Set PPM Reference')
         frame = ttk.Frame(self.win,relief='sunken',pad=5)
         topframe = ttk.Frame(frame,pad=5)
 
@@ -34,11 +33,11 @@ class redraw_period_popup(object):
         self.win.bind('<KP_Enter>',self.set)
 
         # make objects: text entry
-        l1 = ttk.Label(topframe,text='Redraw update period:',pad=5,justify=LEFT)
+        l1 = ttk.Label(topframe,text='PPM Reference Frequency:',pad=5,justify=LEFT)
         self.text = IntVar()
-        self.text.set(parent.update_period)
+        self.text.set(parent.ppm_reference)
         entry = ttk.Entry(topframe,textvariable=self.text,width=10,justify=RIGHT)
-        l2 = ttk.Label(topframe,text='s',pad=5,justify=LEFT)
+        l2 = ttk.Label(topframe,text='Hz',pad=5,justify=LEFT)
         
         # make objects: buttons
         set_button = ttk.Button(frame,text='Set',command=self.set)
@@ -59,8 +58,9 @@ class redraw_period_popup(object):
     # ====================================================================== #
     def set(self,*args):
         """Set entered values"""        
-        self.parent.update_period = self.text.get()
-        self.logger.info('Set redraw period to %s s',self.parent.update_period)
+        self.parent.ppm_reference = self.text.get()
+        self.logger.info('Set ppm reference to %s Hz',self.parent.ppm_reference)
+        self.logger
         self.win.destroy()
         
     # ====================================================================== #

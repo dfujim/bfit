@@ -7,8 +7,8 @@ from tkinter import ttk, messagebox, filedialog
 from bfit import logger_name
 from bdata import bdata
 from functools import partial
-from bfit.gui.fitdata import fitdata
-import bfit.gui.colors as colors
+from bfit.backend.fitdata import fitdata
+import bfit.backend.colors as colors
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt

@@ -5,8 +5,8 @@
 from tkinter import *
 from tkinter import ttk
 from multiprocessing import Process, Pipe
-from bfit.gui.zahersCalculator import current2field
-from bfit.gui.fitdata import fitdata
+from bfit.gui.calculator_nqr_B0 import current2field
+from bfit.backend.fitdata import fitdata
 from bdata import bdata
 from bfit import logger_name
 

@@ -26,17 +26,17 @@ import importlib
 import logging
 
 from bfit import __version__,logger_name
-from bfit.gui.fileviewer_tab import fileviewer
-from bfit.gui.fetch_files_tab import fetch_files
-from bfit.gui.fit_files_tab import fit_files
-from bfit.gui.zahersCalculator import zahersCalculator
-from bfit.gui.monikasCalculator import monikasCalculator
-from bfit.gui.drawstyle_popup import drawstyle_popup
-from bfit.gui.redraw_period_popup import redraw_period_popup
-from bfit.gui.set_ppm_reference_popup import set_ppm_reference_popup
-from bfit.gui.set_histograms_popup import set_histograms_popup
-from bfit.gui.fitdata import fitdata
-import bfit.gui.colors as colors
+from bfit.gui.tab_fileviewer import fileviewer
+from bfit.gui.tab_fetch_files import fetch_files
+from bfit.gui.tab_fit_files import fit_files
+from bfit.gui.calculator_nqr_B0 import calculator_nqr_B0
+from bfit.gui.calculator_nmr_B1 import calculator_nmr_B1
+from bfit.gui.popup_drawstyle import popup_drawstyle
+from bfit.gui.popup_redraw_period import popup_redraw_period
+from bfit.gui.popup_set_ppm_reference import popup_set_ppm_reference
+from bfit.gui.popup_set_histograms import popup_set_histograms
+from bfit.backend.fitdata import fitdata
+import bfit.backend.colors as colors
 
 __doc__="""
     BNMR/BNQR data visualization and curve fitting.
@@ -268,9 +268,9 @@ class bfit(object):
         menu_file = Menu(menubar)
         menu_file.add_command(label='Search archive',command=self.search_archive)
         menu_file.add_command(label='BNMR Oscillating Field Calculator',\
-                command=monikasCalculator)
+                command=calculator_nmr_B1)
         menu_file.add_command(label='BNQR Static Field Calculator',\
-                command=zahersCalculator)
+                command=calculator_nqr_B0)
         menu_file.add_command(label='Export',command=self.do_export)
         menu_file.add_command(label='Exit',command=sys.exit)
         menubar.add_cascade(menu=menu_file, label='File')
@@ -1091,16 +1091,16 @@ class bfit(object):
         state = self.fetch_files.check_state.get()
         self.fetch_files.check_state.set(not state)
         self.fetch_files.check_all()
-    def set_draw_style(self):       drawstyle_popup(self)
-    def set_histograms(self,*a):    set_histograms_popup(self)
+    def set_draw_style(self):       popup_drawstyle(self)
+    def set_histograms(self,*a):    popup_set_histograms(self)
     def set_focus_tab(self,idn,*a): self.notebook.select(idn)
-    def set_ppm_reference(self,*a): set_ppm_reference_popup(self)
+    def set_ppm_reference(self,*a): popup_set_ppm_reference(self)
     def set_probe_species(self, *a): 
         species = self.probe_species.get()
         self.fit_files.fitter.probe_species = species
         self.fit_files.probe_label['text'] = species
         self.logger.info('Probe species changed to %s',species)
-    def set_redraw_period(self,*a): redraw_period_popup(self)
+    def set_redraw_period(self,*a): popup_redraw_period(self)
     def set_style_new(self,x):      
         self.logger.info('Setting draw style to "new"')
         self.draw_style.set('new')
