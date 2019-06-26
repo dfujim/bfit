@@ -267,10 +267,8 @@ class bfit(object):
         # File
         menu_file = Menu(menubar)
         menu_file.add_command(label='Search archive',command=self.search_archive)
-        menu_file.add_command(label='BNMR Oscillating Field Calculator',\
-                command=calculator_nmr_B1)
-        menu_file.add_command(label='BNQR Static Field Calculator',\
-                command=calculator_nqr_B0)
+        menu_file.add_command(label='NMR B1 Calculator',command=calculator_nmr_B1)
+        menu_file.add_command(label='NQR B0 Calculator',command=calculator_nqr_B0)
         menu_file.add_command(label='Export',command=self.do_export)
         menu_file.add_command(label='Exit',command=sys.exit)
         menubar.add_cascade(menu=menu_file, label='File')
@@ -280,7 +278,7 @@ class bfit(object):
         menubar.add_cascade(menu=menu_settings, label='Settings')
         menu_settings_dir = Menu(menu_settings)
         menu_settings_lab = Menu(menu_settings)
-        menu_settings_probe = Menu(menu_settings,selectcolor='green2')
+        menu_settings_probe = Menu(menu_settings,selectcolor=colors.selected)
         
         # Settings cascade commands
         menu_settings.add_cascade(menu=menu_settings_dir,label='Data directory')
@@ -296,7 +294,7 @@ class bfit(object):
         menu_settings.add_cascade(menu=menu_settings_probe,label='Probe Species')
         menu_settings.add_command(label='Redraw period',
                 command=self.set_redraw_period)
-        menu_settings.add_command(label="System matplotlibrc",\
+        menu_settings.add_command(label="System matplotlibrc",
                 command=self.set_matplotlib)
         
         # Settings: data directory
@@ -309,7 +307,7 @@ class bfit(object):
         for dc in self.draw_components:
             menu_settings_lab.add_radiobutton(label=dc,
                 variable=self.label_default,value=dc,command=self.set_all_labels,
-                selectcolor='green2')
+                selectcolor=colors.selected)
         
         # Settings: set probe species
         self.probe_species = StringVar()
@@ -335,19 +333,19 @@ class bfit(object):
         menubar.add_cascade(menu=menu_draw,label='Draw Mode')
         menu_draw.add_radiobutton(label="Draw in new window",\
                 variable=self.draw_style,value='new',underline=8,
-                selectcolor='green2')
+                selectcolor=colors.selected)
         menu_draw.add_radiobutton(label="Stack in existing window",\
                 variable=self.draw_style,value='stack',underline=0,
-                selectcolor='green2')
+                selectcolor=colors.selected)
         menu_draw.add_radiobutton(label="Redraw in existing window",\
                 variable=self.draw_style,value='redraw',underline=0,
-                selectcolor='green2')
+                selectcolor=colors.selected)
         
         menu_draw.add_separator()
         menu_draw.add_checkbutton(label="Draw 1f as PPM shift",\
-                variable=self.draw_ppm,selectcolor='green2')
+                variable=self.draw_ppm,selectcolor=colors.selected)
         menu_draw.add_checkbutton(label="Draw residuals as standardized",\
-                variable=self.draw_standardized_res,selectcolor='green2')
+                variable=self.draw_standardized_res,selectcolor=colors.selected)
         
         # Help
         menu_help = Menu(menubar)
