@@ -52,8 +52,12 @@ class fit_files(object):
             yaxis_combobox: box for choosing y axis draw parameter
     """ 
     
-    default_fit_functions = {'20':('Exp','Str Exp'),'2h':('Exp','Str Exp'),
-            '1f':('Lorentzian','Gaussian'),'1n':('Lorentzian','Gaussian')}
+    default_fit_functions = {
+            '20':('Exp','Str Exp'),
+            '2h':('Exp','Str Exp'),
+            '1f':('Lorentzian','Gaussian'),
+            '1w':('Lorentzian','Gaussian'),
+            '1n':('Lorentzian','Gaussian')}
     mode = ""
     chi_threshold = 1.5 # threshold for red highlight on bad fits 
     n_fitx_pts = 500    # number of points to draw in fitted curves
@@ -487,7 +491,7 @@ class fit_files(object):
             doptions = {}
             doptions['rebin'] = bdfit.rebin.get()
             
-            if self.mode == '1f':
+            if self.mode in ('1f','1w'):
                 dline = self.bfit.fetch_files.data_lines[key]
                 doptions['omit'] = dline.bin_remove.get()
                 if doptions['omit'] == dline.bin_remove_starter_line: 
@@ -634,6 +638,7 @@ class fit_files(object):
                      '2h':"Time (s)",
                      '2e':'Frequency (MHz)',
                      '1f':'Frequency (MHz)',
+                     '1w':'Frequency (MHz)',
                      '1n':'Voltage (V)'}
         
         # get draw setting 
@@ -691,8 +696,8 @@ class fit_files(object):
         res = a - fn(x,*fit_par)
             
         # set x axis
-        if   data.mode == '1f': x *= self.bfit.freq_unit_conv
-        elif data.mode == '1n': x *= self.bfit.volt_unit_conv    
+        if   data.mode in ('1f','1w'):  x *= self.bfit.freq_unit_conv
+        elif data.mode == '1n':         x *= self.bfit.volt_unit_conv    
 
         # draw 
         if self.bfit.draw_standardized_res.get():
@@ -732,6 +737,7 @@ class fit_files(object):
                      '2h':"Time (s)",
                      '2e':'Frequency (MHz)',
                      '1f':'Frequency (MHz)',
+                     '1w':'Frequency (MHz)',
                      '1n':'Voltage (V)'}
                      
         # get data and fit results
@@ -785,9 +791,9 @@ class fit_files(object):
         fitx = np.arange(self.n_fitx_pts)/float(self.n_fitx_pts)*\
                                                     (max(t)-min(t))+min(t)
         
-        if   data.mode == '1f': fitxx = fitx*self.bfit.freq_unit_conv
-        elif data.mode == '1n': fitxx = fitx*self.bfit.volt_unit_conv
-        else:                   fitxx = fitx
+        if   data.mode in ('1f','1w'):  fitxx = fitx*self.bfit.freq_unit_conv
+        elif data.mode == '1n':         fitxx = fitx*self.bfit.volt_unit_conv
+        else:                           fitxx = fitx
     
         plt.plot(fitxx,fn(fitx,*fit_par),zorder=10,**drawargs)
         

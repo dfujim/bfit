@@ -216,9 +216,13 @@ class fileviewer(object):
         """
         
         # settings
-        mode_dict = {"20":"SLR","1f":"Frequency Scan","1n":"Rb Cell Scan",
-                    '2h':'SLR with Alpha Tracking','2s':'Spin Echo',
-                    '2e':'Randomized Frequency Scan'}
+        mode_dict = {"1f":"Frequency Scan",
+                     "1w":"Frequency Comb",
+                     "1n":"Rb Cell Scan",
+                     "20":"SLR",
+                     '2h':'SLR with Alpha Tracking',
+                     '2s':'Spin Echo',
+                     '2e':'Randomized Frequency Scan'}
         
         # fetch year
         try:
@@ -564,7 +568,7 @@ class fileviewer(object):
                 pass
             
         # get 1F specific data
-        elif data.mode in ['1f']:
+        elif data.mode in ('1f','1w'):
             try:
                 val = int(data.ppg.dwelltime.mean)
                 data_ne['Bin Width'] = "%d ms" % val

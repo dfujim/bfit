@@ -118,6 +118,8 @@ class bfit(object):
                             "Shifted Split","Shifted Combined","Raw Histograms"),
                       '1n':("Combined Helicity","Split Helicity","Raw Scans",
                             "Matched Peak Finding","Raw Histograms"),
+                      '1w':("Combined Helicity","Split Helicity","Raw Scans",
+                            "Shifted Split","Shifted Combined","Raw Histograms"),
                       '2e':("Combined Hel Raw","Combined Hel Slopes",      
                             "Combined Hel Diff","Split Hel Raw",
                             "Split Hel Slopes","Split Hel Diff"),
@@ -437,6 +439,7 @@ class bfit(object):
                      '2h':"Time (s)",
                      '2e':'Frequency (MHz)',
                      '1f':'Frequency (MHz)',
+                     '1w':'Frequency (MHz)',
                      '1n':'Voltage (V)'}
         ylabel_dict={'ad':r'$N_\alpha/N_\beta$', # otherwise, label as Asymmetry
                      'hs':r'Asym-Asym($\nu_{min}$)',
@@ -446,6 +449,7 @@ class bfit(object):
                '2h':"time_s",
                '2e':"time",
                '1f':'freq',
+               '1w':'freq',
                '1n':'mV'}
         
         # get draw setting 
@@ -490,7 +494,7 @@ class bfit(object):
         ax.get_xaxis().get_major_formatter().set_useOffset(False)
         
         # get asymmetry: raw scans
-        if asym_type == 'r' and data.mode in ['1f','1n']:
+        if asym_type == 'r' and data.mode in ['1f','1n','1w']:
             a = data.asym('raw',omit=option,hist_select=self.hist_select)
             x = np.arange(len(a.p[0]))
             idx_p = a.p[0]!=0
@@ -584,7 +588,7 @@ class bfit(object):
             
             # unit conversions
             if   data.mode == '1n': x *= self.volt_unit_conv
-            elif data.mode == '1f': 
+            elif data.mode in ('1f','1w'): 
                 if self.draw_ppm.get():
                     self.logger.info('Drawing as PPM shift with reference %s Hz',
                                      self.ppm_reference)

@@ -18,6 +18,7 @@ class fitter(object):
     function_names = {  '20':('Exp','Str Exp'),
                         '2h':('Exp','Str Exp'),
                         '1f':('Lorentzian','Gaussian','BiLorentzian',),
+                        '1w':('Lorentzian','Gaussian','BiLorentzian',),
                         '1n':('Lorentzian','Gaussian''BiLorentzian',)}
      
     # Define names of fit parameters:
@@ -296,26 +297,26 @@ class fitter(object):
         # set fitting function
         if fn_name == 'Lorentzian':
             fn =  fns.lorentzian
-            self.mode='1f'
+            self.mode=1
         elif fn_name == 'BiLorentzian':
             fn =  fns.bilorentzian
-            self.mode='1f'
+            self.mode=1
         elif fn_name == 'Gaussian':
             fn =  fns.gaussian
-            self.mode='1f'
+            self.mode=1
         elif fn_name == 'Exp':
             fn =  fns.pulsed_exp(lifetime,pulse_len)
-            self.mode='20'
+            self.mode=2
         elif fn_name == 'Str Exp':
             fn =  fns.pulsed_strexp(lifetime,pulse_len)
-            self.mode='20'
+            self.mode=2
         else:
             raise RuntimeError('Fitting function not found.')
         
         # Make final function based on number of components
         fnlist = [fn]*ncomp
         
-        if self.mode in ['1f']:
+        if self.mode == 1:
             fnlist.append(lambda x,b: b)
         fn = fns.get_fn_superpos(fnlist)
         
