@@ -688,10 +688,6 @@ class dataline(object):
         # build objects
         line_frame = ttk.Frame(fetch_tab_frame,pad=(5,0))
         
-        info_str = "%d  %d  %3d K  %s  %s" % (self.year,self.run,
-                                              self.temperature,field_text,
-                                              bias_text)
-        info_label = ttk.Label(line_frame,text=info_str,pad=5)
         bin_remove_entry = ttk.Entry(line_frame,textvariable=self.bin_remove,\
                 width=17)
                 
@@ -724,8 +720,11 @@ class dataline(object):
         rebin_box = Spinbox(line_frame,from_=1,to=100,width=3,\
                 textvariable=self.rebin)
                 
+        info_str = "%d  %d  %3d K  %s  %s" % (self.year,self.run,
+                                              self.temperature,field_text,
+                                              bias_text)
         self.check_state.set(bfit.fetch_files.check_state.get())
-        check = ttk.Checkbutton(line_frame,text='',variable=self.check_state,\
+        check = ttk.Checkbutton(line_frame,text=info_str,variable=self.check_state,\
                 onvalue=True,offvalue=False,pad=5)
          
         # add grey text to bin removal
@@ -744,7 +743,6 @@ class dataline(object):
         # grid
         c = 1
         check.grid(column=c,row=0,sticky=E); c+=1
-        info_label.grid(column=c,row=0,sticky=E); c+=1
         if self.mode in ['1f','1n','1w']: 
             bin_remove_entry.grid(column=c,row=0,sticky=E); c+=1
         if self.mode in ['20','2h']: 
