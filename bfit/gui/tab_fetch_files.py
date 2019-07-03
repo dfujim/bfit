@@ -669,14 +669,22 @@ class dataline(object):
             self.temperature = int(np.round(bdfit.temperature.mean))
         except AttributeError:
             self.temperature = -999
-                
-        # field
-        self.field = np.around(bdfit.field,2)
-        
-        try:
-            field_text = "%3.2f T"%self.field
-        except TypeError:
-            field_text = ' '
+            
+        # field (Tesla)
+        if bdfit.field > 0.1:
+            self.field = np.around(bdfit.field,2)
+            
+            try:
+                field_text = "%3.2f T"%self.field
+            except TypeError:
+                field_text = ' '
+        else:
+            self.field = np.round(bdfit.field*1e4)
+            
+            try:
+                field_text = "%3.0f G"%self.field
+            except TypeError:
+                field_text = ' '
         
         # bias
         self.bias = self.bdfit.bias
