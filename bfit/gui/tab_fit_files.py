@@ -638,7 +638,7 @@ class fit_files(object):
                      '2h':"Time (s)",
                      '2e':'Frequency (MHz)',
                      '1f':'Frequency (MHz)',
-                     '1w':'Frequency (MHz)',
+                     '1w':'x Parameter',
                      '1n':'Voltage (V)'}
         
         # get draw setting 
@@ -696,8 +696,8 @@ class fit_files(object):
         res = a - fn(x,*fit_par)
             
         # set x axis
-        if   data.mode in ('1f','1w'):  x *= self.bfit.freq_unit_conv
-        elif data.mode == '1n':         x *= self.bfit.volt_unit_conv    
+        if   data.mode == '1f': x *= self.bfit.freq_unit_conv
+        elif data.mode == '1n': x *= self.bfit.volt_unit_conv    
 
         # draw 
         if self.bfit.draw_standardized_res.get():
@@ -737,7 +737,7 @@ class fit_files(object):
                      '2h':"Time (s)",
                      '2e':'Frequency (MHz)',
                      '1f':'Frequency (MHz)',
-                     '1w':'Frequency (MHz)',
+                     '1w':'x Parameter',
                      '1n':'Voltage (V)'}
                      
         # get data and fit results
@@ -791,9 +791,9 @@ class fit_files(object):
         fitx = np.arange(self.n_fitx_pts)/float(self.n_fitx_pts)*\
                                                     (max(t)-min(t))+min(t)
         
-        if   data.mode in ('1f','1w'):  fitxx = fitx*self.bfit.freq_unit_conv
-        elif data.mode == '1n':         fitxx = fitx*self.bfit.volt_unit_conv
-        else:                           fitxx = fitx
+        if   data.mode == '1f': fitxx = fitx*self.bfit.freq_unit_conv
+        elif data.mode == '1n': fitxx = fitx*self.bfit.volt_unit_conv
+        else:                   fitxx = fitx
     
         plt.plot(fitxx,fn(fitx,*fit_par),zorder=10,**drawargs)
         

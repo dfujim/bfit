@@ -668,7 +668,7 @@ class dataline(object):
         try:
             self.temperature = int(np.round(bdfit.temperature.mean))
         except AttributeError:
-            self.temperature = np.nan
+            self.temperature = -999
                 
         # field
         self.field = np.around(bdfit.field,2)

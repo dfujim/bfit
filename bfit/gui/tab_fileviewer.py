@@ -568,7 +568,7 @@ class fileviewer(object):
                 pass
             
         # get 1F specific data
-        elif data.mode in ('1f','1w'):
+        elif data.mode == '1f':
             try:
                 val = int(data.ppg.dwelltime.mean)
                 data_ne['Bin Width'] = "%d ms" % val
@@ -629,6 +629,120 @@ class fileviewer(object):
                 val = int(data.ppg.ncycles.mean)
                 data_ne['Number of Cycles per Scan Increment'] = '%d' % val
                 key_order_ne.append('Number of Cycles per Scan Increment')
+            except AttributeError:
+                pass
+                
+        # get 1W specific data
+        elif data.mode == '1w':
+            try:
+                val = int(data.ppg.dwelltime.mean)
+                data_ne['Bin Width'] = "%d ms" % val
+                key_order_ne.append('Bin Width')
+            except AttributeError:
+                pass
+            
+            try:    
+                val = int(data.ppg.nbins.mean)
+                data_ne['Number of Bins'] = "%d" % val
+                key_order_ne.append('Number of Bins')
+            except AttributeError:
+                pass
+            
+            try:
+                val = bool(data.ppg.const_t_btwn_cycl.mean)
+                data_ne['Enable Const Time Between Cycles'] = str(val)
+                key_order_ne.append('Enable Const Time Between Cycles')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.service_t.mean)
+                data_ne['DAQ Service Time'] = "%d ms" % val
+                key_order_ne.append('DAQ Service Time')
+            except AttributeError:
+                pass    
+            
+            try:
+                val = int(data.ppg.xstart.mean)
+                data_ne['Parameter x Start'] = '%d' % val
+                key_order_ne.append('Parameter x Start')
+            except AttributeError:
+                pass
+                
+            try:
+                val = int(data.ppg.xstop.mean)
+                data_ne['Parameter x Stop'] = '%d' % val
+                key_order_ne.append('Parameter x Stop')
+            except AttributeError:
+                pass
+                
+            try:
+                val = int(data.ppg.xincr.mean)
+                data_ne['Parameter x Increment'] = '%d' % val
+                key_order_ne.append('Parameter x Increment')
+            except AttributeError:
+                pass
+                
+            try:
+                val = str(data.ppg.freqfn_f1.units)
+                data_ne['CH1 Frequency Function(x)'] = val
+                key_order_ne.append('CH1 Frequency Function(x)')
+            except AttributeError:
+                pass
+            
+            try:
+                val = str(data.ppg.freqfn_f2.units)
+                data_ne['CH2 Frequency Function(x)'] = val
+                key_order_ne.append('CH2 Frequency Function(x)')
+            except AttributeError:
+                pass
+            
+            try:
+                val = str(data.ppg.freqfn_f3.units)
+                data_ne['CH3 Frequency Function(x)'] = val
+                key_order_ne.append('CH3 Frequency Function(x)')
+            except AttributeError:
+                pass
+            
+            try:
+                val = str(data.ppg.freqfn_f4.units)
+                data_ne['CH4 Frequency Function(x)'] = val
+                key_order_ne.append('CH4 Frequency Function(x)')
+            except AttributeError:
+                pass
+             
+            try:
+                val = bool(data.ppg.hel_enable.mean)
+                data_ne['Flip Helicity'] = str(val)
+                key_order_ne.append('Flip Helicity')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.hel_sleep.mean)
+                data_ne['Helicity Flip Sleep'] = "%d ms" % val
+                key_order_ne.append('Helicity Flip Sleep')
+            except AttributeError:
+                pass        
+            
+            try:
+                val = int(data.ppg.ncycles.mean)
+                data_ne['Number of Cycles per Scan Increment'] = '%d' % val
+                key_order_ne.append('Number of Cycles per Scan Increment')
+            except AttributeError:
+                pass
+            
+            try:
+                val = bool(data.ppg.fref_enable.mean)
+                data_ne['Freq Reference Enabled'] = str(val)
+                key_order_ne.append('Freq Reference Enabled')
+            except AttributeError:
+                pass
+         
+            try:
+                val = int(data.ppg.fref_scale.mean)
+                data_ne['Freq Reference Scale Factor'] = '%d' % val
+                key_order_ne.append('Freq Reference Scale Factor')
             except AttributeError:
                 pass
             

@@ -439,7 +439,7 @@ class bfit(object):
                      '2h':"Time (s)",
                      '2e':'Frequency (MHz)',
                      '1f':'Frequency (MHz)',
-                     '1w':'Frequency (MHz)',
+                     '1w':'x Parameter',
                      '1n':'Voltage (V)'}
         ylabel_dict={'ad':r'$N_\alpha/N_\beta$', # otherwise, label as Asymmetry
                      'hs':r'Asym-Asym($\nu_{min}$)',
@@ -449,7 +449,7 @@ class bfit(object):
                '2h':"time_s",
                '2e':"time",
                '1f':'freq',
-               '1w':'freq',
+               '1w':'xpar',
                '1n':'mV'}
         
         # get draw setting 
@@ -587,8 +587,9 @@ class bfit(object):
             xlabel = xlabel_dict[data.mode]
             
             # unit conversions
-            if   data.mode == '1n': x *= self.volt_unit_conv
-            elif data.mode in ('1f','1w'): 
+            if   data.mode == '1n': 
+                x *= self.volt_unit_conv
+            elif data.mode == '1f': 
                 if self.draw_ppm.get():
                     self.logger.info('Drawing as PPM shift with reference %s Hz',
                                      self.ppm_reference)

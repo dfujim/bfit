@@ -83,8 +83,12 @@ class fitdata(object):
         try:
             self.temperature = self.bd.camp.smpl_read_A
         except AttributeError:
-            self.logger.exception('Thermometer not found')
-            self.temperature = self.bd.camp.oven_readC
+            self.logger.exception('Thermometer smpl_read_A not found')
+            try:
+                self.temperature = self.bd.camp.oven_readC
+            except AttributeError:
+                self.logger.exception('Thermometer oven_readC not found')
+                self.temperature = -1111
         
         # field
         try:
