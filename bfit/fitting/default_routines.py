@@ -66,6 +66,7 @@ class fitter(object):
                                             
             returns dictionary of {run: [[par_names],[par_values],[par_errors],
                                         [chisquared],[fitfunction pointers]]}
+                                   and global chisquared
         """
 
         # check ncomponents
@@ -160,8 +161,8 @@ class fitter(object):
         stds = [np.sqrt(np.diag(c)) for c in covs]
         
         # collect results
-        return {'.'.join(map(str,(d[0].year,d[0].run))):[keylist,p,s,c,f] \
-                    for d,p,s,c,f in zip(data_list,pars,stds,chis,fn)}
+        return ({'.'.join(map(str,(d[0].year,d[0].run))):[keylist,p,s,c,f] \
+                    for d,p,s,c,f in zip(data_list,pars,stds,chis,fn)},gchi)
 
     # ======================================================================= #
     def gen_param_names(self,fn_name,ncomp):

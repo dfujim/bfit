@@ -39,6 +39,7 @@ class fit_files(object):
             fit_lines:      Dict storing fitline objects
             fit_lines_old: dictionary of previously used fitline objects, keyed by run
             fitter:         fitting object from self.bfit.routine_mod
+            gchi_label:     Label for global chisquared    
             mode:           what type of run is this. 
             n_component:    number of fitting components (IntVar)
             probe_label:    Label for probe species
@@ -194,6 +195,12 @@ class fit_files(object):
                                      text=self.bfit.probe_species.get(),
                                      justify=CENTER)
         
+        # global chisquared
+        gchi_label_frame = ttk.Labelframe(right_frame,pad=(10,5,10,5),
+                text='Global ChiSquared',)
+        self.gchi_label = ttk.Label(gchi_label_frame,
+                                    text='',justify=CENTER)
+        
         # fit results -----------------------
         results_frame = ttk.Labelframe(right_frame,
             text='Fit Results and Run Conditions',pad=5)     # draw fit results
@@ -246,7 +253,10 @@ class fit_files(object):
         probe_label_frame.grid(column=0,row=1,columnspan=2,sticky=(E,W,N))
         self.probe_label.grid(column=0,row=0)
         
-        results_frame.grid(column=0,row=2,columnspan=2,sticky=(E,W,N))
+        gchi_label_frame.grid(column=0,row=2,columnspan=2,sticky=(E,W,N))
+        self.gchi_label.grid(column=0,row=0)
+        
+        results_frame.grid(column=0,row=3,columnspan=2,sticky=(E,W,N))
         
         # resizing
         
@@ -546,7 +556,7 @@ class fit_files(object):
             
         try:
             # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
-            fit_output = fitter(fn_name=fn_name,ncomp=ncomp,
+            fit_output,gchi = fitter(fn_name=fn_name,ncomp=ncomp,
                                      data_list=data_list,
                                      hist_select=self.bfit.hist_select)
         except Exception as errmsg:
@@ -564,6 +574,9 @@ class fit_files(object):
         # display run results
         for key in self.fit_lines.keys():
             self.fit_lines[key].show_fit_result()
+            
+        # show global chi
+        self.gchi_label['text'] = str(np.around(gchi,2))
         
         # enable draw buttons on fetch files tab
         for k in self.bfit.fetch_files.data_lines.keys():
