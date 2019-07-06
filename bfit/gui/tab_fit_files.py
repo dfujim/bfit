@@ -198,19 +198,17 @@ class fit_files(object):
         # global chisquared
         gchi_label_frame = ttk.Labelframe(right_frame,pad=(10,5,10,5),
                 text='Global ChiSquared',)
-        self.gchi_label = ttk.Label(gchi_label_frame,
-                                    text='',justify=CENTER)
+        self.gchi_label = ttk.Label(gchi_label_frame,text='',justify=CENTER)
         
         # fit results -----------------------
         results_frame = ttk.Labelframe(right_frame,
             text='Fit Results and Run Conditions',pad=5)     # draw fit results
-        results_frame.grid(column=0,row=1,sticky=(N,E,W))
         
         # draw and export buttons
         button_frame = Frame(results_frame)
         draw_button = ttk.Button(button_frame,text='Draw',command=self.draw_param)
         export_button = ttk.Button(button_frame,text='Export',command=self.export)
-        show_button = ttk.Button(button_frame,text='Show All',command=self.show_all_results)
+        show_button = ttk.Button(button_frame,text='Compare',command=self.show_all_results)
         
         # menus for x and y values
         ttk.Label(results_frame,text="x axis:").grid(column=0,row=1)
@@ -243,6 +241,14 @@ class fit_files(object):
         self.yaxis_combobox.grid(column=1,row=2,pady=5)
         self.annotation_combobox.grid(column=1,row=3,pady=5)
         
+       # save/load state -----------------------
+        state_frame = ttk.Labelframe(right_frame,text='Program State',pad=5)
+        state_save_button = ttk.Button(state_frame,text='Save',command=self.save_state)
+        state_load_button = ttk.Button(state_frame,text='Load',command=self.load_state)
+       
+        state_save_button.grid(column=0,row=0,padx=5,pady=5,sticky=(W,E))
+        state_load_button.grid(column=1,row=0,padx=5,pady=5,sticky=(W,E))
+        
         # gridding
         fit_runmode_label_frame.grid(column=0,row=0,sticky=(E,W))
         self.fit_runmode_label.grid(column=0,row=0)
@@ -250,13 +256,14 @@ class fit_files(object):
         fit_routine_label_frame.grid(column=1,row=0,sticky=(E,W))
         self.fit_routine_label.grid(column=0,row=0)
         
-        probe_label_frame.grid(column=0,row=1,columnspan=2,sticky=(E,W,N))
+        probe_label_frame.grid(column=0,row=1,columnspan=2,sticky=(E,W,N),pady=1)
         self.probe_label.grid(column=0,row=0)
         
-        gchi_label_frame.grid(column=0,row=2,columnspan=2,sticky=(E,W,N))
+        gchi_label_frame.grid(column=0,row=2,columnspan=2,sticky=(E,W,N),pady=1)
         self.gchi_label.grid(column=0,row=0)
         
-        results_frame.grid(column=0,row=3,columnspan=2,sticky=(E,W,N))
+        results_frame.grid(column=0,row=3,columnspan=2,sticky=(E,W,N),pady=1)
+        state_frame.grid(column=0,row=4,columnspan=2,sticky=(E,W,N),pady=1)
         
         # resizing
         
@@ -1032,6 +1039,11 @@ class fit_files(object):
             raise AttributeError('Selection "%s" not found' % select)
     
     # ======================================================================= #
+    def load_state(self):
+        """Load the state of the fitting inputs"""
+        print('Not yet implemented')
+    
+    # ======================================================================= #
     def modify_all(self,*args,source=None,par='',column=''):
         """
             Modify all input fields of each line to match the altered one, 
@@ -1045,6 +1057,11 @@ class fit_files(object):
         setall = self.set_as_group.get()
         for k in self.fit_lines.keys():
             self.fit_lines[k].set_input(source,par,column,setall)        
+    
+    # ======================================================================= #
+    def save_state(self):
+        """Save the state of the fitting inputs"""
+        print('Not yet implemented')
     
     # ======================================================================= #
     def show_all_results(self):
