@@ -55,6 +55,11 @@ class pulsed(object):
 class pulsed_exp(pulsed):
     def __call__(self,time,lambda_s,amp):
         return amp*self.pulser.exp(time,lambda_s)
+
+class pulsed_biexp(pulsed):
+    def __call__(self,time,lambda_s,lambdab_s,fracb,amp):
+        return amp*((1-fracb)*  self.pulser.exp(time,lambda_s) + \
+                    fracb*      self.pulser.exp(time,lambdab_s))
         
 class pulsed_strexp(pulsed):
     def __call__(self,time,lambda_s,beta,amp):

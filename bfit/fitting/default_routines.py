@@ -15,14 +15,15 @@ class fitter(object):
     __name__ = 'default'
     
     # Define possible fit functions for given run modes
-    function_names = {  '20':('Exp','Str Exp'),
-                        '2h':('Exp','Str Exp'),
+    function_names = {  '20':('Exp','Bi Exp','Str Exp'),
+                        '2h':('Exp','Bi Exp','Str Exp'),
                         '1f':('Lorentzian','Gaussian','BiLorentzian',),
                         '1w':('Lorentzian','Gaussian','BiLorentzian',),
                         '1n':('Lorentzian','Gaussian''BiLorentzian',)}
      
     # Define names of fit parameters:
     param_names = {     'Exp'       :('1/T1','amp'),
+                        'Bi Exp'    :('1/T1','1/T1b','fraction_b','amp'),
                         'Str Exp'   :('1/T1','beta','amp'),
                         'Lorentzian':('peak','width','height','baseline'),
                         'BiLorentzian':('peak','widthA','heightA',
@@ -207,7 +208,7 @@ class fitter(object):
         """
         
         # set pulsed exp fit initial parameters
-        if fn_name in ['Exp','Str Exp']:
+        if fn_name in ['Exp','Bi Exp','Str Exp']:
             t,a,da = bdataobj.asym('c')
             
             # ampltitude average of first 5 bins
@@ -228,7 +229,8 @@ class fitter(object):
             # set values
             par_values = {'amp':(amp,0,np.inf),
                           '1/T1':(1./T1,0,np.inf),
-                          'baseline':(base,-np.inf,np.inf),
+                          '1/T1b':(1./T1,0,np.inf),
+                          'fraction_b':(0.5,0,1),
                           'beta':(0.5,0,1)}
                          
         # set time integrated fit initial parameters
@@ -307,6 +309,9 @@ class fitter(object):
             self.mode=1
         elif fn_name == 'Exp':
             fn =  fns.pulsed_exp(lifetime,pulse_len)
+            self.mode=2
+        elif fn_name == 'Bi Exp':
+            fn =  fns.pulsed_biexp(lifetime,pulse_len)
             self.mode=2
         elif fn_name == 'Str Exp':
             fn =  fns.pulsed_strexp(lifetime,pulse_len)
