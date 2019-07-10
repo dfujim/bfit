@@ -142,10 +142,11 @@ class fitdata(object):
 
     # ======================================================================= #
     def set_fitresult(self,values):
-        """Set fit results. Values is output of fitting routine. It is 
-        dictionary of lists: {run:[parname/par/err/chi/fnpointer]}
         """
-        print(values)
+            Set fit results. Values is output of fitting routine. It is a list 
+            of tuples
+            [(parname),(par),(err),chi,fnpointer]
+        """
         self.parnames = values[0]
         
         for i in range(len(self.parnames)):

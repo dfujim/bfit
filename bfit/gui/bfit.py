@@ -102,7 +102,6 @@ class bfit(object):
             update_period: update spacing in s. 
             volt_unit_conv: conversion rate from original to display units
     """
-    probe_species = "8Li" # unused
     bnmr_archive_label = "BNMR_ARCHIVE"
     bnqr_archive_label = "BNQR_ARCHIVE"
     update_period = 20  # s

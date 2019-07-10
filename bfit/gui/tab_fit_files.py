@@ -8,11 +8,13 @@ from functools import partial
 from bfit.gui.calculator_nqr_B0 import current2field
 from bfit.gui.popup_show_param import popup_show_param
 from bfit.gui.popup_param import popup_param
+from bfit.fitting.decay_31mg import fa_31Mg
 from bdata import bdata
 from bfit import logger_name
 
 import numpy as np
 import pandas as pd
+import bdata as bd
 import matplotlib.pyplot as plt
 import bfit.backend.colors as colors
 
@@ -766,7 +768,7 @@ class fit_files(object):
         fit_par = [data.fitpar['res'][p] for p in data.parnames]
         fn = data.fitfn
         data = data.bd
-        
+                
         # get draw style
         style = self.bfit.draw_style.get()
         
@@ -1051,6 +1053,8 @@ class fit_files(object):
         if not filename:
             return
         
+        self.logger.info('Loading program state from %s',filename)
+        
         # load the object with the data
         with open(filename,'r') as fid:
             from_file = yaml.safe_load(fid)
@@ -1058,7 +1062,6 @@ class fit_files(object):
         # load selected runs
         datalines = from_file['datalines']
         fetch_tab = self.bfit.fetch_files
-        d_fitdata = self.bfit.data
         setyear = fetch_tab.year.get()
         setrun =  fetch_tab.run.get()
         for id in datalines:
@@ -1089,10 +1092,18 @@ class fit_files(object):
         # set the number of components
         self.n_component.set(from_file['ncomponents'])
         
+        # set the global chisquared
+        self.gchi_label['text'] = from_file['gchi']
+        
+        # set probe
+        self.bfit.probe_species.set(from_file['probe_species'])
+        self.bfit.set_probe_species()
+        
         # get parameters in fitting page
         self.populate()
         
         # set parameter values
+        d_fitdata = self.bfit.data
         fitlines = from_file['fitlines']
         for id in fitlines:
             parentry = fitlines[id]
@@ -1106,10 +1117,46 @@ class fit_files(object):
             fetch_tab.data_lines[id].draw_fit_checkbox['state'] = 'normal'
             fetch_tab.data_lines[id].draw_res_checkbox['state'] = 'normal'
         
-            # set data
-            dat = d_fitdata[id]
-            dat.set_fitpar({p:[p['p0'],p['lobnd'],p['hibnd']] for p in parentry})
-            dat.set_fitresult({p:[p['p0'],p['lobnd'],p['hibnd']] for p in parentry})
+            # set fit inputs
+            d_fitdata[id].set_fitpar({p:[parentry[p]['p0'],
+                                         parentry[p]['blo'],
+                                         parentry[p]['bhi']] for p in parentry})
+            
+            # get chisq
+            keylist = self.fitter.gen_param_names(from_file['fitfn'],
+                                                  from_file['ncomponents'])
+            for k in keylist: 
+                if 'chi' in parentry[k].keys():
+                    chi = float(parentry[k]['chi'])
+                    break
+                    
+            # get pulse length
+            d_actual = fetch_tab.data_lines[id]
+            pulse_len = 0
+            if '2' in d_actual.mode:
+                pulse_len = d_actual.bdfit.get_pulse_s()
+                    
+            # get probe lifetime
+            lifetime = bd.life[from_file['probe_species']]
+            
+            # get fit function
+            fitfn = self.fitter.get_fn(from_file['fitfn'],
+                                       from_file['ncomponents'],
+                                       pulse_len,
+                                       lifetime)
+            
+            if '2' in d_actual.mode and from_file['probe_species'] == 'Mg31':
+                fitfn1 = lambda x,*par : fa_31Mg(x,pulse_len)*fitfn(x,*par)
+            else:
+                fitfn1 = fitfn
+
+            # set fit results
+            d_fitdata[id].set_fitresult([keylist,
+                              [float(parentry[p]['res']) for p in keylist],
+                              [float(parentry[p]['dres']) for p in keylist],
+                              chi,
+                              fitfn1]
+                            )
         
     # ======================================================================= #
     def modify_all(self,*args,source=None,par='',column=''):
@@ -1163,6 +1210,8 @@ class fit_files(object):
         # get state of fitting info from fit page
         to_file['fitfn'] = self.fit_function_title.get()
         to_file['ncomponents'] = self.n_component.get()
+        to_file['gchi'] = self.gchi_label['text']
+        to_file['probe_species'] = self.bfit.probe_species.get()
         
         # get parameter values from fitlines
         fitlines = self.fit_lines
@@ -1182,6 +1231,8 @@ class fit_files(object):
         if fid:
             yaml.dump(to_file,fid)
             fid.close()
+    
+        self.logger.info('Saving program state to %s',fid)
     
     # ======================================================================= #
     def show_all_results(self):
