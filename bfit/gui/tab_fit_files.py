@@ -18,6 +18,7 @@ import bfit.backend.colors as colors
 
 import datetime, os, traceback, warnings
 import logging
+import yaml
 
 """
 """
@@ -34,7 +35,7 @@ class fit_files(object):
             fit_canvas:     canvas object allowing for scrolling 
             fit_data_tab:   containing frame (for destruction)
             fit_function_title: title of fit function to use
-            fit_function_title_box: spinbox for fit function names
+            fit_function_title_box: combobox for fit function names
             fit_input:      fitting input values = (fn_name,ncomp,data_list)
             fit_lines:      Dict storing fitline objects
             fit_lines_old: dictionary of previously used fitline objects, keyed by run
@@ -1040,9 +1041,76 @@ class fit_files(object):
     
     # ======================================================================= #
     def load_state(self):
-        """Load the state of the fitting inputs"""
-        print('Not yet implemented')
+        """
+            Load the state of the gui
+        """
+        
+        # get the filename 
+        filename = filedialog.askopenfilename(filetypes=[('yaml','*.yaml'),
+                                                         ('allfiles','*')])
+        if not filename:
+            return
+        
+        # load the object with the data
+        with open(filename,'r') as fid:
+            from_file = yaml.safe_load(fid)
     
+        # load selected runs
+        datalines = from_file['datalines']
+        fetch_tab = self.bfit.fetch_files
+        d_fitdata = self.bfit.data
+        setyear = fetch_tab.year.get()
+        setrun =  fetch_tab.run.get()
+        for id in datalines:
+            d = datalines[id]
+            
+            # set year and run and fetch
+            fetch_tab.year.set(d['year'])
+            fetch_tab.run.set(d['run'])
+            fetch_tab.get_data()
+            
+            # set corresponding parameters for the run 
+            d_actual = fetch_tab.data_lines[id]
+            d_actual.bin_remove.set(d['bin_remove'])
+            d_actual.check_data.set(d['check_data'])
+            d_actual.check_fit.set(d['check_fit'])
+            d_actual.check_res.set(d['check_res'])
+            d_actual.check_state.set(d['check_state'])
+            d_actual.label.set(d['label'])
+            d_actual.rebin.set(d['rebin'])
+    
+        # reset year and run input info
+        fetch_tab.year.set(setyear)
+        fetch_tab.run.set(setrun)
+        
+        # set the fitting function 
+        self.fit_function_title_box.set(from_file['fitfn'])
+        
+        # set the number of components
+        self.n_component.set(from_file['ncomponents'])
+        
+        # get parameters in fitting page
+        self.populate()
+        
+        # set parameter values
+        fitlines = from_file['fitlines']
+        for id in fitlines:
+            parentry = fitlines[id]
+            parentry_actual = self.fit_lines[id].parentry
+            for parname in parentry:
+                par = parentry[parname]
+                for k in par.keys():
+                    parentry_actual[parname][k][0].set(par[k])
+                    
+            # make sure dataline checkboxes are active
+            fetch_tab.data_lines[id].draw_fit_checkbox['state'] = 'normal'
+            fetch_tab.data_lines[id].draw_res_checkbox['state'] = 'normal'
+        
+            # set data
+            dat = d_fitdata[id]
+            dat.set_fitpar({p:[p['p0'],p['lobnd'],p['hibnd']] for p in parentry})
+            dat.set_fitresult({p:[p['p0'],p['lobnd'],p['hibnd']] for p in parentry})
+        
     # ======================================================================= #
     def modify_all(self,*args,source=None,par='',column=''):
         """
@@ -1060,8 +1128,60 @@ class fit_files(object):
     
     # ======================================================================= #
     def save_state(self):
-        """Save the state of the fitting inputs"""
-        print('Not yet implemented')
+        """
+            Save the state of the gui:
+            
+            dataline state info
+            Fitting function
+            Number of components 
+            Initial inputs
+            Fit results
+        """
+        
+        # final output 
+        to_file = {}
+        
+        # get state from datalines
+        datalines = self.bfit.fetch_files.data_lines
+        dlines = {}
+        for id in datalines:
+            d = datalines[id]
+            dlines[id] = {
+                    'bin_remove'   :d.bin_remove.get(),
+                    'check_data'   :d.check_data.get(),
+                    'check_fit'    :d.check_fit.get(),
+                    'check_res'    :d.check_res.get(),
+                    'check_state'  :d.check_state.get(),
+                    'id'           :d.id,
+                    'label'        :d.label.get(),
+                    'rebin'        :d.rebin.get(),
+                    'run'          :d.run,
+                    'year'         :d.year
+                    }
+        to_file['datalines'] = dlines
+        
+        # get state of fitting info from fit page
+        to_file['fitfn'] = self.fit_function_title.get()
+        to_file['ncomponents'] = self.n_component.get()
+        
+        # get parameter values from fitlines
+        fitlines = self.fit_lines
+        flines = {}
+        for id in fitlines:
+            parentry_actual = fitlines[id].parentry
+            parentry = {}
+            for param_name in parentry_actual:
+                par = parentry_actual[param_name]
+                parentry[param_name] = {k:par[k][0].get() for k in par}
+            flines[id] = parentry
+        to_file['fitlines'] = flines
+  
+        # save file ----------------------------------------------------------
+        fid = filedialog.asksaveasfile(mode='w',filetypes=[('yaml','*.yaml'),
+                                                           ('allfiles','*')])
+        if fid:
+            yaml.dump(to_file,fid)
+            fid.close()
     
     # ======================================================================= #
     def show_all_results(self):

@@ -145,7 +145,7 @@ class fitdata(object):
         """Set fit results. Values is output of fitting routine. It is 
         dictionary of lists: {run:[parname/par/err/chi/fnpointer]}
         """
-        
+        print(values)
         self.parnames = values[0]
         
         for i in range(len(self.parnames)):
