@@ -156,7 +156,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
                 if xl[0] is None: xl[0] = -np.inf
                 if xl[1] is None: xl[1] = np.inf
             
-            idx = (xl[0]<x)*(x<xl[1])
+            idx = (xl[0]<x)*(x<xl[1])*(dy!=0)
             gchi += np.sum(np.square((y[idx]-fn(x[idx],*p))/dy[idx]))
             dof += len(x[idx])-len(p)
         gchi /= dof
@@ -229,7 +229,7 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
     
     # Fit the function 
     par,cov = curve_fit(fn,x,y,sigma=dy,absolute_sigma=True,**kwargs)
-    dof = len(y)-fn.__code__.co_argcount+1
+    dof = len(y)-len(kwargs['p0'])
     
     # get chisquared
     chi = np.sum(np.square((y-fn(x,*par))/dy))/dof
