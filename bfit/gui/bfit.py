@@ -33,6 +33,7 @@ from bfit.gui.calculator_nqr_B0 import calculator_nqr_B0
 from bfit.gui.calculator_nmr_B1 import calculator_nmr_B1
 from bfit.gui.popup_drawstyle import popup_drawstyle
 from bfit.gui.popup_redraw_period import popup_redraw_period
+from bfit.gui.popup_units import popup_units
 from bfit.gui.popup_set_ppm_reference import popup_set_ppm_reference
 from bfit.gui.popup_set_histograms import popup_set_histograms
 from bfit.backend.fitdata import fitdata
@@ -79,28 +80,30 @@ class bfit(object):
         
         Data Fields:
             asym_dict_keys: asym calc and draw types
-            data: dict of fitdata objects for drawing/fitting, keyed by run #
-            draw_style: draw window types # stack, redraw, new
-            draw_components: list of titles for labels, options to export, draw.
-            draw_ppm: BoolVar for drawing as ppm shift
+            data:           dict of fitdata objects for drawing/fitting, keyed by run #
+            draw_style:     draw window types # stack, redraw, new
+            draw_components:list of titles for labels, options to export, draw.
+            draw_ppm:       BoolVar for drawing as ppm shift
             draw_standardized_res: BoolVar for drawing residuals as standardized
             freq_unit_conv: conversion rate from original to display units
-            hist_select: histogram selection for asym calcs (blank for defaults)
-            label_default: StringVar() name of label defaults for fetch
-            logger: logging object 
-            logger_name: string of unique logger name
-            ppm_reference: reference freq in Hz for ppm calulations
-            probe_species: StringVar() name of probe species, bdata.life key.
-            mainframe: main frame for the object
-            notebook: contains all tabs for operations:
+            freq_units:     string, units to display
+            hist_select:    histogram selection for asym calcs (blank for defaults)
+            label_default:  StringVar() name of label defaults for fetch
+            logger:         logging object 
+            logger_name:    string of unique logger name
+            ppm_reference:  reference freq in Hz for ppm calulations
+            probe_species:  StringVar() name of probe species, bdata.life key.
+            mainframe:      main frame for the object
+            notebook:       contains all tabs for operations:
                 fileviewer
                 fetch_files
                 fit_files
-            root: tkinter root instance
-            rounding: number of decimal places to round results to in display
-            routine_mod: module with fitting routines
-            update_period: update spacing in s. 
-            volt_unit_conv: conversion rate from original to display units
+            root:           tkinter root instance
+            rounding:       number of decimal places to round results to in display
+            routine_mod:    module with fitting routines
+            update_period:  int, update spacing in s. 
+            volt_unit_conv: float, conversion rate from original to display units
+            volt_units:     string, units to display
     """
     bnmr_archive_label = "BNMR_ARCHIVE"
     bnqr_archive_label = "BNQR_ARCHIVE"
@@ -110,6 +113,8 @@ class bfit(object):
     hist_select = ''    # histogram selection for asym calculations
     freq_unit_conv = 1.e-6   # conversion rate from original to display units
     volt_unit_conv = 1.e-3   # conversion rate from original to display units
+    freq_units = 'MHz'
+    volt_units = 'V'
     
     asym_dict_keys = {'20':("Combined Helicity","Split Helicity",
                             "Matched Helicity","Raw Histograms"),
@@ -282,13 +287,13 @@ class bfit(object):
         
         # Settings cascade commands
         menu_settings.add_cascade(menu=menu_settings_dir,label='Data directory')
-        menu_settings.add_cascade(menu=menu_settings_lab,label='Default labels')
         menu_settings.add_command(label='Drawing style',
                 command=self.set_draw_style)
         menu_settings.add_command(label='Fitting routines',
                 command=self.set_fit_routines)
         menu_settings.add_command(label='Histograms',
                 command=self.set_histograms)
+        menu_settings.add_cascade(menu=menu_settings_lab,label='Labels default')                
         menu_settings.add_command(label='PPM Reference Frequecy',
                 command=self.set_ppm_reference)
         menu_settings.add_cascade(menu=menu_settings_probe,label='Probe Species')
@@ -296,6 +301,8 @@ class bfit(object):
                 command=self.set_redraw_period)
         menu_settings.add_command(label="System matplotlibrc",
                 command=self.set_matplotlib)
+        menu_settings.add_command(label="Units",
+                command=self.set_units)
         
         # Settings: data directory
         menu_settings_dir.add_command(label="BNMR",command=self.set_bnmr_dir)
@@ -435,10 +442,10 @@ class bfit(object):
         # Settings
         xlabel_dict={'20':"Time (s)",
                      '2h':"Time (s)",
-                     '2e':'Frequency (MHz)',
-                     '1f':'Frequency (MHz)',
+                     '2e':'Frequency (%s)',
+                     '1f':'Frequency (%s)',
                      '1w':'x Parameter',
-                     '1n':'Voltage (V)'}
+                     '1n':'Voltage (%s)'}
         ylabel_dict={'ad':r'$N_\alpha/N_\beta$', # otherwise, label as Asymmetry
                      'hs':r'Asym-Asym($\nu_{min}$)',
                      'cs':r'Asym-Asym($\nu_{min}$)',
@@ -551,13 +558,13 @@ class bfit(object):
                 
                 # plot elements
                 ax.set_xlabel('Time (s)')
-                ax.set_ylabel('Frequency (MHz)')
+                ax.set_ylabel('Frequency (%s)' % self.freq_units)
                 ax.set_zlabel('Asymmetry')
                 ax.get_yaxis().get_major_formatter().set_useOffset(False)
                 ax.get_xaxis().set_ticks(a.time)
             
             else:
-                f = a.freq*1e-6 
+                f = a.freq*self.freq_unit_conv
                 if asym_type == 'sl_c':
                     plt.errorbar(f,a.sl_c[0],a.sl_c[1],label=label,
                                  **drawargs)
@@ -575,7 +582,7 @@ class bfit(object):
                     plt.errorbar(f,a.dif_n[0],a.dif_n[1],
                                  label=label+' ($-$)',**drawargs)
                     
-                plt.xlabel(xlabel_dict[data.mode])
+                plt.xlabel(xlabel_dict[data.mode] % self.freq_units)
                 plt.ylabel("Asymmetry")
             
         # get asymmetry: not raw scans, not 2e
@@ -587,6 +594,7 @@ class bfit(object):
             # unit conversions
             if   data.mode == '1n': 
                 x *= self.volt_unit_conv
+                xlabel = xlabel % self.volt_units
             elif data.mode == '1f': 
                 if self.draw_ppm.get():
                     self.logger.info('Drawing as PPM shift with reference %s Hz',
@@ -595,6 +603,7 @@ class bfit(object):
                     xlabel = 'Frequency Shift (PPM)'
                 else: 
                     x *= self.freq_unit_conv
+                    xlabel = xlabel % self.freq_units
                     
             # plot split helicities
             if asym_type == 'h':
@@ -1108,6 +1117,7 @@ class bfit(object):
         self.fit_files.probe_label['text'] = species
         self.logger.info('Probe species changed to %s',species)
     def set_redraw_period(self,*a): popup_redraw_period(self)
+    def set_units(self,*a):         popup_units(self)
     def set_style_new(self,x):      
         self.logger.info('Setting draw style to "new"')
         self.draw_style.set('new')

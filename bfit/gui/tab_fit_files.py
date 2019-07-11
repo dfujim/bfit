@@ -66,6 +66,13 @@ class fit_files(object):
     chi_threshold = 1.5 # threshold for red highlight on bad fits 
     n_fitx_pts = 500    # number of points to draw in fitted curves
     
+    xlabel_dict={'20':"Time (s)",
+                 '2h':"Time (s)",
+                 '2e':'Frequency (%s)',
+                 '1f':'Frequency (%s)',
+                 '1w':'x Parameter',
+                 '1n':'Voltage (%s)'}
+    
     # ======================================================================= #
     def __init__(self,fit_data_tab,bfit):
         
@@ -133,7 +140,7 @@ class fit_files(object):
         set_group_check = ttk.Checkbutton(fn_select_frame,
                 text='Modify For All',\
                 variable=self.set_as_group,onvalue=True,offvalue=False)
-        self.set_as_group.set(True)
+        self.set_as_group.set(False)
                 
         # GRIDDING
             
@@ -656,14 +663,6 @@ class fit_files(object):
                          'standardized: %s, %s',id,rebin,
                          self.bfit.draw_standardized_res.get(),drawargs)
         
-        # Settings
-        xlabel_dict={'20':"Time (s)",
-                     '2h':"Time (s)",
-                     '2e':'Frequency (MHz)',
-                     '1f':'Frequency (MHz)',
-                     '1w':'x Parameter',
-                     '1n':'Voltage (V)'}
-        
         # get draw setting 
         draw_style = self.bfit.draw_style
         plt.ion()
@@ -719,8 +718,14 @@ class fit_files(object):
         res = a - fn(x,*fit_par)
             
         # set x axis
-        if   data.mode == '1f': x *= self.bfit.freq_unit_conv
-        elif data.mode == '1n': x *= self.bfit.volt_unit_conv    
+        if   data.mode == '1f': 
+            x *= self.bfit.freq_unit_conv
+            xlabel = self.xlabel_dict[self.mode] % self.bfit.freq_units
+        elif data.mode == '1n': 
+            x *= self.bfit.volt_unit_conv    
+            xlabel = self.xlabel_dict[self.mode] % self.bfit.volt_units
+        else:
+            xlabel = self.xlabel_dict[self.mode]
 
         # draw 
         if self.bfit.draw_standardized_res.get():
@@ -742,7 +747,7 @@ class fit_files(object):
             
         
         # plot elementsplt.ylabel('Residual')
-        plt.xlabel(xlabel_dict[self.mode])
+        plt.xlabel(xlabel)
         plt.axhline(0,color='k',linestyle='-',zorder=20)
         
         # show
@@ -754,14 +759,6 @@ class fit_files(object):
         """Draw fit for a single run"""
         
         self.logger.info('Drawing fit for run %s. %s',id,drawargs)
-        
-        # Settings
-        xlabel_dict={'20':"Time (s)",
-                     '2h':"Time (s)",
-                     '2e':'Frequency (MHz)',
-                     '1f':'Frequency (MHz)',
-                     '1w':'x Parameter',
-                     '1n':'Voltage (V)'}
                      
         # get data and fit results
         data = self.bfit.data[id]
@@ -816,16 +813,24 @@ class fit_files(object):
         fitx = np.arange(self.n_fitx_pts)/float(self.n_fitx_pts)*\
                                                     (max(t)-min(t))+min(t)
         
-        if   data.mode == '1f': fitxx = fitx*self.bfit.freq_unit_conv
-        elif data.mode == '2e': fitxx = fitx*self.bfit.freq_unit_conv
-        elif data.mode == '1n': fitxx = fitx*self.bfit.volt_unit_conv
-        else:                   fitxx = fitx
+        if   data.mode == '1f': 
+            fitxx = fitx*self.bfit.freq_unit_conv
+            xlabel = self.xlabel_dict[self.mode] % self.bfit.freq_units
+        elif data.mode == '2e': 
+            fitxx = fitx*self.bfit.freq_unit_conv
+            xlabel = self.xlabel_dict[self.mode] % self.bfit.freq_units
+        elif data.mode == '1n': 
+            fitxx = fitx*self.bfit.volt_unit_conv
+            xlabel = self.xlabel_dict[self.mode] % self.bfit.volt_units
+        else:                   
+            fitxx = fitx
+            xlabel = self.xlabel_dict[self.mode]
     
         plt.plot(fitxx,fn(fitx,*fit_par),zorder=10,**drawargs)
         
         # plot elements
         plt.ylabel('Asymmetry')
-        plt.xlabel(xlabel_dict[self.mode])
+        plt.xlabel(xlabel)
         
         # show
         plt.tight_layout()
