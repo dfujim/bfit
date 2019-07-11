@@ -52,7 +52,7 @@ class fetch_files(object):
     runmode_relabel = {'20':'SLR (20)',
                        '1f':'Frequency Scan (1f)',
                        '1w':'Frequency Comb (1w)',
-                       '2e':'Randomized Frequency (2e)',
+                       '2e':'Random Freq. (2e)',
                        '1n':'Rb Cell Scan (1n)',
                        '2h':'Alpha Tagged (2h)'}
     run_number_starter_line = '40001 40005-40010 (run numbers)'
@@ -85,7 +85,7 @@ class fetch_files(object):
         
         entry_year = Spinbox(fet_entry_frame,textvariable=self.year,width=5,
                              from_=2000,to=datetime.datetime.today().year)
-        entry_run = ttk.Entry(fet_entry_frame,textvariable=self.run,width=80)
+        entry_run = ttk.Entry(fet_entry_frame,textvariable=self.run,width=85)
         entry_run.insert(0,self.run_number_starter_line)
         entry_fn = partial(on_entry_click,text=self.run_number_starter_line,\
                             entry=entry_run)
@@ -99,7 +99,7 @@ class fetch_files(object):
         fetch = ttk.Button(fet_entry_frame,text='Fetch',command=self.get_data)
         
         # grid and labels
-        fet_entry_frame.grid(column=0,row=0,sticky=(N,W))
+        fet_entry_frame.grid(column=0,row=0,sticky=(N,W,E),columnspan=2,padx=5,pady=5)
         ttk.Label(fet_entry_frame,text="Year:").grid(column=0,row=0,sticky=W)
         entry_year.grid(column=1,row=0,sticky=(W))
         ttk.Label(fet_entry_frame,text="Run Number:").grid(column=2,row=0,sticky=W)
@@ -192,12 +192,12 @@ class fetch_files(object):
         check_bin_remove_entry.config(foreground=colors.entry_grey)
                 
         # grid
-        runmode_label_frame.grid(column=2,row=0,sticky=(N,W,E))
+        runmode_label_frame.grid(column=2,row=0,sticky=(N,W,E),pady=5,padx=5)
         self.runmode_label.grid(column=0,row=0,sticky=(N,W,E))
         
         bigright_frame.grid(column=2,row=1,sticky=(N,E))
         
-        self.data_canvas.grid(column=0,row=1,sticky=(E,W,S,N))
+        self.data_canvas.grid(column=0,row=1,sticky=(E,W,S,N),padx=5)
         yscrollbar.grid(column=1,row=1,sticky=(W,S,N))
         
         check_data_box.grid(        column=0,row=0,sticky=(N))

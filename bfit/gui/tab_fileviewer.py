@@ -118,10 +118,10 @@ class fileviewer(object):
         ttk.Label(view_frame,text="Camp").grid(column=0,row=2,sticky=N,pady=5)
         ttk.Label(view_frame,text="EPICS").grid(column=1,row=2,sticky=N,pady=5)
         
-        self.text_nw.grid(column=0,row=1,sticky=(N,W,E,S))
-        self.text_ne.grid(column=1,row=1,sticky=(N,W,E,S))
-        self.text_sw.grid(column=0,row=3,sticky=(N,W,E,S))
-        self.text_se.grid(column=1,row=3,sticky=(N,W,E,S))
+        self.text_nw.grid(column=0,row=1,sticky=(N,W,E,S),padx=5)
+        self.text_ne.grid(column=1,row=1,sticky=(N,W,E,S),padx=5)
+        self.text_sw.grid(column=0,row=3,sticky=(N,W,E,S),padx=5)
+        self.text_se.grid(column=1,row=3,sticky=(N,W,E,S),padx=5)
         
         view_frame.grid(column=0,row=1,sticky=(N,E,W))
         
