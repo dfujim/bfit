@@ -106,7 +106,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
     # fit globally -----------------------------------------------------------
     if any(sharelist) and len(runs)>1:
         print('Running shared parameter fitting...')
-        g = global_bdata_fitter(runs,years,fnlist,sharelist,npar,xlims)
+        g = global_bdata_fitter(runs,years,fnlist,sharelist,npar,xlims,asym_mode=asym_mode)
         g.fit(p0=p0,**kwargs)
         gchi,chis = g.get_chi() # returns global chi, individual chi
         pars,covs = g.get_par()

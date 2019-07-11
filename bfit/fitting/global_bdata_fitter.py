@@ -11,7 +11,8 @@ import collections
 class global_bdata_fitter(global_fitter):
     
     # ======================================================================= #
-    def __init__(self,runs,years,fn,sharelist,npar=-1,xlims=None,rebin=1):
+    def __init__(self,runs,years,fn,sharelist,npar=-1,xlims=None,rebin=1,
+                 asym_mode='c'):
         """
             runs:       list of run numbers
             
@@ -34,6 +35,8 @@ class global_bdata_fitter(global_fitter):
                             range on all runs.
             
             rebin:      rebinning factor on fitting and drawing data
+            
+            asym_mode:  asymmetry type to calculate and fit (combined helicities only)
         """
         
         # Set years
@@ -41,7 +44,7 @@ class global_bdata_fitter(global_fitter):
             years = [years]*len(runs)
         
         # Get asymmetry
-        data = [bdata(r,year=y).asym('c',rebin=rebin) for r,y in zip(runs,years)]
+        data = [bdata(r,year=y).asym(asym_mode,rebin=rebin) for r,y in zip(runs,years)]
         
         # split into x,y,dy data sets
         x = np.array([d[0] for d in data])
