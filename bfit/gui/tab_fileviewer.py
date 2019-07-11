@@ -113,15 +113,15 @@ class fileviewer(object):
         self.text_sw = Text(view_frame,width=80,height=20,state='normal')
         self.text_se = Text(view_frame,width=80,height=20,state='normal')
         
-        ttk.Label(view_frame,text="Run Info").grid(column=0,row=0,sticky=N)
-        ttk.Label(view_frame,text="PPG Parameters").grid(column=1,row=0,sticky=N)
-        ttk.Label(view_frame,text="Camp").grid(column=0,row=2,sticky=N)
-        ttk.Label(view_frame,text="EPICS").grid(column=1,row=2,sticky=N)
+        ttk.Label(view_frame,text="Run Info").grid(column=0,row=0,sticky=N,pady=5)
+        ttk.Label(view_frame,text="PPG Parameters").grid(column=1,row=0,sticky=N,pady=5)
+        ttk.Label(view_frame,text="Camp").grid(column=0,row=2,sticky=N,pady=5)
+        ttk.Label(view_frame,text="EPICS").grid(column=1,row=2,sticky=N,pady=5)
         
-        self.text_nw.grid(column=0,row=1,sticky=(N))
-        self.text_ne.grid(column=1,row=1,sticky=(N))
-        self.text_sw.grid(column=0,row=3,sticky=(N))
-        self.text_se.grid(column=1,row=3,sticky=(N))
+        self.text_nw.grid(column=0,row=1,sticky=(N,W,E,S))
+        self.text_ne.grid(column=1,row=1,sticky=(N,W,E,S))
+        self.text_sw.grid(column=0,row=3,sticky=(N,W,E,S))
+        self.text_se.grid(column=1,row=3,sticky=(N,W,E,S))
         
         view_frame.grid(column=0,row=1,sticky=(N,E,W))
         
@@ -163,7 +163,7 @@ class fileviewer(object):
         entry_frame.grid_columnconfigure(2,weight=1)
         entry_frame.grid_rowconfigure(0,weight=1)
         
-        for i in range(4):
+        for i in range(2):
             view_frame.grid_columnconfigure(i,weight=1)
         view_frame.grid_rowconfigure(1,weight=1)
         view_frame.grid_rowconfigure(3,weight=1)
