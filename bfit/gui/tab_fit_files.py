@@ -89,28 +89,20 @@ class fit_files(object):
         self.fit_data_tab = fit_data_tab
             
         # make top level frames
-        left_frame = ttk.Frame(fit_data_tab)
-        right_frame = ttk.Frame(fit_data_tab)
-    
-        mid_fit_frame = ttk.Labelframe(left_frame,
-                    text='Set Initial Parameters',pad=5)
+        mid_fit_frame = ttk.Labelframe(fit_data_tab,
+                                       text='Set Initial Parameters',pad=5)
                     
-        right_frame.grid(column=1,row=0,sticky=(N,E,W,S))
-        left_frame.grid(column=0,row=0,sticky=(N,E,W,S))
-        mid_fit_frame.grid(column=0,row=1,sticky=(N,W,E,S))
+        mid_fit_frame.grid(column=0,row=1,rowspan=5,sticky=(S,W,E,N))
         
         fit_data_tab.grid_columnconfigure(0,weight=1)   # fitting space
-        fit_data_tab.grid_rowconfigure(0,weight=1)
-        fit_data_tab.grid_rowconfigure(1,weight=1)
+        fit_data_tab.grid_rowconfigure(5,weight=1)
         mid_fit_frame.grid_columnconfigure(0,weight=1)
         mid_fit_frame.grid_rowconfigure(0,weight=1)
-        left_frame.grid_columnconfigure(0,weight=1)
-        left_frame.grid_rowconfigure(1,weight=1)
         
         # TOP FRAME -----------------------------------------------------------
         
         # fit function select 
-        fn_select_frame = ttk.Labelframe(left_frame,text='Fit Function')
+        fn_select_frame = ttk.Labelframe(fit_data_tab,text='Fit Function')
         self.fit_function_title = StringVar()
         self.fit_function_title.set("")
         self.fit_function_title_box = ttk.Combobox(fn_select_frame, 
@@ -145,10 +137,10 @@ class fit_files(object):
         # GRIDDING
             
         # top frame gridding
-        fn_select_frame.grid(column=0,row=0,sticky=(W,E))
+        fn_select_frame.grid(column=0,row=0,sticky=(W,E,N))
         
         c = 0
-        self.fit_function_title_box.grid(column=c,row=0); c+=1
+        self.fit_function_title_box.grid(column=c,row=0,padx=5); c+=1
         ttk.Label(fn_select_frame,text="Number of Terms:").grid(column=c,
                   row=0,sticky=(E),padx=5,pady=5); c+=1
         n_component_box.grid(column=c,row=0,padx=5,pady=5); c+=1
@@ -188,30 +180,30 @@ class fit_files(object):
         # RIGHT FRAME ---------------------------------------------------------
         
         # run mode 
-        fit_runmode_label_frame = ttk.Labelframe(right_frame,pad=(10,5,10,5),
+        fit_runmode_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
                 text='Run Mode',)
         self.fit_runmode_label = ttk.Label(fit_runmode_label_frame,text="",justify=CENTER)
         
         # fitting routine
-        fit_routine_label_frame = ttk.Labelframe(right_frame,pad=(10,5,10,5),
+        fit_routine_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
                 text='Fitting Routine',)
         self.fit_routine_label = ttk.Label(fit_routine_label_frame,text="",
                                            justify=CENTER)
         
         # probe species
-        probe_label_frame = ttk.Labelframe(right_frame,pad=(10,5,10,5),
+        probe_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
                 text='Probe',)
         self.probe_label = ttk.Label(probe_label_frame,
                                      text=self.bfit.probe_species.get(),
                                      justify=CENTER)
         
         # global chisquared
-        gchi_label_frame = ttk.Labelframe(right_frame,pad=(10,5,10,5),
+        gchi_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
                 text='Global ChiSquared',)
         self.gchi_label = ttk.Label(gchi_label_frame,text='',justify=CENTER)
         
         # fit results -----------------------
-        results_frame = ttk.Labelframe(right_frame,
+        results_frame = ttk.Labelframe(fit_data_tab,
             text='Fit Results and Run Conditions',pad=5)     # draw fit results
         
         # draw and export buttons
@@ -252,7 +244,7 @@ class fit_files(object):
         self.annotation_combobox.grid(column=1,row=3,pady=5)
         
        # save/load state -----------------------
-        state_frame = ttk.Labelframe(right_frame,text='Program State',pad=5)
+        state_frame = ttk.Labelframe(fit_data_tab,text='Program State',pad=5)
         state_save_button = ttk.Button(state_frame,text='Save',command=self.save_state)
         state_load_button = ttk.Button(state_frame,text='Load',command=self.load_state)
        
@@ -260,20 +252,20 @@ class fit_files(object):
         state_load_button.grid(column=1,row=0,padx=5,pady=5,sticky=(W,E))
         
         # gridding
-        fit_runmode_label_frame.grid(column=0,row=0,sticky=(E,W))
-        self.fit_runmode_label.grid(column=0,row=0)
+        fit_runmode_label_frame.grid(column=1,row=0,pady=5,padx=2,sticky=(N,E,W))
+        self.fit_runmode_label.grid(column=0,row=0,sticky=(E,W))
         
-        fit_routine_label_frame.grid(column=1,row=0,sticky=(E,W))
-        self.fit_routine_label.grid(column=0,row=0)
+        fit_routine_label_frame.grid(column=2,row=0,pady=5,padx=2,sticky=(N,E,W))
+        self.fit_routine_label.grid(column=0,row=0,sticky=(E,W))
         
-        probe_label_frame.grid(column=0,row=1,columnspan=2,sticky=(E,W,N),pady=1)
+        probe_label_frame.grid(column=1,row=1,columnspan=2,sticky=(E,W,N),pady=2)
         self.probe_label.grid(column=0,row=0)
         
-        gchi_label_frame.grid(column=0,row=2,columnspan=2,sticky=(E,W,N),pady=1)
+        gchi_label_frame.grid(column=1,row=2,columnspan=2,sticky=(E,W,N),pady=2)
         self.gchi_label.grid(column=0,row=0)
         
-        results_frame.grid(column=0,row=3,columnspan=2,sticky=(E,W,N),pady=1)
-        state_frame.grid(column=0,row=4,columnspan=2,sticky=(E,W,N),pady=1)
+        results_frame.grid(column=1,row=3,columnspan=2,sticky=(E,W,N),pady=2)
+        state_frame.grid(column=1,row=4,columnspan=2,sticky=(E,W,N),pady=2)
         
         # resizing
         
@@ -285,8 +277,6 @@ class fit_files(object):
         # fitting frame
         self.fit_canvas.grid_columnconfigure(0,weight=1)    # fetch frame 
         self.fit_canvas.grid_rowconfigure(0,weight=1)
-        
-        fit_data_tab.grid_rowconfigure(1,weight=1)  #fitting area
         
         # right frame
         for i in range(2):
@@ -1141,7 +1131,7 @@ class fit_files(object):
             # get pulse length
             d_actual = fetch_tab.data_lines[id]
             pulse_len = 0
-            if '2' in d_actual.mode:
+            if d_actual.mode in ('20','2h'):
                 pulse_len = d_actual.bdfit.get_pulse_s()
                     
             # get probe lifetime
