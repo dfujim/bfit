@@ -36,8 +36,10 @@ class popup_param(object):
 
     # parameter mapping
     parmap = {  '1/T1':'lam',
+                '1/T1b':'lamb',
                 'amp':'amp',
                 'beta':'beta',
+                'fraction_b':'fraction_b',
                 'baseline':'base',
                 'peak':'peak',
                 'width':'width',
@@ -151,7 +153,7 @@ class popup_param(object):
         
         # ensure matplotlib signals work. Not sure why this is needed.
         self.fig.tight_layout()
-                    
+        
         # get paramters, translating the names
         p0 = []
         if self.n_components > 1:
