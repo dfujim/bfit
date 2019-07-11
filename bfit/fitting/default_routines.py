@@ -19,7 +19,8 @@ class fitter(object):
                         '2h':('Exp','Bi Exp','Str Exp'),
                         '1f':('Lorentzian','Gaussian','BiLorentzian',),
                         '1w':('Lorentzian','Gaussian','BiLorentzian',),
-                        '1n':('Lorentzian','Gaussian''BiLorentzian',)}
+                        '1n':('Lorentzian','Gaussian','BiLorentzian',),
+                        '2e':('Lorentzian','Gaussian','BiLorentzian',)}
      
     # Define names of fit parameters:
     param_names = {     'Exp'       :('1/T1','amp'),
@@ -44,7 +45,7 @@ class fitter(object):
         self.probe_species = probe_species
         
     # ======================================================================= #
-    def __call__(self,fn_name,ncomp,data_list,hist_select):
+    def __call__(self,fn_name,ncomp,data_list,hist_select,asym_mode):
         """
             Fitting controller. 
             
@@ -64,6 +65,17 @@ class fitter(object):
                                     'rebin':int,    # rebinning factor
                                     'group':int,    # fitting group
                                  }
+                    
+            asym_mode:  input for asymmetry calculation type 
+                            c: combined helicity
+                            h: split helicity
+                            
+                        For 2e mode, prefix with:
+                            sl_: combined timebins using slopes
+                            dif_: combined timebins using differences
+                            raw_: raw time-resolved
+                            
+                            ex: sl_c or raw_h or dif_c
                                             
             returns dictionary of {run: [[par_names],[par_values],[par_errors],
                                         [chisquared],[fitfunction pointers]]}
@@ -73,6 +85,8 @@ class fitter(object):
         # check ncomponents
         if ncomp < 1:
             raise RuntimeError('ncomp needs to be >= 1')
+            
+        asym_mode = asym_mode.replace('2e_','')
             
         # parameter names
         keylist = self.gen_param_names(fn_name,ncomp)
@@ -158,7 +172,8 @@ class fitter(object):
 
         # fit data
         pars,covs,chis,gchi = fit_list(runs,years,fn,omit,rebin,sharelist,npar=npar,
-                                   hist_select=hist_select,p0=p0,bounds=bounds)
+                                   hist_select=hist_select,p0=p0,bounds=bounds,
+                                   asym_mode=asym_mode)
         stds = [np.sqrt(np.diag(c)) for c in covs]
         
         # collect results
@@ -196,32 +211,57 @@ class fitter(object):
         return tuple(names)
         
     # ======================================================================= #
-    def gen_init_par(self,fn_name,ncomp,bdataobj):
+    def gen_init_par(self,fn_name,ncomp,bdataobj,asym_mode='combined'):
         """Generate initial parameters for a given function.
         
             fname: name of function. Should be the same as the param_names keys
             ncomp: number of components
             bdataobj: a bdata object representative of the fitting group. 
+            asym_mode: what kind of asymmetry to fit
             
             Set and return dictionary of initial parameters. 
                 {par_name:par_value}
         """
         
+        # asym_mode un-used types 
+        if asym_mode in (   'h',           # Split Helicity          
+                            'hm',          # Matched Helicity
+                            'hs',          # Shifted Split          
+                            'cs',          # Shifted Combined      
+                            'hp',          # Matched Peak Finding
+                            'r',           # Raw Scans            
+                            'rhist',       # Raw Histograms          
+                            '2e_raw_c',    # Combined Hel Raw       
+                            '2e_raw_h',    # Split Hel Raw          
+                            '2e_sl_h',     # Split Hel Slopes
+                            '2e_dif_h',    # Split Hel Diff           
+                            'ad',          # Alpha Diffusion  
+                            "at_c",        # Combined Hel (Alpha Tag)
+                            "at_h",        # Split Hel (Alpha Tag) 
+                            "nat_c",       # Combined Hel (!Alpha Tag)
+                            "nat_h",       # Split Hel (!Alpha Tag)
+                        ):
+            errmsg = "Asymmetry calculation type not implemented for fitting"
+            raise RuntimeError(errmsg)
+        
+        # get asymmetry
+        asym_mode = asym_mode.replace('2e_','')
+        if asym_mode in ('c','sl_c','dif_c'):
+            x,a,da = bdataobj.asym(asym_mode)
+        
         # set pulsed exp fit initial parameters
-        if fn_name in ['Exp','Bi Exp','Str Exp']:
-            t,a,da = bdataobj.asym('c')
-            
+        if fn_name in ('Exp','Bi Exp','Str Exp'):
             # ampltitude average of first 5 bins
             amp = abs(np.mean(a[0:5])/ncomp)
             
             # T1: time after beam off to reach 1/e
             idx = int(bdataobj.ppg.beam_on.mean)
-            beam_duration = t[idx]
+            beam_duration = x[idx]
             amp_beamoff = a[idx]
             target = amp_beamoff/np.exp(1)
             
-            t_target = t[np.sum(a>target)]
-            T1 = t_target-beam_duration
+            x_target = x[np.sum(a>target)]
+            T1 = x_target-beam_duration
             
             # baseline: average of last 25% of runs
             base = np.mean(a[int(len(a)*0.75):])
@@ -234,33 +274,31 @@ class fitter(object):
                           'beta':(0.5,0,1)}
                          
         # set time integrated fit initial parameters
-        elif fn_name in ['Lorentzian','Gaussian','BiLorentzian']:
-            
-            f,a,da = bdataobj.asym('c')
+        elif fn_name in ('Lorentzian','Gaussian','BiLorentzian'):
             
             # get peak asym value
             amin = min(a[a>0])
             
-            peak = f[np.where(a==amin)[0][0]]
+            peak = x[np.where(a==amin)[0][0]]
             base = np.mean(a[:5])
             height = abs(amin-base)
-            width = 2*abs(peak-f[np.where(a<amin+height/2)[0][0]])
+            width = 2*abs(peak-x[np.where(a<amin+height/2)[0][0]])
             
             # set values
             if fn_name == 'Lorentzian':
-                par_values = {'peak':(peak,min(f),max(f)),
+                par_values = {'peak':(peak,min(x),max(x)),
                               'width':(width,0,np.inf),
                               'height':(height,0,np.inf),
                               'baseline':(base,-np.inf,np.inf)
                              }
             elif fn_name == 'Gaussian':
-                par_values = {'mean':(peak,min(f),max(f)),
+                par_values = {'mean':(peak,min(x),max(x)),
                               'sigma':(width,0,np.inf),
                               'height':(height,0,np.inf),
                               'baseline':(base,-np.inf,np.inf)
                               }
             if fn_name == 'BiLorentzian':
-                par_values = {'peak':(peak,min(f),max(f)),
+                par_values = {'peak':(peak,min(x),max(x)),
                               'widthA':(width,0,np.inf),
                               'heightA':(height,0,np.inf),
                               'widthB':(width,0,np.inf),

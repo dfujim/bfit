@@ -233,7 +233,7 @@ class fetch_files(object):
         self.data_canvas.grid_rowconfigure(0,weight=1)
             
         # drawing style
-        style_frame = ttk.Labelframe(bigright_frame,text='Drawing Quantity',\
+        style_frame = ttk.Labelframe(bigright_frame,text='Asymmetry Calculation',\
                 pad=5)
         self.entry_asym_type = ttk.Combobox(style_frame,\
                 textvariable=self.bfit.fileviewer.asym_type,state='readonly',\

@@ -11,7 +11,7 @@ from bfit.fitting.global_bdata_fitter import global_bdata_fitter
 
 # ========================================================================== #
 def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
-              hist_select='',xlims=None,**kwargs):
+              hist_select='',xlims=None,asym_mode='c',**kwargs):
     """
         Fit combined asymetry from bdata.
     
@@ -38,6 +38,17 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         
         xlims:          list of 2-tuple for (low,high) bounds on fitting range 
                             based on x values
+        
+        asym_mode:      input for asymmetry calculation type 
+                            c: combined helicity
+                            h: split helicity
+                            
+                        For 2e mode, prefix with:
+                            sl_: combined timebins using slopes
+                            dif_: combined timebins using differences
+                            raw_: raw time-resolved 
+                            
+                            ex: sl_c or raw_h or dif_c
         
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
@@ -130,13 +141,14 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         iter_obj = tqdm(zip(runs,years,fnlist,omit,rebin,p0,bounds,xlims),
                         total=len(runs),desc='Independent Fitting')
         for r,y,fn,om,re,p,b,xl in iter_obj:
-            p,s,c = fit_single(r,y,fn,om,re,hist_select,p0=p,bounds=b,xlim=xl,**kwargs)
+            p,s,c = fit_single(r,y,fn,om,re,hist_select,p0=p,bounds=b,xlim=xl,
+                               asym_mode=asym_mode,**kwargs)
             pars.append(p)
             covs.append(s)
             chis.append(c)
             
             # get global chi 
-            t,a,da = bdata(r,year=y).asym('c',rebin=re)
+            x,y,dy = _get_asym(bdata(r,year=y),asym_mode,rebin=re)
             
             if xl is None:  
                 xl = [-np.inf,np.inf]
@@ -144,9 +156,9 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
                 if xl[0] is None: xl[0] = -np.inf
                 if xl[1] is None: xl[1] = np.inf
             
-            idx = (xl[0]<t)*(t<xl[1])
-            gchi += np.sum(np.square((a[idx]-fn(t[idx],*p))/da[idx]))
-            dof += len(t[idx])-len(p)
+            idx = (xl[0]<x)*(x<xl[1])
+            gchi += np.sum(np.square((y[idx]-fn(x[idx],*p))/dy[idx]))
+            dof += len(x[idx])-len(p)
         gchi /= dof
         
     pars = np.asarray(pars)
@@ -156,7 +168,8 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
     return(pars,covs,chis,gchi)
 
 # =========================================================================== #
-def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,**kwargs):
+def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
+               **kwargs):
     """
         Fit combined asymetry from bdata.
     
@@ -174,6 +187,17 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,**kwargs):
         xlim:           2-tuple for (low,high) bounds on fitting range based on 
                             x values
         
+        asym_mode:      input for asymmetry calculation type 
+                            c: combined helicity
+                            h: split helicity
+                            
+                        For 2e mode, prefix with:
+                            sl_: combined timebins using slopes
+                            dif_: combined timebins using differences
+                            raw_: raw time-resolved
+                            
+                            ex: sl_c or raw_h or dif_c
+        
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
         Returns: (par,cov,chi)
@@ -184,8 +208,8 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,**kwargs):
     
     # Get data input
     data = bdata(run,year)
-    x,y,dy = data.asym('c',omit=omit,rebin=rebin,hist_select=hist_select)
-    
+    x,y,dy = _get_asym(data,asym_mode)
+            
     # check for values with error == 0. Omit these values. 
     tag = dy != 0
     x = x[tag]
@@ -211,3 +235,22 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,**kwargs):
     chi = np.sum(np.square((y-fn(x,*par))/dy))/dof
     
     return (par,cov,chi)
+    
+# =========================================================================== #
+def _get_asym(data,asym_mode,**asym_kwargs):
+    """
+        Get asymmetry
+        
+        data = bdata object
+        asym_mode: mode as described above
+    """
+    
+    if asym_mode in ('c','sc','dc','sl_c','dif_c'):
+        x,y,dy = data.asym(asym_mode,**asym_kwargs)
+    elif asym_mode in ('h','sh','dh','sl_h','dif_h'):
+        raise RuntimeError('Split helicity fitting not yet implemented')
+    elif 'raw' in asym_mode:
+        raise RuntimeError('2e Time-resolved fitting not yet implemented')
+
+    return (x,y,dy)
+    

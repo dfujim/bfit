@@ -20,8 +20,6 @@ __doc__ = """
     View file contents tab.
     
     To-do:
-        2e mode viewing
-        NBM viewing
         cumulative count viewing
     """
 
@@ -48,12 +46,12 @@ class fileviewer(object):
                  "Matched Peak Finding"     :'hp',
                  "Raw Scans"                :'r',
                  "Raw Histograms"           :'rhist',
-                 "Combined Hel Raw"         :'2e_rw_c',
-                 "Combined Hel Slopes"      :'2e_sl_c',
-                 "Combined Hel Diff"        :'2e_di_c',
-                 "Split Hel Raw"            :'2e_rw_h',
-                 "Split Hel Slopes"         :'2e_sl_h',
-                 "Split Hel Diff"           :'2e_di_h',
+                 "Combined Hel Raw"         :'raw_c',
+                 "Combined Hel Slopes"      :'sl_c',
+                 "Combined Hel Diff"        :'dif_c',
+                 "Split Hel Raw"            :'raw_h',
+                 "Split Hel Slopes"         :'sl_h',
+                 "Split Hel Diff"           :'dif_h',
                  "Alpha Diffusion"          :'ad',
                  "Combined Hel (Alpha Tag)" :"at_c",
                  "Split Hel (Alpha Tag)"    :"at_h",

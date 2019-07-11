@@ -524,8 +524,7 @@ class fit_files(object):
                 pass
                 
             elif self.mode == '2e':
-                self.logger.error('2e fitting not implemented')
-                raise RuntimeError('2e fitting not implemented')
+                pass
             
             else:
                 self.logger.error('Fitting mode not recognized')
@@ -568,7 +567,8 @@ class fit_files(object):
             # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
             fit_output,gchi = fitter(fn_name=fn_name,ncomp=ncomp,
                                      data_list=data_list,
-                                     hist_select=self.bfit.hist_select)
+                                     hist_select=self.bfit.hist_select,
+                                     asym_mode=self.bfit.get_asym_mode())
         except Exception as errmsg:
             self.logger.exception('Fitting error')
             fit_status_window.destroy()
@@ -810,11 +810,14 @@ class fit_files(object):
             drawargs['linestyle'] = '-'
         
         # draw
-        t,a,da = data.asym('c')
+        asym_mode = self.bfit.get_asym_mode()
+        t,a,da = data.asym(asym_mode)
+        
         fitx = np.arange(self.n_fitx_pts)/float(self.n_fitx_pts)*\
                                                     (max(t)-min(t))+min(t)
         
         if   data.mode == '1f': fitxx = fitx*self.bfit.freq_unit_conv
+        elif data.mode == '2e': fitxx = fitx*self.bfit.freq_unit_conv
         elif data.mode == '1n': fitxx = fitx*self.bfit.volt_unit_conv
         else:                   fitxx = fitx
     
@@ -1401,8 +1404,10 @@ class fitline(object):
             plist = self.get_new_parameters()
         except KeyError:
             return          # returns if no parameters found
-        finally:
-            
+        except RuntimeError as err:
+            messagebox.showerror('RuntimeError',err)
+            return
+        else:
             n_old_par = len(self.parlabels)
             n_new_par = len(plist)
             min_n_par = min(n_old_par,n_new_par)
@@ -1603,11 +1608,11 @@ class fitline(object):
         plist.sort()
         
         # get init values
-        values = fitter.gen_init_par(fn_title,ncomp,self.bfit.data[run].bd)
+        values = fitter.gen_init_par(fn_title,ncomp,self.bfit.data[run].bd,
+                                     self.bfit.get_asym_mode())
         
         # set to data
         self.bfit.data[run].set_fitpar(values)
-        
         return tuple(plist)
         
     # ======================================================================= #

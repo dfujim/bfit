@@ -95,8 +95,8 @@ class popup_param(object):
         mode = self.data.mode
         
         # mode switching
-        if mode in ('20','2h'): self.mode = 2
-        elif mode in ('1f',):   self.mode = 1
+        if mode in ('20','2h'):     self.mode = 2
+        elif mode in ('1f','2e'):   self.mode = 1
         else:
             self.logger.warning('P0 Finder not configured for run mode %s',mode)
             print('P0 Finder not configured for run mode %s'%mode)
@@ -109,7 +109,8 @@ class popup_param(object):
         omit = self.data.omit.get()
         if omit == self.bfit.fetch_files.bin_remove_starter_line:
             omit = ''
-        self.xy = self.data.asym('c',rebin=self.data.rebin.get(),omit=omit)
+        self.xy = self.data.asym(self.bfit.get_asym_mode(),
+                                 rebin=self.data.rebin.get(),omit=omit)
         ax.errorbar(*self.xy,fmt='.',color='k',ecolor='k')
         
         # plot elements - don't do tight_layout here - blocks matplotlib signals
@@ -204,6 +205,7 @@ class popup_param(object):
                                      ncomp=self.n_components,
                                      p0=p0,
                                      fnname=self.fname,
+                                     asym_mode=self.bfit.get_asym_mode(),
                                      endfn=self.endfn)
         
     # ====================================================================== #        

@@ -119,9 +119,8 @@ class bfit(object):
                             "Matched Peak Finding","Raw Histograms"),
                       '1w':("Combined Helicity","Split Helicity","Raw Scans",
                             "Shifted Split","Shifted Combined","Raw Histograms"),
-                      '2e':("Combined Hel Raw","Combined Hel Slopes",      
-                            "Combined Hel Diff","Split Hel Raw",
-                            "Split Hel Slopes","Split Hel Diff"),
+                      '2e':("Combined Hel Slopes","Combined Hel Diff","Combined Hel Raw",
+                            "Split Hel Slopes","Split Hel Diff","Split Hel Raw",),
                       '2h':("Combined Helicity","Split Helicity",
                             "Matched Helicity",
                             "Alpha Diffusion",
@@ -506,13 +505,13 @@ class bfit(object):
                     label=label+"($-$)",**drawargs)
         
         # do 2e mode
-        elif '2e' in asym_type:
+        elif data.mode == '2e':
             
             # get asym
             a = data.asym(hist_select=self.hist_select)
         
             # draw
-            if asym_type in ["2e_rw_c","2e_rw_h"]:
+            if asym_type in ["raw_c","raw_h"]:
                 
                 # make 3D axes
                 if type(plt.gcf()) == type(None):   plt.figure()
@@ -534,13 +533,13 @@ class bfit(object):
                 y = np.hstack(y)
                     
                 # draw combined asym
-                if asym_type == "2e_rw_c":
+                if asym_type == "raw_c":
                 
                     z = a.raw_c[0].transpose()
                     z = np.hstack(z)
                     ax.plot(x,y,z,label=label,**drawargs)
                     
-                elif asym_type == "2e_rw_h":
+                elif asym_type == "raw_h":
                 
                     z = a.raw_p[0].transpose()
                     z = np.hstack(z)
@@ -559,18 +558,18 @@ class bfit(object):
             
             else:
                 f = a.freq*1e-6 
-                if asym_type == '2e_sl_c':
+                if asym_type == 'sl_c':
                     plt.errorbar(f,a.sl_c[0],a.sl_c[1],label=label,
                                  **drawargs)
-                elif asym_type == '2e_di_c':
+                elif asym_type == 'dif_c':
                     plt.errorbar(f,a.dif_c[0],a.dif_c[1],label=label,
                                  **drawargs)
-                elif asym_type == '2e_sl_h':
+                elif asym_type == 'sl_h':
                     plt.errorbar(f,a.sl_p[0],a.sl_p[1],
                                  label=label+' ($+$)',**drawargs)
                     plt.errorbar(f,a.sl_n[0],a.sl_n[1],
                                  label=label+' ($-$)',**drawargs)
-                elif asym_type == '2e_di_h':
+                elif asym_type == 'dif_h':
                     plt.errorbar(f,a.dif_p[0],a.dif_p[1],
                                  label=label+' ($+$)',**drawargs)
                     plt.errorbar(f,a.dif_n[0],a.dif_n[1],
@@ -853,6 +852,12 @@ class bfit(object):
             self.logger.exception('Export file write failed')
             pass
     
+    # ======================================================================= #
+    def get_asym_mode(self):
+        """ Get asymmetry calculation type"""
+        id_string = self.fileviewer.asym_type.get()
+        return self.fileviewer.asym_dict[id_string]
+        
     # ======================================================================= #
     def get_label(self,data):
         """ Get label for plot

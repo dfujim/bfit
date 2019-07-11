@@ -17,7 +17,7 @@ class FunctionPlacer(object):
     npts = 1000  # number of points used to draw line
     
     # ======================================================================= #
-    def __init__(self,fig,data,fn_single,ncomp,p0,fnname,endfn,base=0):
+    def __init__(self,fig,data,fn_single,ncomp,p0,fnname,endfn,asym_mode,base=0):
         """
             fig:    pointer to matplotlib figure object to draw in
             data:   bdata object 
@@ -26,11 +26,12 @@ class FunctionPlacer(object):
             endfn:  function pointer to function to call at end of sequence. 
                         Called with no inputs
             base:   value of the baseline when we're not altering it
+            asym_mode: asymmetry calcuation type (c, sl_c, or dif_c)
         
             fn needs input parameters with keys: 
             
-                1F
-                    peak, width, amp, base (optional)
+                1F/2E
+                    peak, width, amp, base
                 20/2H
                     amp, lam, beta (optional)
         """
@@ -41,7 +42,7 @@ class FunctionPlacer(object):
         self.fn = lambda x,**kwargs : fn_single(x,**kwargs)+self.base
         self.fname = fnname
         self.endfn = endfn
-        x = data.asym('c')[0]
+        x = data.asym(asym_mode)[0]
         self.x = np.linspace(min(x),max(x),self.npts)
         
         # get axes for drawing
