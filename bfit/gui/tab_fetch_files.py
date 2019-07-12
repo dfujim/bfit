@@ -192,7 +192,7 @@ class fetch_files(object):
         check_bin_remove_entry.config(foreground=colors.entry_grey)
                 
         # grid
-        runmode_label_frame.grid(column=2,row=0,sticky=(N,W,E),pady=5,padx=5)
+        runmode_label_frame.grid(column=2,row=0,sticky=(N,W,E,S),pady=5,padx=5)
         self.runmode_label.grid(column=0,row=0,sticky=(N,W,E))
         
         bigright_frame.grid(column=2,row=1,sticky=(N,E))

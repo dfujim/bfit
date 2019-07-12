@@ -537,8 +537,10 @@ class fit_files(object):
         fit_status_window = Toplevel(self.bfit.root)
         fit_status_window.lift()
         fit_status_window.resizable(FALSE,FALSE)
-        ttk.Label(fit_status_window,text="Please Wait",pad=20).grid(column=0,
-                                                    row=0,sticky=(N,S,E,W))
+        ttk.Label(fit_status_window,
+                  text="Fitting in progress\nTo cancel press <Ctrl-C> in terminal ONCE",
+                  justify='center',
+                  pad=0).grid(column=0,row=0,padx=15,pady=15)
         fit_status_window.update_idletasks()
         self.bfit.root.update_idletasks()
         
