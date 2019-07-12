@@ -92,7 +92,7 @@ class fit_files(object):
         mid_fit_frame = ttk.Labelframe(fit_data_tab,
                                        text='Set Initial Parameters',pad=5)
                     
-        mid_fit_frame.grid(column=0,row=1,rowspan=5,sticky=(S,W,E,N))
+        mid_fit_frame.grid(column=0,row=1,rowspan=5,sticky=(S,W,E,N),padx=5,pady=5)
         
         fit_data_tab.grid_columnconfigure(0,weight=1)   # fitting space
         fit_data_tab.grid_rowconfigure(5,weight=1)
@@ -137,7 +137,7 @@ class fit_files(object):
         # GRIDDING
             
         # top frame gridding
-        fn_select_frame.grid(column=0,row=0,sticky=(W,E,N))
+        fn_select_frame.grid(column=0,row=0,sticky=(W,E,N),padx=5,pady=5)
         
         c = 0
         self.fit_function_title_box.grid(column=c,row=0,padx=5); c+=1
@@ -248,8 +248,8 @@ class fit_files(object):
         state_save_button = ttk.Button(state_frame,text='Save',command=self.save_state)
         state_load_button = ttk.Button(state_frame,text='Load',command=self.load_state)
        
-        state_save_button.grid(column=0,row=0,padx=5,pady=5,sticky=(W,E))
-        state_load_button.grid(column=1,row=0,padx=5,pady=5,sticky=(W,E))
+        state_save_button.grid(column=0,row=0,padx=5,pady=5)
+        state_load_button.grid(column=1,row=0,padx=5,pady=5)
         
         # gridding
         fit_runmode_label_frame.grid(column=1,row=0,pady=5,padx=2,sticky=(N,E,W))
@@ -258,14 +258,14 @@ class fit_files(object):
         fit_routine_label_frame.grid(column=2,row=0,pady=5,padx=2,sticky=(N,E,W))
         self.fit_routine_label.grid(column=0,row=0,sticky=(E,W))
         
-        probe_label_frame.grid(column=1,row=1,columnspan=2,sticky=(E,W,N),pady=2)
+        probe_label_frame.grid(column=1,row=1,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         self.probe_label.grid(column=0,row=0)
         
-        gchi_label_frame.grid(column=1,row=2,columnspan=2,sticky=(E,W,N),pady=2)
+        gchi_label_frame.grid(column=1,row=2,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         self.gchi_label.grid(column=0,row=0)
         
-        results_frame.grid(column=1,row=3,columnspan=2,sticky=(E,W,N),pady=2)
-        state_frame.grid(column=1,row=4,columnspan=2,sticky=(E,W,N),pady=2)
+        results_frame.grid(column=1,row=3,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        state_frame.grid(column=1,row=4,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         
         # resizing
         

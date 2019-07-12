@@ -197,8 +197,8 @@ class fetch_files(object):
         
         bigright_frame.grid(column=2,row=1,sticky=(N,E))
         
-        self.data_canvas.grid(column=0,row=1,sticky=(E,W,S,N),padx=5)
-        yscrollbar.grid(column=1,row=1,sticky=(W,S,N))
+        self.data_canvas.grid(column=0,row=1,sticky=(E,W,S,N),padx=5,pady=5)
+        yscrollbar.grid(column=1,row=1,sticky=(W,S,N),pady=5)
         
         check_data_box.grid(        column=0,row=0,sticky=(N))
         check_fit_box.grid(         column=1,row=0,sticky=(N))
@@ -208,9 +208,9 @@ class fetch_files(object):
         r = 0
         check_all_box.grid(         column=0,row=r,sticky=(N),columnspan=2); r+= 1
         right_checkbox_frame.grid(  column=0,row=r,sticky=(N),columnspan=2); r+= 1
-        check_toggle_button.grid(   column=0,row=r,sticky=(N,E,W),columnspan=2,pady=1); r+= 1
-        check_draw.grid(            column=0,row=r,sticky=(N,W));
-        check_remove.grid(          column=1,row=r,sticky=(N,E)); r+= 1
+        check_toggle_button.grid(   column=0,row=r,sticky=(N,E,W),columnspan=2,pady=1,padx=5); r+= 1
+        check_draw.grid(            column=0,row=r,sticky=(N,W,E),pady=5,padx=5);
+        check_remove.grid(          column=1,row=r,sticky=(N,E,W),pady=5,padx=5); r+= 1
         check_rebin_label.grid(     column=0,row=r)
         check_rebin_box.grid(       column=1,row=r); r+= 1
         check_bin_remove_entry.grid(column=0,row=r,sticky=(N),columnspan=2); r+= 1
@@ -232,7 +232,7 @@ class fetch_files(object):
         self.data_canvas.grid_columnconfigure(0,weight=1)    # fetch frame 
         self.data_canvas.grid_rowconfigure(0,weight=1)
             
-        # drawing style
+        # asymmetry calculation
         style_frame = ttk.Labelframe(bigright_frame,text='Asymmetry Calculation',\
                 pad=5)
         self.entry_asym_type = ttk.Combobox(style_frame,\
@@ -240,9 +240,9 @@ class fetch_files(object):
                 width=20)
         self.entry_asym_type['values'] = ()
         
-        style_frame.grid(column=0,row=1,sticky=(W,N))
-        self.entry_asym_type.grid(column=0,row=0,sticky=(N))
-        self.entry_asym_type.grid_configure(padx=24)
+        style_frame.grid(column=0,row=1,sticky=(W,N,E))
+        style_frame.grid_columnconfigure(0,weight=1)
+        self.entry_asym_type.grid(column=0,row=0,sticky=(N,E,W),padx=10)
         
         # passing
         self.entry_run = entry_run
