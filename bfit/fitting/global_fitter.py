@@ -197,7 +197,7 @@ class global_fitter(object):
             datplt = plt.errorbar(x_draw,y,dy,label=labels[i],**errorbar_args)
             
             # get color for fit curve
-            if mode in ['stack','s','append','a']:
+            if mode in ['stack','s']:
                 color = datplt[0].get_color()
             else:
                 color = 'k'
