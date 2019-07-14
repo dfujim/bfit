@@ -139,7 +139,7 @@ class bfit(object):
     draw_components = ['Temperature (K)','1000/T (1/K)','Impl. Energy (keV)',
                        'Platform Bias (kV)','Run Number','B0 Field (T)', 
                        'Sample','RF Level DAC','Chi-Squared','Run Duration (s)',
-                       'Start Time','Title']
+                       'Start Time','Title','Year']
 
     try: 
         bnmr_data_dir = os.environ[bnmr_archive_label]
