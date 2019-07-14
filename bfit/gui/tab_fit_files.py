@@ -11,6 +11,7 @@ from bfit.gui.popup_param import popup_param
 from bfit.fitting.decay_31mg import fa_31Mg
 from bdata import bdata
 from bfit import logger_name
+from scipy.special import gamma, polygamma
 
 import numpy as np
 import pandas as pd
@@ -433,9 +434,20 @@ class fit_files(object):
             self.yaxis_combobox['values'] = []
             self.annotation_combobox['values'] = []
             return
-            
-        parlst.sort()
         
+        # Sort the parameters
+        parlst.sort()
+            
+        # beta averaged T1
+        if self.fit_function_title.get() == 'Str Exp':
+            ncomp = self.n_component.get()
+            
+            if ncomp > 1: 
+                for i in range(ncomp):
+                    parlst.append('Beta-Avg 1/<T1_%d>' % i)
+            else:
+                parlst.append('Beta-Avg 1/<T1>')
+            
         self.xaxis_combobox['values'] = ['']+parlst+lst
         self.yaxis_combobox['values'] = ['']+parlst+lst
         self.annotation_combobox['values'] = ['']+parlst+lst
@@ -960,6 +972,9 @@ class fit_files(object):
     
         self.logger.debug('Fetching parameter %s',select)
     
+        # parameter names 
+        parnames = self.fitter.gen_param_names(self.fit_function_title.get(),
+                                               self.n_component.get())
         # Data file options
         if select == 'Temperature (K)':
             val = [data[r].temperature.mean for r in runs]
@@ -1021,9 +1036,42 @@ class fit_files(object):
                     val.append(np.nan)
             err = [np.nan for r in runs]
         
+        elif select == 'Year':
+            val = [data[r].year for r in runs]
+            err = [np.nan for r in runs]
+
+        elif 'Beta-Avg 1/<T1' in select:
+            
+            # get component
+            idx = select.find('_')
+            if idx < 0:     comp_num = ''
+            else:           comp_num = select[idx:]
+            comp_num = comp_num.replace('>','')
+            
+            # initialize
+            val = []
+            err = []
+                
+            # get T1 and beta from that component average
+            for r in runs:
+                T1i = data[r].fitpar['res']['1/T1'+comp_num]
+                T1 = 1/T1i
+                dT1 = data[r].fitpar['dres']['1/T1'+comp_num]/(T1i**2)
+                beta = data[r].fitpar['res']['beta'+comp_num]
+                dbeta = data[r].fitpar['dres']['beta'+comp_num]
+                
+                # take average
+                betai = 1./beta
+                pd_T1 = gamma(betai)/beta
+                pd_beta = -T1*gamma(betai)*(1+betai*polygamma(0,betai))*(betai**2)
+                T1avg = T1*pd_T1
+                dT1avg = ( (pd_T1*dT1)**2 + (pd_beta*dbeta)**2 )**0.5
+                
+                val.append(1/T1avg)
+                err.append(dT1avg/(T1avg**2))
+
         # fitted parameter options
-        elif select in self.fitter.gen_param_names(self.fit_function_title.get(),
-                                                   self.n_component.get()):
+        elif select in parnames:
             val = []
             err = []
             
