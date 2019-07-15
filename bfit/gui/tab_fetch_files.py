@@ -140,7 +140,7 @@ class fetch_files(object):
         check_remove = ttk.Button(right_frame,text='Remove',\
                 command=self.remove_all,pad=5)
         check_draw = ttk.Button(right_frame,text='Draw',\
-                command=self.draw_all,pad=5)
+                command=lambda:self.draw_all('data'),pad=5)
         
         check_set = ttk.Button(right_frame,text='Set',\
                 command=self.set_all)
@@ -323,8 +323,15 @@ class fetch_files(object):
         self.data_canvas.itemconfig(self.canvas_frame_id,width=event.width)
         
     # ======================================================================= #
-    def draw_all(self,ignore_check=False):
-        """Draw all data in data lines"""
+    def draw_all(self,figstyle,ignore_check=False):
+        """
+            Draw all data in data lines
+            
+            figstyle: one of "data", "fit", or "param" to choose which figure 
+                    to draw in
+            ignore_check: draw all with no regard to whether the run has been 
+                    selected
+        """
         
         self.logger.debug('Drawing all data (ignore check: %s)', ignore_check)
         
@@ -332,7 +339,7 @@ class fetch_files(object):
         def draw_lines():
             for i,r in enumerate(self.data_lines.keys()):
                 if self.data_lines[r].check_state.get() or ignore_check:
-                    self.data_lines[r].draw()
+                    self.data_lines[r].draw(figstyle)
                 
         # get draw style
         style = self.bfit.draw_style.get()
@@ -344,14 +351,14 @@ class fetch_files(object):
             
         # overdraw in current figure, stacked
         elif style == 'redraw':
-            plt.clf()
+            self.bfit.plt.clf(figstyle)
             self.bfit.draw_style.set('stack')
             draw_lines()
             self.bfit.draw_style.set('redraw')
             
         # make new figure, draw single
         elif style == 'new':
-            plt.figure()
+            self.bfit.plt.figure(figstyle)
             self.bfit.draw_style.set('stack')
             draw_lines()
             self.bfit.draw_style.set('new')
@@ -705,7 +712,9 @@ class dataline(object):
                 
         remove_button = ttk.Button(line_frame,text='Remove',\
                 command=self.degrid,pad=1)
-        draw_button = ttk.Button(line_frame,text='Draw',command=self.draw,pad=1)
+        draw_button = ttk.Button(line_frame,text='Draw',
+                                 command=lambda:self.draw(figstyle='data'),
+                                 pad=1)
         
         self.check_data = BooleanVar()
         self.check_data.set(True)
@@ -815,8 +824,13 @@ class dataline(object):
             ff.runmode_label['text'] = ''
                 
     # ======================================================================= #
-    def draw(self):
-        """Draw single data file."""
+    def draw(self,figstyle):
+        """
+            Draw single data file.
+            
+            figstyle: one of "data", "fit", or "param" to choose which figure 
+                    to draw in
+        """
         
         # draw data
         if self.check_data.get():
@@ -830,19 +844,20 @@ class dataline(object):
             d = self.bfit.fileviewer.asym_dict[d]
             
             if self.bin_remove.get() == self.bin_remove_starter_line:
-                self.bfit.draw(data,d,self.rebin.get(),
+                self.bfit.draw(data,d,self.rebin.get(),figstyle=figstyle,
                     label=self.label.get())
             else:
-                self.bfit.draw(data,d,self.rebin.get(),\
+                self.bfit.draw(data,d,self.rebin.get(),figstyle=figstyle,\
                     option=self.bin_remove.get(),label=self.label.get())
 
         # draw fit
         if self.check_fit.get():
-            self.bfit.fit_files.draw_fit(id=self.id),
+            self.bfit.fit_files.draw_fit(id=self.id,figstyle=figstyle)
         
         # draw residual
         if self.check_res.get():
             self.bfit.fit_files.draw_residual(id=self.id,
+                                              figstyle=figstyle,
                                               rebin=self.rebin.get())
 
     # ======================================================================= #

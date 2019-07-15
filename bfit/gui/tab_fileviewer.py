@@ -90,7 +90,8 @@ class fileviewer(object):
         fetch = ttk.Button(entry_frame,text='Fetch',command=self.get_data)
             
         # draw button
-        draw = ttk.Button(entry_frame,text='Draw',command=self.draw)
+        draw = ttk.Button(entry_frame,text='Draw',
+                          command=lambda:self.draw(figstyle='data'))
         
         # grid and labels
         entry_frame.grid(column=0,row=0,sticky=N)
@@ -180,12 +181,13 @@ class fileviewer(object):
         pass
         
     # ======================================================================= #
-    def draw(self):
+    def draw(self,figstyle):
         """Get data then draw."""
         if self.get_data():
-            self.bfit.draw(self.data,\
+            self.bfit.draw(self.data,
                     self.asym_dict[self.asym_type.get()],rebin=self.rebin.get(),
-                    label=self.bfit.get_label(self.data))
+                    label=self.bfit.get_label(self.data),
+                    figstyle=figstyle)
             
     # ======================================================================= #
     def export(self):
@@ -903,14 +905,67 @@ class fileviewer(object):
         textbox.insert('1.0',text)
         
     # ======================================================================= #
-    def do_update(self):
+    def do_update(self,first=True):
         
         self.logger.debug('Draw via periodic update')
-        if self.is_updating.get():
-            self.draw()
-            print('\rLast update:',str(datetime.datetime.now()).split('.')[0],
-                  end='',flush=True)
-            self.bfit.root.after(self.bfit.update_period*1000,self.do_update)
         
+        # select period drawing figure
+        if first:
+            
+            did_draw_new = False
+            
+            # check that there is a canvas, if not, draw
+            if self.bfit.plt.active['data'] == 0:
+                self.draw('data')
+                did_draw_new = True
+            
+            # set up updating canvas
+            fig = self.bfit.plt.gcf('data')
+            fig.canvas.set_window_title('Figure %d (Data - Updating)'%fig.number)
+            self.bfit.plt.plots['periodic'] = [fig.number]
+            self.bfit.plt.active['periodic'] = self.bfit.plt.active['data']
+            
+            
+            # repeat
+            if did_draw_new:
+                self.bfit.root.after(self.bfit.update_period*1000,
+                                     lambda:self.do_update(first=False))
+                return
+        
+        # update 
+        if self.is_updating.get():
+            
+            # check that figure exists
+            if self.bfit.plt.active['periodic'] not in self.bfit.plt.plots['data']:
+                self.is_updating.set(False)
+                del self.bfit.plt.plots['periodic'][0]
+                self.bfit.plt.active['periodic'] = 0
+                return
+            
+            # update only in stack mode
+            draw_style = self.bfit.draw_style.get()
+            self.bfit.draw_style.set('stack')
+            self.draw(figstyle='periodic')
+            draw_style = self.bfit.draw_style.set(draw_style)
+            
+            # Print update message
+            print('Updated figure at:',str(datetime.datetime.now()).split('.')[0],
+                  flush=True)
+            
+            # repeat
+            self.bfit.root.after(self.bfit.update_period*1000,
+                                 lambda:self.do_update(first=False))
+            
+        # remove window from updating list
+        else:
+            # check if window already removed 
+            if self.bfit.plt.active['periodic'] != 0:
+                
+                # remove window
+                fig = self.bfit.plt.gcf('periodic')
+                fig.canvas.set_window_title('Figure %d (Data)'%fig.number)
+                del self.bfit.plt.plots['periodic'][0]
+                self.bfit.plt.active['periodic'] = 0
+            
 # =========================================================================== #
 

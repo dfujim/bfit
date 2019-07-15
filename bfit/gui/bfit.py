@@ -37,6 +37,7 @@ from bfit.gui.popup_units import popup_units
 from bfit.gui.popup_set_ppm_reference import popup_set_ppm_reference
 from bfit.gui.popup_set_histograms import popup_set_histograms
 from bfit.backend.fitdata import fitdata
+from bfit.backend.PltTracker import PltTracker
 import bfit.backend.colors as colors
 
 __doc__="""
@@ -98,6 +99,7 @@ class bfit(object):
                 fileviewer
                 fetch_files
                 fit_files
+            plt:            PltTracker for tracking figures
             root:           tkinter root instance
             rounding:       number of decimal places to round results to in display
             routine_mod:    module with fitting routines
@@ -161,6 +163,9 @@ class bfit(object):
         # logging
         self.logger = logging.getLogger(logger_name)
         self.logger.info('Initializing ' + '-'*50)
+        
+        # plot tracker 
+        self.plt = PltTracker()
         
         # root 
         root = Tk()
@@ -426,8 +431,17 @@ class bfit(object):
             pass
     
     # ======================================================================= #
-    def draw(self,data,asym_type,rebin=1,option='',**drawargs):
-        """Draw the selected file"""
+    def draw(self,data,asym_type,rebin=1,option='',figstyle='',**drawargs):
+        """
+            Draw the selected file
+            
+            data: bdata object
+            asym_type: input for asymmetry calculation
+            rebin: rebining on asymmetry calculation
+            option: options passed to asymmetry calculation
+            figstyle: figure style. One of "data", "fit", or "param"
+            drawargs: passed to 
+        """
         
         self.logger.info('Drawing run %d (%d). mode: %s, rebin: %d, '+\
                      'option: %s, style: %s, %s',
@@ -474,12 +488,12 @@ class bfit(object):
         
         # make new window
         if draw_style.get() == 'new':
-            plt.figure()
-            ax = plt.gca()
+            self.plt.figure(figstyle)
+            ax = self.plt.gca(figstyle)
             
         # get index of label in run and delete that run
         elif draw_style.get() == 'stack':
-            ax = plt.gca()
+            ax = self.plt.gca(figstyle)
             try:
                 idx = [ell.get_label() for ell in ax.containers].index(label)
             except ValueError as err:
@@ -491,7 +505,7 @@ class bfit(object):
         
         # delete all runs
         elif draw_style.get() == 'redraw':
-            ax = plt.gca()
+            ax = self.plt.gca(figstyle)
             del ax.lines[:]              # clear lines 
             del ax.collections[:]        # clear errorbar object 
             del ax.containers[:]         # clear errorbar object
@@ -506,9 +520,9 @@ class bfit(object):
             idx_n = a.n[0]!=0
             
             xlabel = 'Bin'
-            plt.errorbar(x[idx_p],a.p[0][idx_p],a.p[1][idx_p],
+            self.plt.errorbar(figstyle,x[idx_p],a.p[0][idx_p],a.p[1][idx_p],
                     label=label+"($+$)",**drawargs)
-            plt.errorbar(x[idx_n],a.n[0][idx_n],a.n[1][idx_n],
+            self.plt.errorbar(figstyle,x[idx_n],a.n[0][idx_n],a.n[1][idx_n],
                     label=label+"($-$)",**drawargs)
         
         # do 2e mode
@@ -521,9 +535,10 @@ class bfit(object):
             if asym_type in ["raw_c","raw_h"]:
                 
                 # make 3D axes
-                if type(plt.gcf()) == type(None):   plt.figure()
-                ax = plt.gcf().add_subplot(111,projection='3d',
-                                           label=str(len(plt.gcf().axes)))
+                if type(self.plt.gcf(figstyle)) == type(None):   
+                    self.plt.figure(figstyle)
+                ax = self.plt.gcf(figstyle).add_subplot(111,projection='3d',
+                                  label=str(len(self.plt.gcf(figstyle).axes)))
                 
                 # get rid of bad draw options
                 try:                del drawargs['capsize']
@@ -566,24 +581,24 @@ class bfit(object):
             else:
                 f = a.freq*self.freq_unit_conv
                 if asym_type == 'sl_c':
-                    plt.errorbar(f,a.sl_c[0],a.sl_c[1],label=label,
+                    self.plt.errorbar(figstyle,f,a.sl_c[0],a.sl_c[1],label=label,
                                  **drawargs)
                 elif asym_type == 'dif_c':
-                    plt.errorbar(f,a.dif_c[0],a.dif_c[1],label=label,
+                    self.plt.errorbar(figstyle,f,a.dif_c[0],a.dif_c[1],label=label,
                                  **drawargs)
                 elif asym_type == 'sl_h':
-                    plt.errorbar(f,a.sl_p[0],a.sl_p[1],
+                    self.plt.errorbar(figstyle,f,a.sl_p[0],a.sl_p[1],
                                  label=label+' ($+$)',**drawargs)
-                    plt.errorbar(f,a.sl_n[0],a.sl_n[1],
+                    self.plt.errorbar(figstyle,f,a.sl_n[0],a.sl_n[1],
                                  label=label+' ($-$)',**drawargs)
                 elif asym_type == 'dif_h':
-                    plt.errorbar(f,a.dif_p[0],a.dif_p[1],
+                    self.plt.errorbar(figstyle,f,a.dif_p[0],a.dif_p[1],
                                  label=label+' ($+$)',**drawargs)
-                    plt.errorbar(f,a.dif_n[0],a.dif_n[1],
+                    self.plt.errorbar(figstyle,f,a.dif_n[0],a.dif_n[1],
                                  label=label+' ($-$)',**drawargs)
                     
-                plt.xlabel(xlabel_dict[data.mode] % self.freq_units)
-                plt.ylabel("Asymmetry")
+                self.plt.xlabel(figstyle,xlabel_dict[data.mode] % self.freq_units)
+                self.plt.ylabel(figstyle,"Asymmetry")
             
         # get asymmetry: not raw scans, not 2e
         else:
@@ -619,9 +634,9 @@ class bfit(object):
                 avg = np.mean(ap[tag_cmb]+an[tag_cmb])/2
                 
                 # draw
-                plt.errorbar(x[tag_p],ap[tag_p],a.p[1][tag_p],label=label+" ($+$)",**drawargs)
-                plt.errorbar(x[tag_n],an[tag_n],a.n[1][tag_n],label=label+" ($-$)",**drawargs)
-                plt.axhline(avg,color='k',linestyle='--')
+                self.plt.errorbar(figstyle,x[tag_p],ap[tag_p],a.p[1][tag_p],label=label+" ($+$)",**drawargs)
+                self.plt.errorbar(figstyle,x[tag_n],an[tag_n],a.n[1][tag_n],label=label+" ($-$)",**drawargs)
+                self.plt.axhline(figstyle,avg,color='k',linestyle='--')
                 
             # plot split helicities, shifted by baseline
             elif asym_type == 'hs':
@@ -639,9 +654,9 @@ class bfit(object):
                 ap -= ap[loc]
                 an -= an[loc]
                 
-                plt.errorbar(x[tag_p],ap,a.p[1][tag_p],
+                self.plt.errorbar(figstyle,x[tag_p],ap,a.p[1][tag_p],
                         label=label+" ($+$)",**drawargs)
-                plt.errorbar(x[tag_n],an,a.n[1][tag_n],
+                self.plt.errorbar(figstyle,x[tag_n],an,a.n[1][tag_n],
                         label=label+" ($-$)",**drawargs)
             
             # plot split helicities, flipped about the average
@@ -656,11 +671,11 @@ class bfit(object):
             
                 avg = np.mean(ap[tag_cmb]+an[tag_cmb])/2
                 
-                plt.errorbar(x[tag_p],a.p[0][tag_p],a.p[1][tag_p],
+                self.plt.errorbar(figstyle,x[tag_p],a.p[0][tag_p],a.p[1][tag_p],
                         label=label+" ($+$)",**drawargs)
-                plt.errorbar(x[tag_n],2*avg-a.n[0][tag_n],a.n[1][tag_n],
+                self.plt.errorbar(figstyle,x[tag_n],2*avg-a.n[0][tag_n],a.n[1][tag_n],
                         label=label+" ($-$)",**drawargs)
-                plt.axhline(avg,color='k',linestyle='--')
+                self.plt.axhline(figstyle,avg,color='k',linestyle='--')
             
             # plot split helicities, flipped about the average, find the largest 
             elif asym_type == 'hp':
@@ -696,16 +711,19 @@ class bfit(object):
                 print('Max asymmetry is %f at V = %f V' % (largest,vmax))
                 
                 # draw    
-                plt.errorbar(x[tag_p],ap,a.p[1][tag_p],label=label+" ($+$)",**drawargs)
-                plt.errorbar(x[tag_n],an,a.n[1][tag_n],label=label+" ($-$)",**drawargs)
-                plt.axhline(largest,color='k',linestyle='--')
-                plt.axvline(vmax,color='k',linestyle='--')
-                plt.text(vmax+0.5,largest+0.0001,'%g V' % vmax)
+                self.plt.errorbar(figstyle,x[tag_p],ap,a.p[1][tag_p],
+                                  label=label+" ($+$)",**drawargs)
+                self.plt.errorbar(figstyle,x[tag_n],an,a.n[1][tag_n],
+                                  label=label+" ($-$)",**drawargs)
+                self.plt.axhline(figstyle,largest,color='k',linestyle='--')
+                self.plt.axvline(figstyle,vmax,color='k',linestyle='--')
+                self.plt.text(figstyle,vmax+0.5,largest+0.0001,'%g V' % vmax)
             
             # plot comined helicities
             elif asym_type == 'c':
                 tag = a.c[0]!=0 # remove zero asym
-                plt.errorbar(x[tag],a.c[0][tag],a.c[1][tag],label=label,**drawargs)
+                self.plt.errorbar(figstyle,x[tag],a.c[0][tag],a.c[1][tag],
+                                  label=label,**drawargs)
                 
             # plot combined helicities, shifted by baseline
             elif asym_type == 'cs':
@@ -720,7 +738,7 @@ class bfit(object):
                 loc = np.where(x==min(x))[0][0]
                 ac -= ac[loc]
                 
-                plt.errorbar(x,ac,a.c[1][tag],label=label,**drawargs)
+                self.plt.errorbar(figstyle,x,ac,a.c[1][tag],label=label,**drawargs)
             
             # attempting to draw raw scans unlawfully
             elif asym_type == 'r':
@@ -729,8 +747,8 @@ class bfit(object):
             # draw alpha diffusion
             elif asym_type == 'ad':
                 a = data.asym('adif',rebin=rebin,hist_select=self.hist_select)
-                plt.errorbar(*a,label=label,**drawargs)
-                plt.ylabel(r'$N_\alpha/N_\beta$')
+                self.plt.errorbar(figstyle,*a,label=label,**drawargs)
+                self.plt.ylabel(figstyle,r'$N_\alpha/N_\beta$')
                 
             # draw alpha tagged runs
             elif asym_type in ['at_c','at_h','nat_c','nat_h']:
@@ -739,23 +757,23 @@ class bfit(object):
                 t = a.time_s
                 
                 if asym_type == 'at_c':
-                    plt.errorbar(t,a.c_wiA[0],a.c_wiA[1],
+                    self.plt.errorbar(figstyle,t,a.c_wiA[0],a.c_wiA[1],
                                  label=label+r" $\alpha$",**drawargs)
                 
                 elif asym_type == 'nat_c':
-                    plt.errorbar(t,a.c_noA[0],a.c_noA[1],
+                    self.plt.errorbar(figstyle,t,a.c_noA[0],a.c_noA[1],
                                  label=label+r" !$\alpha$",**drawargs)
                                  
                 elif asym_type == 'at_h':
-                    plt.errorbar(t,a.p_wiA[0],a.p_wiA[1],
+                    self.plt.errorbar(figstyle,t,a.p_wiA[0],a.p_wiA[1],
                                  label=label+r" $\alpha$ ($+$)",**drawargs)
-                    plt.errorbar(t,a.n_wiA[0],a.n_wiA[1],
+                    self.plt.errorbar(figstyle,t,a.n_wiA[0],a.n_wiA[1],
                                  label=label+r" $\alpha$ ($-$)",**drawargs)
                 
                 elif asym_type == 'nat_h':
-                    plt.errorbar(t,a.p_noA[0],a.p_noA[1],
+                    self.plt.errorbar(figstyle,t,a.p_noA[0],a.p_noA[1],
                                  label=label+r" !$\alpha$ ($+$)",**drawargs)
-                    plt.errorbar(t,a.n_noA[0],a.n_noA[1],
+                    self.plt.errorbar(figstyle,t,a.n_noA[0],a.n_noA[1],
                                  label=label+r" !$\alpha$ ($-$)",**drawargs)
             
             # draw raw histograms
@@ -780,10 +798,10 @@ class bfit(object):
                     
                     # check for non-empty histograms, then draw
                     if np.mean(hist[h].data) > 0:                        
-                        plt.plot(x,hist[h].data,label=h)
+                        self.plt.plot(figstyle,x,hist[h].data,label=h)
                         
-                plt.ylabel(ylabel_dict[asym_type])
-                plt.xlabel('Bin')
+                self.plt.ylabel(figstyle,ylabel_dict[asym_type])
+                self.plt.xlabel(figstyle,'Bin')
                             
             # unknown run type
             else:
@@ -791,15 +809,15 @@ class bfit(object):
                     
         # plot elements
         if data.mode != '2e' and asym_type != 'rhist':
-            plt.xlabel(xlabel)
+            self.plt.xlabel(figstyle,xlabel)
             
             if asym_type in ylabel_dict.keys():
-                plt.ylabel(ylabel_dict[asym_type])
+                self.plt.ylabel(figstyle,ylabel_dict[asym_type])
             else:
-                plt.ylabel("Asymmetry")
+                self.plt.ylabel(figstyle,"Asymmetry")
                 
-        plt.tight_layout()
-        plt.legend()
+        self.plt.tight_layout(figstyle)
+        self.plt.legend(figstyle)
         self.logger.debug('Drawing success.')
     
     # ======================================================================= #
@@ -812,9 +830,9 @@ class bfit(object):
         idx = self.notebook.index('current')
         self.logger.debug('Drawing for notebook index %d',idx)
         if idx == 0:        # data viewer
-            self.fileviewer.draw()
+            self.fileviewer.draw(figstyle='data')
         elif idx == 1:        # data fetch_files
-            self.fetch_files.draw_all()
+            self.fetch_files.draw_all(figstyle='data')
         elif idx == 2:        # fit viewer
             self.fit_files.draw_param()
         else:

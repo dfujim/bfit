@@ -46,6 +46,7 @@ class fit_files(object):
             gchi_label:     Label for global chisquared    
             mode:           what type of run is this. 
             n_component:    number of fitting components (IntVar)
+            plt:            self.bfit.plt
             probe_label:    Label for probe species
             runframe:       frame for displaying fit results and inputs
             runmode_label:  display run mode 
@@ -88,7 +89,8 @@ class fit_files(object):
         self.fitter = self.bfit.routine_mod.fitter(bfit.probe_species.get())
         self.draw_components = bfit.draw_components
         self.fit_data_tab = fit_data_tab
-            
+        self.plt = self.bfit.plt
+        
         # make top level frames
         mid_fit_frame = ttk.Labelframe(fit_data_tab,
                                        text='Set Initial Parameters',pad=5)
@@ -615,11 +617,11 @@ class fit_files(object):
         
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            self.bfit.fetch_files.draw_all(ignore_check=False)
+            self.bfit.fetch_files.draw_all(figstyle='fit',ignore_check=False)
         
         if len(self.fit_lines.keys())>8:
-            plt.gca().get_legend().remove()
-            plt.tight_layout()
+            self.plt.gca(figstyle).get_legend().remove()
+            self.plt.tight_layout(figstyle)
         
         self.bfit.draw_style.set(style)
             
@@ -660,7 +662,7 @@ class fit_files(object):
             self.fit_lines[k].populate(force_modify=True)
     
     # ======================================================================= #
-    def draw_residual(self,id,rebin=1,**drawargs):
+    def draw_residual(self,id,figstyle,rebin=1,**drawargs):
         """Draw fitting residuals for a single run"""
         
         self.logger.info('Drawing residual for run %s, rebin %d, '+\
@@ -668,6 +670,7 @@ class fit_files(object):
                          self.bfit.draw_standardized_res.get(),drawargs)
         
         # get draw setting 
+        figstyle = 'data'
         draw_style = self.bfit.draw_style
         plt.ion()
         
@@ -690,12 +693,12 @@ class fit_files(object):
         
         # make new window
         if draw_style.get() == 'new':
-            plt.figure()
-            ax = plt.gca()
+            self.plt.figure(figstyle)
+            ax = self.plt.gca(figstyle)
             
         # get index of label in run and delete that run
         elif draw_style.get() == 'stack':
-            ax = plt.gca()
+            ax = self.plt.gca(figstyle)
             try:
                 idx = [ell.get_label() for ell in ax.containers].index(label)
             except ValueError as err:
@@ -707,7 +710,7 @@ class fit_files(object):
         
         # delete all runs
         elif draw_style.get() == 'redraw':
-            ax = plt.gca()
+            ax = self.plt.gca(figstyle)
             del ax.lines[:]              # clear lines 
             del ax.collections[:]        # clear errorbar object 
             del ax.containers[:]         # clear errorbar object
@@ -718,7 +721,7 @@ class fit_files(object):
         style = self.bfit.draw_style.get()
 
         # get residuals
-        x,a,da = data.asym('c',rebin=rebin)
+        x,a,da = data.asym(self.bfit.get_asym_mode(),rebin=rebin)
         res = a - fn(x,*fit_par)
             
         # set x axis
@@ -733,34 +736,42 @@ class fit_files(object):
 
         # draw 
         if self.bfit.draw_standardized_res.get():
-            plt.errorbar(x,res/da,np.zeros(len(x)),label=label,**drawargs)
+            self.plt.errorbar(figstyle,x,res/da,np.zeros(len(x)),label=label,
+                              **drawargs)
             
             # draw fill
-            ax = plt.gca()
+            ax = self.plt.gca(figstyle)
             lim = ax.get_xlim()
             for i in range(1,4):
                 ax.fill_between(lim,-1*i,i,color='k',alpha=0.1)
-            plt.xlim(lim)
-            plt.ylabel(r'Standardized Residual ($\sigma$)')
+            self.plt.xlim(figstyle,lim)
+            self.plt.ylabel(figstyle,r'Standardized Residual ($\sigma$)')
         else:
-            plt.errorbar(x,res,da,label=label,**drawargs)
-            plt.ylabel('Residual')
+            self.plt.errorbar(figstyle,x,res,da,label=label,**drawargs)
+            self.plt.ylabel(figstyle,'Residual')
         
         # draw pulse marker
-        if '2' in data.mode: plt.axvline(data.get_pulse_s(),ls='--',color='k')
+        if '2' in data.mode: 
+            self.plt.axvline(figstyle,data.get_pulse_s(),ls='--',color='k')
             
         
         # plot elementsplt.ylabel('Residual')
-        plt.xlabel(xlabel)
-        plt.axhline(0,color='k',linestyle='-',zorder=20)
+        self.plt.xlabel(figstyle,xlabel)
+        self.plt.axhline(figstyle,0,color='k',linestyle='-',zorder=20)
         
         # show
-        plt.tight_layout()
-        plt.legend()
+        self.plt.tight_layout(figstyle)
+        self.plt.legend(figstyle)
         
     # ======================================================================= #
-    def draw_fit(self,id,**drawargs):
-        """Draw fit for a single run"""
+    def draw_fit(self,id,figstyle,**drawargs):
+        """
+            Draw fit for a single run
+            
+            id: id of run to draw fit of 
+            figstyle: one of "data", "fit", or "param" to choose which figure 
+                    to draw in
+        """
         
         self.logger.info('Drawing fit for run %s. %s',id,drawargs)
                      
@@ -781,10 +792,10 @@ class fit_files(object):
         
         # set drawing style
         if style == 'new':
-            plt.figure()
+            self.plt.figure(figstyle)
         if style == 'stack':
             
-            ax = plt.gca()
+            ax = self.plt.gca(figstyle)
             try:
                 idx = [ell.get_label() for ell in ax.lines].index(label)
             except ValueError as err:
@@ -795,9 +806,9 @@ class fit_files(object):
         elif style == 'redraw':
             ylim = ax.get_ylim()
             xlim = ax.get_xlim()
-            plt.clf()
-            plt.ylim(*ylim)
-            plt.xlim(*xlim)
+            self.plt.clf(figstyle)
+            self.plt.ylim(figstyle,*ylim)
+            self.plt.xlim(figstyle,*xlim)
             
         # set drawing style arguments
         for k in self.bfit.style:
@@ -830,18 +841,20 @@ class fit_files(object):
             fitxx = fitx
             xlabel = self.xlabel_dict[self.mode]
     
-        plt.plot(fitxx,fn(fitx,*fit_par),zorder=10,**drawargs)
+        self.plt.plot(figstyle,fitxx,fn(fitx,*fit_par),zorder=10,**drawargs)
         
         # plot elements
-        plt.ylabel('Asymmetry')
-        plt.xlabel(xlabel)
+        self.plt.ylabel(figstyle,'Asymmetry')
+        self.plt.xlabel(figstyle,xlabel)
         
         # show
-        plt.tight_layout()
-        plt.legend()
+        self.plt.tight_layout(figstyle)
+        self.plt.legend(figstyle)
         
     # ======================================================================= #
     def draw_param(self,*args):
+        
+        figstyle = 'param'
         
         # make sure plot shows
         plt.ion()
@@ -896,30 +909,30 @@ class fit_files(object):
         style = self.bfit.draw_style.get()
         
         if style == 'new':
-            plt.figure()
+            self.plt.figure(figstyle)
         elif style == 'redraw':
-            plt.clf()
-        plt.gca().get_xaxis().get_major_formatter().set_useOffset(False)
-        plt.gca().get_yaxis().get_major_formatter().set_useOffset(False)
+            self.plt.clf(figstyle)
+        self.plt.gca(figstyle).get_xaxis().get_major_formatter().set_useOffset(False)
+        self.plt.gca(figstyle).get_yaxis().get_major_formatter().set_useOffset(False)
         
         # draw
         if type(xvals[0]) == str:
-            plt.xticks(np.arange(len(xvals)))
-            plt.gca().set_xticklabels(xvals)
+            self.plt.xticks(figstyle,np.arange(len(xvals)))
+            self.plt.gca(figstyle).set_xticklabels(xvals)
             xvals = np.arange(len(xvals))
         
         if type(yvals[0]) == str:
-            plt.yticks(np.arange(len(yvals)))
-            plt.gca().set_yticklabels(yvals)
+            self.plt.yticks(figstyle,np.arange(len(yvals)))
+            self.plt.gca(figstyle).set_yticklabels(yvals)
             yvals = np.arange(len(yvals))
         
-        f = plt.errorbar(xvals,yvals,xerr=xerrs,yerr=yerrs,fmt='.')
+        f = self.plt.errorbar(figstyle,xvals,yvals,xerr=xerrs,yerr=yerrs,fmt='.')
         self._annotate(xvals,yvals,ann,color=f[0].get_color())
         
         # plot elements
-        plt.xlabel(xdraw)
-        plt.ylabel(ydraw)
-        plt.tight_layout()
+        self.plt.xlabel(figstyle,xdraw)
+        self.plt.ylabel(figstyle,ydraw)
+        self.plt.tight_layout(figstyle)
         
     # ======================================================================= #
     def export(self,savetofile=True):
@@ -1328,7 +1341,7 @@ class fit_files(object):
         # do annotation
         for label,xcoord,ycoord in zip(ptlabels,x,y):        
             if type(label) != type(None):
-                plt.annotate(label,
+                self.plt.annotate(figstyle,label,
                              xy=(xcoord,ycoord),
                              xytext=(-3, 20),
                              textcoords='offset points', 
