@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 # =========================================================================== #
 class PltTracker(object):
     """
-        active:         id number of active plot {data:0,fitting:0,param:0}
-        plots:          dictionary for plots drawn {data:[],fitting:[],param:[]}
+        active:         dictionary, id number of active plot
+        plots:          dictionary, list of plots drawn for type
     """
     
     # ======================================================================= #
