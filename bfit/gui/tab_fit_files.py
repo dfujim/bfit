@@ -779,8 +779,7 @@ class fit_files(object):
         data = self.bfit.data[id]
         fit_par = [data.fitpar['res'][p] for p in data.parnames]
         fn = data.fitfn
-        data = data.bd
-                
+        
         # get draw style
         style = self.bfit.draw_style.get()
         
@@ -793,16 +792,25 @@ class fit_files(object):
         # set drawing style
         if style == 'new':
             self.plt.figure(figstyle)
-        if style == 'stack':
+            ax.data_id = []    
+            ax.lines_id = []    
             
+        if style == 'stack':
             ax = self.plt.gca(figstyle)
-            try:
-                idx = [ell.get_label() for ell in ax.lines].index(label)
-            except ValueError as err:
-                pass
+            
+            # check for id array
+            if not hasattr(ax,'data_id'):
+                ax.lines_id = []
             else:
-                del ax.lines[idx]              # clear lines 
-                
+                while data.id+'fit' in ax.lines_id:
+                    idxl = ax.lines_id.index(data.id+'fit')
+                    
+                    # clear lines 
+                    del ax.lines[idxl]              
+                    
+                    # clear labels
+                    del ax.lines_id[idxl]
+            
         elif style == 'redraw':
             ylim = ax.get_ylim()
             xlim = ax.get_xlim()
@@ -842,6 +850,7 @@ class fit_files(object):
             xlabel = self.xlabel_dict[self.mode]
     
         self.plt.plot(figstyle,fitxx,fn(fitx,*fit_par),zorder=10,**drawargs)
+        ax.lines_id.append(data.id+'fit')        
         
         # plot elements
         self.plt.ylabel(figstyle,'Asymmetry')

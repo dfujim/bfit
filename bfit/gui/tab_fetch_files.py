@@ -837,7 +837,8 @@ class dataline(object):
             self.logger.debug('Draw run %d (%d)',self.run,self.year)
                     
             # get new data file
-            data = bdata(self.run,year=self.year)
+            data = self.bfit.data[self.bfit.get_run_key(r=self.run,y=self.year)]
+            data.read()
             
             # get data file run type
             d = self.bfit.fileviewer.asym_type.get()

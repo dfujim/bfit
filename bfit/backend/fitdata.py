@@ -79,6 +79,26 @@ class fitdata(object):
         for k in ['p0','blo','bhi','res','dres','chi','fixed','shared']:
             self.fitpar[k] = {}
         
+        self.read()
+
+    # ======================================================================= #
+    def __getattr__(self,name):
+        """Access bdata attributes in the case that fitdata doesn't have it."""
+        try:
+            return self.__dict__[name]
+        except KeyError:
+            return getattr(self.bd,name)
+
+    # ======================================================================= #
+    def asym(self,*args,**kwargs):  return self.bd.asym(*args,**kwargs)
+
+    # ======================================================================= #
+    def read(self):
+        """Read data file"""
+        
+        # bdata access
+        self.bd = bdata(self.run,self.year)
+                
         # set temperature 
         try:
             self.temperature = self.bd.camp.smpl_read_A
@@ -92,12 +112,12 @@ class fitdata(object):
         
         # field
         try:
-            if bd.area == 'BNMR':
-                self.field = bd.camp.b_field.mean
-                self.field_std = bd.camp.b_field.std
+            if self.bd.area == 'BNMR':
+                self.field = self.bd.camp.b_field.mean
+                self.field_std = self.bd.camp.b_field.std
             else:
-                self.field = current2field(bd.epics.hh_current.mean)*1e-4
-                self.field_std = current2field(bd.epics.hh_current.std)*1e-4
+                self.field = current2field(self.bd.epics.hh_current.mean)*1e-4
+                self.field_std = current2field(self.bd.epics.hh_current.std)*1e-4
         except AttributeError:
             self.logger.exception('Field not found')
             self.field = np.nan
@@ -105,27 +125,17 @@ class fitdata(object):
             
         # bias
         try:
-            if bd.area == 'BNMR': 
-                self.bias = bd.epics.nmr_bias.mean
-                self.bias_std = bd.epics.nmr_bias.std
+            if self.bd.area == 'BNMR': 
+                self.bias = self.bd.epics.nmr_bias.mean
+                self.bias_std = self.bd.epics.nmr_bias.std
             else:
-                self.bias = bd.epics.nqr_bias.mean/1000.
-                self.bias_std = bd.epics.nqr_bias.std/1000.
+                self.bias = self.bd.epics.nqr_bias.mean/1000.
+                self.bias_std = self.bd.epics.nqr_bias.std/1000.
         except AttributeError:
             self.logger.exception('Bias not found')
             self.bias = np.nan
 
-    # ======================================================================= #
-    def __getattr__(self,name):
-        """Access bdata attributes in the case that fitdata doesn't have it."""
-        try:
-            return self.__dict__[name]
-        except KeyError:
-            return getattr(self.bd,name)
-
-    # ======================================================================= #
-    def asym(self,*args,**kwargs):  return self.bd.asym(*args,**kwargs)
-
+        
     # ======================================================================= #
     def set_fitpar(self,values):
         """Set fitting initial parameters
