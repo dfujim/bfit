@@ -408,7 +408,6 @@ class fileviewer(object):
         # rates and counts
         hist = ('F+','F-','B-','B+') if data.area == 'BNMR' \
                                      else ('L+','L-','R-','R+')
-            
         try:     
             val = np.sum([data.hist[h].data for h in hist])
             data_sw['Total Counts Sample'] = "%d" % (val)
@@ -437,7 +436,6 @@ class fileviewer(object):
             key_order_sw.append('Rate NBM')
         except AttributeError:
             pass
-        
             
         # rf dac
         if mode != 'SLR':
@@ -453,7 +451,6 @@ class fileviewer(object):
                 key_order_sw.append('RF Amplifier Gain')
             except AttributeError:
                 pass    
-                
                 
         # SE -----------------------------------------------------------------
         data_se = {'':''}
@@ -919,7 +916,6 @@ class fileviewer(object):
                 
             key_order_ne.append('')
             
-        
         # set viewer string
         def set_str(data_dict,key_order,txtbox):
         

@@ -145,7 +145,6 @@ class bfit(object):
                        'Cryo Lift Read (mm)','He Mass Flow','CryoEx Mass Flow',
                        'Needle Set (turns)','Laser Power','Target Bias (kV)',
                        'NBM Rate (count/s)','Sample Rate (count/s)']
-
     try: 
         bnmr_data_dir = os.environ[bnmr_archive_label]
         bnqr_data_dir = os.environ[bnqr_archive_label]

@@ -12,19 +12,19 @@ from bfit.fitting.decay_31mg import fa_31Mg
 from bdata import bdata
 from bfit import logger_name
 from scipy.special import gamma, polygamma
+from pandas.plotting import register_matplotlib_converters
 
 import numpy as np
 import pandas as pd
 import bdata as bd
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import bfit.backend.colors as colors
-
 import datetime, os, traceback, warnings
 import logging
 import yaml
 
-"""
-"""
+register_matplotlib_converters()
 
 # =========================================================================== #
 # =========================================================================== #
@@ -928,22 +928,33 @@ class fit_files(object):
             self.plt.figure(figstyle)
         elif style == 'redraw':
             self.plt.clf(figstyle)
-        self.plt.gca(figstyle).get_xaxis().get_major_formatter().set_useOffset(False)
-        self.plt.gca(figstyle).get_yaxis().get_major_formatter().set_useOffset(False)
         
+        # get axis 
+        ax = self.plt.gca(figstyle)
+        
+        # set dates axis
+        if xdraw in ('Start Time',): 
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%y/%m/%d (%H:%M)'))
+            xvals = np.array([datetime.datetime.fromtimestamp(x) for x in xvals])
+            xerrs = None
+            ax.tick_params(axis='x', which='major', labelsize='x-small')
+        else:
+            ax.get_xaxis().get_major_formatter().set_useOffset(False)
+        
+        if ydraw in ('Start Time',):    
+            ax.yaxis.set_major_formatter(mdates.DateFormatter('%y/%m/%d (%H:%M)'))
+            yvals = mdates.epoch2num(yvals)
+            yerrs = None
+            ax.tick_params(axis='y', which='major', labelsize='x-small')
+        else:
+            ax.get_yaxis().get_major_formatter().set_useOffset(False)
+            
         # draw
-        if type(xvals[0]) == str:
-            self.plt.xticks(figstyle,np.arange(len(xvals)))
-            self.plt.gca(figstyle).set_xticklabels(xvals)
-            xvals = np.arange(len(xvals))
-        
-        if type(yvals[0]) == str:
-            self.plt.yticks(figstyle,np.arange(len(yvals)))
-            self.plt.gca(figstyle).set_yticklabels(yvals)
-            yvals = np.arange(len(yvals))
-        
         f = self.plt.errorbar(figstyle,xvals,yvals,xerr=xerrs,yerr=yerrs,fmt='.')
         self._annotate(xvals,yvals,ann,color=f[0].get_color())
+        
+        # format date x axis
+        if xerrs is None:   self.plt.gcf(figstyle).autofmt_xdate()
         
         # plot elements
         self.plt.xlabel(figstyle,xdraw)
@@ -1049,7 +1060,7 @@ class fit_files(object):
             err = [np.nan for r in runs]
             
         elif select == 'Start Time':
-            val = [data[r].bd.start_date for r in runs]
+            val = [data[r].bd.start_time for r in runs]
             err = [np.nan for r in runs]
         
         elif select == 'Title':
