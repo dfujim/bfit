@@ -792,6 +792,7 @@ class fit_files(object):
         # set drawing style
         if style == 'new':
             self.plt.figure(figstyle)
+            ax = self.plt.gca(figstyle)
             ax.data_id = []    
             ax.lines_id = []    
             
@@ -859,6 +860,11 @@ class fit_files(object):
         # show
         self.plt.tight_layout(figstyle)
         self.plt.legend(figstyle)
+        
+        # bring window to front 
+        wm = plt.get_current_fig_manager() 
+        wm.window.attributes('-topmost', 1)
+        wm.window.attributes('-topmost', 0)
         
     # ======================================================================= #
     def draw_param(self,*args):
@@ -942,6 +948,11 @@ class fit_files(object):
         self.plt.xlabel(figstyle,xdraw)
         self.plt.ylabel(figstyle,ydraw)
         self.plt.tight_layout(figstyle)
+        
+        # bring window to front
+        wm = plt.get_current_fig_manager()
+        wm.show() 
+        wm.canvas.get_tk_widget().focus_force()   
         
     # ======================================================================= #
     def export(self,savetofile=True):

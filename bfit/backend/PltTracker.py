@@ -55,9 +55,6 @@ class PltTracker(object):
             kwargs: passed to fn
         """
         
-        # get current active 
-        active_overall = plt.gcf().number
-        
         # get active for this style
         active_style = self.active[style]
         
@@ -66,9 +63,6 @@ class PltTracker(object):
 
         # run function 
         output = fn(*args,**kwargs)
-                        
-        # switch back
-        plt.figure(active_overall)
         
         return output
     

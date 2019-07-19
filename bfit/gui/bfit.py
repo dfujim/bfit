@@ -925,6 +925,13 @@ class bfit(object):
                 
         self.plt.tight_layout(figstyle)
         self.plt.legend(figstyle)
+        
+        # bring window to front
+        if figstyle != 'periodic':
+            wm = plt.get_current_fig_manager()
+            wm.show() 
+            wm.canvas.get_tk_widget().focus_force()   
+            
         self.logger.debug('Drawing success.')
     
     # ======================================================================= #
