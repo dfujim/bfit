@@ -1350,7 +1350,7 @@ class fit_files(object):
         # do annotation
         for label,xcoord,ycoord in zip(ptlabels,x,y):        
             if type(label) != type(None):
-                self.plt.annotate(figstyle,label,
+                self.plt.annotate('param',label,
                              xy=(xcoord,ycoord),
                              xytext=(-3, 20),
                              textcoords='offset points', 
