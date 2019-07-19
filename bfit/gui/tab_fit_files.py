@@ -1103,6 +1103,49 @@ class fit_files(object):
                 val.append(1/T1avg)
                 err.append(dT1avg/(T1avg**2))
 
+        elif 'Cryo Lift Set (mm)' in select:
+            val = [data[r].bd.camp.clift_set.mean for r in runs]
+            err = [data[r].bd.camp.clift_set.std for r in runs]
+        
+        elif 'Cryo Lift Read (mm)' in select:
+            val = [data[r].bd.camp.clift_read.mean for r in runs]
+            err = [data[r].bd.camp.clift_read.std for r in runs]
+        
+        elif 'He Mass Flow' in select:
+            var = 'mass_read' if data[runs[0]].area == 'BNMR' else 'he_read'
+            val = [data[r].bd.camp[var].mean for r in runs]
+            err = [data[r].bd.camp[var].std for r in runs]
+            
+        elif 'CryoEx Mass Flow' in select:
+            val = [data[r].bd.camp.cryo_read.mean for r in runs]
+            err = [data[r].bd.camp.cryo_read.std for r in runs]
+            
+        elif 'Needle Set (turns)' in select:
+            val = [data[r].bd.camp.needle_set.mean for r in runs]
+            err = [data[r].bd.camp.needle_set.std for r in runs]
+            
+        elif 'Laser Power' in select:
+            val = [data[r].bd.epics.las_pwr.mean for r in runs]
+            err = [data[r].bd.epics.las_pwr.std for r in runs]
+            
+        elif 'Target Bias (kV)' in select:
+            val = [data[r].bd.epics.target_bias.mean for r in runs]
+            err = [data[r].bd.epics.target_bias.std for r in runs]        
+        
+        elif 'NBM Rate (count/s)' in select:
+            rate = lambda b : np.sum([b.hist['NBM'+h].data \
+                                    for h in ('F+','F-','B-','B+')])/b.duration
+            val = [rate(data[r].bd) for r in runs]
+            err = [np.nan for r in runs]        
+            
+        elif 'Sample Rate (count/s)' in select:
+            hist = ('F+','F-','B-','B+') if data[runs[0]].area == 'BNMR' \
+                                         else ('L+','L-','R-','R+')
+                
+            rate = lambda b : np.sum([b.hist[h].data for h in hist])/b.duration
+            val = [rate(data[r].bd) for r in runs]
+            err = [np.nan for r in runs]        
+            
         # fitted parameter options
         elif select in parnames:
             val = []
@@ -1120,7 +1163,7 @@ class fit_files(object):
             return (val,err)
         except UnboundLocalError:
             self.logger.warning('Parameter selection "%s" not found' % select)
-            raise AttributeError('Selection "%s" not found' % select)
+            raise AttributeError('Selection "%s" not found' % select) from None
     
     # ======================================================================= #
     def load_state(self):
