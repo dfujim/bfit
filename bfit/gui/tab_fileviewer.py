@@ -353,6 +353,13 @@ class fileviewer(object):
         except AttributeError:
             pass
             
+        try: 
+            val = current2field(data.epics.hh_current.mean)
+            data_sw['Magnetic Field'] = "%.3f Gauss" % val
+            key_order_sw.append('Magnetic Field')
+        except AttributeError:
+            pass
+            
         key_order_sw.append('')
                 
         # cryo options
@@ -395,6 +402,42 @@ class fileviewer(object):
             key_order_sw.append('Cryo Lift Readback')
         except AttributeError:
             pass
+    
+        key_order_sw.append('')
+        
+        # rates and counts
+        hist = ('F+','F-','B-','B+') if data.area == 'BNMR' \
+                                     else ('L+','L-','R-','R+')
+            
+        try:     
+            val = np.sum([data.hist[h].data for h in hist])
+            data_sw['Total Counts Sample'] = "%d" % (val)
+            key_order_sw.append('Total Counts Sample')
+        except AttributeError:
+            pass
+        
+        try: 
+            val = np.sum([data.hist[h].data for h in hist])/data.duration
+            data_sw['Rate Sample'] = "%d (1/s)" % (val)
+            key_order_sw.append('Rate Sample')
+        except AttributeError:
+            pass
+        
+        hist = ('F+','F-','B-','B+')    
+        try: 
+            val = np.sum([data.hist['NBM'+h].data for h in hist])
+            data_sw['Total Counts NBM'] = "%d" % (val)
+            key_order_sw.append('Total Counts NBM')
+        except AttributeError:
+            pass
+        
+        try: 
+            val = np.sum([data.hist['NBM'+h].data for h in hist])/data.duration
+            data_sw['Rate NBM'] = "%d (1/s)" % (val)
+            key_order_sw.append('Rate NBM')
+        except AttributeError:
+            pass
+        
             
         # rf dac
         if mode != 'SLR':
@@ -483,11 +526,7 @@ class fileviewer(object):
             val = data.epics.hh_current.mean
             std = data.epics.hh_current.std
             data_se['Magnet Current'] = "%.3f +/- %.3f A" % (val,std)
-            key_order_se.append('Magnet Current')
-            
-            val = current2field(val)
-            data_se['Magnetic Field'] = "%.3f Gauss" % val
-            key_order_se.append('Magnetic Field')
+            key_order_se.append('Magnet Current')            
         except AttributeError:
             pass
         
