@@ -472,6 +472,7 @@ class fit_files(object):
                 
         # fitter
         fitter = self.fitter
+        figstyle = 'fit'
         
         # get fitter inputs
         fn_name = self.fit_function_title.get()
