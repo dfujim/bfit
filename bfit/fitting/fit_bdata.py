@@ -91,7 +91,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         rebin = np.concatenate((rebin,np.ones(nruns-len(rebin))))
     
     rebin = np.asarray(rebin).astype(int)
-
+    
     # get years
     if type(years) in (int,float):
         years = np.ones(nruns,dtype=int)*years
@@ -106,7 +106,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
     # fit globally -----------------------------------------------------------
     if any(sharelist) and len(runs)>1:
         print('Running shared parameter fitting...')
-        g = global_bdata_fitter(runs,years,fnlist,sharelist,npar,xlims,asym_mode=asym_mode)
+        g = global_bdata_fitter(runs,years,fnlist,sharelist,npar,xlims,asym_mode=asym_mode,rebin=rebin)
         g.fit(p0=p0,**kwargs)
         gchi,chis = g.get_chi() # returns global chi, individual chi
         pars,covs = g.get_par()
@@ -208,7 +208,7 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
     
     # Get data input
     data = bdata(run,year)
-    x,y,dy = _get_asym(data,asym_mode)
+    x,y,dy = _get_asym(data,asym_mode,rebin=rebin)
             
     # check for values with error == 0. Omit these values. 
     tag = dy != 0

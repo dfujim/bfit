@@ -43,8 +43,12 @@ class global_bdata_fitter(global_fitter):
         if not isinstance(years,collections.Iterable):
             years = [years]*len(runs)
         
+        # Set rebin
+        if not isinstance(rebin,collections.Iterable):
+            rebin = [rebin]*len(runs)
+        
         # Get asymmetry
-        data = [bdata(r,year=y).asym(asym_mode,rebin=rebin) for r,y in zip(runs,years)]
+        data = [bdata(r,year=y).asym(asym_mode,rebin=re) for r,y,re in zip(runs,years,rebin)]
         
         # split into x,y,dy data sets
         x = np.array([d[0] for d in data])

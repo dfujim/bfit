@@ -52,6 +52,7 @@ class fit_files(object):
             runmode_label:  display run mode 
             set_as_group:   BooleanVar() if true, set fit parfor whole group
             share_var:      BooleanVar() holds share checkbox for all fitlines
+            use_rebin:      BoolVar() for rebinning on fitting
             xaxis:          StringVar() for parameter to draw on x axis
             yaxis:          StringVar() for parameter to draw on y axis
             xaxis_combobox: box for choosing x axis draw parameter
@@ -199,6 +200,15 @@ class fit_files(object):
         self.probe_label = ttk.Label(probe_label_frame,
                                      text=self.bfit.probe_species.get(),
                                      justify=CENTER)
+                                     
+        # rebin checkbox
+        use_rebin_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
+                text='Binning',)
+        self.use_rebin = BooleanVar()
+        set_use_rebin = ttk.Checkbutton(use_rebin_label_frame,
+                text='Rebin data',\
+                variable=self.use_rebin,onvalue=True,offvalue=False)
+        self.use_rebin.set(False)
         
         # global chisquared
         gchi_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
@@ -261,8 +271,11 @@ class fit_files(object):
         fit_routine_label_frame.grid(column=2,row=0,pady=5,padx=2,sticky=(N,E,W))
         self.fit_routine_label.grid(column=0,row=0,sticky=(E,W))
         
-        probe_label_frame.grid(column=1,row=1,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        probe_label_frame.grid(column=1,row=1,columnspan=1,sticky=(E,W,N),pady=2,padx=2)
         self.probe_label.grid(column=0,row=0)
+        
+        use_rebin_label_frame.grid(column=2,row=1,columnspan=1,sticky=(E,W,N),pady=2,padx=2)
+        set_use_rebin.grid(column=0,row=0)
         
         gchi_label_frame.grid(column=1,row=2,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         self.gchi_label.grid(column=0,row=0)
@@ -521,7 +534,9 @@ class fit_files(object):
                 
             # doptions
             doptions = {}
-            doptions['rebin'] = bdfit.rebin.get()
+            
+            if self.use_rebin.get():
+                doptions['rebin'] = bdfit.rebin.get()
             
             if self.mode in ('1f','1w'):
                 dline = self.bfit.fetch_files.data_lines[key]
