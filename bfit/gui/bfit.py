@@ -281,7 +281,9 @@ class bfit(object):
         menu_file.add_command(label='Search archive',command=self.search_archive)
         menu_file.add_command(label='NMR B1 Calculator',command=calculator_nmr_B1)
         menu_file.add_command(label='NQR B0 Calculator',command=calculator_nqr_B0)
-        menu_file.add_command(label='Export',command=self.do_export)
+        menu_file.add_command(label='Export Data',command=self.do_export)
+        menu_file.add_command(label='Save State',command=self.do_save)
+        menu_file.add_command(label='Load State',command=self.do_load)
         menu_file.add_command(label='Exit',command=sys.exit)
         menubar.add_cascade(menu=menu_file, label='File')
         
@@ -431,6 +433,12 @@ class bfit(object):
             self.fit_files.export()
         else:
             pass
+    
+    # ======================================================================= #
+    def do_load(self): self.fit_files.load_state()
+    
+    # ======================================================================= #
+    def do_save(self): self.fit_files.save_state()
     
     # ======================================================================= #
     def draw(self,data,asym_type,rebin=1,option='',figstyle='',**drawargs):
