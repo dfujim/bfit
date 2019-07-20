@@ -3,26 +3,30 @@
 Submodules and function signatures: 
 
 * **`bfit.fitting.functions`** (base functions module)
-    * `lorentzian(freq,peak,width,amp)`
-    * `gaussian(freq,mean,sigma,amp)`
+    * [`lorentzian(freq,peak,width,amp)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/functions.py#L24-L25)
+    * [`bilorentzian(freq,peak,widthA,ampA,widthB,ampB)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/functions.py#L27-L29)
+    * [`gaussian(freq,mean,sigma,amp)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/functions.py#L31-L32)
     * `pulsed_exp`
-        * constructor: `pulsed_exp(lifetime,pulse_len)`
-        * call:`pulsed_exp(time,lambda_s,amp)`
+        * constructor: [`pulsed_exp(lifetime,pulse_len)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/functions.py#L40-L45)
+        * call: [`pulsed_exp(time,lambda_s,amp)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/functions.py#L56-L57)
+    * `pulsed_biexp`
+        * constructor: [`pulsed_biexp(lifetime,pulse_len)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/functions.py#L40-L45)
+        * call: [`pulsed_biexp(time,lambda_s,lambdab_s,fracb,amp)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/functions.py#L60-L62)
     * `pulsed_strexp`
-        * constructor: `pulsed_strexp(lifetime,pulse_len)`
-        * call:`pulsed_strexp(time,lambda_s,beta,amp)`
-    * `get_fn_superpos(fn_handles)`
+        * constructor: [`pulsed_strexp(lifetime,pulse_len)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/functions.py#L40-L45)
+        * call: [`pulsed_strexp(time,lambda_s,beta,amp)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/functions.py#L65-L66)
+    * [`get_fn_superpos(fn_handles)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/functions.py#L71-L79)
 * **`bfit.fitting.fit_bdata`** (fitting bdata files module)
-    * `fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,hist_select='',**kwargs)`
-    * `fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs)`
-* **`bfit.fitting.global_fitter`** (general global fitting)
-    * constructor: `global_fitter(x,y,dy,fn,sharelist,npar=-1)`
-    * `draw(mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,savefig='',**errorbar_args`
-    * `fit(**fitargs)`
-    * `get_chi()`
-    * `get_par()`
-* **`bfit.fitting.global_bdata_fitter`** (global fitting of bdata objects, inherits from `global_fitter`)
-    * constructor: `global_bdata_fitter(runs,years,fn,sharelist,npar=-1)`
+    * [`fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,hist_select='',**kwargs)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/fit_bdata.py#L13-L60)
+    * [`fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/fit_bdata.py#L171-L207)
+* [**`bfit.fitting.global_fitter`**](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/global_fitter.py#L50-L80) (general global fitting)
+    * constructor: [`global_fitter(x,y,dy,fn,sharelist,npar=-1)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/global_fitter.py#L88-L105)
+    * [`draw(mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,savefig='',**errorbar_args)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/global_fitter.py#L140-L160)
+    * [`fit(**fitargs)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/global_fitter.py#L222-L251)
+    * [`get_chi()`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/global_fitter.py#L311-L318)
+    * [`get_par()`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/global_fitter.py#L341-L350)
+* [**`bfit.fitting.global_bdata_fitter`**](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/global_bdata_fitter.py#L11-L12) (global fitting of bdata objects, inherits from `global_fitter`)
+    * constructor: [`global_bdata_fitter(runs,years,fn,sharelist,npar=-1)`](https://github.com/dfujim/bfit/blob/d8feb0e12d3aae682917a9ac47d3d19f32eb8885/bfit/fitting/global_bdata_fitter.py#L14-L40)
 * **`bfit.fitting.decay_31mg`** (fractional activity of 31Mg probe and decay products)
    * `fn_31Mg(time,beam_pulse,beam_rate=1e6)` (fractions of total atoms. Similar for 31Al, 31Si, 31P, 30Al, 30Si.)
    * `fa_31Mg(time,beam_pulse,beam_rate=1e6)` (fractional activity. Similar for 31Al, 31Si, 31P, 30Al, 30Si.)
@@ -44,70 +48,6 @@ These are easy fit [bdata object](https://ms-code.phas.ubc.ca:2633/dfujim_public
 
 The second, `fit_single`, fits only a single run. 
 
-Docstrings: 
-
-```python
-def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,hist_select='',**kwargs):
-    """
-        Fit combined asymetry from bdata.
-    
-        runs:           list of run numbers
-        
-        years:          list of years corresponding to run numbers, or int which applies to all
-        
-        fnlist:         list of function handles to fit (or single which applies to all)
-                        must specify inputs explicitly (do not do def fn(*par)!)
-                        must have len(fn) = len(runs) if list
-        
-        omit:           list of strings of space-separated bin ranges to omit
-        rebin:          list of rebinning of data prior to fitting. 
-        
-        sharelist:      list of bool to indicate which parameters are shared. 
-                        True if shared
-                        len = number of parameters.
-        
-        npar:           number of free parameters in each fitting function.
-                        Set if number of parameters is not intuitable from 
-                            function code.      
-        
-        hist_select:    string for selecting histograms to use in asym calc
-        
-        kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
-        
-        Returns: par,cov
-            par: best fit parameters
-            std: standard deviation for each parameter
-            chi: chisquared values
-    """
-```
-
-
-```python
-
-def fit_single(run,year,fn,omit='',rebin=1,hist_select='',**kwargs):
-    """
-        Fit combined asymetry from bdata.
-    
-        runs:           run number
-        
-        years:          year
-        
-        fn:             function handle to fit
-        
-        omit:           string of space-separated bin ranges to omit
-        rebin:          rebinning of data prior to fitting. 
-        
-        hist_select:    string for selecting histograms to use in asym calc
-        
-        kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
-        
-        Returns: par,cov
-            par: best fit parameters
-            std: standard deviation for each parameter
-            chi: chisquared value
-    """
-```
-
 ## `bfit.fitting.global_fitter`
 
 Global fitting object. 
@@ -117,133 +57,26 @@ Global fitting object.
     
     Usage: 
         
-        Construct fitter:
-            
-            g = global_fitter(x,y,dy,fn,sharelist,npar=-1)
-            
-            
-            x,y:        2-list of data sets of equal length. 
-                        fmt: [[a1,a2,...],[b1,b2,...],...]
-            
-            dy:         list of errors in y with same format as y
-            
-            fn:         function handle OR list of function handles. 
-                        MUST specify inputs explicitly
-                        if list must have that len(fn) = len(x)
-            
-            sharelist:  tuple of booleans indicating which values to share. 
-                        len = number of parameters 
-                        
-            npar:       number of free parameters in each fitting function.
-                        Set if number of parameters is not intuitable from 
-                            function code.
-        
+        Construct fitter:    
+            g = global_fitter(x,y,dy,fn,sharelist,npar=-1)        
     
         Fit
             g.fit(**fitargs)
-        
-            
-            fitargs: parameters to pass to fitter (scipy.optimize.curve_fit) 
-            
-            p0:         [(p1,p2,...),...] innermost tuple is initial parameters 
-                            for each data set, list of tuples for all data sets
-                            if not enough sets of inputs, last input is copied 
-                            for remaining data sets.
-                            
-                            p0.shape = (nsets,npars)
-                    OR
-                        (p1,p2,...) single tuple to set same initial parameters 
-                            for all data sets
-            
-                            p0.shape = (npars,)
-            
-            bounds:     [((l1,l2,...),(h1,h2,...)),...] similar to p0, but use 
-                            2-tuples instead of the 1-tuples of p0
-                        
-                            bounds.shape = (nsets,2,npars)
-                        
-                    OR
-                        ((l1,l2,...),(h1,h2,...)) single 2-tuple to set same 
-                            bounds for all data sets
-                            
-                            bounds.shape = (2,npars)
-                            
-                            
-            returns (parameters,stdev)
-        
-            
+           
         Get chi squared
             g.get_chi()
-            
-            
-            Calculate chisq/DOF, both globally and for each function.
-            
-            sets self.chi and self.chi_glbl
-            
-            return (global chi, list of chi for each fn)
-        
         
         Get fit parameters
             g.get_par()
             
-            
-            Fetch fit parameters as dictionary
-            
-            return 2-tuple of (par,error) each with format
-            
-            [data1:[par1,par2,...],data2:[],...]
-        
-            
         Draw the result
-        
             g.draw(mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,
                    savefig='',**errorbar_args)
-           
-            
-            Draw data and fit results. 
-            
-            mode:           drawing mode. 
-                            one of 'stack', 'new', 'append' (or first character 
-                                for shorhand)
-            
-            xlabel/ylabel:  string for axis labels
-            
-            do_legend:      if true set legend
-            
-            labels:         list of string to label data
-            
-            savefig:        if not '', save figure with this name
-            
-            errorbar_args:  arguments to pass on to plt.errorbar
-            
-            Returns list of matplotlib figure objects
 ```        
 
 ## `bfit.fitting.global_bdata_fitter`
 
 Inherits from `global_fitter`, but changes the constructor to extract [bdata](https://ms-code.phas.ubc.ca:2633/dfujim_public/bdata) asymmetries. 
-
-Constructor: 
-
-```python
-global_bdata_fitter(runs,years,fn,sharelist,npar=-1):
-        """
-            runs:       list of run numbers
-            
-            years:      list of years corresponding to run numbers, or int which applies to all
-            
-            fn:         list of function handles to fit (or single which applies to all)
-                        must specify inputs explicitly (do not do def fn(*par)!)
-                        must have len(fn) = len(runs) if list
-                        
-            sharelist:  list of bool to indicate which parameters are shared. 
-                        True if shared
-                        len = number of parameters.
-                        
-            npar:       number of free parameters in each fitting function.
-                        Set if number of parameters is not intuitable from function code.            
-        """
-```
 
 ## `bfit.fitting.decay_31mg`
 
