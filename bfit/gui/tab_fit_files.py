@@ -130,14 +130,7 @@ class fit_files(object):
                         command=self.do_reset_initial,pad=1)
         gui_param_button = ttk.Button(fn_select_frame,text='P0 Finder',
                         command=self.do_gui_param,pad=1)
-        
-        # set as group checkbox
-        self.set_as_group = BooleanVar()
-        set_group_check = ttk.Checkbutton(fn_select_frame,
-                text='Modify For All',\
-                variable=self.set_as_group,onvalue=True,offvalue=False)
-        self.set_as_group.set(False)
-                
+            
         # GRIDDING
             
         # top frame gridding
@@ -146,13 +139,12 @@ class fit_files(object):
         c = 0
         self.fit_function_title_box.grid(column=c,row=0,padx=5); c+=1
         ttk.Label(fn_select_frame,text="Number of Terms:").grid(column=c,
-                  row=0,sticky=(E),padx=5,pady=5); c+=1
-        n_component_box.grid(column=c,row=0,padx=5,pady=5); c+=1
-        fit_button.grid(column=c,row=0,padx=5,pady=1); c+=1
-        set_param_button.grid(column=c,row=0,padx=5,pady=1); c+=1
-        reset_param_button.grid(column=c,row=0,padx=5,pady=1); c+=1
-        gui_param_button.grid(column=c,row=0,padx=5,pady=1); c+=1
-        set_group_check.grid(column=c,row=0,padx=5,pady=1); c+=1
+                  row=0,padx=5,pady=5,sticky=W); c+=1
+        n_component_box.grid(column=c,row=0,padx=5,pady=5,sticky=W); c+=1
+        fit_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
+        set_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
+        reset_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
+        gui_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
         
         # MID FRAME -----------------------------------------------------------
         
@@ -200,20 +192,30 @@ class fit_files(object):
         self.probe_label = ttk.Label(probe_label_frame,
                                      text=self.bfit.probe_species.get(),
                                      justify=CENTER)
-                                     
-        # rebin checkbox
-        use_rebin_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
-                text='Binning',)
-        self.use_rebin = BooleanVar()
-        set_use_rebin = ttk.Checkbutton(use_rebin_label_frame,
-                text='Rebin data',\
-                variable=self.use_rebin,onvalue=True,offvalue=False)
-        self.use_rebin.set(False)
         
         # global chisquared
         gchi_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
-                text='Global ChiSquared',)
+                text='Global ChiSq',)
         self.gchi_label = ttk.Label(gchi_label_frame,text='',justify=CENTER)
+                     
+        # other settings
+        other_settings_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
+                text='Other Settings',)
+                
+        # set as group checkbox
+        self.set_as_group = BooleanVar()
+        set_group_check = ttk.Checkbutton(other_settings_label_frame,
+                text='Modify for all',\
+                variable=self.set_as_group,onvalue=True,offvalue=False)
+        self.set_as_group.set(False)
+        
+                
+        # rebin checkbox
+        self.use_rebin = BooleanVar()
+        set_use_rebin = ttk.Checkbutton(other_settings_label_frame,
+                text='Rebin data (set in fetch)',\
+                variable=self.use_rebin,onvalue=True,offvalue=False)
+        self.use_rebin.set(False)
         
         # fit results -----------------------
         results_frame = ttk.Labelframe(fit_data_tab,
@@ -274,11 +276,12 @@ class fit_files(object):
         probe_label_frame.grid(column=1,row=1,columnspan=1,sticky=(E,W,N),pady=2,padx=2)
         self.probe_label.grid(column=0,row=0)
         
-        use_rebin_label_frame.grid(column=2,row=1,columnspan=1,sticky=(E,W,N),pady=2,padx=2)
-        set_use_rebin.grid(column=0,row=0)
-        
-        gchi_label_frame.grid(column=1,row=2,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        gchi_label_frame.grid(column=2,row=1,columnspan=1,sticky=(E,W,N),pady=2,padx=2)
         self.gchi_label.grid(column=0,row=0)
+        
+        other_settings_label_frame.grid(column=1,row=2,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        set_group_check.grid(column=0,row=0,padx=5,pady=1,sticky=W)
+        set_use_rebin.grid(column=0,row=1,padx=5,pady=1,sticky=W)
         
         results_frame.grid(column=1,row=3,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         state_frame.grid(column=1,row=4,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
@@ -286,9 +289,8 @@ class fit_files(object):
         # resizing
         
         # fn select
-        fn_select_frame.grid_columnconfigure(1,weight=10)   # Nterms
-        fn_select_frame.grid_columnconfigure(4,weight=1)    # Set result to p0
-        fn_select_frame.grid_columnconfigure(5,weight=1)    # reset p0
+        fn_select_frame.grid_columnconfigure(1,weight=1)    # Nterms label
+        fn_select_frame.grid_columnconfigure(6,weight=100)   # p0 finder
         
         # fitting frame
         self.fit_canvas.grid_columnconfigure(0,weight=1)    # fetch frame 
