@@ -32,7 +32,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ),
     install_requires=['cython>=0.28','numpy>=1.14','tqdm>=4.31',
-                      'bdata>=3.1.0','matplotlib>=2.2.2','pandas>=0.23.0'],
+                      'bdata>=3.1.2','matplotlib>=2.2.2','pandas>=0.23.0'],
     package_data={'': ['./images/']},
     include_package_data=True,
     ext_modules = cythonize([ext],include_path = [numpy.get_include()]),
