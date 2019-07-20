@@ -5,14 +5,19 @@
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from functools import partial
+from bdata import bdata
+from bfit import logger_name
+from scipy.optimize import curve_fit
+from scipy.special import gamma, polygamma
+from pandas.plotting import register_matplotlib_converters
+
 from bfit.gui.calculator_nqr_B0 import current2field
 from bfit.gui.popup_show_param import popup_show_param
 from bfit.gui.popup_param import popup_param
 from bfit.fitting.decay_31mg import fa_31Mg
-from bdata import bdata
-from bfit import logger_name
-from scipy.special import gamma, polygamma
-from pandas.plotting import register_matplotlib_converters
+from bfit.backend.entry_color_set import on_focusout,on_entry_click
+from bfit.backend.raise_window import raise_window
+from bfit.backend.get_model import get_model
 
 import numpy as np
 import pandas as pd
@@ -20,9 +25,8 @@ import bdata as bd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import bfit.backend.colors as colors
-import datetime, os, traceback, warnings
-import logging
-import yaml
+
+import datetime, os, traceback, warnings, logging, yaml
 
 register_matplotlib_converters()
 
@@ -45,6 +49,19 @@ class fit_files(object):
             fitter:         fitting object from self.bfit.routine_mod
             gchi_label:     Label for global chisquared    
             mode:           what type of run is this. 
+            
+            model_chi_label:Label, chisquared output
+            model_fn:       Funtion handle, fit model for pars, created on fit
+            model_p0:       Initial parameters for model fitting
+            model_entry:    Entry: model function
+            model_results:  Tuple, (par,std) for model fit results
+            model_results_fn:  StringVar, fit function to model results
+            model_results_par: StringVar, parameter list of model_results fn
+            model_results_text: Text, output model results
+            model_errors_text: Text, output model result errors
+            modelp0_entry:  Entry: model p0 list
+            modelpar_entry: Entry: model parameter list
+            
             n_component:    number of fitting components (IntVar)
             plt:            self.bfit.plt
             probe_label:    Label for probe species
@@ -200,7 +217,7 @@ class fit_files(object):
                      
         # other settings
         other_settings_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
-                text='Other Settings',)
+                text='Switches',)
                 
         # set as group checkbox
         self.set_as_group = BooleanVar()
@@ -208,8 +225,7 @@ class fit_files(object):
                 text='Modify for all',\
                 variable=self.set_as_group,onvalue=True,offvalue=False)
         self.set_as_group.set(False)
-        
-                
+
         # rebin checkbox
         self.use_rebin = BooleanVar()
         set_use_rebin = ttk.Checkbutton(other_settings_label_frame,
@@ -258,7 +274,80 @@ class fit_files(object):
         self.yaxis_combobox.grid(column=1,row=2,pady=5)
         self.annotation_combobox.grid(column=1,row=3,pady=5)
         
-       # save/load state -----------------------
+        # fit fit parameters --------------------
+        fit_fitresults_frame= ttk.Labelframe(fit_data_tab,
+                                             text='Model Fit Results',pad=5)
+        self.model_results_fn = StringVar()
+        self.model_results_par = StringVar()
+        self.model_p0 = StringVar()
+        
+        # entry
+        model_entry_frame = Frame(fit_fitresults_frame)
+        self.modelpar_entry = ttk.Entry(model_entry_frame,
+                                  textvariable=self.model_results_par,width=6)
+        
+        self.model_entry = ttk.Entry(model_entry_frame,
+                                     textvariable=self.model_results_fn,width=26)
+        
+        self.modelp0_entry = ttk.Entry(model_entry_frame,
+                                  textvariable=self.model_p0,width=26)
+                                     
+        # entry defaults (parameters)
+        self.modelpar_entry.insert(0,'a,b')
+        entry_parfn = partial(on_entry_click,text='a,b',entry=self.modelpar_entry)
+        on_focusout_parfn = partial(on_focusout,text='a,b',entry=self.modelpar_entry)
+        self.modelpar_entry.bind('<FocusIn>', entry_parfn)
+        self.modelpar_entry.bind('<FocusOut>', on_focusout_parfn)
+        self.modelpar_entry.config(foreground=colors.entry_grey)
+       
+        # entry defaults (function)
+        self.model_entry.insert(0,'a*x+b')
+        entry_fnfn = partial(on_entry_click,text='a*x+b',entry=self.model_entry)
+        on_focusout_fnfn = partial(on_focusout,text='a*x+b',entry=self.model_entry)
+        self.model_entry.bind('<FocusIn>', entry_fnfn)
+        self.model_entry.bind('<FocusOut>', on_focusout_fnfn)
+        self.model_entry.config(foreground=colors.entry_grey)
+       
+        # entry defaults (p0)
+        self.modelp0_entry.insert(0,'1,1')
+        entry_fnp0 = partial(on_entry_click,text='1,1',entry=self.modelp0_entry)
+        on_focusout_fnp0 = partial(on_focusout,text='1,1',entry=self.modelp0_entry)
+        self.modelp0_entry.bind('<FocusIn>', entry_fnp0)
+        self.modelp0_entry.bind('<FocusOut>', on_focusout_fnp0)
+        self.modelp0_entry.config(foreground=colors.entry_grey)
+       
+        # buttons
+        model_fit_button = ttk.Button(fit_fitresults_frame,text='Fit',command=self.do_fit_model)
+        
+        # chisq
+        self.model_chi_label = ttk.Label(fit_fitresults_frame,text='',justify=LEFT)
+        
+        # text for output
+        self.model_results_text = Text(fit_fitresults_frame,width=17,height=8,state='normal')
+        self.model_errors_text = Text(fit_fitresults_frame,width=17,height=8,state='normal')
+        
+        # gridding
+        model_entry_frame.grid(column=0,row=0,columnspan=2,sticky=W,pady=2)
+        
+        ttk.Label(model_entry_frame,text="Param").grid(column=0,row=0,sticky=(N,W))
+        ttk.Label(model_entry_frame,text="Model").grid(column=2,row=0,sticky=(N,W))
+        self.modelpar_entry.grid(column=0,row=1,padx=2,pady=1,sticky=(N,W))
+        ttk.Label(model_entry_frame,text=":").grid(column=1,row=1,sticky=(N,W))
+        self.model_entry.grid(column=2,row=1,padx=2,pady=1,sticky=(N,W))
+        ttk.Label(model_entry_frame,text="P0").grid(column=0,row=2,sticky=(E))
+        ttk.Label(model_entry_frame,text=":").grid(column=1,row=2,sticky=(N,W))
+        self.modelp0_entry.grid(column=2,row=2,padx=2,pady=1,sticky=(N,W))
+        
+        model_fit_button.grid(column=0,row=2,padx=2,pady=2)
+        self.model_chi_label.grid(column=1,row=2,padx=2,pady=2)
+        
+        ttk.Label(fit_fitresults_frame,text="Results").grid(column=0,row=3,pady=2,sticky=N)
+        ttk.Label(fit_fitresults_frame,text="Errors").grid(column=1,row=3,pady=2,sticky=N)
+        
+        self.model_results_text.grid(column=0,row=4,padx=2)
+        self.model_errors_text.grid(column=1,row=4,padx=2)
+        
+        # save/load state -----------------------
         state_frame = ttk.Labelframe(fit_data_tab,text='Program State',pad=5)
         state_save_button = ttk.Button(state_frame,text='Save',command=self.save_state)
         state_load_button = ttk.Button(state_frame,text='Load',command=self.load_state)
@@ -284,7 +373,8 @@ class fit_files(object):
         set_use_rebin.grid(column=0,row=1,padx=5,pady=1,sticky=W)
         
         results_frame.grid(column=1,row=3,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
-        state_frame.grid(column=1,row=4,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        fit_fitresults_frame.grid(column=1,row=4,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        state_frame.grid(column=1,row=5,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         
         # resizing
         
@@ -644,6 +734,85 @@ class fit_files(object):
         self.bfit.draw_style.set(style)
             
     # ======================================================================= #
+    def do_fit_model(self,*args):
+        
+        # get fit data
+        xstr = self.xaxis.get()
+        ystr = self.yaxis.get()
+        
+        # Make model 
+        parstr = self.model_results_par.get()
+        parlst = parstr.split(',')
+        npar = len(parlst)
+        
+        if parstr[-1] == ',': parstr = parstr[:-1]
+        model = 'lambda x,%s : %s' % (parstr,self.model_results_fn.get())
+        
+        self.logger.info('Fitting model %s for x="%s", y="%s"',model,xstr,ystr)
+        
+        model = get_model(model) 
+        self.model_fn = model
+        npar = len(parstr.split(','))
+        
+        # get data values
+        try:
+            xvals, xerrs = self.get_values(xstr)
+            yvals, yerrs = self.get_values(ystr)
+        except UnboundLocalError as err:
+            self.logger.error('Bad input parameter selection')
+            messagebox.showerror("Error",'Select two input parameters')
+            raise err
+        except (KeyError,AttributeError) as err:
+            self.logger.error('Parameter "%s or "%s" not found for fitting',
+                              xstr,ystr)
+            messagebox.showerror("Error",
+                    'Parameter "%s" or "%s" not found' % (xstr,ystr))
+            raise err
+            
+        xvals = np.asarray(xvals)
+        yvals = np.asarray(yvals)
+        yerrs = np.asarray(yerrs)
+            
+        # get p0
+        p0 = self.model_p0.get()
+        if p0[-1] == ',': p0 = p0[:-1]
+        
+        try:
+            if p0:  p0 = list(map(float,p0.split(',')))
+            else:   p0 = np.ones(npar)
+        except ValueError:
+            msg = 'Bad p0 input: use format p0,p1,p2,...'
+            messagebox.showerror('Error',msg)
+            self.logging.error('Bad p0 input')
+            raise ValueError(msg) from None
+        
+        if len(p0) < npar:  p0 = np.concatenate((p0,np.ones(npar-len(p0))))
+        if len(p0) > npar:  p0 = p0[:npar]
+            
+        # fit model 
+        par,cov = curve_fit(model,xvals,yvals,sigma=yerrs,absolute_sigma=True,p0=p0)
+        std = np.diag(cov)**0.5
+        chi = np.sum(((model(xvals,*par)-yvals)/yerrs)**2)/(len(xvals)-npar)
+        
+        # display results 
+        number = '%'+('%.df' % self.bfit.rounding)
+        outtext = [p+': '+number % r for p,r in zip(parlst,par)]
+        self.model_results_text.delete('1.0',END)
+        self.model_results_text.insert('1.0','\n'.join(outtext))
+        
+        outtext = [number % r for r in std]
+        self.model_errors_text.delete('1.0',END)
+        self.model_errors_text.insert('1.0','\n'.join(outtext))
+        
+        self.model_chi_label['text'] = 'ChiSq: %.2f' % np.around(chi,2)
+        
+        self.logger.info('Fit model results: %s, Errors: %s',str(par),str(std))
+        
+        self.model_results = (par,std)
+        self.draw_param()
+        self.draw_model()
+        
+    # ======================================================================= #
     def do_gui_param(self,*args):
         """Set initial parmeters with GUI"""
         popup_param(self.bfit)
@@ -781,6 +950,8 @@ class fit_files(object):
         self.plt.tight_layout(figstyle)
         self.plt.legend(figstyle)
         
+        raise_window()
+        
     # ======================================================================= #
     def draw_fit(self,id,figstyle,**drawargs):
         """
@@ -880,10 +1051,57 @@ class fit_files(object):
         self.plt.legend(figstyle)
         
         # bring window to front 
-        wm = plt.get_current_fig_manager() 
-        wm.window.attributes('-topmost', 1)
-        wm.window.attributes('-topmost', 0)
+        raise_window()
         
+    # ======================================================================= #
+    def draw_model(self,*args):
+        figstyle = 'param'
+        
+        # get draw components
+        xstr = self.xaxis.get()
+        ystr = self.yaxis.get()
+        
+        self.logger.info('Draw model parameters "%s" vs "%s"',ystr,xstr)
+        
+        # get data values
+        try:
+            xvals, xerrs = self.get_values(xstr)
+            yvals, yerrs = self.get_values(ystr)
+        except UnboundLocalError as err:
+            self.logger.error('Bad input parameter selection')
+            messagebox.showerror("Error",'Select two input parameters')
+            raise err
+        except (KeyError,AttributeError) as err:
+            self.logger.error('Parameter "%s or "%s" not found for drawing model',
+                              xstr,ystr)
+            messagebox.showerror("Error",
+                    'Parameter "%s" or "%s" not found' % (xstr,ystr))
+            raise err
+
+        # get fit function
+        fn = self.model_fn
+
+        # get draw style
+        style = self.bfit.draw_style.get()
+        
+        if style == 'new':
+            self.plt.figure(figstyle)
+        elif style == 'redraw':
+            self.plt.clf(figstyle)
+        
+        self.plt.gca(figstyle)
+            
+        # draw
+        fitx = np.linspace(min(xvals),max(xvals),self.n_fitx_pts)
+        f = self.plt.plot(figstyle,fitx,fn(fitx,*self.model_results[0]),color='k')
+        
+        # plot elements
+        self.plt.xlabel(figstyle,xstr)
+        self.plt.ylabel(figstyle,ystr)
+        self.plt.tight_layout(figstyle)
+        
+        raise_window()
+    
     # ======================================================================= #
     def draw_param(self,*args):
         
@@ -897,7 +1115,7 @@ class fit_files(object):
         ydraw = self.yaxis.get()
         ann = self.annotation.get()
         
-        self.logger.info('Draw fit paramters "%s" vs "%s" with annotation "%s"',
+        self.logger.info('Draw fit parameters "%s" vs "%s" with annotation "%s"',
                           ydraw,xdraw,ann)
         
         # get plottable data
@@ -979,9 +1197,7 @@ class fit_files(object):
         self.plt.tight_layout(figstyle)
         
         # bring window to front
-        wm = plt.get_current_fig_manager()
-        wm.show() 
-        wm.canvas.get_tk_widget().focus_force()   
+        raise_window()
         
     # ======================================================================= #
     def export(self,savetofile=True):
@@ -1414,10 +1630,17 @@ class fit_files(object):
         draw_par_items = (  self.xaxis_combobox,
                             self.yaxis_combobox,
                             self.annotation_combobox)
-                            
+        
+        # fit model items
+        fit_model_items = ( self.modelp0_entry,
+                            self.model_entry,
+                            self.modelpar_entry)
+        
         # do action 
         if focus in draw_par_items:
             self.draw_param()
+        elif focus in fit_model_items:
+            self.do_fit_model()
         elif focus == self.bfit.root:
             pass
         else:

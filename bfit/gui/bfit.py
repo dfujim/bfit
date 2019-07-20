@@ -38,6 +38,7 @@ from bfit.gui.popup_set_ppm_reference import popup_set_ppm_reference
 from bfit.gui.popup_set_histograms import popup_set_histograms
 from bfit.backend.fitdata import fitdata
 from bfit.backend.PltTracker import PltTracker
+from bfit.backend.raise_window import raise_window
 import bfit.backend.colors as colors
 
 __doc__="""
@@ -938,9 +939,7 @@ class bfit(object):
         
         # bring window to front
         if figstyle != 'periodic':
-            wm = plt.get_current_fig_manager()
-            wm.show() 
-            wm.canvas.get_tk_widget().focus_force()   
+            raise_window()   
             
         self.logger.debug('Drawing success.')
     

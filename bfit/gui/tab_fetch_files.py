@@ -8,6 +8,7 @@ from bfit import logger_name
 from bdata import bdata
 from functools import partial
 from bfit.backend.fitdata import fitdata
+from bfit.backend.entry_color_set import on_focusout,on_entry_click
 import bfit.backend.colors as colors
 import numpy as np
 import pandas as pd
@@ -883,22 +884,6 @@ class dataline(object):
         self.label_entry.bind('<FocusOut>', on_focusout_fn_lab)
         self.label_entry.config(foreground=colors.entry_grey)
         
-# =========================================================================== #
-def on_entry_click(event,entry,text):
-    """Vanish grey text on click"""
-    if entry.get() == text:
-        entry.delete(0, "end") # delete all the text in the entry
-        entry.insert(0, '') #Insert blank for user input
-        entry.config(foreground = colors.entry_white)
-
-# =========================================================================== #
-def on_focusout(event,entry,text):
-    """Set grey text for boxes on exit"""
-    if entry.get() == '':
-        entry.insert(0,text)
-        entry.config(foreground = colors.entry_grey)
-    else:
-        entry.config(foreground = colors.entry_white)
 
 
 
