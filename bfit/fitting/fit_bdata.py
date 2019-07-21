@@ -11,7 +11,7 @@ from bfit.fitting.global_bdata_fitter import global_bdata_fitter
 
 # ========================================================================== #
 def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
-              hist_select='',xlims=None,asym_mode='c',**kwargs):
+              hist_select='',xlims=None,asym_mode='c',fixed=None,**kwargs):
     """
         Fit combined asymetry from bdata.
     
@@ -49,6 +49,12 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
                             raw_: raw time-resolved 
                             
                             ex: sl_c or raw_h or dif_c
+        
+        fixed:          list of booleans indicating if the paramter is to be 
+                        fixed to p0 value (same length as p0). Returns best 
+                        parameters in order presented, with the fixed 
+                        parameters omitted. Can be a list of lists with one list 
+                        for each run.
         
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
@@ -106,7 +112,8 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
     # fit globally -----------------------------------------------------------
     if any(sharelist) and len(runs)>1:
         print('Running shared parameter fitting...')
-        g = global_bdata_fitter(runs,years,fnlist,sharelist,npar,xlims,asym_mode=asym_mode,rebin=rebin)
+        g = global_bdata_fitter(runs,years,fnlist,sharelist,npar,xlims,
+                                asym_mode=asym_mode,rebin=rebin)
         g.fit(p0=p0,**kwargs)
         gchi,chis = g.get_chi() # returns global chi, individual chi
         pars,covs = g.get_par()
@@ -122,33 +129,45 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
             bounds = [(-np.inf,np.inf)]*nruns 
             
         # check p0 dimensionality
-        if len(np.array(p0).shape) < 2:
+        if len(np.asarray(p0).shape) < 2:
             p0 = [p0]*nruns
         
         # check xlims shape - should match number of runs
-        if len(np.array(xlims).shape) < 2:
+        if len(np.asarray(xlims).shape) < 2:
             xlims = [xlims for i in range(len(runs))]
         else:
             xlims = list(xlims)
             xlims.extend([xlims[-1] for i in range(len(runs)-len(xlims))])
         
+        # check fixed shape
+        if fixed is not None: 
+            fixed = np.asarray(fixed)
+            if len(fixed.shape) < 2:
+                fixed = [fixed]*nruns
         
         pars = []
         covs = []
         chis = []
         gchi = 0.
         dof = 0.
-        iter_obj = tqdm(zip(runs,years,fnlist,omit,rebin,p0,bounds,xlims),
+        iter_obj = tqdm(zip(runs,years,fnlist,omit,rebin,p0,bounds,xlims,fixed),
                         total=len(runs),desc='Independent Fitting')
-        for r,y,fn,om,re,p,b,xl in iter_obj:
+        for r,y,fn,om,re,p,b,xl,fix in iter_obj:
+            
+            # get fixed p0,bounds,function
+            fn,p,b = _get_fixed_values(fix,fn,p,b)
+            
+            # fit
             p,s,c = fit_single(r,y,fn,om,re,hist_select,p0=p,bounds=b,xlim=xl,
                                asym_mode=asym_mode,**kwargs)
+            
+            # outputs
             pars.append(p)
             covs.append(s)
             chis.append(c)
             
             # get global chi 
-            x,y,dy = _get_asym(bdata(r,year=y),asym_mode,rebin=re)
+            x,y,dy = _get_asym(bdata(r,year=y),asym_mode,rebin=re,omit=om)
             
             if xl is None:  
                 xl = [-np.inf,np.inf]
@@ -169,7 +188,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
 
 # =========================================================================== #
 def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
-               **kwargs):
+               fixed=None,**kwargs):
     """
         Fit combined asymetry from bdata.
     
@@ -198,6 +217,11 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
                             
                             ex: sl_c or raw_h or dif_c
         
+        fixed:          list of booleans indicating if the paramter is to be 
+                        fixed to p0 value (same length as p0). Returns best 
+                        parameters in order presented, with the fixed 
+                        parameters omitted.
+        
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
         Returns: (par,cov,chi)
@@ -224,9 +248,23 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
         dy = dy[tag]
     
     # p0
-    if 'p0' not in kwargs.keys():
+    if 'p0' not in kwargs:
         kwargs['p0'] = np.ones(fn.__code__.co_argcount-1)
     
+    # fixed parameters
+    if fixed is not None and any(fixed):
+        
+        # prep inputs
+        fixed = np.asarray(fixed)
+        if 'bounds' in kwargs:  bounds = kwargs['bounds']
+        else:                   bounds = None
+        
+        # get fixed version
+        fn,kwargs['p0'],bounds = _get_fixed_values(fixed,fn,kwargs['p0'],bounds)
+        
+        # modify fiting inputs
+        if bounds is not None:  kwargs['bounds'] = bounds
+        
     # Fit the function 
     par,cov = curve_fit(fn,x,y,sigma=dy,absolute_sigma=True,**kwargs)
     dof = len(y)-len(kwargs['p0'])
@@ -254,3 +292,36 @@ def _get_asym(data,asym_mode,**asym_kwargs):
 
     return (x,y,dy)
     
+# =========================================================================== #
+def _get_fixed_values(fixed,fn,p0,bounds=None):
+    """
+        Get fixed function, p0, bounds
+    """
+    
+    # save original inputs
+    fn_orig = fn
+    p0_orig = np.copy(p0)
+    npar_orig = len(p0_orig)
+            
+    # index of fixed parameters
+    idx = np.where(fixed)
+    
+    # make new fitting function with fixed parameter(s)
+    def fn(x,*args):
+        args_fixed = np.zeros(npar_orig)
+        args_fixed[fixed] = p0_orig[fixed]
+        args_fixed[~fixed] = args
+        return fn_orig(x,*args_fixed)
+    
+    # make new p0
+    p0 = np.asarray(p0_orig)[~fixed]
+    
+    # bounds
+    if bounds is not None:
+        try:
+            bounds[0] = np.asarray(bounds[0])[~fixed]
+            bounds[1] = np.asarray(bounds[1])[~fixed]
+        except IndexError:
+            pass
+    
+    return (fn,p0,bounds)
