@@ -12,7 +12,7 @@ class global_bdata_fitter(global_fitter):
     
     # ======================================================================= #
     def __init__(self,runs,years,fn,sharelist,npar=-1,xlims=None,rebin=1,
-                 asym_mode='c'):
+                 asym_mode='c',fixed=None):
         """
             runs:       list of run numbers
             
@@ -35,6 +35,11 @@ class global_bdata_fitter(global_fitter):
                             range on all runs.
             
             rebin:      rebinning factor on fitting and drawing data
+            
+            fixed:      list of booleans indicating if the paramter is to be 
+                        fixed to p0 value (same length as p0). Returns best 
+                        parameters in order presented, with the fixed 
+                        parameters omitted.
             
             asym_mode:  asymmetry type to calculate and fit (combined helicities only)
         """
@@ -69,7 +74,7 @@ class global_bdata_fitter(global_fitter):
             
             # select subrange
             for i,xl in enumerate(xlims):
-                tag = (xl[0]<x[i])*(x[i]<xl[1])
+                tag = (xl[0]<x[i])*(x[i]<xl[1])*dy[i]!=0
                 xnew.append(x[i][tag])
                 ynew.append(y[i][tag])
                 dynew.append(dy[i][tag])
@@ -80,4 +85,4 @@ class global_bdata_fitter(global_fitter):
             dy = np.array(dynew)
             
         # intialize
-        super(global_bdata_fitter,self).__init__(x,y,dy,fn,sharelist,npar)
+        super(global_bdata_fitter,self).__init__(x,y,dy,fn,sharelist,npar,fixed)

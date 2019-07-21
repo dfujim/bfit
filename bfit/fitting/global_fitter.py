@@ -5,7 +5,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
+# ~ from bfit.fitting.fit_bdata import _get_fixed_values
 import os, collections, warnings, textwrap
+
 
 __doc__=\
 """
@@ -85,7 +87,7 @@ class global_fitter(object):
     ndraw_pts = 500             # number of points to draw fits with
     
     # ======================================================================= #
-    def __init__(self,x,y,dy,fn,sharelist,npar=-1):
+    def __init__(self,x,y,dy,fn,sharelist,npar=-1,fixed=None):
         """
             x,y:        2-list of data sets of equal length. 
                         fmt: [[a1,a2,...],[b1,b2,...],...]
@@ -93,15 +95,21 @@ class global_fitter(object):
             dy:         list of errors in y with same format as y
             
             fn:         function handle OR list of function handles. 
-                        MUST specify inputs explicitly
-                        if list must have that len(fn) = len(x)
+                        MUST specify inputs explicitly if list must have that 
+                        len(fn) = len(x) and all function must have the same 
+                        inputs in the same order
             
             sharelist:  tuple of booleans indicating which values to share. 
                         len = number of parameters 
                         
             npar:       number of free parameters in each fitting function.
                         Set if number of parameters is not intuitable from 
-                            function code.
+                            function code
+                            
+            fixed:      list of booleans indicating if the paramter is to be 
+                        fixed to p0 value (same length as p0). Returns best 
+                        parameters in order presented, with the fixed 
+                        parameters omitted.
         """
         
         # save inputs
@@ -114,7 +122,7 @@ class global_fitter(object):
         # get number of data sets
         self.nsets = len(self.xdata)
         
-        # check in input function is iterable
+        # check if input function is iterable
         if not isinstance(self.fn,collections.Iterable):
             self.fn = [self.fn for i in range(self.nsets)]
         
@@ -135,6 +143,34 @@ class global_fitter(object):
         
         # get fit function
         self.fitfn = self._get_fitfn()
+        
+        # final values which will be fixed in reduced, flattened set of params
+        _,uidx = np.unique(self.par_index,return_index=True)
+        
+        # build and flatten fixed
+        if fixed is not None:
+            
+            # build
+            fixed = np.asarray(fixed)
+            sh = fixed.shape
+            if len(sh) == 1:    # one input
+                fixed = np.array([fixed for i in range(self.nsets)])
+            else:               # list input
+                fixed_add = [np.full(sh[1],False) for i in range(self.nsets-sh[0])]
+                fixed = np.vstack((*fixed,*fixed_add))
+            
+            # setup fixed sharing
+            for i,(f,s) in enumerate(zip(fixed.T,sharelist)): 
+                if s: 
+                    fixed[:,i] = np.full(len(f),any(f)) 
+            
+            # flatten
+            fixed = np.concatenate(fixed)
+          
+            # reshuffle input p0 to have no excess inputs
+            self.fixed = fixed[uidx] 
+        else:
+            self.fixed = np.fill(False,len(uidx))
         
     # ======================================================================= #
     def draw(self,mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,
@@ -249,14 +285,15 @@ class global_fitter(object):
                             
             returns (parameters,covariance matrix)
         """
+        
         # get rid of zero errors
         tag = self.dyccat != 0
         
         # set default p0
-        if 'p0' not in fitargs:
-            p0 = np.ones((self.nsets,self.npar))
-        else:
+        if 'p0' in fitargs:
             p0 = np.asarray(fitargs['p0'])
+        else:
+            p0 = np.ones((self.nsets,self.npar))
             
         # build and flatten p0
         sh = p0.shape
@@ -268,33 +305,71 @@ class global_fitter(object):
         
         # reshuffle input p0 to have no excess inputs
         _,uidx = np.unique(self.par_index,return_index=True)
-        fitargs['p0'] = p0[uidx] 
+        p0 = fitargs['p0'] = p0[uidx] 
         
-        # do bounds input
+        # build and flatten bounds
         try:
             bounds = np.asarray(fitargs['bounds'])
         except KeyError:
-            pass
+            bounds = None
         else:
-            
             # get expanded bounds
             bounds = self._get_expanded_bounds(bounds)
     
             # reshuffle bounds
             lo = np.concatenate(bounds[:,0,:])[uidx]
             hi = np.concatenate(bounds[:,1,:])[uidx]
-            fitargs['bounds'] = np.array((lo,hi))
+            bounds = fitargs['bounds'] = np.array((lo,hi))
+               
+        # fixed parameters
+        did_fixed = False
+        fixed = self.fixed
+        if fixed is not None and any(fixed):
             
+            # save stuff for inflation
+            did_fixed = True
+            p0 = np.copy(fitargs['p0'])
+            npar = len(p0)
+            
+            # prep inputs
+            if 'bounds' in fitargs: bounds = fitargs['bounds']
+            else:                   bounds = None
+                
+            # modify fiting inputs
+            if bounds is not None:  fitargs['bounds'] = bounds
+        
+            # get fixed versions of p0, bounds
+            fitfn,fitargs['p0'],bounds = _get_fixed_values(self.fixed,self.fitfn,p0,bounds)
+            if bounds is not None: fitargs['bounds'] = bounds
+        else:
+            fitfn = self.fitfn
+        
         # do fit
-        par,cov = curve_fit(self.fitfn,
+        par,cov = curve_fit(fitfn,
                             self.xccat[tag],
                             self.yccat[tag],
                             sigma=self.dyccat[tag],
                             absolute_sigma=True,
                             **fitargs)
+        
         # to array
         par = np.asarray(par)
         cov = np.asarray(cov)
+        
+        # inflate parameters from fixing
+        if did_fixed:
+            
+            # inflate parameters
+            par_inflated = np.zeros(npar)
+            par_inflated[fixed] = p0[fixed]
+            par_inflated[~fixed] = par
+            par = par_inflated
+            
+            # inflate cov matrix with NaN
+            nfixed_flat = np.concatenate(np.outer(~fixed,~fixed))
+            c_inflated = np.full(npar**2,np.nan)
+            c_inflated[nfixed_flat] = np.concatenate(cov)
+            cov = c_inflated.reshape(npar,-1)
         
         # expand parameters
         par_out = par[self.par_index].reshape(-1,self.npar)
@@ -495,13 +570,13 @@ class global_fitter(object):
         
         # get data without zeros
         xdata = np.array([x[dy!=0] for x,dy in zip(self.xdata,self.dydata)])
-        
+            
         # make fit function: assign parameters  
         def fitfn(unused,*par):
-            return np.concatenate([f(x,*(np.asarray(par)[p])) \
+            return np.concatenate([f(x,*np.asarray(par)[p]) \
                                     for x,p,f in zip(xdata,par_index,self.fn)])
         return fitfn
-
+        
     # ======================================================================= #
     def _get_full_depth(self,nested_list,depth=0):
         """Get maximum depth of nested list set recursively."""
@@ -528,6 +603,7 @@ class global_fitter(object):
         # set indexes for sharing.
         add = np.arange(npar,npar*nsets,npar)   # offsets to set all other pars
         for i,s in enumerate(self.sharelist):
+            
             # parameter is shared
             if s:
                 
@@ -545,9 +621,44 @@ class global_fitter(object):
                         offset += 1
                     elif not par_shared[j]:
                         par_index[j] -= offset
-                    
         return par_index
 
+# =========================================================================== #
+def _get_fixed_values(fixed,fn,p0,bounds=None):
+    """
+        Get fixed function, p0, bounds
+    """
+    
+    # save original inputs
+    fn_orig = fn
+    p0_orig = np.copy(p0)
+    npar_orig = len(p0_orig)
+            
+    # index of fixed parameters
+    idx = np.where(fixed)
+    
+    # make new fitting function with fixed parameter(s)
+    def fn(x,*args):
+        args_fixed = np.zeros(npar_orig)
+        args_fixed[fixed] = p0_orig[fixed]
+        args_fixed[~fixed] = args
+        return fn_orig(x,*args_fixed)
+    
+    # make new p0
+    p0 = np.asarray(p0_orig)[~fixed]
+    
+    # bounds
+    if bounds is not None:
+        bounds = list(bounds)
+        try:
+            bounds[0] = np.asarray(bounds[0])[~fixed]
+            bounds[1] = np.asarray(bounds[1])[~fixed]
+        except IndexError:
+            pass
+        else:
+            bounds = np.asarray(bounds)
+    
+    return (fn,p0,bounds)
 
 # Add to module docstring
 __doc__ = __doc__ % (global_fitter.__init__.__doc__,

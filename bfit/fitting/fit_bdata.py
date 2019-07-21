@@ -265,16 +265,16 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
     did_fixed = False
     if fixed is not None and any(fixed):
         
-        # dumb case: all values fixed: 
-        if all(fixed):
-            p0 = kwargs['p0']
-            cov = np.ones(len(p0),len(p0))*np.nan
-            chi = np.sum(np.square((y-fn(x,*p0))/dy))/len(y)
-            return (p0,cov,chi)
-        
         # save stuff for inflation
         did_fixed = True
         p0 = np.copy(kwargs['p0'])
+        npar = len(p0)
+        
+        # dumb case: all values fixed: 
+        if all(fixed):
+            cov = np.full((npar,npar),np.nan)
+            chi = np.sum(np.square((y-fn(x,*p0))/dy))/len(y)
+            return (p0,cov,chi)
         
         # prep inputs
         fixed = np.asarray(fixed)
@@ -298,7 +298,6 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
     if did_fixed:
         
         # inflate parameters
-        npar = len(p0)
         par_inflated = np.zeros(npar)
         par_inflated[fixed] = p0[fixed]
         par_inflated[~fixed] = par
@@ -307,10 +306,8 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
         # inflate cov matrix with NaN
         nfixed_flat = np.concatenate(np.outer(~fixed,~fixed))
         c_inflated = np.full(npar**2,np.nan)
-        cov_flat = np.concatenate(cov)
-        c_inflated[nfixed_flat] = cov_flat
-        c_inflated = c_inflated.reshape(npar,-1)
-        cov = c_inflated
+        c_inflated[nfixed_flat] = np.concatenate(cov)
+        cov = c_inflated.reshape(npar,-1)
     
     return (par,cov,chi)
     

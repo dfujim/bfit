@@ -174,7 +174,7 @@ class fitter(object):
         pars,covs,chis,gchi = fit_list(runs,years,fn,omit,rebin,sharelist,
                                        npar=npar,hist_select=hist_select,p0=p0,
                                        bounds=bounds,asym_mode=asym_mode,
-                                       fixed=fixed)
+                                       fixed=fixedlist)
         stds = [np.sqrt(np.diag(c)) for c in covs]
         
         # collect results
