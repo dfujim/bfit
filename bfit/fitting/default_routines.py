@@ -177,35 +177,6 @@ class fitter(object):
                                        fixed=fixed)
         stds = [np.sqrt(np.diag(c)) for c in covs]
         
-        # insert fixed values into fit results
-        j = 0
-        pars = pars.tolist()
-        
-        for i in range(len(data_list)):
-            
-            fixpar = np.asarray(fixedlist[i])
-            
-            if any(fixpar) and not all(fixpar):
-                
-                p = pars[i]
-                s = stds[i]
-                
-                npar_orig = len(p0[i])
-                
-                newp = np.zeros(npar_orig)
-                news = np.zeros(npar_orig)
-                
-                newp[fixpar] = np.asarray(p0[i])[fixpar]
-                newp[~fixpar] = p
-                
-                news[fixpar] = np.full(sum(fixpar),np.nan)
-                news[~fixpar] = s
-                                
-                pars[i] = newp
-                stds[i] = news
-                
-                j += 1
-        
         # collect results
         return ({'.'.join(map(str,(d[0].year,d[0].run))):[keylist,p,s,c,f] \
                     for d,p,s,c,f in zip(data_list,pars,stds,chis,fn)},gchi)
