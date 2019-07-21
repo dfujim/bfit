@@ -152,32 +152,46 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         dof = 0.
         iter_obj = tqdm(zip(runs,years,fnlist,omit,rebin,p0,bounds,xlims,fixed),
                         total=len(runs),desc='Independent Fitting')
-        for r,y,fn,om,re,p,b,xl,fix in iter_obj:
+        for r,yr,fn,om,re,p,b,xl,fix in iter_obj:
             
-            # get fixed p0,bounds,function
-            fn,p,b = _get_fixed_values(fix,fn,p,b)
+            # get data for chisq calculations
+            x,y,dy = _get_asym(bdata(r,year=yr),asym_mode,rebin=re,omit=om)
             
-            # fit
-            p,s,c = fit_single(r,y,fn,om,re,hist_select,p0=p,bounds=b,xlim=xl,
-                               asym_mode=asym_mode,**kwargs)
-            
-            # outputs
-            pars.append(p)
-            covs.append(s)
-            chis.append(c)
-            
-            # get global chi 
-            x,y,dy = _get_asym(bdata(r,year=y),asym_mode,rebin=re,omit=om)
-            
+            # get x limits
             if xl is None:  
                 xl = [-np.inf,np.inf]
             else:
                 if xl[0] is None: xl[0] = -np.inf
                 if xl[1] is None: xl[1] = np.inf
             
+            # get good data
             idx = (xl[0]<x)*(x<xl[1])*(dy!=0)
-            gchi += np.sum(np.square((y[idx]-fn(x[idx],*p))/dy[idx]))
-            dof += len(x[idx])-len(p)
+            x = x[idx]
+            y = y[idx]
+            dy = dy[idx]
+            
+            # trivial case: all parameters fixed
+            if all(fix):
+                lenp = len(p)
+                s = np.full((lenp,lenp),np.nan)
+                c = np.sum(np.square((y-fn(x,*p))/dy))/len(y)
+                
+            # fit with free parameters
+            else:            
+                # get fixed p0,bounds,function
+                fn,p,b = _get_fixed_values(fix,fn,p,b)
+                
+                # fit
+                p,s,c = fit_single(r,yr,fn,om,re,hist_select,p0=p,bounds=b,
+                                   xlim=xl,asym_mode=asym_mode,**kwargs)
+            # outputs
+            pars.append(p)
+            covs.append(s)
+            chis.append(c)
+            
+            # get global chi             
+            gchi += np.sum(np.square((y-fn(x,*p))/dy))
+            dof += len(x)-len(p)
         gchi /= dof
         
     pars = np.asarray(pars)
@@ -232,7 +246,7 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
     
     # Get data input
     data = bdata(run,year)
-    x,y,dy = _get_asym(data,asym_mode,rebin=rebin)
+    x,y,dy = _get_asym(data,asym_mode,rebin=rebin,omit=omit)
             
     # check for values with error == 0. Omit these values. 
     tag = dy != 0
@@ -253,6 +267,13 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
     
     # fixed parameters
     if fixed is not None and any(fixed):
+        
+        # dumb case: all values fixed: 
+        if all(fixed):
+            p0 = kwargs['p0']
+            cov = np.ones(len(p0),len(p0))*np.nan
+            chi = np.sum(np.square((y-fn(x,*p0))/dy))/len(y)
+            return (p0,cov,chi)
         
         # prep inputs
         fixed = np.asarray(fixed)
