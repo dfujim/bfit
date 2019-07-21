@@ -113,7 +113,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
     if any(sharelist) and len(runs)>1:
         print('Running shared parameter fitting...')
         g = global_bdata_fitter(runs,years,fnlist,sharelist,npar,xlims,
-                                asym_mode=asym_mode,rebin=rebin)
+                                asym_mode=asym_mode,rebin=rebin,fixed=fixed)
         g.fit(p0=p0,**kwargs)
         gchi,chis = g.get_chi() # returns global chi, individual chi
         pars,covs = g.get_par()
@@ -178,12 +178,8 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
                 
             # fit with free parameters
             else:            
-                # get fixed p0,bounds,function
-                fn,p,b = _get_fixed_values(fix,fn,p,b)
-                
-                # fit
                 p,s,c = fit_single(r,yr,fn,om,re,hist_select,p0=p,bounds=b,
-                                   xlim=xl,asym_mode=asym_mode,**kwargs)
+                                   xlim=xl,asym_mode=asym_mode,fixed=fix,**kwargs)
             # outputs
             pars.append(p)
             covs.append(s)
@@ -266,6 +262,7 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
         kwargs['p0'] = np.ones(fn.__code__.co_argcount-1)
     
     # fixed parameters
+    did_fixed = False
     if fixed is not None and any(fixed):
         
         # dumb case: all values fixed: 
@@ -274,6 +271,10 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
             cov = np.ones(len(p0),len(p0))*np.nan
             chi = np.sum(np.square((y-fn(x,*p0))/dy))/len(y)
             return (p0,cov,chi)
+        
+        # save stuff for inflation
+        did_fixed = True
+        p0 = np.copy(kwargs['p0'])
         
         # prep inputs
         fixed = np.asarray(fixed)
@@ -292,6 +293,24 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
     
     # get chisquared
     chi = np.sum(np.square((y-fn(x,*par))/dy))/dof
+    
+    # inflate parameters with fixed values 
+    if did_fixed:
+        
+        # inflate parameters
+        npar = len(p0)
+        par_inflated = np.zeros(npar)
+        par_inflated[fixed] = p0[fixed]
+        par_inflated[~fixed] = par
+        par = par_inflated
+        
+        # inflate cov matrix with NaN
+        nfixed_flat = np.concatenate(np.outer(~fixed,~fixed))
+        c_inflated = np.full(npar**2,np.nan)
+        cov_flat = np.concatenate(cov)
+        c_inflated[nfixed_flat] = cov_flat
+        c_inflated = c_inflated.reshape(npar,-1)
+        cov = c_inflated
     
     return (par,cov,chi)
     
