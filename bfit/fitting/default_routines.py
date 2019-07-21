@@ -101,6 +101,7 @@ class fitter(object):
         omit = []
         rebin = []
         sharelist = np.zeros(npar,dtype=bool)
+        fixedlist = []
         
         for data in data_list:
             
@@ -139,22 +140,21 @@ class fitter(object):
             # get fitting bounds
             bound = [[],[]]
             shlist = []
+            fixed = []
             for k in keylist:
                 
-                # if fixed, set bounds to p0 +/- epsilon
-                if pdict[k][3]:
-                    p0i = pdict[k][0]
-                    bound[0].append(p0i-self.epsilon)
-                    bound[1].append(p0i+self.epsilon)
-            
-                # else set to bounds 
-                else:
-                    bound[0].append(pdict[k][1])
-                    bound[1].append(pdict[k][2])
+                # bounds
+                bound[0].append(pdict[k][1])
+                bound[1].append(pdict[k][2])
+                
+                # fixed
+                fixed.append(pdict[k][3])    
                     
                 # sharelist
                 shlist.append(pdict[k][4])
+                
             bounds.append(bound)
+            fixedlist.append(fixed)
             
             # look for any sharelist
             sharelist += np.array(shlist)
@@ -168,13 +168,43 @@ class fitter(object):
             try:
                 omit.append(doptions['omit'])
             except KeyError:
-                omit.append('')
-                
+                omit.append('')                
+            
         # fit data
         pars,covs,chis,gchi = fit_list(runs,years,fn,omit,rebin,sharelist,
                                        npar=npar,hist_select=hist_select,p0=p0,
-                                       bounds=bounds,asym_mode=asym_mode)
+                                       bounds=bounds,asym_mode=asym_mode,
+                                       fixed=fixed)
         stds = [np.sqrt(np.diag(c)) for c in covs]
+        
+        # insert fixed values into fit results
+        j = 0
+        pars = pars.tolist()
+        
+        for i in range(len(data_list)):
+            
+            fixpar = np.asarray(fixedlist[i])
+            
+            if any(fixpar) and not all(fixpar):
+                
+                p = pars[i]
+                s = stds[i]
+                
+                npar_orig = len(p0[i])
+                
+                newp = np.zeros(npar_orig)
+                news = np.zeros(npar_orig)
+                
+                newp[fixpar] = np.asarray(p0[i])[fixpar]
+                newp[~fixpar] = p
+                
+                news[fixpar] = np.full(sum(fixpar),np.nan)
+                news[~fixpar] = s
+                                
+                pars[i] = newp
+                stds[i] = news
+                
+                j += 1
         
         # collect results
         return ({'.'.join(map(str,(d[0].year,d[0].run))):[keylist,p,s,c,f] \
@@ -261,7 +291,7 @@ class fitter(object):
             target = amp_beamoff/np.exp(1)
             
             x_target = x[np.sum(a>target)]
-            T1 = x_target-beam_duration
+            T1 = abs(x_target-beam_duration)
             
             # baseline: average of last 25% of runs
             base = np.mean(a[int(len(a)*0.75):])
