@@ -30,7 +30,7 @@ class FunctionPlacer(object):
         
             fn needs input parameters with keys: 
             
-                1F/2E
+                1F/2E/1W
                     peak, width, amp, base
                 20/2H
                     amp, lam, beta (optional)
