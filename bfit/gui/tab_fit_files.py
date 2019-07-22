@@ -63,6 +63,7 @@ class fit_files(object):
             modelpar_entry: Entry: model parameter list
             
             n_component:    number of fitting components (IntVar)
+            n_component_box:Spinbox for number of fitting components
             plt:            self.bfit.plt
             probe_label:    Label for probe species
             runframe:       frame for displaying fit results and inputs
@@ -134,7 +135,7 @@ class fit_files(object):
         # number of components in fit spinbox
         self.n_component = IntVar()
         self.n_component.set(1)
-        n_component_box = Spinbox(fn_select_frame,from_=1,to=20, 
+        self.n_component_box = Spinbox(fn_select_frame,from_=1,to=20, 
                 textvariable=self.n_component,width=5,
                 command=lambda:self.populate_param(force_modify=True))
         
@@ -157,7 +158,7 @@ class fit_files(object):
         self.fit_function_title_box.grid(column=c,row=0,padx=5); c+=1
         ttk.Label(fn_select_frame,text="Number of Terms:").grid(column=c,
                   row=0,padx=5,pady=5,sticky=W); c+=1
-        n_component_box.grid(column=c,row=0,padx=5,pady=5,sticky=W); c+=1
+        self.n_component_box.grid(column=c,row=0,padx=5,pady=5,sticky=W); c+=1
         fit_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
         set_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
         reset_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
@@ -1641,6 +1642,8 @@ class fit_files(object):
             self.draw_param()
         elif focus in fit_model_items:
             self.do_fit_model()
+        elif focus == self.n_component_box:
+            self.populate_param(force_modify=True)
         elif focus == self.bfit.root:
             pass
         else:
