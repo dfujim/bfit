@@ -482,6 +482,7 @@ class fetch_files(object):
                 
                 if r in self.data_lines_old.keys():
                     self.data_lines[r] = self.data_lines_old[r]
+                    self.data_lines[r].set_label()
                     del self.data_lines_old[r]
                 else:
                     self.data_lines[r] = dataline(\
@@ -866,11 +867,16 @@ class dataline(object):
     def set_label(self):
         """Set default label text"""
         
+        # get default label
+        try:
+            label = self.bfit.get_label(self.bfit.data[self.id])
+        except KeyError:
+            return
+        
         # clear old text
         self.label_entry.delete(0,'end')
         
-        # get default label
-        label = self.bfit.get_label(self.bfit.data[self.id])
+        # set
         self.label_entry.insert(0,label)
         
         # make function to clear and replace with default text
