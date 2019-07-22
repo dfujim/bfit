@@ -40,6 +40,8 @@ class fileviewer(object):
     
     asym_dict = {"Combined Helicity"        :'c',
                  "Split Helicity"           :'h',
+                 "Positive Helicity"        :'p',
+                 "Negative Helicity"        :'n',
                  "Matched Helicity"         :'hm',
                  "Shifted Split"            :'hs',
                  "Shifted Combined"         :'cs',

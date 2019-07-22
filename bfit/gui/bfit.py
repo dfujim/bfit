@@ -121,16 +121,22 @@ class bfit(object):
     volt_units = 'V'
     
     asym_dict_keys = {'20':("Combined Helicity","Split Helicity",
+                            "Positive Helicity","Negative Helicity",
                             "Matched Helicity","Raw Histograms"),
                       '1f':("Combined Helicity","Split Helicity","Raw Scans",
+                            "Positive Helicity","Negative Helicity",
                             "Shifted Split","Shifted Combined","Raw Histograms"),
                       '1n':("Combined Helicity","Split Helicity","Raw Scans",
+                            "Positive Helicity","Negative Helicity",
                             "Matched Peak Finding","Raw Histograms"),
                       '1w':("Combined Helicity","Split Helicity","Raw Scans",
+                            "Positive Helicity","Negative Helicity",
                             "Shifted Split","Shifted Combined","Raw Histograms"),
                       '2e':("Combined Hel Slopes","Combined Hel Diff","Combined Hel Raw",
+                            "Positive Helicity","Negative Helicity",
                             "Split Hel Slopes","Split Hel Diff","Split Hel Raw",),
                       '2h':("Combined Helicity","Split Helicity",
+                            "Positive Helicity","Negative Helicity",
                             "Matched Helicity",
                             "Alpha Diffusion",
                             "Combined Hel (Alpha Tag)","Split Hel (Alpha Tag)",
@@ -720,6 +726,30 @@ class bfit(object):
                 self.plt.axhline(figstyle,avg,color='k',linestyle='--')
                 ax.lines_id.append('line')
                 
+            # plot positive helicity
+            elif asym_type == 'p':
+                
+                # remove zero asym
+                ap = a.p[0]
+                tag = ap!=0
+                
+                # draw
+                self.plt.errorbar(figstyle,x[tag],ap[tag],a.p[1][tag],label=label+" ($+$)",**drawargs)
+                ax.data_id.append(data.id)
+                ax.lines_id.append(data.id)
+            
+            # plot negative helicity
+            elif asym_type == 'n':
+                
+                # remove zero asym
+                an = a.n[0]
+                tag = an!=0
+                
+                # draw
+                self.plt.errorbar(figstyle,x[tag],an[tag],a.n[1][tag],label=label+" ($-$)",**drawargs)
+                ax.data_id.append(data.id)
+                ax.lines_id.append(data.id)
+                
             # plot split helicities, shifted by baseline
             elif asym_type == 'hs':
                 
@@ -822,7 +852,6 @@ class bfit(object):
                 ax.lines_id.append('line')
                 ax.lines_id.append('line')
                 
-            
             # plot comined helicities
             elif asym_type == 'c':
                 tag = a.c[0]!=0 # remove zero asym
@@ -1375,6 +1404,7 @@ class bfit(object):
     
         # fetch files
         self.fetch_files.entry_asym_type['values'] = self.asym_dict_keys[mode]
+        self.fit_files.entry_asym_type['values'] = self.asym_dict_keys[mode]
     
     # ======================================================================= #
     def update_bfit(self):

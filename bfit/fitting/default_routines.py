@@ -69,6 +69,8 @@ class fitter(object):
             asym_mode:  input for asymmetry calculation type 
                             c: combined helicity
                             h: split helicity
+                            p: positive helicity
+                            n: negative helicity
                             
                         For 2e mode, prefix with:
                             sl_: combined timebins using slopes
@@ -247,7 +249,7 @@ class fitter(object):
         
         # get asymmetry
         asym_mode = asym_mode.replace('2e_','')
-        if asym_mode in ('c','sl_c','dif_c'):
+        if asym_mode in ('c','p','n','sl_c','dif_c'):
             x,a,da = bdataobj.asym(asym_mode)
         
         # set pulsed exp fit initial parameters
@@ -264,11 +266,15 @@ class fitter(object):
             x_target = x[np.sum(a>target)]
             T1 = abs(x_target-beam_duration)
             
-            # baseline: average of last 25% of runs
-            base = np.mean(a[int(len(a)*0.75):])
+            # bounds and amp
+            if asym_mode == 'n':
+                amp_bounds = (-np.inf,np.inf)
+                amp = -amp
+            else:
+                amp_bounds = (0,np.inf)
             
             # set values
-            par_values = {'amp':(amp,0,np.inf),
+            par_values = {'amp':(amp,*amp_bounds),
                           '1/T1':(1./T1,0,np.inf),
                           '1/T1b':(1./T1,0,np.inf),
                           'fraction_b':(0.5,0,1),
@@ -278,32 +284,38 @@ class fitter(object):
         elif fn_name in ('Lorentzian','Gaussian','BiLorentzian'):
             
             # get peak asym value
-            amin = min(a[a>0])
+            amin = min(a[a!=0])
             
             peak = x[np.where(a==amin)[0][0]]
             base = np.mean(a[:5])
-            height = abs(amin-base)
+            height = base-amin
             width = 2*abs(peak-x[np.where(a<amin+height/2)[0][0]])
+            
+            # bounds
+            if asym_mode == 'n':
+                height_bounds = (-np.inf,0)
+            else:
+                height_bounds = (0,np.inf)
             
             # set values
             if fn_name == 'Lorentzian':
                 par_values = {'peak':(peak,min(x),max(x)),
                               'width':(width,0,np.inf),
-                              'height':(height,0,np.inf),
+                              'height':(height,*height_bounds),
                               'baseline':(base,-np.inf,np.inf)
                              }
             elif fn_name == 'Gaussian':
                 par_values = {'mean':(peak,min(x),max(x)),
                               'sigma':(width,0,np.inf),
-                              'height':(height,0,np.inf),
+                              'height':(height,*height_bounds),
                               'baseline':(base,-np.inf,np.inf)
                               }
             if fn_name == 'BiLorentzian':
                 par_values = {'peak':(peak,min(x),max(x)),
                               'widthA':(width,0,np.inf),
-                              'heightA':(height,0,np.inf),
+                              'heightA':(height,*height_bounds),
                               'widthB':(width,0,np.inf),
-                              'heightB':(height,0,np.inf),
+                              'heightB':(height,*height_bounds),
                               'baseline':(base,-np.inf,np.inf)
                              }
         else:

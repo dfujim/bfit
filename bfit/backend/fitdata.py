@@ -135,7 +135,6 @@ class fitdata(object):
             self.logger.exception('Bias not found')
             self.bias = np.nan
 
-        
     # ======================================================================= #
     def set_fitpar(self,values):
         """Set fitting initial parameters

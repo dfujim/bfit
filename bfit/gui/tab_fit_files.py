@@ -28,6 +28,8 @@ import bfit.backend.colors as colors
 
 import datetime, os, traceback, warnings, logging, yaml
 
+import psutil
+
 register_matplotlib_converters()
 
 # =========================================================================== #
@@ -39,6 +41,7 @@ class fit_files(object):
             canvas_frame_id:id number of frame in canvas
             chi_threshold:  if chi > thres, set color to red
             draw_components:list of titles for labels, options to export, draw.
+            entry_asym_type:combobox for asym calculations
             fit_canvas:     canvas object allowing for scrolling 
             fit_data_tab:   containing frame (for destruction)
             fit_function_title: title of fit function to use
@@ -114,7 +117,7 @@ class fit_files(object):
         mid_fit_frame = ttk.Labelframe(fit_data_tab,
                                        text='Set Initial Parameters',pad=5)
                     
-        mid_fit_frame.grid(column=0,row=1,rowspan=5,sticky=(S,W,E,N),padx=5,pady=5)
+        mid_fit_frame.grid(column=0,row=1,rowspan=6,sticky=(S,W,E,N),padx=5,pady=5)
         
         fit_data_tab.grid_columnconfigure(0,weight=1)   # fitting space
         fit_data_tab.grid_rowconfigure(5,weight=1)
@@ -216,6 +219,14 @@ class fit_files(object):
                 text='Global ChiSq',)
         self.gchi_label = ttk.Label(gchi_label_frame,text='',justify=CENTER)
                      
+        # asymmetry calculation
+        asym_label_frame = ttk.Labelframe(fit_data_tab,pad=(60,5,5,5),
+                text='Asymmetry Calculation',)
+        self.entry_asym_type = ttk.Combobox(asym_label_frame,\
+                textvariable=self.bfit.fileviewer.asym_type,state='readonly',\
+                width=20)
+        self.entry_asym_type['values'] = ()
+        
         # other settings
         other_settings_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
                 text='Switches',)
@@ -369,13 +380,16 @@ class fit_files(object):
         gchi_label_frame.grid(column=2,row=1,columnspan=1,sticky=(E,W,N),pady=2,padx=2)
         self.gchi_label.grid(column=0,row=0)
         
-        other_settings_label_frame.grid(column=1,row=2,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        asym_label_frame.grid(column=1,row=2,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        self.entry_asym_type.grid(column=0,row=0)
+        
+        other_settings_label_frame.grid(column=1,row=3,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         set_group_check.grid(column=0,row=0,padx=5,pady=1,sticky=W)
         set_use_rebin.grid(column=0,row=1,padx=5,pady=1,sticky=W)
         
-        results_frame.grid(column=1,row=3,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
-        fit_fitresults_frame.grid(column=1,row=4,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
-        state_frame.grid(column=1,row=5,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        results_frame.grid(column=1,row=4,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        fit_fitresults_frame.grid(column=1,row=5,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        state_frame.grid(column=1,row=6,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         
         # resizing
         
@@ -575,7 +589,7 @@ class fit_files(object):
             
     # ======================================================================= #
     def do_fit(self,*args):
-                
+        # ~ print(psutil.virtual_memory()._asdict()['used']/1024**3)
         # fitter
         fitter = self.fitter
         figstyle = 'fit'
@@ -588,7 +602,7 @@ class fit_files(object):
         
         # build data list
         data_list = []
-        for key in self.fit_lines.keys():
+        for key in self.fit_lines:
             
             # get fit line
             fitline = self.fit_lines[key]
@@ -698,22 +712,22 @@ class fit_files(object):
             raise errmsg
         else:
             fit_status_window.destroy()
-        
+            del fit_status_window
+
         # set output results
         for key in fit_output.keys():
             self.bfit.data[key].set_fitresult(fit_output[key])
-            
+
         # display run results
         for key in self.fit_lines.keys():
             self.fit_lines[key].show_fit_result()
-            
+        
         # show global chi
         self.gchi_label['text'] = str(np.around(gchi,2))
         
         # enable fit checkboxes on fetch files tab
         for k in self.bfit.fetch_files.data_lines.keys():
             dline = self.bfit.fetch_files.data_lines[k]
-            
             dline.draw_fit_checkbox['state'] = 'normal'
             dline.draw_res_checkbox['state'] = 'normal'
             dline.check_fit.set(True)
@@ -734,6 +748,7 @@ class fit_files(object):
             self.plt.tight_layout(figstyle)
         
         self.bfit.draw_style.set(style)
+        # ~ print(psutil.virtual_memory()._asdict()['used']/1024**3)
             
     # ======================================================================= #
     def do_fit_model(self,*args):

@@ -320,7 +320,7 @@ def _get_asym(data,asym_mode,**asym_kwargs):
         asym_mode: mode as described above
     """
     
-    if asym_mode in ('c','sc','dc','sl_c','dif_c'):
+    if asym_mode in ('c','p','n','sc','dc','sl_c','dif_c'):
         x,y,dy = data.asym(asym_mode,**asym_kwargs)
     elif asym_mode in ('h','sh','dh','sl_h','dif_h'):
         raise RuntimeError('Split helicity fitting not yet implemented')
