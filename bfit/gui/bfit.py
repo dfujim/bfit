@@ -144,8 +144,9 @@ class bfit(object):
                        'Sample','RF Level DAC','Chi-Squared','Run Duration (s)',
                        'Start Time','Title','Year','Cryo Lift Set (mm)',
                        'Cryo Lift Read (mm)','He Mass Flow','CryoEx Mass Flow',
-                       'Needle Set (turns)','Laser Power','Target Bias (kV)',
-                       'NBM Rate (count/s)','Sample Rate (count/s)']
+                       'Needle Set (turns)','Needle Read (turns)','Laser Power',
+                       'Target Bias (kV)','NBM Rate (count/s)',
+                       'Sample Rate (count/s)']
     try: 
         bnmr_data_dir = os.environ[bnmr_archive_label]
         bnqr_data_dir = os.environ[bnqr_archive_label]
@@ -1019,39 +1020,94 @@ class bfit(object):
         self.logger.debug('Fetching plot label for "%s" (run %d)',select,data.run)
         
         # Data file options
-        if select == 'Temperature (K)':
-            label = "%d K" % int(round(data.temperature.mean))
-            
-        elif select == 'B0 Field (T)':
-            label = "%.2f T" % np.around(data.field,2)
-            
-        elif select == 'RF Level DAC':
-            label = str(int(data.bd.camp.rf_dac.mean))
-            
-        elif select == 'Platform Bias (kV)':
-            label = "%d kV" % int(np.round(data.bias))
+        try:
+            if select == 'Temperature (K)':
+                label = "%d K" % int(round(data.temperature.mean))
                 
-        elif select == 'Impl. Energy (keV)':
-            label = "%.2f keV" % np.around(data.bd.beam_kev())
+            elif select == 'B0 Field (T)':
+                if data.field > 0.1:
+                    label = "%3.2f T"% np.around(data.field,2)  # field (Tesla)
+                else:
+                    label = "%3.2f G" % np.round(data.field*1e4)# field (Gauss)
+                
+            elif select == 'RF Level DAC':
+                label = str(int(data.bd.camp.rf_dac.mean))
+                
+            elif select == 'Platform Bias (kV)':
+                label = "%d kV" % int(np.round(data.bias))
+                    
+            elif select == 'Impl. Energy (keV)':
+                label = "%.2f keV" % np.around(data.bd.beam_kev())
+                
+            elif select == 'Run Duration (s)':
+                label = "%d s" % int(data.bd.duration)
+                
+            elif select == 'Run Number':
+                label = str(data.run)
+                
+            elif select == 'Sample':
+                label = data.bd.sample
+                
+            elif select == 'Start Time':
+                label = data.bd.start_date
             
-        elif select == 'Run Duration (s)':
-            label = "%d s" % int(data.bd.duration)
+            elif select == 'Title':
+                label = data.bd.title
+                
+            elif select == '1000/T (1/K)':
+                label = '%3.3f 1/K' % np.around(1000/data.temperature.mean,2)
+                
+            elif select == 'Chi-Squared':
+                try:
+                    label = "%.2f" % np.around(data.chi)
+                except(KeyError,AttributeError):
+                    label = ""
+                
+            elif select == 'Year':
+                label = '%d' % data.year
+                
+            elif 'Cryo Lift Set (mm)' in select:
+                label = '%3.2f mm' % np.around(data.bd.camp.clift_set.mean,2)
+                
+            elif 'Cryo Lift Read (mm)' in select:
+                label = '%3.2f mm' % np.around(data.bd.camp.clift_read.mean,2)
+                
+            elif 'He Mass Flow' in select:
+                var = 'mass_read' if data.area == 'BNMR' else 'he_read'
+                label = '%3.2f' % np.around(data.bd.camp[var].mean,2)
+                
+            elif 'CryoEx Mass Flow' in select:
+                label = '%3.2f' % np.around(data.bd.camp.cryo_read.mean,2)
+                
+            elif 'Needle Set (turns)' in select:
+                label = '%3.2f turns' % np.around(data.bd.camp.needle_set.mean,2)
+                
+            elif 'Needle Read (turns)' in select:
+                label = '%3.2f turns' % np.around(data.bd.camp.needle_pos.mean,2)
+                
+            elif 'Laser Power' in select:
+                label = '%3.2f' % np.around(data.bd.epics.las_pwr.mean,2)
+                
+            elif 'Target Bias (kV)' in select:
+                label = '%3.2f kV' % np.around(data.bd.epics.target_bias.mean,2)
+                
+            elif 'NBM Rate (count/s)' in select:
+                rate = np.sum([data.hist['NBM'+h].data \
+                               for h in ('F+','F-','B-','B+')])/data.duration            
+                label = '%3.2f count/s' % np.around(rate,2)
+                
+            elif 'Sample Rate (count/s)' in select:
+                hist = ('F+','F-','B-','B+') if data.area == 'BNMR' \
+                                             else ('L+','L-','R-','R+')
+                    
+                rate = np.sum([data.hist[h].data for h in hist])/data.duration
+                label = '%3.2f count/s' % np.around(rate,2)
+                
+            else:
+                label = str(data.run)
+        except Exception as err:
+            label = '%d (Error)' % data.run
             
-        elif select == 'Run Number':
-            label = str(data.run)
-            
-        elif select == 'Sample':
-            label = data.bd.sample
-            
-        elif select == 'Start Time':
-            label = data.bd.start_date
-        
-        elif select == 'Title':
-            label = data.bd.title
-            
-        else:
-            label = str(data.run)
-        
         return label
     
     # ======================================================================= #

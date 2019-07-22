@@ -1254,6 +1254,7 @@ class fit_files(object):
         # parameter names 
         parnames = self.fitter.gen_param_names(self.fit_function_title.get(),
                                                self.n_component.get())
+        
         # Data file options
         if select == 'Temperature (K)':
             val = [data[r].temperature.mean for r in runs]
@@ -1369,6 +1370,10 @@ class fit_files(object):
         elif 'Needle Set (turns)' in select:
             val = [data[r].bd.camp.needle_set.mean for r in runs]
             err = [data[r].bd.camp.needle_set.std for r in runs]
+            
+        elif 'Needle Read (turns)' in select:
+            val = [data[r].bd.camp.needle_pos.mean for r in runs]
+            err = [data[r].bd.camp.needle_pos.std for r in runs]
             
         elif 'Laser Power' in select:
             val = [data[r].bd.epics.las_pwr.mean for r in runs]
