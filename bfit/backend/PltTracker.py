@@ -55,11 +55,8 @@ class PltTracker(object):
             kwargs: passed to fn
         """
         
-        # get active for this style
-        active_style = self.active[style]
-        
         # switch 
-        plt.figure(active_style)
+        plt.figure(self.active[style])
 
         # run function 
         output = fn(*args,**kwargs)
@@ -104,9 +101,6 @@ class PltTracker(object):
             other arguments: defaults for matplotlib.pyplot.plot
         """
         
-        # get current active 
-        active_overall = plt.gcf().number
-        
         # get active for this style
         active_style = self.active[style]
         
@@ -123,9 +117,6 @@ class PltTracker(object):
                      xlolims=xlolims, xuplims=xuplims, errorevery=errorevery, 
                      capthick=capthick, data=data, **kwargs)
         
-        # reset active plot
-        plt.figure(active_overall)
-    
         return obj
     
     # ======================================================================= #
@@ -179,9 +170,6 @@ class PltTracker(object):
             other arguments: defaults for matplotlib.pyplot.plot
         """
         
-        # get current active 
-        active_overall = plt.gcf().number
-        
         # get active for this style
         active_style = self.active[style]
         
@@ -193,9 +181,6 @@ class PltTracker(object):
         plt.figure(active_style)
         obj = plt.plot(*args,scalex=scalex, scaley=scaley, data=data,**kwargs)
         
-        # reset active plot
-        plt.figure(active_overall)
-
         return obj
 
     # ======================================================================= #

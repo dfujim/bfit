@@ -105,6 +105,7 @@ class bfit(object):
             rounding:       number of decimal places to round results to in display
             routine_mod:    module with fitting routines
             update_period:  int, update spacing in s. 
+            use_nbm:        BooleanVar, use NBM in asym calculations
             volt_unit_conv: float, conversion rate from original to display units
             volt_units:     string, units to display
     """
@@ -346,6 +347,8 @@ class bfit(object):
         self.draw_ppm.set(False)
         self.draw_standardized_res = BooleanVar()
         self.draw_standardized_res.set(False)
+        self.use_nbm = BooleanVar()
+        self.use_nbm.set(False)
         
         menu_draw = Menu(menubar)
         menubar.add_cascade(menu=menu_draw,label='Draw Mode')
@@ -364,6 +367,8 @@ class bfit(object):
                 variable=self.draw_ppm,selectcolor=colors.selected)
         menu_draw.add_checkbutton(label="Draw residuals as standardized",\
                 variable=self.draw_standardized_res,selectcolor=colors.selected)
+        menu_draw.add_checkbutton(label="Use NBM",\
+                variable=self.use_nbm,selectcolor=colors.selected)
         
         # Help
         menu_help = Menu(menubar)
@@ -559,7 +564,8 @@ class bfit(object):
         
         # get asymmetry: raw scans
         if asym_type == 'r' and data.mode in ['1f','1n','1w']:
-            a = data.asym('raw',omit=option,hist_select=self.hist_select)
+            a = data.asym('raw',omit=option,hist_select=self.hist_select,
+                          nbm=self.use_nbm.get())
             x = np.arange(len(a.p[0]))
             idx_p = a.p[0]!=0
             idx_n = a.n[0]!=0
@@ -670,7 +676,8 @@ class bfit(object):
             
         # get asymmetry: not raw scans, not 2e
         else:
-            a = data.asym(omit=option,rebin=rebin,hist_select=self.hist_select)
+            a = data.asym(omit=option,rebin=rebin,hist_select=self.hist_select,
+                          nbm=self.use_nbm.get())
             x = a[x_tag[data.mode]]
             xlabel = xlabel_dict[data.mode]
             
@@ -847,7 +854,8 @@ class bfit(object):
                 
             # draw alpha diffusion
             elif asym_type == 'ad':
-                a = data.asym('adif',rebin=rebin,hist_select=self.hist_select)
+                a = data.asym('adif',rebin=rebin,hist_select=self.hist_select,
+                              nbm=self.use_nbm.get())
                 self.plt.errorbar(figstyle,*a,label=label,**drawargs)
                 ax.data_id.append(data.id)
                 ax.lines_id.append(data.id)
@@ -856,7 +864,8 @@ class bfit(object):
             # draw alpha tagged runs
             elif asym_type in ['at_c','at_h','nat_c','nat_h']:
                 
-                a = data.asym('atag',rebin=rebin,hist_select=self.hist_select)
+                a = data.asym('atag',rebin=rebin,hist_select=self.hist_select,
+                              nbm=self.use_nbm.get())
                 t = a.time_s
                 
                 if asym_type == 'at_c':
@@ -930,11 +939,11 @@ class bfit(object):
         if data.mode != '2e' and asym_type != 'rhist':
             self.plt.xlabel(figstyle,xlabel)
             
-            if asym_type in ylabel_dict.keys():
-                self.plt.ylabel(figstyle,ylabel_dict[asym_type])
-            else:
-                self.plt.ylabel(figstyle,"Asymmetry")
-                
+            if asym_type in ylabel_dict.keys(): label = ylabel_dict[asym_type]
+            else:                               label = "Asymmetry"
+            if self.use_nbm.get():              label = 'NBM ' + label    
+            self.plt.ylabel(figstyle,label)    
+            
         self.plt.tight_layout(figstyle)
         self.plt.legend(figstyle)
         
