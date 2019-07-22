@@ -143,11 +143,10 @@ class fetch_files(object):
         check_draw = ttk.Button(right_frame,text='Draw',\
                 command=lambda:self.draw_all('data'),pad=5)
         
-        check_set = ttk.Button(right_frame,text='Set',\
-                command=self.set_all)
         check_rebin_label = ttk.Label(right_frame,text="SLR Rebin:",pad=5)
         check_rebin_box = Spinbox(right_frame,from_=1,to=100,width=3,\
-                textvariable=self.check_rebin)
+                textvariable=self.check_rebin,
+                command=self.set_all)
         check_bin_remove_entry = ttk.Entry(right_frame,\
                 textvariable=self.check_bin_remove,width=20)
         
@@ -215,12 +214,10 @@ class fetch_files(object):
         check_rebin_label.grid(     column=0,row=r)
         check_rebin_box.grid(       column=1,row=r); r+= 1
         check_bin_remove_entry.grid(column=0,row=r,sticky=(N),columnspan=2); r+= 1
-        check_set.grid(             column=0,row=r,sticky=(N,E,W),columnspan=2)
         bigright_frame.grid(        rowspan=2,sticky=(N,E,W))
         
         check_rebin_box.grid_configure(padx=5,pady=5,sticky=(E,W))
         check_rebin_label.grid_configure(padx=5,pady=5,sticky=(E,W))
-        check_set.grid_configure(padx=5,pady=5,sticky=(E,W))
         
         # resizing
         fetch_data_tab.grid_columnconfigure(0, weight=1)        # main area
@@ -519,19 +516,19 @@ class fetch_files(object):
         """Switch between various functions of the enter button. """
         
         # check where the focus is
-        focus_id = str(self.bfit.root.focus_get())
+        focus_id = self.bfit.root.focus_get()
         
         # run or year entry
-        if focus_id in [str(self.entry_run), str(self.entry_year)]:
+        if focus_id in [self.entry_run, self.entry_year]:
             self.logger.debug('Focus is: run or year entry')
             self.get_data()
         
         # checked rebin or checked run omission
-        elif focus_id in [str(self.check_rebin_box),\
-                          str(self.check_bin_remove_entry)]:
+        elif focus_id in [self.check_rebin_box,\
+                          self.check_bin_remove_entry]:
             self.logger.debug('Focus is: checked rebin or checked run omission')
             self.set_all()
-        elif focus_id == str(self.check_all_box):
+        elif focus_id == self.check_all_box:
             self.logger.debug('Focus is: check all box')
             self.draw_all()
         else:
@@ -738,6 +735,7 @@ class dataline(object):
         rebin_label = ttk.Label(line_frame,text="Rebin:",pad=5)
         rebin_box = Spinbox(line_frame,from_=1,to=100,width=3,\
                 textvariable=self.rebin)
+        self.rebin.set(self.bfit.fetch_files.check_rebin.get())
                 
         info_str = "%d  %d  %3d K  %s  %s" % (self.year,self.run,
                                               self.temperature,field_text,
