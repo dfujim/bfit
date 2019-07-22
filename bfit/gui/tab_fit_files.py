@@ -710,13 +710,14 @@ class fit_files(object):
         # show global chi
         self.gchi_label['text'] = str(np.around(gchi,2))
         
-        # enable draw buttons on fetch files tab
+        # enable fit checkboxes on fetch files tab
         for k in self.bfit.fetch_files.data_lines.keys():
             dline = self.bfit.fetch_files.data_lines[k]
             
             dline.draw_fit_checkbox['state'] = 'normal'
             dline.draw_res_checkbox['state'] = 'normal'
             dline.check_fit.set(True)
+        self.bfit.fetch_files.check_state_fit.set(True)
         
         # draw fit results
         style = self.bfit.draw_style.get()
