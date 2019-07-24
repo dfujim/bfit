@@ -722,6 +722,13 @@ class fileviewer(object):
                 pass
                 
             try:
+                val = int(data.ppg.yconst.mean)
+                data_ne['Parameter y (constant)'] = '%d' % val
+                key_order_ne.append('Parameter y (constant)')
+            except AttributeError:
+                pass
+                
+            try:
                 val = str(data.ppg.freqfn_f1.units)
                 data_ne['CH1 Frequency Function(x)'] = val
                 key_order_ne.append('CH1 Frequency Function(x)')
