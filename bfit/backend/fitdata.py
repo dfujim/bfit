@@ -32,7 +32,6 @@ class fitdata(object):
             field_std:  magnetic field standard deviation in T (float)
             bias:       platform bias in kV (float)
             bias_std:   platform bias in kV (float)
-            mode:       run mode
             
             id:         key for unique idenfication (str)    
             fitfnname:  function (str)
@@ -135,10 +134,6 @@ class fitdata(object):
         except AttributeError:
             self.logger.exception('Bias not found')
             self.bias = np.nan
-            
-        # get run mode 
-        ppg_mode = self.bd.ppg.mode.units
-        self.mode = ppg_mode if ppg_mode else self.bd.mode
 
     # ======================================================================= #
     def set_fitpar(self,values):
