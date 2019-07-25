@@ -13,8 +13,7 @@ import bfit.backend.colors as colors
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import logging
-import time,datetime
+import time,datetime,os,logging,glob
 
 
 __doc__="""
@@ -576,20 +575,49 @@ class fetch_files(object):
     def string2run(self,string):
         """Parse string, return list of run numbers"""
         
+        # standardize deliminators
         full_string = string.replace(',',' ').replace(';',' ')
         full_string = full_string.replace(':','-')
         part_string = full_string.split()
         
+        # get list of run numbers
         run_numbers = []
         for s in part_string:
+            
+            # select a range
             if '-' in s:
+                
+                # get runs in range
                 try:
-                    rn_lims = [int(s2) for s2 in s.split('-')]
+                    spl = s.split('-')
+                    
+                    # look for "range to current run"
+                    if spl[1] == '':
+                        
+                        # look for latest run by run number
+                        if int(spl[0]) < 45000:
+                            dirloc = os.environ[self.bfit.bnmr_archive_label]
+                        else:
+                            dirloc = os.environ[self.bfit.bnqr_archive_label]
+                            
+                        runlist = glob.glob(os.path.join(dirloc,
+                                                         str(self.year.get()),
+                                                         '*.msr'))
+                        spl[1] = max([int(os.path.splitext(os.path.basename(r))[0]) 
+                                   for r in runlist])
+                        
+                    rn_lims = tuple(map(int,spl))
+                    
+                # get bad range first value
                 except ValueError:
                     run_numbers.append(int(s.replace('-','')))
+                
+                # get range of runs
                 else:
                     rns = np.arange(rn_lims[0],rn_lims[1]+1).tolist()
                     run_numbers.extend(rns)
+            
+            # get single run
             else:
                 run_numbers.append(int(s))
         

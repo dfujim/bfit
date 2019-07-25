@@ -242,8 +242,8 @@ class fileviewer(object):
         
         if run < 40000:
             
-            # look for latest run by run number
             runlist = []
+            # look for latest run by run number
             for d in [self.bfit.bnmr_archive_label,self.bfit.bnqr_archive_label]:
                 dirloc = os.environ[d]
                 runlist.extend(glob.glob(os.path.join(dirloc,str(year),'0%d*.msr'%run)))
