@@ -246,7 +246,7 @@ class fileviewer(object):
             runlist = []
             for d in [self.bfit.bnmr_archive_label,self.bfit.bnqr_archive_label]:
                 dirloc = os.environ[d]
-                runlist.extend(glob.glob(os.path.join(dirloc,str(year),'0'+str(run))+'*.msr'))
+                runlist.extend(glob.glob(os.path.join(dirloc,str(year),'%06d.msr'%run)))
             runlist = [int(os.path.splitext(os.path.basename(r))[0]) for r in runlist]
             
             # get latest run by max run number
@@ -282,7 +282,8 @@ class fileviewer(object):
         # get data: headers
         mode = mode_dict[data.mode]
         try:
-            if data.ppg.rf_enable.mean and data.mode == '20':
+            if data.ppg.rf_enable.mean and data.mode == '20': and \
+                                                        data.ppg.rf_on.mean > 0:
                 mode = "Hole Burning"
         except AttributeError:
             pass
