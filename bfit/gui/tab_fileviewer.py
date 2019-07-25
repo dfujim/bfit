@@ -246,7 +246,7 @@ class fileviewer(object):
             runlist = []
             for d in [self.bfit.bnmr_archive_label,self.bfit.bnqr_archive_label]:
                 dirloc = os.environ[d]
-                runlist.extend(glob.glob(os.path.join(dirloc,str(year),'%06d.msr'%run)))
+                runlist.extend(glob.glob(os.path.join(dirloc,str(year),'0%d*.msr'%run)))
             runlist = [int(os.path.splitext(os.path.basename(r))[0]) for r in runlist]
             
             # get latest run by max run number
