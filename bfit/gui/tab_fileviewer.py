@@ -282,7 +282,7 @@ class fileviewer(object):
         # get data: headers
         mode = mode_dict[data.mode]
         try:
-            if data.ppg.rf_enable.mean and data.mode == '20': and \
+            if data.ppg.rf_enable.mean and data.mode == '20' and \
                                                         data.ppg.rf_on.mean > 0:
                 mode = "Hole Burning"
         except AttributeError:
