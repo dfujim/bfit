@@ -807,8 +807,12 @@ class fit_files(object):
         if len(p0) > npar:  p0 = p0[:npar]
             
         # fit model 
+        if all(np.isnan(yerrs)): yerrs = None
+        
         par,cov = curve_fit(model,xvals,yvals,sigma=yerrs,absolute_sigma=True,p0=p0)
         std = np.diag(cov)**0.5
+        
+        if yerrs is None:   yerrs = np.ones(len(xvals))
         chi = np.sum(((model(xvals,*par)-yvals)/yerrs)**2)/(len(xvals)-npar)
         
         # display results 
