@@ -1009,9 +1009,9 @@ class bfit(object):
         # settings
         title_dict = {'c':"combined",'p':"positive_helicity",
                         'n':"negative_helicity",'time_s':'time_s',
-                        'freq':"freq_Hz",'mV':'voltage_mV'}
+                        'freq':"freq_Hz",'mV':'voltage_mV','xpar':'x_parameter'}
                         
-        index_list = ['time_s','freq_Hz','voltage_mV'] 
+        index_list = ['time_s','freq_Hz','voltage_mV','x_parameter'] 
         
         # get asymmetry
         asym = data.asym(hist_select=self.hist_select)
