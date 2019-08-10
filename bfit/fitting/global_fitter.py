@@ -170,7 +170,7 @@ class global_fitter(object):
             # reshuffle input p0 to have no excess inputs
             self.fixed = fixed[uidx] 
         else:
-            self.fixed = np.fill(False,len(uidx))
+            self.fixed = np.full(len(uidx),False)
         
     # ======================================================================= #
     def draw(self,mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,

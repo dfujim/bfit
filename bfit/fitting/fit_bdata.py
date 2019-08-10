@@ -133,8 +133,10 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
             p0 = [p0]*nruns
         
         # check xlims shape - should match number of runs
-        if len(np.asarray(xlims).shape) < 2:
-            xlims = [xlims for i in range(len(runs))]
+        if xlims is None:
+            xlims = [None]*nruns
+        elif len(np.asarray(xlims).shape) < 2:
+            xlims = [xlims for i in range(nruns)]
         else:
             xlims = list(xlims)
             xlims.extend([xlims[-1] for i in range(len(runs)-len(xlims))])
@@ -144,12 +146,15 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
             fixed = np.asarray(fixed)
             if len(fixed.shape) < 2:
                 fixed = [fixed]*nruns
+        else:
+            fixed = [[False]*npar]*nruns
         
         pars = []
         covs = []
         chis = []
         gchi = 0.
         dof = 0.
+        
         iter_obj = tqdm(zip(runs,years,fnlist,omit,rebin,p0,bounds,xlims,fixed),
                         total=len(runs),desc='Independent Fitting')
         for r,yr,fn,om,re,p,b,xl,fix in iter_obj:
