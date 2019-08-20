@@ -709,24 +709,30 @@ class dataline(object):
             self.field = np.around(bdfit.field,2)
             
             try:
-                field_text = "%3.2f T"%self.field
+                field_text = "%3.2fT"%self.field
             except TypeError:
                 field_text = ' '
         else:
             self.field = np.round(bdfit.field*1e4)
             
             try:
-                field_text = "%3.0f G"%self.field
+                field_text = "%3.0fG"%self.field
             except TypeError:
                 field_text = ' '
         
         # bias
         self.bias = self.bdfit.bias
         try:
-            bias_text = "%4.2f kV"%self.bias
+            bias_text = "%4.2fkV"%self.bias
         except TypeError:
             bias_text = ' '
         
+        # duration 
+        try: 
+            duration_text = "%02d:%02d" % divmod(self.bdfit.duration, 60)
+        except AttributeError:
+            duration_text = ' '
+            
         # build objects
         line_frame = ttk.Frame(fetch_tab_frame,pad=(5,0))
         
@@ -765,9 +771,9 @@ class dataline(object):
                 textvariable=self.rebin)
         self.rebin.set(self.bfit.fetch_files.check_rebin.get())
                 
-        info_str = "%d  %d  %3d K  %s  %s" % (self.year,self.run,
+        info_str = "%d.%d, %3dK, %s, %s, %s" % (self.year,self.run,
                                               self.temperature,field_text,
-                                              bias_text)
+                                              bias_text,duration_text)
         self.check_state.set(bfit.fetch_files.check_state.get())
         check = ttk.Checkbutton(line_frame,text=info_str,variable=self.check_state,\
                 onvalue=True,offvalue=False,pad=5)
