@@ -2,6 +2,7 @@
 foreground      = 'white'
 background      = 'black'
 fieldbackground = 'grey30'
+focusbackground = 'grey'
 
 selected        = 'green2'
 

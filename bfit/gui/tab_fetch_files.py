@@ -734,7 +734,9 @@ class dataline(object):
             duration_text = ' '
             
         # build objects
-        line_frame = ttk.Frame(fetch_tab_frame,pad=(5,0))
+        line_frame = Frame(fetch_tab_frame)
+        line_frame.bind('<Enter>', self.on_line_enter)
+        line_frame.bind('<Leave>', self.on_line_leave)
         
         bin_remove_entry = ttk.Entry(line_frame,textvariable=self.bin_remove,\
                 width=17)
@@ -928,6 +930,12 @@ class dataline(object):
         self.label_entry.bind('<FocusOut>', on_focusout_fn_lab)
         self.label_entry.config(foreground=colors.entry_grey)
         
-
-
-
+    # ======================================================================= #
+    def on_line_enter(self,*args):
+        """Make the dataline grey on mouseover"""
+        self.line_frame.config(bg=colors.focusbackground)
+    
+    # ======================================================================= #
+    def on_line_leave(self,*args):
+        """Make the dataline black on stop mouseover"""
+        self.line_frame.config(bg=colors.background)
