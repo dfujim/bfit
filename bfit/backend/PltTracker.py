@@ -33,6 +33,7 @@ class PltTracker(object):
         event.canvas.mpl_disconnect(event.canvas.user_active)
         
         # close the winow
+        plt.figure(number).clf()
         plt.close(number)
         
         # remove from list 
