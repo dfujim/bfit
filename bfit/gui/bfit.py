@@ -143,6 +143,29 @@ class bfit(object):
                             "Combined Hel (!Alpha Tag)","Split Hel (!Alpha Tag)",
                             "Raw Histograms")}
     
+    asym_dict = {"Combined Helicity"        :'c',
+                 "Split Helicity"           :'h',
+                 "Positive Helicity"        :'p',
+                 "Negative Helicity"        :'n',
+                 "Matched Helicity"         :'hm',
+                 "Shifted Split"            :'hs',
+                 "Shifted Combined"         :'cs',
+                 "Matched Peak Finding"     :'hp',
+                 "Raw Scans"                :'r',
+                 "Raw Histograms"           :'rhist',
+                 "Combined Hel Raw"         :'raw_c',
+                 "Combined Hel Slopes"      :'sl_c',
+                 "Combined Hel Diff"        :'dif_c',
+                 "Split Hel Raw"            :'raw_h',
+                 "Split Hel Slopes"         :'sl_h',
+                 "Split Hel Diff"           :'dif_h',
+                 "Alpha Diffusion"          :'ad',
+                 "Combined Hel (Alpha Tag)" :"at_c",
+                 "Split Hel (Alpha Tag)"    :"at_h",
+                 "Combined Hel (!Alpha Tag)":"nat_c",
+                 "Split Hel (!Alpha Tag)"   :"nat_h",
+                 }
+    
     data = {}   # for fitdata objects
     
     # define draw componeents in draw_param and labels
@@ -1042,10 +1065,10 @@ class bfit(object):
             pass
     
     # ======================================================================= #
-    def get_asym_mode(self):
+    def get_asym_mode(self,obj):
         """ Get asymmetry calculation type"""
-        id_string = self.fileviewer.asym_type.get()
-        return self.fileviewer.asym_dict[id_string]
+        id_string = obj.asym_type.get()
+        return self.asym_dict[id_string]
         
     # ======================================================================= #
     def get_label(self,data):
@@ -1368,44 +1391,39 @@ class bfit(object):
         
         # fileviewer
         if tab_id == 0:
-            try:
-                self.set_asym_calc_mode_box(self.fileviewer.data.mode)
-            except AttributeError:
-                pass
+            pass
             
         # fetch files
         elif tab_id == 1:
-            try:
-                k = list(self.data.keys())[0]
-            except IndexError:
-                pass
-            else:   
-                self.set_asym_calc_mode_box(self.data[k].mode)
-            
+            pass
+        
         # fit files
         elif tab_id == 2:
             self.fit_files.populate()
      
     # ======================================================================= #
-    def set_asym_calc_mode_box(self,mode,*args):
+    def set_asym_calc_mode_box(self,mode,parent,*args):
         """Set asym combobox values. Asymmetry calculation and draw modes."""
         
-        self.logger.debug('Setting fileviewer asym combobox values for mode '+\
+        self.logger.debug('Setting asym combobox values for mode '+\
                          '"%s"',mode)
-        fv = self.fileviewer
     
-        # selection: switch if run mode not possible
+        # get list of possible run modes
         modes = self.asym_dict_keys[mode]
-        if fv.asym_type.get() not in modes:
-            fv.asym_type.set(modes[0])
+        
+        # prune the list to match only ok files
+        if parent == self.fit_files:
+            modes2 = modes
+            modes = [m for m in modes2 if self.asym_dict[m] in \
+                                        self.fit_files.fitter.valid_asym_modes]
+            
+        # selection: switch if run mode not possible
+        if parent.asym_type.get() not in modes:
+            parent.asym_type.set(modes[0])
     
-        # fileviewer
-        fv.entry_asym_type['values'] = self.asym_dict_keys[mode]
-    
-        # fetch files
-        self.fetch_files.entry_asym_type['values'] = self.asym_dict_keys[mode]
-        self.fit_files.entry_asym_type['values'] = self.asym_dict_keys[mode]
-    
+        # set list
+        parent.entry_asym_type['values'] = modes
+        
     # ======================================================================= #
     def update_bfit(self):
         """Check pip for updated version"""

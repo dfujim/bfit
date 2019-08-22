@@ -28,8 +28,6 @@ import bfit.backend.colors as colors
 
 import datetime, os, traceback, warnings, logging, yaml
 
-import psutil
-
 register_matplotlib_converters()
 
 # =========================================================================== #
@@ -38,6 +36,7 @@ class fit_files(object):
     """
         Data fields:
             annotation:     stringvar: name of quantity for annotating parameters 
+            asym_type:      asymmetry calculation type
             canvas_frame_id:id number of frame in canvas
             chi_threshold:  if chi > thres, set color to red
             draw_components:list of titles for labels, options to export, draw.
@@ -222,8 +221,10 @@ class fit_files(object):
         # asymmetry calculation
         asym_label_frame = ttk.Labelframe(fit_data_tab,pad=(60,5,5,5),
                 text='Asymmetry Calculation',)
+        self.asym_type = StringVar()
+        self.asym_type.set('')
         self.entry_asym_type = ttk.Combobox(asym_label_frame,\
-                textvariable=self.bfit.fileviewer.asym_type,state='readonly',\
+                textvariable=self.asym_type,state='readonly',\
                 width=20)
         self.entry_asym_type['values'] = ()
         
@@ -433,6 +434,7 @@ class fit_files(object):
             parlst = [p for p in self.fitter.gen_param_names(
                                                 self.fit_function_title.get(),
                                                 self.n_component.get())]
+                                                
         # no paramteters: empty out the variable list
         except KeyError:
             share_var = {}
@@ -589,7 +591,6 @@ class fit_files(object):
             
     # ======================================================================= #
     def do_fit(self,*args):
-        # ~ print(psutil.virtual_memory()._asdict()['used']/1024**3)
         # fitter
         fitter = self.fitter
         figstyle = 'fit'
@@ -704,12 +705,12 @@ class fit_files(object):
             fit_output,gchi = fitter(fn_name=fn_name,ncomp=ncomp,
                                      data_list=data_list,
                                      hist_select=self.bfit.hist_select,
-                                     asym_mode=self.bfit.get_asym_mode())
+                                     asym_mode=self.bfit.get_asym_mode(self))
         except Exception as errmsg:
             self.logger.exception('Fitting error')
             fit_status_window.destroy()
             messagebox.showerror("Error",str(errmsg))
-            raise errmsg
+            raise errmsg from None
         else:
             fit_status_window.destroy()
             del fit_status_window
@@ -748,7 +749,6 @@ class fit_files(object):
             self.plt.tight_layout(figstyle)
         
         self.bfit.draw_style.set(style)
-        # ~ print(psutil.virtual_memory()._asdict()['used']/1024**3)
             
     # ======================================================================= #
     def do_fit_model(self,*args):
@@ -929,7 +929,7 @@ class fit_files(object):
         style = self.bfit.draw_style.get()
 
         # get residuals
-        x,a,da = data.asym(self.bfit.get_asym_mode(),rebin=rebin)
+        x,a,da = data.asym(self.bfit.get_asym_mode(self),rebin=rebin)
         res = a - fn(x,*fit_par)
             
         # set x axis
@@ -1041,7 +1041,7 @@ class fit_files(object):
             drawargs['linestyle'] = '-'
         
         # draw
-        asym_mode = self.bfit.get_asym_mode()
+        asym_mode = self.bfit.get_asym_mode(self)
         t,a,da = data.asym(asym_mode)
         
         fitx = np.arange(self.n_fitx_pts)/float(self.n_fitx_pts)*\
@@ -1091,13 +1091,13 @@ class fit_files(object):
         except UnboundLocalError as err:
             self.logger.error('Bad input parameter selection')
             messagebox.showerror("Error",'Select two input parameters')
-            raise err
+            raise err from None
         except (KeyError,AttributeError) as err:
             self.logger.error('Parameter "%s or "%s" not found for drawing model',
                               xstr,ystr)
             messagebox.showerror("Error",
                     'Parameter "%s" or "%s" not found' % (xstr,ystr))
-            raise err
+            raise err from None
 
         # get fit function
         fn = self.model_fn
@@ -1146,13 +1146,13 @@ class fit_files(object):
         except UnboundLocalError as err:
             self.logger.error('Bad input parameter selection')
             messagebox.showerror("Error",'Select two input parameters')
-            raise err
+            raise err from None
         except (KeyError,AttributeError) as err:
             self.logger.error('Parameter "%s or "%s" not found for drawing',
                               xdraw,ydraw)
             messagebox.showerror("Error",
                     'Drawing parameter "%s" or "%s" not found' % (xdraw,ydraw))
-            raise err
+            raise err from None
             
         # get annotation
         if ann != '':
@@ -1164,7 +1164,7 @@ class fit_files(object):
                 self.logger.error('Bad input annotation value "%s"',ann)
                 messagebox.showerror("Error",
                         'Annotation "%s" not found' % (ann))
-                raise err
+                raise err from None
         
         # fix annotation values (blank to none)
         else:
@@ -1803,11 +1803,11 @@ class fitline(object):
         # get list of parameters and initial values
         try:
             plist = self.get_new_parameters()
-        except KeyError:
+        except KeyError as err:
             return          # returns if no parameters found
         except RuntimeError as err:
             messagebox.showerror('RuntimeError',err)
-            return
+            raise err from None
         else:
             n_old_par = len(self.parlabels)
             n_new_par = len(plist)
@@ -2010,7 +2010,7 @@ class fitline(object):
         
         # get init values
         values = fitter.gen_init_par(fn_title,ncomp,self.bfit.data[run].bd,
-                                     self.bfit.get_asym_mode())
+                                     self.bfit.get_asym_mode(self.bfit.fit_files))
         
         # set to data
         self.bfit.data[run].set_fitpar(values)

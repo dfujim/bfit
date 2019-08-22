@@ -36,6 +36,9 @@ class fitter(object):
     fn_list = {}
     epsilon = 1e-9  # for fixing parameters
 
+    # define list of ok run modes 
+    valid_asym_modes = ('c','p','n','sl_c','dif_c')
+
     # ======================================================================= #
     def __init__(self,probe_species='8Li'):
         """
@@ -248,9 +251,7 @@ class fitter(object):
             raise RuntimeError(errmsg)
         
         # get asymmetry
-        asym_mode = asym_mode.replace('2e_','')
-        if asym_mode in ('c','p','n','sl_c','dif_c'):
-            x,a,da = bdataobj.asym(asym_mode)
+        x,a,da = bdataobj.asym(asym_mode)
         
         # set pulsed exp fit initial parameters
         if fn_name in ('Exp','Bi Exp','Str Exp'):

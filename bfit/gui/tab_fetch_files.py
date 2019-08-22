@@ -25,6 +25,7 @@ class fetch_files(object):
     """
         Data fields:
             
+            asym_type: drawing style
             canvas_frame_id: id number of frame in canvas
             check_rebin: IntVar for handling rebin aspect of checkall
             check_bin_remove: StringVar for handing omission of 1F data
@@ -232,8 +233,10 @@ class fetch_files(object):
         # asymmetry calculation
         style_frame = ttk.Labelframe(bigright_frame,text='Asymmetry Calculation',\
                 pad=5)
+        self.asym_type = StringVar()
+        self.asym_type.set('')
         self.entry_asym_type = ttk.Combobox(style_frame,\
-                textvariable=self.bfit.fileviewer.asym_type,state='readonly',\
+                textvariable=self.asym_type,state='readonly',\
                 width=20)
         self.entry_asym_type['values'] = ()
         
@@ -464,7 +467,8 @@ class fetch_files(object):
             self.logger.warning(s)
             raise RuntimeError(s)
         self.runmode_label['text'] = self.runmode_relabel[self.runmode]
-        self.bfit.set_asym_calc_mode_box(self.runmode)
+        self.bfit.set_asym_calc_mode_box(self.runmode,self)
+        self.bfit.set_asym_calc_mode_box(self.runmode,self.bfit.fit_files)
         
         keys_list = list(self.bfit.data.keys())
         keys_list.sort()
@@ -877,8 +881,8 @@ class dataline(object):
             data.read()
             
             # get data file run type
-            d = self.bfit.fileviewer.asym_type.get()
-            d = self.bfit.fileviewer.asym_dict[d]
+            d = self.asym_type.get()
+            d = self.bfit.asym_dict[d]
             
             if self.bin_remove.get() == self.bin_remove_starter_line:
                 self.bfit.draw(data,d,self.rebin.get(),figstyle=figstyle,

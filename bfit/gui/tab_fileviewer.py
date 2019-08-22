@@ -38,28 +38,6 @@ class fileviewer(object):
             data: bdata object for drawing
     """
     
-    asym_dict = {"Combined Helicity"        :'c',
-                 "Split Helicity"           :'h',
-                 "Positive Helicity"        :'p',
-                 "Negative Helicity"        :'n',
-                 "Matched Helicity"         :'hm',
-                 "Shifted Split"            :'hs',
-                 "Shifted Combined"         :'cs',
-                 "Matched Peak Finding"     :'hp',
-                 "Raw Scans"                :'r',
-                 "Raw Histograms"           :'rhist',
-                 "Combined Hel Raw"         :'raw_c',
-                 "Combined Hel Slopes"      :'sl_c',
-                 "Combined Hel Diff"        :'dif_c',
-                 "Split Hel Raw"            :'raw_h',
-                 "Split Hel Slopes"         :'sl_h',
-                 "Split Hel Diff"           :'dif_h',
-                 "Alpha Diffusion"          :'ad',
-                 "Combined Hel (Alpha Tag)" :"at_c",
-                 "Split Hel (Alpha Tag)"    :"at_h",
-                 "Combined Hel (!Alpha Tag)":"nat_c",
-                 "Split Hel (!Alpha Tag)"   :"nat_h",
-                 }
     default_export_filename = "%d_%d.csv" # year_run.csv
     
     # ======================================================================= #
@@ -187,7 +165,7 @@ class fileviewer(object):
         """Get data then draw."""
         if self.get_data():
             self.bfit.draw(self.data,
-                    self.asym_dict[self.asym_type.get()],rebin=self.rebin.get(),
+                    self.bfit.asym_dict[self.asym_type.get()],rebin=self.rebin.get(),
                     label=self.bfit.get_label(self.data),
                     figstyle=figstyle)
             
@@ -275,7 +253,7 @@ class fileviewer(object):
             return False
         
         # set draw parameters
-        self.bfit.set_asym_calc_mode_box(data.mode)
+        self.bfit.set_asym_calc_mode_box(data.mode,self)
         
         # NE -----------------------------------------------------------------
         
