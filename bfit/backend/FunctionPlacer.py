@@ -274,7 +274,6 @@ class FunctionPlacer(object):
             plt.close(self.fig.number)
             self.endfn(self.p0,self.base)
         
-
 class dummybaseline(object):
     def __init__(self):pass
     def set_ydata(self,y) : pass

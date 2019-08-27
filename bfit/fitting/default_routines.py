@@ -23,9 +23,9 @@ class fitter(object):
                         '2e':('Lorentzian','Gaussian','BiLorentzian',)}
      
     # Define names of fit parameters:
-    param_names = {     'Exp'       :('1/T1','amp'),
-                        'Bi Exp'    :('1/T1','1/T1b','fraction_b','amp'),
-                        'Str Exp'   :('1/T1','beta','amp'),
+    param_names = {     'Exp'       :('1_T1','amp'),
+                        'Bi Exp'    :('1_T1','1_T1b','fraction_b','amp'),
+                        'Str Exp'   :('1_T1','beta','amp'),
                         'Lorentzian':('peak','width','height','baseline'),
                         'BiLorentzian':('peak','widthA','heightA',
                                                'widthB','heightB','baseline'),
@@ -37,7 +37,7 @@ class fitter(object):
     epsilon = 1e-9  # for fixing parameters
 
     # define list of ok run modes 
-    valid_asym_modes = ('c','p','n','sl_c','dif_c')
+    valid_asym_modes = ('c','p','n','sl_c','dif_c',)
 
     # ======================================================================= #
     def __init__(self,probe_species='8Li'):
@@ -276,8 +276,8 @@ class fitter(object):
             
             # set values
             par_values = {'amp':(amp,*amp_bounds),
-                          '1/T1':(1./T1,0,np.inf),
-                          '1/T1b':(1./T1,0,np.inf),
+                          '1_T1':(1./T1,0,np.inf),
+                          '1_T1b':(1./T1,0,np.inf),
                           'fraction_b':(0.5,0,1),
                           'beta':(0.5,0,1)}
                          
