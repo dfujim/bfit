@@ -881,7 +881,7 @@ class dataline(object):
             data.read()
             
             # get data file run type
-            d = self.asym_type.get()
+            d = self.bfit.fetch_files.asym_type.get()
             d = self.bfit.asym_dict[d]
             
             if self.bin_remove.get() == self.bin_remove_starter_line:
