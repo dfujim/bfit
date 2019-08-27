@@ -1354,9 +1354,9 @@ class fit_files(object):
                 
             # get T1 and beta from that component average
             for r in runs:
-                T1i = data[r].fitpar['res']['1/T1'+comp_num]
+                T1i = data[r].fitpar['res']['1_T1'+comp_num]
                 T1 = 1/T1i
-                dT1 = data[r].fitpar['dres']['1/T1'+comp_num]/(T1i**2)
+                dT1 = data[r].fitpar['dres']['1_T1'+comp_num]/(T1i**2)
                 beta = data[r].fitpar['res']['beta'+comp_num]
                 dbeta = data[r].fitpar['dres']['beta'+comp_num]
                 
@@ -1454,9 +1454,12 @@ class fit_files(object):
         with open(filename,'r') as fid:
             from_file = yaml.safe_load(fid)
     
+        # clear loaded runs
+        fetch_tab = self.bfit.fetch_files
+        fetch_tab.remove_all()
+    
         # load selected runs
         datalines = from_file['datalines']
-        fetch_tab = self.bfit.fetch_files
         setyear = fetch_tab.year.get()
         setrun =  fetch_tab.run.get()
         for id in datalines:
