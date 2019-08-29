@@ -352,7 +352,7 @@ class bfit(object):
         # Settings: set label default
         self.label_default = StringVar()
         self.label_default.set('Run Number')
-        for dc in self.draw_components:
+        for dc in sorted(self.draw_components):
             menu_settings_lab.add_radiobutton(label=dc,
                 variable=self.label_default,value=dc,command=self.set_all_labels,
                 selectcolor=colors.selected)
