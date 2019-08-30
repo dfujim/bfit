@@ -33,6 +33,7 @@ from bfit.gui.calculator_nqr_B0 import calculator_nqr_B0
 from bfit.gui.calculator_nmr_B1 import calculator_nmr_B1
 from bfit.gui.popup_drawstyle import popup_drawstyle
 from bfit.gui.popup_redraw_period import popup_redraw_period
+from bfit.gui.popup_terminal import popup_terminal
 from bfit.gui.popup_units import popup_units
 from bfit.gui.popup_set_ppm_reference import popup_set_ppm_reference
 from bfit.gui.popup_set_histograms import popup_set_histograms
@@ -311,6 +312,7 @@ class bfit(object):
         # File
         menu_file = Menu(menubar)
         menu_file.add_command(label='Search archive',command=self.search_archive)
+        menu_file.add_command(label='Run Python Commands',command=lambda:popup_terminal(self))
         menu_file.add_command(label='NMR B1 Calculator',command=calculator_nmr_B1)
         menu_file.add_command(label='NQR B0 Calculator',command=calculator_nqr_B0)
         menu_file.add_command(label='Export Data',command=self.do_export)
