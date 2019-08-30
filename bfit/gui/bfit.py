@@ -312,7 +312,7 @@ class bfit(object):
         # File
         menu_file = Menu(menubar)
         menu_file.add_command(label='Search archive',command=self.search_archive)
-        menu_file.add_command(label='Run Python Commands',command=lambda:popup_terminal(self))
+        menu_file.add_command(label='Python Interpreter',command=lambda:popup_terminal(self))
         menu_file.add_command(label='NMR B1 Calculator',command=calculator_nmr_B1)
         menu_file.add_command(label='NQR B0 Calculator',command=calculator_nqr_B0)
         menu_file.add_command(label='Export Data',command=self.do_export)
