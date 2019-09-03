@@ -14,7 +14,7 @@
 cimport cython
 import numpy as np
 cimport numpy as np
-from libc.math cimport exp 
+from libc.math cimport exp,pow
 
 # ========================================================================== #
 # Integration functions import

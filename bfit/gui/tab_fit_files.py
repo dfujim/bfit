@@ -816,7 +816,6 @@ class fit_files(object):
         if '2' in data.mode: 
             self.plt.axvline(figstyle,data.get_pulse_s(),ls='--',color='k')
             
-        
         # plot elementsplt.ylabel('Residual')
         self.plt.xlabel(figstyle,xlabel)
         self.plt.axhline(figstyle,0,color='k',linestyle='-',zorder=20)

@@ -25,7 +25,7 @@ class popup_terminal(object):
         
         # make a new window
         self.win = Toplevel(bfit.mainframe)
-        self.win.title('Interpreter')
+        self.win.title('Run Python Commands')
         frame = ttk.Frame(self.win,relief='sunken',pad=5)
         
         # Key bindings
