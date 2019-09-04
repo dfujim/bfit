@@ -8,7 +8,6 @@ from bfit import logger_name
 import webbrowser
 import logging
 
-
 # ========================================================================== #
 class popup_redraw_period(object):
     """

@@ -9,7 +9,6 @@ import numpy as np
 import logging
 from bfit import logger_name
 
-
 class popup_show_param(object):
     """
         Display pandas dataframe object as pretty table in popup window.

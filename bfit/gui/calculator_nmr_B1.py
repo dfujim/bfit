@@ -9,7 +9,6 @@ import numpy as np
 import webbrowser
 import logging
 
-
 # =========================================================================== #
 class calculator_nmr_B1(object):
     

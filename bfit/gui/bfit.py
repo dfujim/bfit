@@ -20,6 +20,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import bdata as bd
+import weakref as wref
 import webbrowser
 import subprocess
 import importlib
@@ -37,7 +38,6 @@ from bfit.gui.popup_terminal import popup_terminal
 from bfit.gui.popup_units import popup_units
 from bfit.gui.popup_set_ppm_reference import popup_set_ppm_reference
 from bfit.gui.popup_set_histograms import popup_set_histograms
-from bfit.backend.fitdata import fitdata
 from bfit.backend.PltTracker import PltTracker
 from bfit.backend.raise_window import raise_window
 import bfit.backend.colors as colors
@@ -314,7 +314,7 @@ class bfit(object):
         menu_file.add_command(label='Search archive',command=self.search_archive)
         menu_file.add_command(label='NMR B1 Calculator',command=calculator_nmr_B1)
         menu_file.add_command(label='NQR B0 Calculator',command=calculator_nqr_B0)
-        menu_file.add_command(label='Run Commands',command=lambda:popup_terminal(self))
+        menu_file.add_command(label='Run Commands',command=lambda:popup_terminal(wref.proxy(self)))
         menu_file.add_command(label='Export Data',command=self.do_export)
         menu_file.add_command(label='Save State',command=self.do_save)
         menu_file.add_command(label='Load State',command=self.do_load)
@@ -430,9 +430,9 @@ class bfit(object):
         noteframe.rowconfigure(0,weight=1)
         
         # Notetabs
-        self.fileviewer = fileviewer(file_viewer_tab,self)
-        self.fetch_files = fetch_files(fetch_files_tab,self)
-        self.fit_files = fit_files(fit_files_tab,self)
+        self.fileviewer = fileviewer(file_viewer_tab,wref.proxy(self))
+        self.fetch_files = fetch_files(fetch_files_tab,wref.proxy(self))
+        self.fit_files = fit_files(fit_files_tab,wref.proxy(self))
         
         # set instance variables ---------------------------------------------
         self.root = root
@@ -1367,17 +1367,17 @@ class bfit(object):
         state = self.fetch_files.check_state.get()
         self.fetch_files.check_state.set(not state)
         self.fetch_files.check_all()
-    def set_draw_style(self):       popup_drawstyle(self)
-    def set_histograms(self,*a):    popup_set_histograms(self)
+    def set_draw_style(self):       popup_drawstyle(wref.proxy(self))
+    def set_histograms(self,*a):    popup_set_histograms(wref.proxy(self))
     def set_focus_tab(self,idn,*a): self.notebook.select(idn)
-    def set_ppm_reference(self,*a): popup_set_ppm_reference(self)
+    def set_ppm_reference(self,*a): popup_set_ppm_reference(wref.proxy(self))
     def set_probe_species(self, *a): 
         species = self.probe_species.get()
         self.fit_files.fitter.probe_species = species
         self.fit_files.probe_label['text'] = species
         self.logger.info('Probe species changed to %s',species)
-    def set_redraw_period(self,*a): popup_redraw_period(self)
-    def set_units(self,*a):         popup_units(self)
+    def set_redraw_period(self,*a): popup_redraw_period(wref.proxy(self))
+    def set_units(self,*a):         popup_units(wref.proxy(self))
     def set_style_new(self,x):      
         self.logger.info('Setting draw style to "new"')
         self.draw_style.set('new')

@@ -8,6 +8,7 @@ from bfit import logger_name
 import webbrowser
 import logging
 
+
 # ========================================================================== #
 class popup_set_ppm_reference(object):
     """
