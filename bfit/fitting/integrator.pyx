@@ -43,7 +43,7 @@ cdef class PulsedFns:
 
 # =========================================================================== #
     @cython.boundscheck(False)  # some speed up in exchange for instability
-    cpdef exp(self,np.ndarray[double, ndim=1] time,double Lambda):
+    cpdef exp(self,double[:] time, double Lambda):
         """
             Pulsed exponential for an array of times. Efficient c-speed looping 
             and indexing. 
@@ -90,7 +90,7 @@ cdef class PulsedFns:
 
 # =========================================================================== #
     @cython.boundscheck(False)  # some speed up in exchange for instability
-    cpdef str_exp(self,np.ndarray[double, ndim=1] time,double Lambda, double Beta):
+    cpdef str_exp(self,double[:] time, double Lambda, double Beta):
         """
             Pulsed stretched exponential for an array of times. Efficient 
             c-speed looping and indexing. 
@@ -117,14 +117,14 @@ cdef class PulsedFns:
         
         prefac_post = life*(1.-exp(-pulse_len/life))
         
+        # make integrator
+        intr = new Integrator(life)
+        
         # Calculate pulsed str. exponential
         for i in range(n):    
             
             # get some useful values: time, normalization
             t = time[i]
-                
-            # make integrator
-            intr = new Integrator(life)
             
             # during pulse
             if t<pulse_len:
@@ -140,6 +140,7 @@ cdef class PulsedFns:
             # save result
             out_arr[i] = out
         
+        del intr
         return out_arr
 
 # =========================================================================== #
@@ -175,14 +176,14 @@ cdef class PulsedFns:
         
         prefac_post = life*(1.-exp(-pulse_len/life))
         
+        # make integrator
+        intr = new Integrator(life)
+        
         # Calculate pulsed str. exponential
         for i in range(n):    
             
             # get some useful values: time, normalization
             t = time[i]
-            
-            # make integrator
-            intr = new Integrator(life)
             
             # during pulse
             if t<pulse_len:
@@ -199,4 +200,5 @@ cdef class PulsedFns:
             # save result
             out_arr[i] = out
         
+        del intr
         return out_arr
