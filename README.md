@@ -19,6 +19,8 @@ Install is done simply by `pip install bfit`. Afterwards, you may want to tell b
 
 In this example, you would set `BNQR_ARCHIVE=/path/bnqr/` to the directory containing the year directories.
 
+If bfit cannot find the data, it will attempt to download the files from [musr.ca](http://musr.ca/mud/runSel.html) according to the defaults set in the [bdata](https://pypi.org/project/bdata/) package. 
+
 ## Operation Details
 
 See [here](https://github.com/dfujim/bfit/blob/master/bfit/fitting/README.md) for the bfit fitting submodule documentation. 
