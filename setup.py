@@ -32,7 +32,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=['cython>=0.28','numpy>=1.14','tqdm',
-                      'bdata>=4.0.1','matplotlib>=2.2.4','pandas>=0.23.0',
+                      'bdata>=4.2.1','matplotlib>=2.2.4','pandas>=0.23.0',
                       'pyyaml','scipy'],
     package_data={'': ['./images']},
     include_package_data=True,
