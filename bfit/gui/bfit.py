@@ -185,13 +185,6 @@ class bfit(object):
         bnmr_data_dir = os.getcwd()
         bnqr_data_dir = os.getcwd()
         
-        messagebox.showwarning("Set Environment Variables", 
-            "Environment variables "+\
-            "\n\nBNMR_ARCHIVE\n\nand\n\nBNQR_ARCHIVE\n\nnot found. "+\
-            "\n\nSet these such that "+\
-            "the data can be accessed in a manner such as "+\
-            "\n\n$BNMR_ARCHIVE/year/datafile.msr")
-        
     # ======================================================================= #
     def __init__(self):
         
@@ -1180,14 +1173,20 @@ class bfit(object):
         # get the current year
         year = datetime.datetime.now().year
         
+        # get paths 
+        try:
+            nmr_path = os.environ[self.bnmr_archive_label]
+            nqr_path = os.environ[self.bnqr_archive_label]
+        except KeyError:
+            nmr_path = os.path.join(bd._mud_data,'bnmr')
+            nqr_path = os.path.join(bd._mud_data,'bnqr')
+        
         # functions to check for data (NMR or NQR)
-        no_nmr = lambda y: not os.path.isdir(os.path.join(
-                                    os.environ[self.bnmr_archive_label],str(y)))
-        no_nqr = lambda y: not os.path.isdir(os.path.join(
-                                    os.environ[self.bnqr_archive_label],str(y)))
+        no_nmr = lambda y: not os.path.isdir(os.path.join(nmr_path,str(y)))
+        no_nqr = lambda y: not os.path.isdir(os.path.join(nqr_path,str(y)))
         
         # check data
-        while (no_nmr(year) or no_nqr(year)) and year > 0:
+        while (no_nmr(year) and no_nqr(year)) and year > 0:
             year -= 1
             
         self.logger.debug('Latest year with data: %d (NMR: %s, NQR: %s)',

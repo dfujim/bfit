@@ -573,6 +573,7 @@ class global_fitter(object):
             
         # make fit function: assign parameters  
         def fitfn(unused,*par):
+            
             return np.concatenate([f(x,*np.asarray(par)[p]) \
                                     for x,p,f in zip(xdata,par_index,self.fn)])
         return fitfn

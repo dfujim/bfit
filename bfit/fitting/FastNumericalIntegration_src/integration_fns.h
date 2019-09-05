@@ -5,7 +5,6 @@
 #ifndef INTEGRATION_FNS_H
 #define INTEGRATION_FNS_H
 
-
 /// ======================================================================= ///
 /// Integral of stretched exponential from 0 to x
 class Integrator
@@ -20,8 +19,5 @@ class Integrator
         double MixedStrExp(double t, double tprime, double lamb1, double beta1, 
                 double lamb2, double beta2, double amp);
 };
-
-
-
 
 #endif // INTEGRATION_FNS_H //
