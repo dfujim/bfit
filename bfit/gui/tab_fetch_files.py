@@ -350,15 +350,15 @@ class fetch_files(object):
             
         # overdraw in current figure, stacked
         elif style == 'redraw':
-            self.bfit.plt.clf(figstyle)
             self.bfit.draw_style.set('stack')
+            self.bfit.plt.clf(figstyle)
             draw_lines()
             self.bfit.draw_style.set('redraw')
             
         # make new figure, draw single
         elif style == 'new':
-            self.bfit.plt.figure(figstyle)
             self.bfit.draw_style.set('stack')
+            self.bfit.plt.figure(figstyle)
             draw_lines()
             self.bfit.draw_style.set('new')
         else:
