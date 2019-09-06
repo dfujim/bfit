@@ -35,8 +35,8 @@ class popup_param(object):
     """
 
     # parameter mapping
-    parmap = {  '1/T1':'lam',
-                '1/T1b':'lamb',
+    parmap = {  '1_T1':'lam',
+                '1_T1b':'lamb',
                 'amp':'amp',
                 'beta':'beta',
                 'fraction_b':'fraction_b',
@@ -111,7 +111,7 @@ class popup_param(object):
         omit = self.data.omit.get()
         if omit == self.bfit.fetch_files.bin_remove_starter_line:
             omit = ''
-        self.xy = self.data.asym(self.bfit.get_asym_mode(),
+        self.xy = self.data.asym(self.bfit.get_asym_mode(self.bfit.fit_files),
                                  rebin=self.data.rebin.get(),omit=omit)
         ax.errorbar(*self.xy,fmt='.',color='k',ecolor='k')
         
@@ -207,7 +207,7 @@ class popup_param(object):
                                      ncomp=self.n_components,
                                      p0=p0,
                                      fnname=self.fname,
-                                     asym_mode=self.bfit.get_asym_mode(),
+                                     asym_mode=self.bfit.get_asym_mode(self.bfit.fit_files),
                                      endfn=self.endfn)
         
     # ====================================================================== #        
