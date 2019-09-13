@@ -16,8 +16,6 @@ class Integrator
         // Methods
         Integrator(double lifetime);
         double StrExp(double t, double tprime, double lamb, double beta);
-        double MixedStrExp(double t, double tprime, double lamb1, double beta1, 
-                double lamb2, double beta2, double amp);
 };
 
 #endif // INTEGRATION_FNS_H //

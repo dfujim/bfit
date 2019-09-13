@@ -23,7 +23,6 @@ cdef extern from 'integration_fns.h':
         double lifetime;
         Integrator(double);
         double StrExp(double,double,double,double) except +;
-        double MixedStrExp(double,double,double,double,double,double,double) except +;
         
 # =========================================================================== #
 # Integrator class
@@ -135,66 +134,6 @@ cdef class PulsedFns:
             # after pulse
             else:
                 x = intr.StrExp(t,pulse_len,Lambda,Beta)
-                out = x*exp((t-pulse_len)/life)/prefac_post
-            
-            # save result
-            out_arr[i] = out
-        
-        del intr
-        return out_arr
-
-# =========================================================================== #
-    @cython.boundscheck(False)  # some speed up in exchange for instability
-    cpdef mixed_str_exp(self,np.ndarray[double, ndim=1] time, 
-                double Lambda1, double Beta1, double Lambda2, double Beta2,
-                double alpha):
-        """
-            Pulsed stretched exponential for an array of times. Efficient 
-            c-speed looping and indexing. 
-            
-            Inputs: 
-                time: array of times
-                pulse_len: pulse length
-                Lambda: 1/T1 in s^-1
-                Beta: stretching factor
-                alpha: mixing 0 < alpha < 1
-                
-            Outputs: 
-                np.array of values for the puslsed stretched exponential. 
-        """
-        
-        # Variable definitions
-        cdef double out
-        cdef int n = time.shape[0]
-        cdef int i
-        cdef double t
-        cdef np.ndarray[double, ndim=1] out_arr = np.zeros(n)
-        cdef double prefac
-        cdef double prefac_post
-        cdef double life = self.life
-        cdef double pulse_len = self.pulse_len
-        
-        prefac_post = life*(1.-exp(-pulse_len/life))
-        
-        # make integrator
-        intr = new Integrator(life)
-        
-        # Calculate pulsed str. exponential
-        for i in range(n):    
-            
-            # get some useful values: time, normalization
-            t = time[i]
-            
-            # during pulse
-            if t<pulse_len:
-                prefac = life*(1.-exp(-t/life))
-                x = intr.MixedStrExp(t,t,Lambda1,Beta1,Lambda2,Beta2,alpha)
-                out = x/prefac
-            
-            # after pulse
-            else:
-                x = intr.MixedStrExp(t,pulse_len,Lambda1,Beta1,Lambda2,Beta2,
-                                     alpha)
                 out = x*exp((t-pulse_len)/life)/prefac_post
             
             # save result
