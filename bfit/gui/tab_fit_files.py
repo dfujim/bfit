@@ -14,6 +14,7 @@ from bfit.gui.calculator_nqr_B0 import current2field
 from bfit.gui.popup_show_param import popup_show_param
 from bfit.gui.popup_param import popup_param
 from bfit.gui.popup_fit_results import popup_fit_results
+from bfit.gui.popup_fit_constraints import popup_fit_constraints
 from bfit.fitting.decay_31mg import fa_31Mg
 from bfit.backend.entry_color_set import on_focusout,on_entry_click
 from bfit.backend.raise_window import raise_window
@@ -41,6 +42,7 @@ class fit_files(object):
             draw_components:list of titles for labels, options to export, draw.
             entry_asym_type:combobox for asym calculations
             fit_canvas:     canvas object allowing for scrolling 
+            pop_fitconstr:  object for fitting with constrained functions
             fit_data_tab:   containing frame (for destruction)
             fit_function_title: title of fit function to use
             fit_function_title_box: combobox for fit function names
@@ -107,7 +109,7 @@ class fit_files(object):
         mid_fit_frame.grid(column=0,row=1,rowspan=6,sticky=(S,W,E,N),padx=5,pady=5)
         
         fit_data_tab.grid_columnconfigure(0,weight=1)   # fitting space
-        fit_data_tab.grid_rowconfigure(5,weight=1)
+        fit_data_tab.grid_rowconfigure(6,weight=1)      # push bottom window in right frame to top
         mid_fit_frame.grid_columnconfigure(0,weight=1)
         mid_fit_frame.grid_rowconfigure(0,weight=1)
         
@@ -132,6 +134,8 @@ class fit_files(object):
         # fit and other buttons
         fit_button = ttk.Button(fn_select_frame,text='Fit',command=self.do_fit,\
                                 pad=1)
+        constraint_button = ttk.Button(fn_select_frame,text='Fit with constraints',
+                                       command=self.do_fit_constraints,pad=1)
         set_param_button = ttk.Button(fn_select_frame,text='Set Result as P0',
                         command=self.do_set_result_as_initial,pad=1)                        
         reset_param_button = ttk.Button(fn_select_frame,text='Reset Inputs',
@@ -150,6 +154,7 @@ class fit_files(object):
                   row=0,padx=5,pady=5,sticky=W); c+=1
         self.n_component_box.grid(column=c,row=0,padx=5,pady=5,sticky=W); c+=1
         fit_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
+        constraint_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
         set_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
         reset_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
         gui_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
@@ -279,10 +284,6 @@ class fit_files(object):
         self.annotation_combobox.grid(column=1,row=3,pady=5)
         model_fit_button.grid(column=0,row=4,columnspan=2,pady=5,sticky=(E,W))
         
-        # fit fit parameters --------------------
-        fit_fitresults_frame= ttk.Labelframe(fit_data_tab,
-                                         text='Parameter Constraints',pad=5)
-        
         # save/load state -----------------------
         state_frame = ttk.Labelframe(fit_data_tab,text='Program State',pad=5)
         state_save_button = ttk.Button(state_frame,text='Save',command=self.save_state)
@@ -312,14 +313,15 @@ class fit_files(object):
         set_use_rebin.grid(column=0,row=1,padx=5,pady=1,sticky=W)
         
         results_frame.grid(column=1,row=4,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
-        fit_fitresults_frame.grid(column=1,row=5,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         state_frame.grid(column=1,row=6,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         
         # resizing
         
         # fn select
         fn_select_frame.grid_columnconfigure(1,weight=1)    # Nterms label
-        fn_select_frame.grid_columnconfigure(6,weight=100)   # p0 finder
+        fn_select_frame.grid_columnconfigure(4,weight=100)    # constraints
+        fn_select_frame.grid_columnconfigure(5,weight=1)  # set results as p0
+        fn_select_frame.grid_columnconfigure(6,weight=1)  # reset p0
         
         # fitting frame
         self.fit_canvas.grid_columnconfigure(0,weight=1)    # fetch frame 
@@ -673,6 +675,15 @@ class fit_files(object):
         
         self.bfit.draw_style.set(style)
         
+    # ======================================================================= #
+    def do_fit_constraints(self):
+        if hasattr(self,'pop_fitconstr'):
+            p = self.pop_fitconstr
+            self.pop_fitconstr = popup_fit_constraints(self.bfit,
+                                    constr_text=p.constr_text)
+        else:
+            self.pop_fitconstr = popup_fit_constraints(self.bfit)
+    
     # ======================================================================= #
     def do_fit_model(self):
         
