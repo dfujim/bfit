@@ -30,7 +30,7 @@ class popup_fit_constraints(object):
         constr_text:        string, text defining constraints
         new_par:            dataframe, index: parnames, columns: p0,blo,bhi,res,err
         
-        output_par_label    label, detected parameter names
+        output_par_text     text, detected parameter names
         output_text         dict, keys: p0,blo,bhi,res,err, value: tkk.Text objects
        
         parnames:           list, function inputs
@@ -66,6 +66,10 @@ class popup_fit_constraints(object):
         left_frame = ttk.Frame(frame)
         right_frame = ttk.Frame(frame)
 
+        # Key bindings
+        self.win.bind('<Control-Key-Return>',self.do_fit)
+        self.win.bind('<Control-Key-KP_Enter>',self.do_fit)
+
         # Keyword parameters
         key_param_frame = ttk.Frame(left_frame,relief='sunken',pad=5)
         s = 'Reserved variable names:\n\n'
@@ -85,7 +89,7 @@ class popup_fit_constraints(object):
         self.parnames = self.fittab.fitter.gen_param_names(
                                         self.fittab.fit_function_title.get(),
                                         self.fittab.n_component.get())
-        s += '\n'.join([k for k in self.parnames]) 
+        s += '\n'.join([k for k in sorted(self.parnames)]) 
         s += '\n'
         fit_param_label = ttk.Label(fit_param_frame,text=s,justify=LEFT)
 
@@ -107,7 +111,7 @@ class popup_fit_constraints(object):
                                 text='Enter one constraint per line.'+\
                                      '\nNon-reserved words are shared variables.'+\
                                      '\nEx: "1_T1 = a*np.exp(b*BIAS**0.5)+c"')
-        self.entry = Text(entry_frame,width=50,height=13,state='normal')
+        self.entry = Text(entry_frame,width=54,height=13,state='normal')
         self.entry.bind('<KeyRelease>',self.get_input)
         scrollb = Scrollbar(entry_frame, command=self.entry.yview)
         self.entry['yscrollcommand'] = scrollb.set
@@ -116,7 +120,7 @@ class popup_fit_constraints(object):
         self.entry.bind('<Return>',self.do_parse)             
         self.entry.bind('<KP_Enter>',self.do_parse)
         
-        # fit
+        # parse
         parse_button = ttk.Button(right_frame,text='Parse Input',command=self.do_parse)
         
         # text for output
@@ -126,14 +130,18 @@ class popup_fit_constraints(object):
         output_head3_label = ttk.Label(output_frame,text='Bounds')
         output_head4_label = ttk.Label(output_frame,text='Result')
         output_head5_label = ttk.Label(output_frame,text='Error')
-        self.output_par_label = ttk.Label(output_frame,justify=LEFT,text='    ')
+        self.output_par_text = Text(output_frame,width=8,height=8,state='disabled')
         self.output_text = {k:Text(output_frame,width=8,height=8,state='normal')\
                             for k in ('p0','blo','bhi','res','err')}
         for k in ('res','err'):
             self.output_text[k].config(state='disabled',width=9)
 
+        # key bindings and scrollbar
+        scrollb_out = Scrollbar(output_frame, command=self.yview)
+        self.output_par_text['yscrollcommand'] = scrollb_out.set
         for k in self.output_text:
             self.output_text[k].bind('<KeyRelease>',self.get_result_input)
+            self.output_text[k]['yscrollcommand'] = scrollb_out.set
                 
         c = 0; r = 0;
         output_head1_label.grid(column=c,row=r);        c+=1;
@@ -144,9 +152,13 @@ class popup_fit_constraints(object):
         output_head5_label.grid(column=c,row=r);        c+=1;
         
         c = 0; r += 1;
-        self.output_par_label   .grid(column=c,row=r,sticky=N); c+=1;
+        self.output_par_text.grid(column=c,row=r,sticky=N); c+=1;
         for k in ('p0','blo','bhi','res','err'):
             self.output_text[k].grid(column=c,row=r,sticky=N); c+=1;
+        scrollb_out.grid(row=r, column=c, sticky='nsew')
+        
+        # fitting button 
+        fit_button = ttk.Button(right_frame,text='Fit',command=self.do_fit)
         
         # gridding
         key_param_label.grid(column=0,row=0)
@@ -163,11 +175,12 @@ class popup_fit_constraints(object):
         
         key_param_frame.grid(column=0,row=0,rowspan=1,sticky=(E,W),padx=1,pady=1)
         module_frame.grid(column=0,row=1,sticky=(E,W),padx=1,pady=1,rowspan=2)
-        fit_param_frame.grid(column=0,row=3,sticky=(E,W),padx=1,pady=1)
+        fit_param_frame.grid(column=0,row=3,sticky=(E,W,N,S),padx=1,pady=1)
         
         entry_frame.grid(column=0,row=0,sticky=(N,E,W),padx=1,pady=1)
         parse_button.grid(column=0,row=1,sticky=(N,E,W),padx=1,pady=1)
-        output_frame.grid(column=0,row=2,sticky=(N,E,W),padx=1,pady=1)
+        output_frame.grid(column=0,row=2,sticky=(N,E,W,S),padx=1,pady=1)
+        fit_button.grid(column=0,row=3,sticky=(N,E,W),padx=1,pady=1)
         
         # initialize 
         self.new_par = pd.DataFrame(columns=['name','p0','blo','bhi','res','err']) 
@@ -180,6 +193,11 @@ class popup_fit_constraints(object):
     
     # ====================================================================== #
     def do_fit(self,*args):
+        """
+            Set up the fit functions and do the fit. Then map the outputs to the
+            proper displays. 
+        """
+        
         pass
         
     # ====================================================================== #
@@ -265,13 +283,15 @@ class popup_fit_constraints(object):
                 self.new_par.drop(i,inplace=True)
         
         # allow setting
+        self.output_par_text.config(state='normal')
         for k in ('res','err'):
             self.output_text[k].config(state='normal')
 
         # set fields
         self.new_par.sort_values('name',inplace=True)
         set_par = self.new_par.astype(str)
-        self.output_par_label['text']   = '\n'.join(set_par['name'])
+        self.output_par_text.delete('1.0',END)
+        self.output_par_text.insert(1.0,'\n'.join(set_par['name']))
         
         for k in self.output_text:
             self.output_text[k].delete('1.0',END)
@@ -279,8 +299,9 @@ class popup_fit_constraints(object):
         
         # disable setting
         for k in ('res','err'):
-            self.output_text[k].config(state='normal')
-    
+            self.output_text[k].config(state='disabled')
+        self.output_par_text.config(state='disabled')
+        
         # logging
         self.logger.info('Parse found constraints for %s, and defined %s',
                          sorted(defined),
@@ -308,7 +329,7 @@ class popup_fit_constraints(object):
         text = pd.DataFrame(text)
         
         # get names of the parameters
-        parnames = self.output_par_label['text'].split('\n')
+        parnames = self.output_par_text.get('1.0',END).split('\n')[:-1]
         
         # update
         par = self.new_par.set_index('name')
@@ -317,3 +338,12 @@ class popup_fit_constraints(object):
         par.reset_index(inplace=True)
         self.new_par = par
         self.logger.debug('get_result_input: updated new_par')
+    
+    # ====================================================================== #
+    def yview(self,*args):
+        """
+            Scrollbar for all output text fields
+        """
+        self.output_par_text.yview(*args)
+        for k in self.output_text:
+            self.output_text[k].yview(*args)
