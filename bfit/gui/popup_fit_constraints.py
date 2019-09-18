@@ -66,10 +66,6 @@ class popup_fit_constraints(object):
         left_frame = ttk.Frame(frame)
         right_frame = ttk.Frame(frame)
 
-        # Key bindings
-        self.win.bind('<Return>',self.do_fit)             
-        self.win.bind('<KP_Enter>',self.do_fit)
-        
         # Keyword parameters
         key_param_frame = ttk.Frame(left_frame,relief='sunken',pad=5)
         s = 'Reserved variable names:\n\n'
@@ -116,10 +112,12 @@ class popup_fit_constraints(object):
         scrollb = Scrollbar(entry_frame, command=self.entry.yview)
         self.entry['yscrollcommand'] = scrollb.set
         
+        # Key bindings
+        self.entry.bind('<Return>',self.do_parse)             
+        self.entry.bind('<KP_Enter>',self.do_parse)
         
         # fit
         parse_button = ttk.Button(right_frame,text='Parse Input',command=self.do_parse)
-        
         
         # text for output
         output_frame = ttk.Frame(right_frame,relief='sunken',pad=5)
@@ -133,6 +131,9 @@ class popup_fit_constraints(object):
                             for k in ('p0','blo','bhi','res','err')}
         for k in ('res','err'):
             self.output_text[k].config(state='disabled',width=9)
+
+        for k in self.output_text:
+            self.output_text[k].bind('<KeyRelease>',self.get_result_input)
                 
         c = 0; r = 0;
         output_head1_label.grid(column=c,row=r);        c+=1;
@@ -164,13 +165,12 @@ class popup_fit_constraints(object):
         module_frame.grid(column=0,row=1,sticky=(E,W),padx=1,pady=1,rowspan=2)
         fit_param_frame.grid(column=0,row=3,sticky=(E,W),padx=1,pady=1)
         
-        entry_frame.grid(column=0,row=0,sticky=(N),padx=1,pady=1)
+        entry_frame.grid(column=0,row=0,sticky=(N,E,W),padx=1,pady=1)
         parse_button.grid(column=0,row=1,sticky=(N,E,W),padx=1,pady=1)
         output_frame.grid(column=0,row=2,sticky=(N,E,W),padx=1,pady=1)
         
         # initialize 
         self.new_par = pd.DataFrame(columns=['name','p0','blo','bhi','res','err']) 
-        
         
         self.logger.debug('Initialization success. Starting mainloop.')
     
@@ -291,4 +291,29 @@ class popup_fit_constraints(object):
         """Get input from text box."""
         self.constr_text = self.entry.get('1.0',END)
         
+    # ====================================================================== #
+    def get_result_input(self,*args):
+        """
+            Set new_par row to match changes made by user
+        """
+    
+        # get text
+        try:
+            text = {k:list(map(float,self.output_text[k].get('1.0',END).split('\n')[:-1])) \
+                for k in self.output_text}
         
+        # no update if blank
+        except ValueError:
+            return 
+        text = pd.DataFrame(text)
+        
+        # get names of the parameters
+        parnames = self.output_par_label['text'].split('\n')
+        
+        # update
+        par = self.new_par.set_index('name')
+        for i,name in enumerate(parnames):
+            par.loc[name] = text.iloc[i]
+        par.reset_index(inplace=True)
+        self.new_par = par
+        self.logger.debug('get_result_input: updated new_par')
