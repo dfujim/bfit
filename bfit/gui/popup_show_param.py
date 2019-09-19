@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import logging
 from bfit import logger_name
+import bfit
 
 class popup_show_param(object):
     """
@@ -33,6 +34,13 @@ class popup_show_param(object):
         root.title("Fitted Parameters")
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
+        
+        # icon
+        try:
+            img = PhotoImage(file=bfit.icon_path)
+            root.tk.call('wm', 'iconphoto', root._w, img)
+        except Exception as err:
+            print(err)
         
         # main frame
         mainframe = ttk.Frame(root,pad=5)

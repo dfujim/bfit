@@ -26,6 +26,9 @@ class popup_drawstyle(object):
         self.win.title('Set Marker and Line Styles')
         frame = ttk.Frame(self.win,relief='sunken',pad=5)
         
+        # icon
+        parent.set_icon(self.win)
+        
         # Key bindings
         self.win.bind('<Return>',self.set)             
         self.win.bind('<KP_Enter>',self.set)

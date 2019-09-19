@@ -29,6 +29,9 @@ class popup_set_histograms(object):
         self.win.title('Set Histograms')
         frame = ttk.Frame(self.win,relief='sunken',pad=5)
         
+        # icon
+        self.parent.set_icon(self.win)
+        
         # Key bindings
         self.win.bind('<Return>',self.set)             
         self.win.bind('<KP_Enter>',self.set)

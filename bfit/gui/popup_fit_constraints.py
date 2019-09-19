@@ -6,7 +6,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from functools import partial
 
-import logging,re
+import logging,re,os
 import numpy as np
 import pandas as pd
 import weakref as wref
@@ -54,7 +54,7 @@ class popup_fit_constraints(object):
         self.bfit = bfit
         self.fittab = bfit.fit_files
         self.constr_text = constr_text
-        
+    
         # get logger
         self.logger = logging.getLogger(logger_name)
         self.logger.info('Initializing')
@@ -65,6 +65,13 @@ class popup_fit_constraints(object):
         frame = ttk.Frame(self.win,relief='sunken',pad=5)
         left_frame = ttk.Frame(frame)
         right_frame = ttk.Frame(frame)
+
+        # set icon
+        try:
+            img = PhotoImage(file=os.path.dirname(__file__)+'/../images/icon.gif')
+            self.win.tk.call('wm', 'iconphoto', self.win._w, img)
+        except Exception as err:
+            print(err)
 
         # Key bindings
         self.win.bind('<Control-Key-Return>',self.do_fit)

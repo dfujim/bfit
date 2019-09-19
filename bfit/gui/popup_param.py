@@ -65,6 +65,9 @@ class popup_param(object):
         self.win.title('Find P0')
         frame = ttk.Frame(self.win,relief='sunken',pad=5)
         
+        # icon 
+        self.bfit.set_icon(self.win)
+        
         # Labels
         ttk.Label(frame,text="Select Run").grid(column=0,row=0,sticky=E)
         

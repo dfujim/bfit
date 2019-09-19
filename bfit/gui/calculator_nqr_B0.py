@@ -7,6 +7,7 @@ from tkinter import ttk
 import numpy as np
 import webbrowser
 import logging
+import bfit
 from bfit import logger_name
 
 # =========================================================================== #
@@ -25,7 +26,14 @@ class calculator_nqr_B0(object):
         root.title("Zaher's Caculator")
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
-        
+
+        # icon
+        try:
+            img = PhotoImage(file=bfit.icon_path)
+            root.tk.call('wm', 'iconphoto', root._w, img)
+        except Exception as err:
+            print(err)
+
         # key bindings
         root.bind('<Return>',self.calculate)             
         root.bind('<KP_Enter>',self.calculate)

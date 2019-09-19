@@ -8,6 +8,7 @@ from bfit import logger_name
 import numpy as np
 import webbrowser
 import logging
+import bfit
 
 # =========================================================================== #
 class calculator_nmr_B1(object):
@@ -25,6 +26,13 @@ class calculator_nmr_B1(object):
         root.title("Gerald's Caculator")
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
+        
+        # icon
+        try:
+            img = PhotoImage(file=bfit.icon_path)
+            root.tk.call('wm', 'iconphoto', root._w, img)
+        except Exception as err:
+            print(err)
         
         # key bindings
         root.bind('<Return>',self.calculate)             

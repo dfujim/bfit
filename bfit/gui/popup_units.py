@@ -28,6 +28,9 @@ class popup_units(object):
         frame = ttk.Frame(self.win,relief='sunken',pad=5)
         topframe = ttk.Frame(frame,pad=5)
 
+        # icon
+        self.parent.set_icon(self.win)
+
         # Key bindings
         self.win.bind('<Return>',self.set)             
         self.win.bind('<KP_Enter>',self.set)

@@ -28,6 +28,9 @@ class popup_terminal(object):
         self.win.title('Run Python Commands')
         frame = ttk.Frame(self.win,relief='sunken',pad=5)
         
+        # icon
+        self.bfit.set_icon(self.win)
+        
         # Key bindings
         self.win.bind('<Control-Key-Return>',self.do_run)             
         self.win.bind('<Control-Key-KP_Enter>',self.do_run)

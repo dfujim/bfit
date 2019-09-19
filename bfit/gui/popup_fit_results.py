@@ -60,6 +60,9 @@ class popup_fit_results(object):
         self.win = Toplevel(bfit.mainframe)
         self.win.title('Model the Fit Results')
         fit_fitresults_frame = ttk.Frame(self.win,relief='sunken',pad=5)
+        
+        # icon
+        self.bfit.set_icon(self.win)
 
         # Key bindings
         self.win.bind('<Return>',self.do_fit_model)             

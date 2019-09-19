@@ -26,7 +26,7 @@ import subprocess
 import importlib
 import logging
 
-from bfit import __version__,logger_name
+from bfit import __version__,logger_name,icon_path
 from bfit.gui.tab_fileviewer import fileviewer
 from bfit.gui.tab_fetch_files import fetch_files
 from bfit.gui.tab_fit_files import fit_files
@@ -249,11 +249,7 @@ class bfit(object):
         ttk_style.map('TSpinbox', borderwidth=[('selected', 1)])
         
         # icon
-        try:
-            img = PhotoImage(file=os.path.dirname(__file__)+'/../images/icon.gif')
-            root.tk.call('wm', 'iconphoto', root._w, img)
-        except Exception as err:
-            print(err)
+        self.set_icon(root)
             
         # key bindings
         root.bind('<Return>',self.return_binder)             
@@ -1331,19 +1327,28 @@ class bfit(object):
         self.logger.info('Success.')
         
     # ======================================================================= #
+    def set_icon(self,window):
+        """Set the icon for new windows"""
+        try:
+            img = PhotoImage(file=icon_path)
+            window.tk.call('wm', 'iconphoto', window._w, img)
+        except Exception as err:
+            print(err)
+        
+    # ======================================================================= #
     def set_matplotlib(self): 
         """Edit matplotlib settings file, or give info on how to do so."""
         
         self.logger.info('Attempting to edit matplotlibrc file')
         
         # settings
-        location = os.environ['HOME']+"/.config/matplotlib/"
+        location = os.path.join(os.environ['HOME'],'.config','matplotlib')
         filename = "matplotlibrc"
         weblink = 'http://matplotlib.org/users/customizing.html'+\
                   '#the-matplotlibrc-file'
         
         # check for file existance
-        if not os.path.isfile(location+filename):
+        if not os.path.isfile(os.path.join(location,filename)):
             self.logger.debug('File not found.')
             value = messagebox.showinfo(parent=self.mainframe,
                     title="Get matplotlibrc",\
@@ -1357,7 +1362,7 @@ class bfit(object):
         
         # if file exists, edit
         self.logger.debug('File found. Opening in external program.')
-        subprocess.call(['xdg-open',location+filename])
+        subprocess.call(['xdg-open',os.path.join(location,filename)])
             
     # ======================================================================= #
     def set_all_labels(self,*a):    self.fetch_files.set_all_labels()
