@@ -25,34 +25,26 @@ class ConstrainedFunction(object):
                 'RATE'  : 'Sample Rate (count/s)',
                 'RF'    : 'RF Level DAC',
                 'RUN'   : 'Run Number',
-                'T'     : 'Temperature (K)',
+                'TEMP'  : 'Temperature (K)',
                 'TIME'  : 'Start Time',
                 'YEAR'  : 'Year',
               }    
                        
     # ======================================================================= # 
-    def __init__(self,bfit,constraints,p1,p2):
+    def __init__(self,bfit,defined,equation,newpar,oldpar):
         """
-            constraints:    list of strings corresponding to equations 
-                            each of the LHS _MUST_ be one of the p1 values
-            p1:             ordered list of strings for the original parameters
-            p2:             ordered list of strings for the new parameters
+            equation:       list of strings corresponding to equation RHS in old 
+                            parameter order
+            newpar:         list of strings corresponding to new function 
+                            parameters in order
         """
 
         self.bfit = bfit
-        self.p1 = p1
-        self.p2 = p2
-        self.constraints = constraints
+        self.header = 'lambda %s : ' % (','.join(newpar))
+        self.oldpar = oldpar
         
-        # get list of parameters set by the constraints
-        self.defined = [c.split('=')[0] for c in constraints]
-        
-        # find new parameter names in the string, replace with indexed par
-        for i,c in enumerate(self.constraints):
-            for j,p in enumerate(self.p2):
-                if p in c:
-                    c = c.replace(p,'par[%d]'%j)
-            self.constraints[i] = c
+        # sort equations and defined by old par
+        self.equation = [equation[defined.index(p)] for p in oldpar]
         
     # ======================================================================= # 
     def __call__(self,data,fn):
@@ -67,32 +59,23 @@ class ConstrainedFunction(object):
         varlist = np.array(list(self.keyvars.keys()))
         varlist = varlist[np.argsort(list(map(len,varlist))[::-1])]
     
-        constr = []
-        for c in self.constraints:
+        eqn = []
+        for c in self.equation:
                 
             # find constant names in the string, replace with constant
             for var in varlist:
                 if var in c:
                     value = self._get_value(data,var)
                     c = c.replace(var,str(value))
-            constr.append(c)
+            eqn.append(c)
         
+        # get constraint functions, sorted 
+        constr_fns = [eval(self.header+e)for e in eqn]    
         
-        
-        # get constraint functions, sorted THIS NEEDS FIXING
-        header = 'lambda x,%s : ' % (','.join(self.p2))
-        constr_fns = []
-        for i,p in enumerate(self.p1):
-            if p in self.defined:
-                j = self.defined.index(p)
-                constr_fns.append(eval(header+constr[j].split('=')[1]))
-            else:
-                constr_fns.append(eval(header+p)
-    
         # define the new fitting function
-        def new_fn(x,*p2):
-            p1 = [c(x,*p2) for c in constr_fns]
-            return fn(x,*p1)
+        def new_fn(x,*newparam):
+            oldparam = [c(*newparam) for c in constr_fns]
+            return fn(x,*oldparam)
             
         return new_fn
             
@@ -117,6 +100,6 @@ class ConstrainedFunction(object):
             return np.sum([data.hist[h].data for h in hist])/data.duration
         elif name =='RF'    :   return data.bd.camp.rf_dac.mean
         elif name =='RUN'   :   return data.run
-        elif name =='T'     :   return data.temperature.mean
+        elif name =='TEMP'  :   return data.temperature.mean
         elif name =='TIME'  :   return data.bd.start_time
         elif name =='YEAR'  :   return data.year

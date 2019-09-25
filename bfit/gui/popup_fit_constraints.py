@@ -217,30 +217,44 @@ class popup_fit_constraints(object):
         text = [t.strip() for t in text if '=' in t]
         
         # check for no input
-        if not text:
-            return
+        if not text:    return
         
         # get equations and defined variables
         defined = [t.split('=')[0].strip() for t in text]
         eqn = [t.split('=')[1].strip() for t in text]
         
-        # set up parameter sharing
-        # ~ sharelist = [True]*len(defined)
-        sharelist = [False]*len(defined)
-        
         # make shared parameters for the rest of the parameters
+        allpar = self.new_par['name'].tolist()
+        alldef = defined[:]
+        sharelist = [True]*len(allpar)
+        
         for n in self.parnames:
             if n not in defined:
+                eqn.append(n)
+                alldef.append(n)
+                allpar.append(n)
                 sharelist.append(False)
+                        
+        # replace 1_T1 with lambda1
+        for i,_ in enumerate(allpar):
+            if '1_T1' in allpar[i]:
+                allpar[i] = allpar[i].replace('1_T1','lambda1')
         
+        for i,_ in enumerate(eqn):
+            while '1_T1' in eqn[i]:
+                eqn[i] = eqn[i].replace('1_T1','lambda1')
+                
         # make constrained functions
-        cgen= CstrFnGenerator(self.bfit,text,self.parnames,self.new_par)
+        cgen= CstrFnGenerator(self.bfit,alldef,eqn,allpar,self.parnames)
         
         # get the functions and initial parameters
         fit_files = self.bfit.fit_files
         fetch_files = self.bfit.fetch_files
-        fitfns = {}
-        par = {}
+        fitfns = []
+        par = []
+        rebin = []
+        omit = []
+        fnptrs = []
         
         keylist = sorted(fit_files.fit_lines.keys())
         for k in keylist:
@@ -254,12 +268,27 @@ class popup_fit_constraints(object):
             except KeyError:
                 pass
             
+            # get function
             fn = fit_files.fitter.get_fn(fn_name=fit_files.fit_function_title.get(),
                                          ncomp=fit_files.n_component.get(),
                                          pulse_len=pulse_len,
                                          lifetime=bd.life[fit_files.probe_label['text']])
-            fitfns[k] = cgen(data=data,fn=fn)
-            par[k] = data.fitpar
+            fitfns.append(cgen(data=data,fn=fn))
+            fnptrs.append(fn)
+            
+            # get initial parameters
+            par.append(data.fitpar)
+            
+            # get rebin
+            rebin.append(data.rebin.get())
+            
+            # get bin omission
+            omit.append(data.omit.get())
+        
+        # clean up omit strings
+        for i,om in enumerate(omit):
+            if om == fetch_files.bin_remove_starter_line:
+                omit[i] = ''
         
         # set up p0, bounds
         p0 = self.new_par['p0'].values
@@ -272,9 +301,9 @@ class popup_fit_constraints(object):
                 
         for n in self.parnames:
             if n not in defined:
-                p0.append([par[k]['p0'][n] for k in keylist])
-                blo.append([par[k]['blo'][n] for k in keylist])
-                bhi.append([par[k]['bhi'][n] for k in keylist])
+                p0.append( [p['p0' ][n] for p in par])
+                blo.append([p['blo'][n] for p in par])
+                bhi.append([p['bhi'][n] for p in par])
         
         p0 = np.array(p0).T
         blo = np.array(blo).T
@@ -288,17 +317,41 @@ class popup_fit_constraints(object):
         
         par,cov,chi,gchi = fit_list(runs=runs,
                                     years=years,
-                                    fnlist=[fitfns[k] for k in keylist],
+                                    fnlist=fitfns,
                                     sharelist=sharelist,
                                     npar=npar,
                                     p0=p0,
                                     bounds=bounds,
                                     asym_mode='c',
-                                    rebin=None,
-                                    omit=None,
+                                    rebin=rebin,
+                                    omit=omit,
                                     xlims=None,
-                                    hist_select='')
-        print(par)
+                                    hist_select=self.bfit.hist_select)
+        std = np.array(list(map(np.diag,cov)))**0.5
+        
+        # display output for global parameters
+        for i in self.new_par.index:
+            self.new_par.loc[i,'res'] = par[0][i]
+            self.new_par.loc[i,'err'] = std[0][i]
+        self.set_par_text()
+        
+        # calculate original parameter equivalents
+        constr_fns = [eval(cgen.header+e)for e in cgen.equation]
+        
+        for i,k in enumerate(keylist):
+            data = fetch_files.data_lines[k].bdfit
+            
+            old_par = [c(*par[i]) for c in constr_fns]
+            old_std = [s if d in defined else np.nan for s,d in zip(std[i],alldef)]
+            old_chi = chi[i]
+            
+            # set to fitdata containers
+            # [(parname),(par),(err),chi,fnpointer]
+            data.set_fitresult([self.parnames,old_par,old_std,old_chi,fnptrs[i]])
+            
+        # display in fit_files tab
+        for key in fit_files.fit_lines:
+            fit_files.fit_lines[key].show_fit_result()
         
     # ====================================================================== #
     def do_parse(self,*args):
@@ -379,30 +432,14 @@ class popup_fit_constraints(object):
             if k not in new_par:
                 self.new_par.drop(i,inplace=True)
         
-        # allow setting
-        self.output_par_text.config(state='normal')
-        for k in ('res','err'):
-            self.output_text[k].config(state='normal')
-
         # set fields
         self.new_par.sort_values('name',inplace=True)
-        set_par = self.new_par.astype(str)
-        self.output_par_text.delete('1.0',END)
-        self.output_par_text.insert(1.0,'\n'.join(set_par['name']))
-        
-        for k in self.output_text:
-            self.output_text[k].delete('1.0',END)
-            self.output_text[k] .insert(1.0,'\n'.join(set_par[k]) )
-        
-        # disable setting
-        for k in ('res','err'):
-            self.output_text[k].config(state='disabled')
-        self.output_par_text.config(state='disabled')
+        self.set_par_text()
         
         # logging
         self.logger.info('Parse found constraints for %s, and defined %s',
                          sorted(defined),
-                         set_par['name'].values.tolist())
+                         self.new_par['name'].values.tolist())
     
     # ====================================================================== #
     def get_input(self,*args):
@@ -436,6 +473,38 @@ class popup_fit_constraints(object):
         self.new_par = par
         self.logger.debug('get_result_input: updated new_par')
     
+    # ====================================================================== #
+    def set_par_text(self):
+        """
+            Set the textboxes based on stored results in self.newpar
+        """
+        
+        # get strings
+        set_par = self.new_par.astype(str)
+        
+        # round
+        numstr = '%'+('.%df' % self.bfit.rounding)
+        for k in ('res','err'):
+            set_par[k] = set_par.loc[:,k].apply(\
+                    lambda x: numstr % np.around(float(x),self.bfit.rounding))
+        
+        # enable setting
+        for k in ('res','err'):
+            self.output_text[k].config(state='normal')
+        self.output_par_text.config(state='normal')
+        
+        self.output_par_text.delete('1.0',END)
+        self.output_par_text.insert(1.0,'\n'.join(set_par['name']))
+        
+        for k in self.output_text:
+            self.output_text[k].delete('1.0',END)
+            self.output_text[k].insert(1.0,'\n'.join(set_par[k]))
+                    
+        # disable setting
+        for k in ('res','err'):
+            self.output_text[k].config(state='disabled')
+        self.output_par_text.config(state='disabled')
+        
     # ====================================================================== #
     def yview(self,*args):
         """
