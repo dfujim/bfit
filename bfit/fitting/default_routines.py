@@ -55,7 +55,6 @@ class fitter(object):
             fn_name: name of function to fit
             ncomp : number of components to incude (2 = biexp, for example)
             data_list: list of [[bdata object,pdict,doptions],]
-            hist_select: string for selection of histograms
             
                 where pdict = {par:(init val,   # initial guess
                                     bound_lo,   # lower fitting bound
@@ -68,7 +67,8 @@ class fitter(object):
                                     'rebin':int,    # rebinning factor
                                     'group':int,    # fitting group
                                  }
-                    
+                                 
+            hist_select: string for selection of histograms
             asym_mode:  input for asymmetry calculation type 
                             c: combined helicity
                             h: split helicity

@@ -11,7 +11,7 @@ class ConstrainedFunction(object):
         p1
         p2
         constraints
-        set_p
+        defined
     """
     
     # keywords used to identify variables
@@ -39,13 +39,13 @@ class ConstrainedFunction(object):
             p2:             ordered list of strings for the new parameters
         """
 
-        self.bfit = bftit
+        self.bfit = bfit
         self.p1 = p1
         self.p2 = p2
         self.constraints = constraints
         
         # get list of parameters set by the constraints
-        self.set_p = [c.split('=')[0] for c in constraints]
+        self.defined = [c.split('=')[0] for c in constraints]
         
         # find new parameter names in the string, replace with indexed par
         for i,c in enumerate(self.constraints):
@@ -64,27 +64,30 @@ class ConstrainedFunction(object):
         """
         
         # get variables in decreasing order of length (no mistakes in replace)
-        varlist = np.array(keyvars.keys())
+        varlist = np.array(list(self.keyvars.keys()))
         varlist = varlist[np.argsort(list(map(len,varlist))[::-1])]
     
         constr = []
-        for i,c in enumerate(self.constraints):
+        for c in self.constraints:
                 
             # find constant names in the string, replace with constant
             for var in varlist:
                 if var in c:
-                    value = self.get_value(data,var)
+                    value = self._get_value(data,var)
                     c = c.replace(var,str(value))
-            constr[i] = c
+            constr.append(c)
         
-        # get constraint functions, sorted
+        
+        
+        # get constraint functions, sorted THIS NEEDS FIXING
+        header = 'lambda x,%s : ' % (','.join(self.p2))
         constr_fns = []
         for i,p in enumerate(self.p1):
-            if p in self.set_p:
-                j = self.set_p.index(p)
-                constr_fns.append(eval('lambda x,*par : %s' % constr[j].split('=')[1]))
+            if p in self.defined:
+                j = self.defined.index(p)
+                constr_fns.append(eval(header+constr[j].split('=')[1]))
             else:
-                constr_fns.append(lambda x,*par: par[i])
+                constr_fns.append(eval(header+p)
     
         # define the new fitting function
         def new_fn(x,*p2):
@@ -101,7 +104,6 @@ class ConstrainedFunction(object):
         
         if   name == 'B0'   :   return data.field.mean
         elif name =='BIAS'  :   return data.bias.mean
-        elif name =='CHI'   :   return data.chi
         elif name =='CLFT'  :   return data.bd.camp.clift_read.mean
         elif name =='DUR'   :   return data.bd.duration.mean
         elif name =='ENRG'  :   return data.bd.beam_kev()

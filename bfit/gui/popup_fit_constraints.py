@@ -9,14 +9,17 @@ from functools import partial
 import logging,re,os
 import numpy as np
 import pandas as pd
+import bdata as bd
 import weakref as wref
 
 from bfit import logger_name
 from bfit.backend.entry_color_set import on_focusout,on_entry_click
 from bfit.backend.raise_window import raise_window
+from bfit.backend.ConstrainedFunction import ConstrainedFunction as CstrFnGenerator
 
 import bfit.backend.colors as colors
-import bfit.backend.ConstrainedFunction as CstrFn
+
+from bfit.fitting.fit_bdata import fit_list
 
 # ========================================================================== #
 class popup_fit_constraints(object):
@@ -28,6 +31,7 @@ class popup_fit_constraints(object):
         logger
         
         constr_text:        string, text defining constraints
+        entry:              Text, text entry for user
         new_par:            dataframe, index: parnames, columns: p0,blo,bhi,res,err
         
         output_par_text     text, detected parameter names
@@ -80,7 +84,7 @@ class popup_fit_constraints(object):
         # Keyword parameters
         key_param_frame = ttk.Frame(left_frame,relief='sunken',pad=5)
         s = 'Reserved variable names:\n\n'
-        self.reserved_pars = CstrFn.ConstrainedFunction.keyvars
+        self.reserved_pars = CstrFnGenerator.keyvars
         
         keys = list(self.reserved_pars.keys())
         descr = [self.reserved_pars[k] for k in self.reserved_pars]
@@ -92,7 +96,7 @@ class popup_fit_constraints(object):
         
         # fit parameter names 
         fit_param_frame = ttk.Frame(left_frame,relief='sunken',pad=5)
-        s = 'Reserved function input names:\n\n'
+        s = 'Reserved function parameter names:\n\n'
         self.parnames = self.fittab.fitter.gen_param_names(
                                         self.fittab.fit_function_title.get(),
                                         self.fittab.n_component.get())
@@ -115,7 +119,7 @@ class popup_fit_constraints(object):
         # Text entry
         entry_frame = ttk.Frame(right_frame,relief='sunken',pad=5)
         entry_label = ttk.Label(entry_frame,justify=LEFT,
-                                text='Enter one constraint per line.'+\
+                                text='Enter one constraint equation per line.'+\
                                      '\nNon-reserved words are shared variables.'+\
                                      '\nEx: "1_T1 = a*np.exp(b*BIAS**0.5)+c"')
         self.entry = Text(entry_frame,width=54,height=13,state='normal')
@@ -205,7 +209,96 @@ class popup_fit_constraints(object):
             proper displays. 
         """
         
-        pass
+        # parse text
+        self.do_parse()
+        
+        # clean input
+        text = self.constr_text.split('\n')
+        text = [t.strip() for t in text if '=' in t]
+        
+        # check for no input
+        if not text:
+            return
+        
+        # get equations and defined variables
+        defined = [t.split('=')[0].strip() for t in text]
+        eqn = [t.split('=')[1].strip() for t in text]
+        
+        # set up parameter sharing
+        # ~ sharelist = [True]*len(defined)
+        sharelist = [False]*len(defined)
+        
+        # make shared parameters for the rest of the parameters
+        for n in self.parnames:
+            if n not in defined:
+                sharelist.append(False)
+        
+        # make constrained functions
+        cgen= CstrFnGenerator(self.bfit,text,self.parnames,self.new_par)
+        
+        # get the functions and initial parameters
+        fit_files = self.bfit.fit_files
+        fetch_files = self.bfit.fetch_files
+        fitfns = {}
+        par = {}
+        
+        keylist = sorted(fit_files.fit_lines.keys())
+        for k in keylist:
+            line = fetch_files.data_lines[k]
+            data = line.bdfit
+            
+            # get pulse length
+            pulse_len = -1
+            try:
+                data.bd.get_pulse_s()
+            except KeyError:
+                pass
+            
+            fn = fit_files.fitter.get_fn(fn_name=fit_files.fit_function_title.get(),
+                                         ncomp=fit_files.n_component.get(),
+                                         pulse_len=pulse_len,
+                                         lifetime=bd.life[fit_files.probe_label['text']])
+            fitfns[k] = cgen(data=data,fn=fn)
+            par[k] = data.fitpar
+        
+        # set up p0, bounds
+        p0 = self.new_par['p0'].values
+        blo = self.new_par['blo'].values
+        bhi = self.new_par['bhi'].values
+        
+        p0 = [[p]*len(keylist) for p in p0]
+        blo = [[p]*len(keylist) for p in blo]
+        bhi = [[p]*len(keylist) for p in bhi]
+                
+        for n in self.parnames:
+            if n not in defined:
+                p0.append([par[k]['p0'][n] for k in keylist])
+                blo.append([par[k]['blo'][n] for k in keylist])
+                bhi.append([par[k]['bhi'][n] for k in keylist])
+        
+        p0 = np.array(p0).T
+        blo = np.array(blo).T
+        bhi = np.array(bhi).T
+        
+        # set up fitter inputs
+        runs = [int(k.split('.')[1]) for k in keylist]
+        years = [int(k.split('.')[0]) for k in keylist]
+        npar = len(sharelist)
+        bounds = [[l,h] for l,h in zip(blo,bhi)]
+        
+        par,cov,chi,gchi = fit_list(runs=runs,
+                                    years=years,
+                                    fnlist=[fitfns[k] for k in keylist],
+                                    sharelist=sharelist,
+                                    npar=npar,
+                                    p0=p0,
+                                    bounds=bounds,
+                                    asym_mode='c',
+                                    rebin=None,
+                                    omit=None,
+                                    xlims=None,
+                                    hist_select='')
+        print(par)
         
     # ====================================================================== #
     def do_parse(self,*args):
@@ -258,10 +351,7 @@ class popup_fit_constraints(object):
                     delist.append(i)
                     continue
                 
-                # check function names, variables
-                if l in self.parnames:  
-                    delist.append(i)
-                    continue
+                # check variables
                 if l in self.reserved_pars:  
                     delist.append(i)
                     continue
