@@ -36,7 +36,7 @@ class fitdata(object):
             id:         key for unique idenfication (str)    
             fitfnname:  function (str)
             fitfn:      function (function pointer)
-            fitpar:     initial parameters {column:{parname:float}} 
+            fitpar:     initial parameters {column:{parname:float}} and results
                         Columns are fit_files.fitinputtab.collist
             parnames:   parameter names in the order needed by the fit function
             

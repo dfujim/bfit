@@ -100,6 +100,7 @@ class popup_fit_constraints(object):
         self.parnames = self.fittab.fitter.gen_param_names(
                                         self.fittab.fit_function_title.get(),
                                         self.fittab.n_component.get())
+        
         s += '\n'.join([k for k in sorted(self.parnames)]) 
         s += '\n'
         fit_param_label = ttk.Label(fit_param_frame,text=s,justify=LEFT)
@@ -229,7 +230,7 @@ class popup_fit_constraints(object):
         alldef = defined[:]     # all parameter names in order
         sharelist = [True]*len(allpar)
         
-        for n in self.parnames:
+        for n in sorted(self.parnames):
             if n not in defined:
                 eqn.append(n)
                 alldef.append(n)
@@ -304,7 +305,7 @@ class popup_fit_constraints(object):
         blo = [[p]*len(keylist) for p in blo]
         bhi = [[p]*len(keylist) for p in bhi]
                 
-        for n in self.parnames:
+        for n in sorted(self.parnames):
             if n not in defined:
                 p0.append( [p['p0' ][n] for p in par])
                 blo.append([p['blo'][n] for p in par])
@@ -351,11 +352,11 @@ class popup_fit_constraints(object):
             old_chi = chi[i]
             
             # sort by original parameter name order
-            old_std = [old_std[alldef.index(n)] for n in self.parnames]
+            old_std = [old_std[alldef.index(n)] for n in cgen.oldpar]
             
             # set to fitdata containers
             # [(parname),(par),(err),chi,fnpointer]
-            data.set_fitresult([self.parnames,old_par,old_std,old_chi,fnptrs[i]])
+            data.set_fitresult([cgen.oldpar,old_par,old_std,old_chi,fnptrs[i]])
             
         # display in fit_files tab
         for key in fit_files.fit_lines:
@@ -468,7 +469,13 @@ class popup_fit_constraints(object):
         # no update if blank
         except ValueError:
             return 
-        text = pd.DataFrame(text)
+            
+        try:
+            text = pd.DataFrame(text)   
+        
+        # bad input
+        except ValueError:
+            return
         
         # get names of the parameters
         parnames = self.output_par_text.get('1.0',END).split('\n')[:-1]

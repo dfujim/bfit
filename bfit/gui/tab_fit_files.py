@@ -1797,7 +1797,6 @@ class fitline(object):
                     try:
                         self.dataline.bdfit.fitpar[col][parname] = \
                                 float(self.parentry[parname][col][0].get())
-                    
                     # failure cases: 
                     #   KeyError on ncomp change
                     #   ValueError on bad user input
