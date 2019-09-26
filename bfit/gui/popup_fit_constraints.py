@@ -6,7 +6,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from functools import partial
 
-import logging,re,os
+import logging,re,os,warnings
 import numpy as np
 import pandas as pd
 import bdata as bd
@@ -321,18 +321,28 @@ class popup_fit_constraints(object):
         npar = len(sharelist)
         bounds = [[l,h] for l,h in zip(blo,bhi)]
         
-        par,cov,chi,gchi = fit_list(runs=runs,
-                                    years=years,
-                                    fnlist=fitfns,
-                                    sharelist=sharelist,
-                                    npar=npar,
-                                    p0=p0,
-                                    bounds=bounds,
-                                    asym_mode='c',
-                                    rebin=rebin,
-                                    omit=omit,
-                                    xlims=None,
-                                    hist_select=self.bfit.hist_select)
+        # do the fit and kill fitting window
+        fit_status_window = fit_files.make_fit_status_window()
+        try:
+            par,cov,chi,gchi = fit_list(runs=runs,
+                                        years=years,
+                                        fnlist=fitfns,
+                                        sharelist=sharelist,
+                                        npar=npar,
+                                        p0=p0,
+                                        bounds=bounds,
+                                        asym_mode='c',
+                                        rebin=rebin,
+                                        omit=omit,
+                                        xlims=None,
+                                        hist_select=self.bfit.hist_select)
+        except Exception as errmsg:
+            self.logger.exception('Fitting error')
+            messagebox.showerror("Error",str(errmsg))
+            raise errmsg from None
+        finally:
+            fit_status_window.destroy()
+            del fit_status_window
         std = np.array(list(map(np.diag,cov)))**0.5
         
         # display output for global parameters
@@ -362,6 +372,12 @@ class popup_fit_constraints(object):
         for key in fit_files.fit_lines:
             fit_files.fit_lines[key].show_fit_result()
         
+        # show global chi
+        fit_files.gchi_label['text'] = str(np.around(gchi,2))
+
+        # do end-of-fit stuff
+        fit_files.do_end_of_fit()
+    
     # ====================================================================== #
     def do_parse(self,*args):
         """

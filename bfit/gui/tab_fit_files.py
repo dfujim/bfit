@@ -595,36 +595,11 @@ class fit_files(object):
         
         # call fitter with error message, potentially
         self.fit_input = (fn_name,ncomp,data_list)
-        
-        # make fitting status window
-        fit_status_window = Toplevel(self.bfit.root)
-        fit_status_window.lift()
-        fit_status_window.resizable(FALSE,FALSE)
-        ttk.Label(fit_status_window,
-                  text="Fitting in progress\nTo cancel press <Ctrl-C> in terminal ONCE",
-                  justify='center',
-                  pad=0).grid(column=0,row=0,padx=15,pady=15)
-        fit_status_window.update_idletasks()
-        self.bfit.root.update_idletasks()
-        
-        width = fit_status_window.winfo_reqwidth()
-        height = fit_status_window.winfo_reqheight()
-        
-        rt_x = self.bfit.root.winfo_x()
-        rt_y = self.bfit.root.winfo_y()
-        rt_w = self.bfit.root.winfo_width()
-        rt_h = self.bfit.root.winfo_height()
-        
-        x = rt_x + rt_w/2 - (width/2)
-        y = rt_y + rt_h/3 - (width/2)
-        
-        fit_status_window.geometry('{}x{}+{}+{}'.format(width, height, int(x), int(y)))
-        fit_status_window.update_idletasks()
+        fit_status_window = self.make_fit_status_window()
         
         # do fit then kill window
         for d in data_list:
-            self.logger.info('Fitting run %d (%d): %s',d[0].run,d[0].year,d[1:])
-            
+            self.logger.info('Fitting run %d (%d): %s',d[0].run,d[0].year,d[1:])    
         try:
             # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
             fit_output,gchi = fitter(fn_name=fn_name,ncomp=ncomp,
@@ -633,10 +608,9 @@ class fit_files(object):
                                      asym_mode=self.bfit.get_asym_mode(self))
         except Exception as errmsg:
             self.logger.exception('Fitting error')
-            fit_status_window.destroy()
             messagebox.showerror("Error",str(errmsg))
             raise errmsg from None
-        else:
+        finally:
             fit_status_window.destroy()
             del fit_status_window
 
@@ -650,6 +624,12 @@ class fit_files(object):
         
         # show global chi
         self.gchi_label['text'] = str(np.around(gchi,2))
+        
+        self.do_end_of_fit()
+        
+    # ======================================================================= #
+    def do_end_of_fit(self):
+        """Things to do after fitting: draw, set checkbox status"""
         
         # enable fit checkboxes on fetch files tab
         for k in self.bfit.fetch_files.data_lines.keys():
@@ -1370,6 +1350,34 @@ class fit_files(object):
                               chi,
                               fitfn1]
                             )
+        
+    # ======================================================================= #
+    def make_fit_status_window(self):
+        """Window to show that fitting is in progress"""
+        fit_status_window = Toplevel(self.bfit.root)
+        fit_status_window.lift()
+        fit_status_window.resizable(FALSE,FALSE)
+        ttk.Label(fit_status_window,
+                  text="Fitting in progress\nTo cancel press <Ctrl-C> in terminal ONCE",
+                  justify='center',
+                  pad=0).grid(column=0,row=0,padx=15,pady=15)
+        fit_status_window.update_idletasks()
+        self.bfit.root.update_idletasks()
+        
+        width = fit_status_window.winfo_reqwidth()
+        height = fit_status_window.winfo_reqheight()
+        
+        rt_x = self.bfit.root.winfo_x()
+        rt_y = self.bfit.root.winfo_y()
+        rt_w = self.bfit.root.winfo_width()
+        rt_h = self.bfit.root.winfo_height()
+        
+        x = rt_x + rt_w/2 - (width/2)
+        y = rt_y + rt_h/3 - (width/2)
+        
+        fit_status_window.geometry('{}x{}+{}+{}'.format(width, height, int(x), int(y)))
+        fit_status_window.update_idletasks()
+        return fit_status_window
         
     # ======================================================================= #
     def modify_all(self,*args,source=None,par='',column=''):
