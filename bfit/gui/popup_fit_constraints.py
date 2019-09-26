@@ -65,7 +65,7 @@ class popup_fit_constraints(object):
         
         # make a new window
         self.win = Toplevel(bfit.mainframe)
-        self.win.title('Constrain Fit Parameters')
+        self.win.title('Fit With Constrained Parameters')
         frame = ttk.Frame(self.win,relief='sunken',pad=5)
         left_frame = ttk.Frame(frame)
         right_frame = ttk.Frame(frame)
@@ -121,8 +121,9 @@ class popup_fit_constraints(object):
         entry_label = ttk.Label(entry_frame,justify=LEFT,
                                 text='Enter one constraint equation per line.'+\
                                      '\nNon-reserved words are shared variables.'+\
-                                     '\nEx: "1_T1 = a*np.exp(b*BIAS**0.5)+c"')
-        self.entry = Text(entry_frame,width=54,height=13,state='normal')
+                                     '\nEx: "1_T1 = a*np.exp(b*BIAS**0.5)+c"'+\
+                                     '\nNote: Shared and fixed flags from main window ignored.')
+        self.entry = Text(entry_frame,width=60,height=13,state='normal')
         self.entry.bind('<KeyRelease>',self.get_input)
         scrollb = Scrollbar(entry_frame, command=self.entry.yview)
         self.entry['yscrollcommand'] = scrollb.set
@@ -142,10 +143,10 @@ class popup_fit_constraints(object):
         output_head4_label = ttk.Label(output_frame,text='Result')
         output_head5_label = ttk.Label(output_frame,text='Error')
         self.output_par_text = Text(output_frame,width=8,height=8,state='disabled')
-        self.output_text = {k:Text(output_frame,width=8,height=8,state='normal')\
+        self.output_text = {k:Text(output_frame,width=8,height=8,wrap='none',state='normal')\
                             for k in ('p0','blo','bhi','res','err')}
         for k in ('res','err'):
-            self.output_text[k].config(state='disabled',width=9)
+            self.output_text[k].config(state='disabled',width=12)
 
         # key bindings and scrollbar
         scrollb_out = Scrollbar(output_frame, command=self.yview)
@@ -225,7 +226,7 @@ class popup_fit_constraints(object):
         
         # make shared parameters for the rest of the parameters
         allpar = self.new_par['name'].tolist()
-        alldef = defined[:]
+        alldef = defined[:]     # all parameter names in order
         sharelist = [True]*len(allpar)
         
         for n in self.parnames:
@@ -255,6 +256,7 @@ class popup_fit_constraints(object):
         rebin = []
         omit = []
         fnptrs = []
+        constr_fns = []
         
         keylist = sorted(fit_files.fit_lines.keys())
         for k in keylist:
@@ -273,8 +275,11 @@ class popup_fit_constraints(object):
                                          ncomp=fit_files.n_component.get(),
                                          pulse_len=pulse_len,
                                          lifetime=bd.life[fit_files.probe_label['text']])
-            fitfns.append(cgen(data=data,fn=fn))
+            
+            genf,genc = cgen(data=data,fn=fn)
+            fitfns.append(genf)
             fnptrs.append(fn)
+            constr_fns.append(genc)
             
             # get initial parameters
             par.append(data.fitpar)
@@ -336,14 +341,17 @@ class popup_fit_constraints(object):
         self.set_par_text()
         
         # calculate original parameter equivalents
-        constr_fns = [eval(cgen.header+e)for e in cgen.equation]
-        
         for i,k in enumerate(keylist):
             data = fetch_files.data_lines[k].bdfit
             
-            old_par = [c(*par[i]) for c in constr_fns]
-            old_std = [s if d in defined else np.nan for s,d in zip(std[i],alldef)]
+            # calculate
+            old_par = [cfn(*par[i]) for cfn in constr_fns[i]]
+            old_std = [st if adef not in defined else np.nan for st,adef in zip(std[i],alldef)]
+            old_std += [np.nan]*(len(alldef)-len(old_std))
             old_chi = chi[i]
+            
+            # sort by original parameter name order
+            old_std = [old_std[alldef.index(n)] for n in self.parnames]
             
             # set to fitdata containers
             # [(parname),(par),(err),chi,fnpointer]
@@ -483,7 +491,7 @@ class popup_fit_constraints(object):
         set_par = self.new_par.astype(str)
         
         # round
-        numstr = '%'+('.%df' % self.bfit.rounding)
+        numstr = '%'+('.%dg' % self.bfit.rounding)
         for k in ('res','err'):
             set_par[k] = set_par.loc[:,k].apply(\
                     lambda x: numstr % np.around(float(x),self.bfit.rounding))

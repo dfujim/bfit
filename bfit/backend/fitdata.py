@@ -38,7 +38,6 @@ class fitdata(object):
             fitfn:      function (function pointer)
             fitpar:     initial parameters {column:{parname:float}} 
                         Columns are fit_files.fitinputtab.collist
-            fitpar_var: initial parameters {column:{parname:StringVar}}
             parnames:   parameter names in the order needed by the fit function
             
             drawarg:    drawing arguments for errorbars (dict)

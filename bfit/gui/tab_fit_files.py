@@ -547,7 +547,7 @@ class fit_files(object):
                 for col in fitline.collist:
                     
                     # get number entries
-                    if col in ['p0','blo','bhi']:
+                    if col in ('p0','blo','bhi'):
                         try:
                             line.append(float(pline[col][0].get()))
                         except ValueError as errmsg:
@@ -1776,6 +1776,8 @@ class fitline(object):
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
             self.parentry[p]['shared'] = [value,entry]
             
+            
+        # set p0 synchronization ----------------------------------------------
         for p in self.parentry.keys():
             parentry = self.parentry[p]
             
@@ -1784,21 +1786,37 @@ class fitline(object):
             parentry['shared'][0] = var
             parentry['shared'][1].config(variable=var)
             
-            # set parameter entry synchronization
+            # make callback function
+            def callback(*args,parname,col,source):
+                
+                # set parameter entry synchronization
+                self.bfit.fit_files.modify_all(source=source,par=parname,column=col)
+                
+                # set bdfit p0 values
+                if col != 'fixed':
+                    try:
+                        self.dataline.bdfit.fitpar[col][parname] = \
+                                float(self.parentry[parname][col][0].get())
+                    
+                    # failure cases: 
+                    #   KeyError on ncomp change
+                    #   ValueError on bad user input
+                    except (ValueError,KeyError):
+                        pass            
+            
+            # set callback
             for k in ('p0','blo','bhi','fixed'):
-                
-                # make callback function
-                callback = partial(self.bfit.fit_files.modify_all,
-                                   source=self,par=p,column=k)
-                
+                        
                 # remove old trace callbacks
                 for t in parentry[k][0].trace_vinfo():
                     parentry[k][0].trace_vdelete(*t)
                 
                 # set new trace callback
-                parentry[k][0].trace_id = parentry[k][0].trace("w", callback)
-                parentry[k][0].trace_callback = callback
-        
+                parentry[k][0].trace_id = parentry[k][0].trace("w",\
+                                partial(callback,parname=p,col=k,source=self))
+                parentry[k][0].trace_callback = \
+                                partial(callback,parname=p,col=k,source=self)
+                
     # ======================================================================= #
     def get_new_parameters(self):
         """

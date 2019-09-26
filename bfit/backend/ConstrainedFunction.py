@@ -77,7 +77,7 @@ class ConstrainedFunction(object):
             oldparam = [c(*newparam) for c in constr_fns]
             return fn(x,*oldparam)
             
-        return new_fn
+        return (new_fn,constr_fns)
             
     # ======================================================================= # 
     def _get_value(self,data,name):
@@ -85,21 +85,21 @@ class ConstrainedFunction(object):
             Tranlate typed constant to numerical value
         """
         
-        if   name == 'B0'   :   return data.field.mean
-        elif name =='BIAS'  :   return data.bias.mean
+        if   name == 'B0'   :   return data.field
+        elif name =='BIAS'  :   return data.bias
         elif name =='CLFT'  :   return data.bd.camp.clift_read.mean
-        elif name =='DUR'   :   return data.bd.duration.mean
+        elif name =='DUR'   :   return data.bd.duration
         elif name =='ENRG'  :   return data.bd.beam_kev()
         elif name =='LAS'   :   return data.bd.epics.las_pwr.mean
         elif name =='NBMR'  :   
             return np.sum([data.hist['NBM'+h].data \
-                            for h in ('F+','F-','B-','B+')])/data.duration.mean
+                           for h in ('F+','F-','B-','B+')])/data.duration
         elif name =='RATE'  :   
-            hist = ('F+','F-','B-','B+') if data[runs[0]].area == 'BNMR' \
+            hist = ('F+','F-','B-','B+') if data.area == 'BNMR' \
                                          else ('L+','L-','R-','R+')    
             return np.sum([data.hist[h].data for h in hist])/data.duration
         elif name =='RF'    :   return data.bd.camp.rf_dac.mean
         elif name =='RUN'   :   return data.run
-        elif name =='TEMP'  :   return data.temperature.mean
+        elif name =='TEMP'  :   return data.temperature
         elif name =='TIME'  :   return data.bd.start_time
         elif name =='YEAR'  :   return data.year
