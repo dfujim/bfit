@@ -37,10 +37,12 @@ class popup_fit_constraints(object):
         output_par_text     text, detected parameter names
         output_text         dict, keys: p0,blo,bhi,res,err, value: tkk.Text objects
        
+        output_par_text_val string, contents of output_par_text
+        output_text_val     dict of strings, contents of output_text
+       
         parnames:           list, function inputs
         reserved_pars:      dict, define values in bdata that can be accessed
         win:                Toplevel
-        
     """
 
     # names of modules the constraints have access to
@@ -54,10 +56,16 @@ class popup_fit_constraints(object):
                         'err':np.nan}
 
     # ====================================================================== #
-    def __init__(self,bfit,constr_text=''):
+    def __init__(self,bfit,constr_text='',output_par_text='',output_text=''):
         self.bfit = bfit
         self.fittab = bfit.fit_files
         self.constr_text = constr_text
+        self.output_par_text_val = output_par_text
+        
+        if not output_text:
+            self.output_text_val = {}
+        else:
+            self.output_text_val = output_text
     
         # get logger
         self.logger = logging.getLogger(logger_name)
@@ -129,12 +137,8 @@ class popup_fit_constraints(object):
         scrollb = Scrollbar(entry_frame, command=self.entry.yview)
         self.entry['yscrollcommand'] = scrollb.set
         
-        # Key bindings
-        self.entry.bind('<Return>',self.do_parse)             
-        self.entry.bind('<KP_Enter>',self.do_parse)
-        
-        # parse
-        parse_button = ttk.Button(right_frame,text='Parse Input',command=self.do_parse)
+        # Insert default text
+        self.entry.insert('1.0',self.constr_text.strip())
         
         # text for output
         output_frame = ttk.Frame(right_frame,relief='sunken',pad=5)
@@ -143,9 +147,20 @@ class popup_fit_constraints(object):
         output_head3_label = ttk.Label(output_frame,text='Bounds')
         output_head4_label = ttk.Label(output_frame,text='Result')
         output_head5_label = ttk.Label(output_frame,text='Error')
-        self.output_par_text = Text(output_frame,width=8,height=8,state='disabled')
-        self.output_text = {k:Text(output_frame,width=8,height=8,wrap='none',state='normal')\
+        self.output_par_text = Text(output_frame,width=8,height=8)
+        self.output_text = {k:Text(output_frame,width=8,height=8,wrap='none')\
                             for k in ('p0','blo','bhi','res','err')}
+        
+        # default starter strings
+        if self.output_par_text_val: 
+            self.output_par_text.insert('1.0',self.output_par_text_val)
+        self.output_par_text.config(state='disabled')
+    
+        if self.output_text_val: 
+            for k in self.output_text_val:
+                self.output_text[k].insert('1.0',self.output_text_val[k])
+
+        # disable results
         for k in ('res','err'):
             self.output_text[k].config(state='disabled',width=12)
 
@@ -191,9 +206,8 @@ class popup_fit_constraints(object):
         fit_param_frame.grid(column=0,row=3,sticky=(E,W,N,S),padx=1,pady=1)
         
         entry_frame.grid(column=0,row=0,sticky=(N,E,W),padx=1,pady=1)
-        parse_button.grid(column=0,row=1,sticky=(N,E,W),padx=1,pady=1)
-        output_frame.grid(column=0,row=2,sticky=(N,E,W,S),padx=1,pady=1)
-        fit_button.grid(column=0,row=3,sticky=(N,E,W),padx=1,pady=1)
+        output_frame.grid(column=0,row=1,sticky=(N,E,W,S),padx=1,pady=1)
+        fit_button.grid(column=0,row=2,sticky=(N,E,W),padx=1,pady=1)
         
         # initialize 
         self.new_par = pd.DataFrame(columns=['name','p0','blo','bhi','res','err']) 
@@ -224,6 +238,14 @@ class popup_fit_constraints(object):
         # get equations and defined variables
         defined = [t.split('=')[0].strip() for t in text]
         eqn = [t.split('=')[1].strip() for t in text]
+        
+        # check that the defined variables all match function inputs
+        for d in defined: 
+            if d not in self.parnames:
+                errmsg = 'Definition for "%s" invalid. ' % d+\
+                         'Must only define function inputs. '
+                messagebox.showerror("Error",errmsg)
+                raise RuntimeError(errmsg)
         
         # make shared parameters for the rest of the parameters
         allpar = self.new_par['name'].tolist()
@@ -397,14 +419,6 @@ class popup_fit_constraints(object):
         defined = [t.split('=')[0].strip() for t in text]
         eqn = [t.split('=')[1].strip() for t in text]
         
-        # check that the defined variables all match function inputs
-        for d in defined: 
-            if d not in self.parnames:
-                errmsg = 'Definition for "%s" invalid. ' % d+\
-                         'Must only define function inputs. '
-                messagebox.showerror("Error",errmsg)
-                raise RuntimeError(errmsg)
-        
         # check for new parameters
         new_par = []
         for eq in eqn:
@@ -436,7 +450,10 @@ class popup_fit_constraints(object):
                     
             delist.sort()
             for i in delist[::-1]:
-                del lst[i]
+                try:
+                    del lst[i]
+                except IndexError:  # error raised on incomplete math: ex "np."
+                    pass
                 
             new_par.append(lst)
 
@@ -470,6 +487,7 @@ class popup_fit_constraints(object):
     def get_input(self,*args):
         """Get input from text box."""
         self.constr_text = self.entry.get('1.0',END)
+        self.do_parse()
         
     # ====================================================================== #
     def get_result_input(self,*args):
@@ -481,14 +499,13 @@ class popup_fit_constraints(object):
         try:
             text = {k:list(map(float,self.output_text[k].get('1.0',END).split('\n')[:-1])) \
                 for k in self.output_text}
-        
         # no update if blank
         except ValueError:
             return 
-            
+        
+        # dataframe it
         try:
             text = pd.DataFrame(text)   
-        
         # bad input
         except ValueError:
             return
@@ -514,7 +531,7 @@ class popup_fit_constraints(object):
         set_par = self.new_par.astype(str)
         
         # round
-        numstr = '%'+('.%dg' % self.bfit.rounding)
+        numstr = '%'+('.%df' % self.bfit.rounding)
         for k in ('res','err'):
             set_par[k] = set_par.loc[:,k].apply(\
                     lambda x: numstr % np.around(float(x),self.bfit.rounding))
@@ -526,11 +543,13 @@ class popup_fit_constraints(object):
         
         self.output_par_text.delete('1.0',END)
         self.output_par_text.insert(1.0,'\n'.join(set_par['name']))
+        self.output_par_text_val = '\n'.join(set_par['name'])
         
         for k in self.output_text:
             self.output_text[k].delete('1.0',END)
             self.output_text[k].insert(1.0,'\n'.join(set_par[k]))
-                    
+            self.output_text_val[k] = '\n'.join(set_par[k])
+                
         # disable setting
         for k in ('res','err'):
             self.output_text[k].config(state='disabled')
