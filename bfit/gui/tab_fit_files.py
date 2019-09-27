@@ -659,8 +659,19 @@ class fit_files(object):
     def do_fit_constraints(self):
         if hasattr(self,'pop_fitconstr'):
             p = self.pop_fitconstr
+            
+            # don't make more than one window
+            if Toplevel.winfo_exists(p.win): 
+                p.win.lift()
+                return
+            
+            # make a new window, using old inputs and outputs
             self.pop_fitconstr = popup_fit_constraints(self.bfit,
-                                    constr_text=p.constr_text)
+                                    constr_text=p.constr_text,
+                                    output_par_text=p.output_par_text_val,
+                                    output_text=p.output_text_val)
+        
+        # make entirely new window
         else:
             self.pop_fitconstr = popup_fit_constraints(self.bfit)
     
