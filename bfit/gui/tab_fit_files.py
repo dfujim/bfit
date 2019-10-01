@@ -61,6 +61,8 @@ class fit_files(object):
             runframe:       frame for displaying fit results and inputs
             runmode_label:  display run mode 
             set_as_group:   BooleanVar() if true, set fit parfor whole group
+            set_prior_p0:   BooleanVar() if true, set P0 of newly added runs to 
+                            P0 of fit with largest run number
             share_var:      BooleanVar() holds share checkbox for all fitlines
             use_rebin:      BoolVar() for rebinning on fitting
             xaxis:          StringVar() for parameter to draw on x axis
@@ -134,11 +136,11 @@ class fit_files(object):
         # fit and other buttons
         fit_button = ttk.Button(fn_select_frame,text='Fit',command=self.do_fit,\
                                 pad=1)
-        constraint_button = ttk.Button(fn_select_frame,text='Fit with constraints',
+        constraint_button = ttk.Button(fn_select_frame,text='Constrained Fit',
                                        command=self.do_fit_constraints,pad=1)
         set_param_button = ttk.Button(fn_select_frame,text='Set Result as P0',
                         command=self.do_set_result_as_initial,pad=1)                        
-        reset_param_button = ttk.Button(fn_select_frame,text='Reset Inputs',
+        reset_param_button = ttk.Button(fn_select_frame,text='Reset P0',
                         command=self.do_reset_initial,pad=1)
         gui_param_button = ttk.Button(fn_select_frame,text='P0 Finder',
                         command=self.do_gui_param,pad=1)
@@ -154,7 +156,7 @@ class fit_files(object):
                   row=0,padx=5,pady=5,sticky=W); c+=1
         self.n_component_box.grid(column=c,row=0,padx=5,pady=5,sticky=W); c+=1
         fit_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
-        constraint_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
+        constraint_button.grid(column=c,row=0,padx=5,pady=1,sticky=(W,E)); c+=1
         set_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
         reset_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
         gui_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
@@ -239,6 +241,13 @@ class fit_files(object):
                 variable=self.use_rebin,onvalue=True,offvalue=False)
         self.use_rebin.set(False)
         
+        # set P0 as prior checkbox
+        self.set_prior_p0 = BooleanVar()
+        set_prior_p0 = ttk.Checkbutton(other_settings_label_frame,
+                text='Set P0 of new run to prior result',\
+                variable=self.set_prior_p0,onvalue=True,offvalue=False)
+        self.set_prior_p0.set(False)
+        
         # fit results -----------------------
         results_frame = ttk.Labelframe(fit_data_tab,
             text='Fit Results and Run Conditions',pad=5)     # draw fit results
@@ -311,6 +320,7 @@ class fit_files(object):
         other_settings_label_frame.grid(column=1,row=3,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         set_group_check.grid(column=0,row=0,padx=5,pady=1,sticky=W)
         set_use_rebin.grid(column=0,row=1,padx=5,pady=1,sticky=W)
+        set_prior_p0.grid(column=0,row=2,padx=5,pady=1,sticky=W)
         
         results_frame.grid(column=1,row=4,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         state_frame.grid(column=1,row=6,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
@@ -447,7 +457,6 @@ class fit_files(object):
                 self.fit_lines_old[k] = self.fit_lines[k]
                 del self.fit_lines[k]
         
-            
         # make or regrid fitline objects
         n = 0
         for k in keylist:
@@ -1795,7 +1804,6 @@ class fitline(object):
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
             self.parentry[p]['shared'] = [value,entry]
             
-            
         # set p0 synchronization ----------------------------------------------
         for p in self.parentry.keys():
             parentry = self.parentry[p]
@@ -1805,7 +1813,7 @@ class fitline(object):
             parentry['shared'][0] = var
             parentry['shared'][1].config(variable=var)
             
-            # make callback function
+            # make callback function to set p0 values in bdfit object
             def callback(*args,parname,col,source):
                 
                 # set parameter entry synchronization
@@ -1855,9 +1863,27 @@ class fitline(object):
         plist = list(fitter.gen_param_names(fn_title,ncomp))
         plist.sort()
         
-        # get init values
-        values = fitter.gen_init_par(fn_title,ncomp,self.bfit.data[run].bd,
-                                     self.bfit.get_asym_mode(self.bfit.fit_files))
+        # check if we are using the fit results of the prior fit
+        values = None
+        res = self.bfit.data[run].fitpar['res']
+        isfitted = any([res[k] for k in res]) # is this run fitted?
+        
+        if fit_files.set_prior_p0.get() and not isfitted:
+            r = 0
+            for rkey in self.bfit.data:
+                data = self.bfit.data[rkey]
+                res = data.fitpar['res']
+                isfitted = any([res[k] for k in res]) # is the latest run fitted?
+                if isfitted and data.run > r:
+                    r = data.run
+                    values = {k:(res[k],
+                                 data.fitpar['blo'][k],
+                                 data.fitpar['bhi'][k]) for k in res}
+            
+        # get calcuated initial values
+        if values is None:
+            values = fitter.gen_init_par(fn_title,ncomp,self.bfit.data[run].bd,
+                                     self.bfit.get_asym_mode(fit_files))
         
         # set to data
         self.bfit.data[run].set_fitpar(values)
