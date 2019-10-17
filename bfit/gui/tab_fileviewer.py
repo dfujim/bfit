@@ -780,34 +780,80 @@ class fileviewer(object):
             except AttributeError:
                 pass
             
-            try:
-                val = int(data.ppg.volt_start.mean)
-                data_ne['Start Rb Scan'] = '%d Volts' % val
-                key_order_ne.append('Start Rb Scan')
+            # get mode
+            try: 
+                custom_enable = bool(data.ppg.customv_enable.mean)
             except AttributeError:
-                pass
+                custom_enable = False
             
-            try:    
-                val = int(data.ppg.volt_stop.mean)
-                data_ne['Stop Rb Scan'] = '%d Volts' % val
-                key_order_ne.append('Stop Rb Scan')
-            except AttributeError:
-                pass
+            # custom varible scan
+            if custom_enable:
+                
+                try:
+                    val = str(data.ppg.customv_name_write.units)
+                    data_ne['EPICS variable name (for writing)'] = '%s' % val
+                    key_order_ne.append('EPICS variable name (for writing)')
+                except AttributeError:
+                    pass
             
-            try:
-                val = int(data.ppg.volt_incr.mean)
-                data_ne['Scan Increment'] = '%d Volts' % val
-                key_order_ne.append('Scan Increment')
-            except AttributeError:
-                pass
+                try:
+                    val = str(data.ppg.customv_name_read.units)
+                    data_ne['EPICS variable name (for readback)'] = '%s' % val
+                    key_order_ne.append('EPICS variable name (for readback)')
+                except AttributeError:
+                    pass
             
+                try:
+                    val = int(data.ppg.customv_scan_start.mean)
+                    data_ne['Scan start value'] = '%d' % val
+                    key_order_ne.append('Scan start value')
+                except AttributeError:
+                    pass
+            
+                try:
+                    val = int(data.ppg.customv_scan_stop.mean)
+                    data_ne['Scan stop value'] = '%d' % val
+                    key_order_ne.append('Scan stop value')
+                except AttributeError:
+                    pass
+            
+                try:
+                    val = int(data.ppg.customv_scan_incr.mean)
+                    data_ne['Scan increment'] = '%d' % val
+                    key_order_ne.append('Scan increment')
+                except AttributeError:
+                    pass
+            
+            # normal Rb cell scan
+            else:
+                try:
+                    val = int(data.ppg.volt_start.mean)
+                    data_ne['Start Rb Scan'] = '%d Volts' % val
+                    key_order_ne.append('Start Rb Scan')
+                except AttributeError:
+                    pass
+                
+                try:    
+                    val = int(data.ppg.volt_stop.mean)
+                    data_ne['Stop Rb Scan'] = '%d Volts' % val
+                    key_order_ne.append('Stop Rb Scan')
+                except AttributeError:
+                    pass
+                
+                try:
+                    val = int(data.ppg.volt_incr.mean)
+                    data_ne['Scan Increment'] = '%d Volts' % val
+                    key_order_ne.append('Scan Increment')
+                except AttributeError:
+                    pass
+                
             try:
                 val = int(data.ppg.nbins.mean)
                 data_ne['Number of Bins'] = '%d' % val
                 key_order_ne.append('Number of Bins')
             except AttributeError:
                 pass
-            
+                
             try:
                 val = bool(data.ppg.hel_enable.mean)
                 data_ne['Flip Helicity'] = str(val)
