@@ -69,6 +69,8 @@ class fit_files(object):
             yaxis:          StringVar() for parameter to draw on y axis
             xaxis_combobox: box for choosing x axis draw parameter
             yaxis_combobox: box for choosing y axis draw parameter
+            
+            xlo,hi:         StringVar, fit range limits on x axis
     """ 
     
     default_fit_functions = {
@@ -248,6 +250,19 @@ class fit_files(object):
                 variable=self.set_prior_p0,onvalue=True,offvalue=False)
         self.set_prior_p0.set(False)
         
+        # specify x axis --------------------
+        xspecify_frame = ttk.Labelframe(fit_data_tab,
+            text='Restrict x limits',pad=5)
+        
+        self.xlo = StringVar()
+        self.xhi = StringVar()
+        self.xlo.set('-inf')
+        self.xhi.set('inf')
+        
+        entry_xspecify_lo = ttk.Entry(xspecify_frame,textvariable=self.xlo,width=10)
+        entry_xspecify_hi = ttk.Entry(xspecify_frame,textvariable=self.xhi,width=10)
+        label_xspecify = ttk.Label(xspecify_frame,text=" < x < ")
+        
         # fit results -----------------------
         results_frame = ttk.Labelframe(fit_data_tab,
             text='Fit Results and Run Conditions',pad=5)     # draw fit results
@@ -322,7 +337,12 @@ class fit_files(object):
         set_use_rebin.grid(column=0,row=1,padx=5,pady=1,sticky=W)
         set_prior_p0.grid(column=0,row=2,padx=5,pady=1,sticky=W)
         
-        results_frame.grid(column=1,row=4,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        entry_xspecify_lo.grid(column=0,row=0)
+        label_xspecify.grid(column=1,row=0)
+        entry_xspecify_hi.grid(column=2,row=0)
+        
+        xspecify_frame.grid(column=1,row=4,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        results_frame.grid(column=1,row=5,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         state_frame.grid(column=1,row=6,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
         
         # resizing
@@ -533,6 +553,14 @@ class fit_files(object):
         fn_name = self.fit_function_title.get()
         ncomp = self.n_component.get()
         
+        xlims = (self.xlo.get(),self.xhi.get())
+        try:
+            xlims = tuple(map(float,xlims))
+        except ValueError as err:
+            messagebox.showerror("Error",'Bad input for xlims')
+            self.logger.exception(str(err))
+            raise err
+            
         self.logger.info('Fitting with "%s" with %d components',fn_name,ncomp)
         
         # build data list
@@ -614,7 +642,8 @@ class fit_files(object):
             fit_output,gchi = fitter(fn_name=fn_name,ncomp=ncomp,
                                      data_list=data_list,
                                      hist_select=self.bfit.hist_select,
-                                     asym_mode=self.bfit.get_asym_mode(self))
+                                     asym_mode=self.bfit.get_asym_mode(self),
+                                     xlims=xlims)
         except Exception as errmsg:
             self.logger.exception('Fitting error')
             messagebox.showerror("Error",str(errmsg))

@@ -48,7 +48,7 @@ class fitter(object):
         self.probe_species = probe_species
         
     # ======================================================================= #
-    def __call__(self,fn_name,ncomp,data_list,hist_select,asym_mode):
+    def __call__(self,fn_name,ncomp,data_list,hist_select,asym_mode,xlims):
         """
             Fitting controller. 
             
@@ -81,7 +81,7 @@ class fitter(object):
                             raw_: raw time-resolved
                             
                             ex: sl_c or raw_h or dif_c
-                                            
+            xlims: fit subrange of x axis
             returns dictionary of {run: [[par_names],[par_values],[par_errors],
                                         [chisquared],[fitfunction pointers]]}
                                    and global chisquared
@@ -179,7 +179,7 @@ class fitter(object):
         pars,covs,chis,gchi = fit_list(runs,years,fn,omit,rebin,sharelist,
                                        npar=npar,hist_select=hist_select,p0=p0,
                                        bounds=bounds,asym_mode=asym_mode,
-                                       fixed=fixedlist)
+                                       fixed=fixedlist,xlims=xlims)
         stds = [np.sqrt(np.diag(c)) for c in covs]
         
         # collect results
