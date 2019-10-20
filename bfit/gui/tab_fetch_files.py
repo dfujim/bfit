@@ -654,6 +654,7 @@ class dataline(object):
         bfit:           pointer to root 
         bin_remove:     StringVar for specifying which bins to remove in 1f runs
         bin_remove_entry: Entry object for bin remove 
+        check:          Checkbox for selection (related to check_state)
         check_data:     BooleanVar for specifying to draw data
         check_fit:      BooleanVar for specifying to draw fit
         check_res:      BooleanVar for specifying to draw residual
@@ -704,41 +705,6 @@ class dataline(object):
         self.bdfit = bdfit
         self.id = bdfit.id
         
-        # temperature
-        try:
-            self.temperature = int(np.round(bdfit.temperature.mean))
-        except AttributeError:
-            self.temperature = -999
-            
-        # field (Tesla)
-        if bdfit.field > 0.1:
-            self.field = np.around(bdfit.field,2)
-            
-            try:
-                field_text = "%3.2fT"%self.field
-            except TypeError:
-                field_text = ' '
-        else:
-            self.field = np.round(bdfit.field*1e4)
-            
-            try:
-                field_text = "%3.0fG"%self.field
-            except TypeError:
-                field_text = ' '
-        
-        # bias
-        self.bias = self.bdfit.bias
-        try:
-            bias_text = "%4.2fkV"%self.bias
-        except TypeError:
-            bias_text = ' '
-        
-        # duration 
-        try: 
-            duration_text = "%02d:%02d" % divmod(self.bdfit.duration, 60)
-        except AttributeError:
-            duration_text = ' '
-            
         # build objects
         line_frame = Frame(fetch_tab_frame)
         line_frame.bind('<Enter>', self.on_line_enter)
@@ -779,12 +745,11 @@ class dataline(object):
                 textvariable=self.rebin)
         self.rebin.set(self.bfit.fetch_files.check_rebin.get())
                 
-        info_str = "%d.%d, %3dK, %s, %s, %s" % (self.year,self.run,
-                                              self.temperature,field_text,
-                                              bias_text,duration_text)
         self.check_state.set(bfit.fetch_files.check_state.get())
-        check = ttk.Checkbutton(line_frame,text=info_str,variable=self.check_state,\
+        self.check = ttk.Checkbutton(line_frame,variable=self.check_state,\
                 onvalue=True,offvalue=False,pad=5)
+         
+        self.set_check_text()
          
         # add grey text to bin removal
         bin_remove_entry.insert(0,self.bin_remove_starter_line)
@@ -801,7 +766,7 @@ class dataline(object):
                 
         # grid
         c = 1
-        check.grid(column=c,row=0,sticky=E); c+=1
+        self.check.grid(column=c,row=0,sticky=E); c+=1
         if self.mode in ['1f','1n','1w']: 
             bin_remove_entry.grid(column=c,row=0,sticky=E); c+=1
         if self.mode in ['20','2h']: 
@@ -843,6 +808,7 @@ class dataline(object):
         self.line_frame.grid(column=0,row=row,columnspan=2, sticky=(W,N))
         self.line_frame.update_idletasks()
         self.bfit.data[self.id] = self.bdfit
+        self.set_check_text()
         
     # ======================================================================= #
     def degrid(self):
@@ -909,6 +875,53 @@ class dataline(object):
                                               figstyle=figstyle,
                                               rebin=self.rebin.get())
 
+    # ======================================================================= #
+    def set_check_text(self):
+        """Update the string for the check state box"""
+        
+        bdfit = self.bdfit
+        
+        # temperature
+        try:
+            self.temperature = int(np.round(bdfit.temperature.mean))
+        except AttributeError:
+            self.temperature = -999
+            
+        # field (Tesla)
+        if bdfit.field > 0.1:
+            self.field = np.around(bdfit.field,2)
+            
+            try:
+                field_text = "%3.2fT"%self.field
+            except TypeError:
+                field_text = ' '
+        else:
+            self.field = np.round(bdfit.field*1e4)
+            
+            try:
+                field_text = "%3.0fG"%self.field
+            except TypeError:
+                field_text = ' '
+        
+        # bias
+        self.bias = self.bdfit.bias
+        try:
+            bias_text = "%4.2fkV"%self.bias
+        except TypeError:
+            bias_text = ' '
+        
+        # duration 
+        try: 
+            duration_text = "%02d:%02d" % divmod(self.bdfit.duration, 60)
+        except AttributeError:
+            duration_text = ' '
+        
+        # set the text    
+        info_str = "%d.%d, %3dK, %s, %s, %s" % (self.year,self.run,
+                                              self.temperature,field_text,
+                                              bias_text,duration_text)
+        self.check.config(text=info_str)
+    
     # ======================================================================= #
     def set_label(self):
         """Set default label text"""
