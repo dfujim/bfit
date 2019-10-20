@@ -1400,6 +1400,10 @@ class fit_files(object):
                               fitfn1]
                             )
         
+        # xlims
+        self.xlo.set(from_file['xlo'])
+        self.xhi.set(from_file['xhi'])
+        
     # ======================================================================= #
     def make_fit_status_window(self):
         """Window to show that fitting is in progress"""
@@ -1494,6 +1498,10 @@ class fit_files(object):
                 parentry[param_name] = {k:par[k][0].get() for k in par}
             flines[id] = parentry
         to_file['fitlines'] = flines
+  
+        # get xlims
+        to_file['xlo'] = self.xlo.get()
+        to_file['xhi'] = self.xhi.get()
   
         # save file ----------------------------------------------------------
         fid = filedialog.asksaveasfile(mode='w',filetypes=[('yaml','*.yaml'),
