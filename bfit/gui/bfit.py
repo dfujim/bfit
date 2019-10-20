@@ -175,12 +175,12 @@ class bfit(object):
     # define draw componeents in draw_param and labels
     draw_components = ['Temperature (K)','1000/T (1/K)','Impl. Energy (keV)',
                        'Platform Bias (kV)','Run Number','B0 Field (T)', 
-                       'Sample','RF Level DAC','Chi-Squared','Run Duration (s)',
-                       'Start Time','Title','Year','Cryo Lift Set (mm)',
-                       'Cryo Lift Read (mm)','He Mass Flow','CryoEx Mass Flow',
-                       'Needle Set (turns)','Needle Read (turns)','Laser Power',
-                       'Target Bias (kV)','NBM Rate (count/s)',
-                       'Sample Rate (count/s)']
+                       'Unique Id', 'Sample','RF Level DAC','Chi-Squared',
+                       'Run Duration (s)', 'Start Time','Title','Year',
+                       'Cryo Lift Set (mm)', 'Cryo Lift Read (mm)',
+                       'He Mass Flow','CryoEx Mass Flow', 'Needle Set (turns)',
+                       'Needle Read (turns)','Laser Power', 'Target Bias (kV)',
+                       'NBM Rate (count/s)', 'Sample Rate (count/s)']
     try: 
         bnmr_data_dir = os.environ[bnmr_archive_label]
         bnqr_data_dir = os.environ[bnqr_archive_label]
@@ -345,7 +345,7 @@ class bfit(object):
         
         # Settings: set label default
         self.label_default = StringVar()
-        self.label_default.set('Run Number')
+        self.label_default.set('Unique Id')
         for dc in sorted(self.draw_components):
             menu_settings_lab.add_radiobutton(label=dc,
                 variable=self.label_default,value=dc,command=self.set_all_labels,
@@ -1120,6 +1120,9 @@ class bfit(object):
                 
             elif select == 'Year':
                 label = '%d' % data.year
+            
+            elif select == 'Unique Id':
+                label = '%d.%d' % (data.year,data.run)
                 
             elif 'Cryo Lift Set (mm)' in select:
                 label = '%3.2f mm' % np.around(data.bd.camp.clift_set.mean,2)
