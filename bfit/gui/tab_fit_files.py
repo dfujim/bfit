@@ -1623,8 +1623,10 @@ class fitline(object):
         fitframe = ttk.Frame(self.parent,pad=(5,0))
         
         # label for displyaing run number
-        self.run_label = Label(fitframe,text='[ %d ]' % (self.dataline.run),
-                               bg=colors.foreground,fg=colors.background)
+        self.run_label = Label(fitframe,
+                            text='[ %d - %d ]' % (self.dataline.run,
+                                                  self.dataline.year),
+                           bg=colors.foreground,fg=colors.background)
         self.run_label_title = Label(fitframe,text=self.dataline.bdfit.title,
                                         justify='right',fg='red3')
      
@@ -1640,7 +1642,7 @@ class fitline(object):
         ttk.Label(fitframe,text='Fixed').grid(        column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Shared').grid(       column=c,row=1,padx=5); c+=1
     
-        self.run_label.grid(column=0,row=0,padx=5,pady=5)
+        self.run_label.grid(column=0,row=0,padx=5,pady=5,columnspan=2,sticky=W)
         self.run_label_title.grid(column=1,row=0,padx=5,pady=5,columnspan=c-1,sticky=E)
         
         # save frame 
