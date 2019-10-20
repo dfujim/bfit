@@ -8,6 +8,10 @@ from tkinter import ttk,filedialog,messagebox
 from bdata import bdata
 from scipy.optimize import curve_fit
 
+# set MPL backend
+import matplotlib as mpl
+mpl.use('TkAgg')
+
 try:
     from mpl_toolkits.mplot3d import Axes3D
 except ImportError as errmsg:
@@ -18,7 +22,6 @@ import sys,os,datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import bdata as bd
 import weakref as wref
 import webbrowser
