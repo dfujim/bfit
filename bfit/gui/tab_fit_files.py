@@ -688,8 +688,8 @@ class fit_files(object):
             self.bfit.fetch_files.draw_all(figstyle='fit',ignore_check=False)
         
         if len(self.fit_lines.keys())>8:
-            self.plt.gca(figstyle).get_legend().remove()
-            self.plt.tight_layout(figstyle)
+            self.plt.gca('fit').get_legend().remove()
+            self.plt.tight_layout('fit')
         
         self.bfit.draw_style.set(style)
         
