@@ -47,7 +47,6 @@ __doc__=\
             %s
 """
 
-
 # =========================================================================== #
 class global_fitter(object):
     """
@@ -159,11 +158,11 @@ class global_fitter(object):
                 fixed_add = [np.full(sh[1],False) for i in range(self.nsets-sh[0])]
                 fixed = np.vstack((*fixed,*fixed_add))
             
-            # setup fixed sharing
+            # fixed sharing
             for i,(f,s) in enumerate(zip(fixed.T,sharelist)): 
-                if s: 
-                    fixed[:,i] = np.full(len(f),any(f)) 
-            
+                if s and any(f): 
+                    raise RuntimeError('Cannot fix a shared parameter')
+                    
             # flatten
             fixed = np.concatenate(fixed)
           
@@ -635,9 +634,6 @@ def _get_fixed_values(fixed,fn,p0,bounds=None):
     p0_orig = np.copy(p0)
     npar_orig = len(p0_orig)
             
-    # index of fixed parameters
-    idx = np.where(fixed)
-    
     # make new fitting function with fixed parameter(s)
     def fn(x,*args):
         args_fixed = np.zeros(npar_orig)

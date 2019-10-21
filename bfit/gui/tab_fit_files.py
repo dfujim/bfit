@@ -1856,6 +1856,29 @@ class fitline(object):
             self.parentry[p]['shared'] = [value,entry]
             
         # set p0 synchronization ----------------------------------------------
+        
+        # make callback function to set p0 values in bdfit object
+        def callback(*args,parname,col,source):
+            
+            # set parameter entry synchronization
+            self.bfit.fit_files.modify_all(source=source,par=parname,column=col)
+            
+            # set bdfit p0 values
+            if col != 'fixed':
+                try:
+                    self.dataline.bdfit.fitpar[col][parname] = \
+                            float(self.parentry[parname][col][0].get())
+                # failure cases: 
+                #   KeyError on ncomp change
+                #   ValueError on bad user input
+                except (ValueError,KeyError):
+                    pass
+            
+            elif col == 'fixed':
+                if self.parentry[parname][col][0].get():
+                    self.bfit.fit_files.share_var[parname].set(False)
+        
+        # set synchronization        
         for p in self.parentry.keys():
             parentry = self.parentry[p]
             
@@ -1863,24 +1886,7 @@ class fitline(object):
             var = self.bfit.fit_files.share_var[p]
             parentry['shared'][0] = var
             parentry['shared'][1].config(variable=var)
-            
-            # make callback function to set p0 values in bdfit object
-            def callback(*args,parname,col,source):
-                
-                # set parameter entry synchronization
-                self.bfit.fit_files.modify_all(source=source,par=parname,column=col)
-                
-                # set bdfit p0 values
-                if col != 'fixed':
-                    try:
-                        self.dataline.bdfit.fitpar[col][parname] = \
-                                float(self.parentry[parname][col][0].get())
-                    # failure cases: 
-                    #   KeyError on ncomp change
-                    #   ValueError on bad user input
-                    except (ValueError,KeyError):
-                        pass            
-            
+                        
             # set callback
             for k in ('p0','blo','bhi','fixed'):
                         
@@ -1893,6 +1899,22 @@ class fitline(object):
                                 partial(callback,parname=p,col=k,source=self))
                 parentry[k][0].trace_callback = \
                                 partial(callback,parname=p,col=k,source=self)
+                
+        # disallow fixed shared parameters
+        def callback2(*args,parname):
+            parentry = self.parentry[parname]
+            var = self.bfit.fit_files.share_var[parname]
+            if var.get():
+                parentry['fixed'][0].set(False)
+                # ~ parentry['fixed'][1].config(state='disabled')
+            # ~ else:
+                # ~ parentry['fixed'][1].config(state='normal')
+                    
+        for p in self.parentry.keys():
+            parentry = self.parentry[p]
+            share = parentry['shared'][0]
+            share.trace_id = share.trace("w",partial(callback2,parname=p))
+            share.trace_callback = partial(callback2,parname=p)
                 
     # ======================================================================= #
     def get_new_parameters(self):
@@ -1974,6 +1996,10 @@ class fitline(object):
             shared = parentry['shared'][0].get()
             source_entry = source_line.parentry[parameter]
         except KeyError:
+            return
+        
+        # special case: fixed checkbox
+        if not set_all and column == 'fixed':
             return
         
         # set value
