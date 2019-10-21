@@ -231,6 +231,7 @@ class bfit(object):
         ttk_style.map('.', background=[('disabled',colors.background)],
                            fieldbackground=[('selected',colors.selected)])
                                          
+        ttk_style.configure('TNotebook.Tab', padding=[50,2])
         ttk_style.configure("TNotebook.Tab",background=colors.background)
         ttk_style.map("TNotebook.Tab",background=[("selected",colors.tab)])
         
@@ -250,6 +251,7 @@ class bfit(object):
         
         ttk_style.configure('TSpinbox', borderwidth=0,background=colors.background)
         ttk_style.map('TSpinbox', borderwidth=[('selected', 1)])
+        
         
         # icon
         self.set_icon(root)
@@ -407,9 +409,9 @@ class bfit(object):
         fetch_files_tab = ttk.Frame(notebook)
         fit_files_tab = ttk.Frame(notebook)
         
-        notebook.add(file_viewer_tab,text='File Details')
-        notebook.add(fetch_files_tab,text='Fetch Data')
-        notebook.add(fit_files_tab,text='Fit Data')
+        notebook.add(file_viewer_tab,text='Inspect')
+        notebook.add(fetch_files_tab,text=' Fetch ')
+        notebook.add(fit_files_tab,  text='  Fit  ')
         
         # set drawing styles
         notebook.bind("<<NotebookTabChanged>>",
