@@ -181,8 +181,10 @@ class fileviewer(object):
         data = self.data
         
         # get filename 
-        filename = filedialog.asksaveasfilename(
+        filename = filedialog.asksaveasfile(
                 initialfile=self.default_export_filename%(data.year,data.run),
+                filetypes=[('csv','*.csv'),
+                           ('allfiles','*')],
                 defaultextension='.csv')
         
         # write to file

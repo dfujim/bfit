@@ -1102,7 +1102,10 @@ class fit_files(object):
         if savetofile:
             
             # get file name
-            filename = filedialog.asksaveasfilename()
+            filename = filedialog.asksaveasfile(mode='w',
+                                                filetypes=[('csv','*.csv'),
+                                                           ('allfiles','*')],
+                                                defaultextension='.csv')
             if not filename:    return
             self.logger.info('Exporting parameters to "%s"',filename)
             
@@ -1518,7 +1521,8 @@ class fit_files(object):
   
         # save file ----------------------------------------------------------
         fid = filedialog.asksaveasfile(mode='w',filetypes=[('yaml','*.yaml'),
-                                                           ('allfiles','*')])
+                                                           ('allfiles','*')],
+                                       defaultextension='.yaml')
         if fid:
             yaml.dump(to_file,fid)
             fid.close()
