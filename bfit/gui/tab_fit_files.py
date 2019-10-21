@@ -1110,12 +1110,16 @@ class fit_files(object):
     # ======================================================================= #
     def get_values(self,select):
         """ Get plottable values"""
+        
         data = self.bfit.data
-        runs = list(data.keys())
+        dlines = self.bfit.fetch_files.data_lines
+        
+        # draw only selected runs
+        runs = [dlines[k].id for k in dlines if dlines[k].check_state.get()]
         runs.sort()
-    
+        
         self.logger.debug('Fetching parameter %s',select)
-    
+        
         # parameter names 
         parnames = self.fitter.gen_param_names(self.fit_function_title.get(),
                                                self.n_component.get())
