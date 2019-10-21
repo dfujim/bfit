@@ -1027,7 +1027,8 @@ class fit_files(object):
         if style == 'new':
             self.plt.figure(figstyle)
         elif style == 'redraw':
-            self.plt.clf(figstyle)
+            if self.plt.plots[figstyle]:
+                self.plt.clf(figstyle)
         
         # get axis 
         ax = self.plt.gca(figstyle)
