@@ -553,7 +553,14 @@ class fit_files(object):
         fn_name = self.fit_function_title.get()
         ncomp = self.n_component.get()
         
-        xlims = (self.xlo.get(),self.xhi.get())
+        xlims = [self.xlo.get(),self.xhi.get()]
+        if not xlims[0]: 
+            xlims[0] = '-inf'
+            self.xlo.set('-inf')
+        if not xlims[1]: 
+            xlims[1] = 'inf'
+            self.xhi.set('inf')
+        
         try:
             xlims = tuple(map(float,xlims))
         except ValueError as err:
