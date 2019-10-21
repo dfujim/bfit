@@ -54,6 +54,7 @@ class fetch_files(object):
                        '1w':'Frequency Comb (1w)',
                        '2e':'Random Freq. (2e)',
                        '1n':'Rb Cell Scan (1n)',
+                       '1e':'Field Scan (1e)',
                        '2h':'Alpha Tagged (2h)'}
     run_number_starter_line = '40001 40005-40010 (run numbers)'
     bin_remove_starter_line = '24 100-200 (bins)'

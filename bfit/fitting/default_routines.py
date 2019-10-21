@@ -20,6 +20,7 @@ class fitter(object):
                         '1f':('Lorentzian','Gaussian','BiLorentzian',),
                         '1w':('Lorentzian','Gaussian','BiLorentzian',),
                         '1n':('Lorentzian','Gaussian','BiLorentzian',),
+                        '1e':('Lorentzian','Gaussian','BiLorentzian',),
                         '2e':('Lorentzian','Gaussian','BiLorentzian',)}
      
     # Define names of fit parameters:

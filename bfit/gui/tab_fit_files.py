@@ -88,6 +88,7 @@ class fit_files(object):
                  '2e':'Frequency (%s)',
                  '1f':'Frequency (%s)',
                  '1w':'x Parameter',
+                 '1e':'Field (G)',
                  '1n':'Voltage (%s)'}
     
     # ======================================================================= #

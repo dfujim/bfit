@@ -199,6 +199,7 @@ class fileviewer(object):
         mode_dict = {"1f":"Frequency Scan",
                      "1w":"Frequency Comb",
                      "1n":"Rb Cell Scan",
+                     "1e":"Field Scan",
                      "20":"SLR",
                      '2h':'SLR with Alpha Tracking',
                      '2s':'Spin Echo',
@@ -625,6 +626,64 @@ class fileviewer(object):
                 val = int(data.ppg.freq_incr.mean)
                 data_ne['Frequency Scan Increment'] = '%d Hz' % val
                 key_order_ne.append('Frequency Scan Increment')
+            except AttributeError:
+                pass
+            
+            try:
+                val = bool(data.ppg.hel_enable.mean)
+                data_ne['Flip Helicity'] = str(val)
+                key_order_ne.append('Flip Helicity')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.hel_sleep.mean)
+                data_ne['Helicity Flip Sleep'] = "%d ms" % val
+                key_order_ne.append('Helicity Flip Sleep')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.ncycles.mean)
+                data_ne['Number of Cycles per Scan Increment'] = '%d' % val
+                key_order_ne.append('Number of Cycles per Scan Increment')
+            except AttributeError:
+                pass
+                
+        # get 1E specific data
+        elif data.mode == '1e':
+            try:
+                val = int(data.ppg.dwelltime.mean)
+                data_ne['Bin Width'] = "%d ms" % val
+                key_order_ne.append('Bin Width')
+            except AttributeError:
+                pass
+            
+            try:    
+                val = int(data.ppg.nbins.mean)
+                data_ne['Number of Bins'] = "%d" % val
+                key_order_ne.append('Number of Bins')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.field_start.mean)
+                data_ne['Field Scan Start'] = '%d G' % val
+                key_order_ne.append('Field Scan Start')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.field_stop.mean)
+                data_ne['Field Scan End'] = '%d G' % val
+                key_order_ne.append('Field Scan End')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.field_incr.mean)
+                data_ne['Field Scan Increment'] = '%d G' % val
+                key_order_ne.append('Field Scan Increment')
             except AttributeError:
                 pass
             
