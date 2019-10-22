@@ -91,6 +91,7 @@ class bfit(object):
             draw_components:list of titles for labels, options to export, draw.
             draw_ppm:       BoolVar for drawing as ppm shift
             draw_standardized_res: BoolVar for drawing residuals as standardized
+            forced_mode:    StringVar, mode type to force on data file
             freq_unit_conv: conversion rate from original to display units
             freq_units:     string, units to display
             hist_select:    histogram selection for asym calcs (blank for defaults)
@@ -324,6 +325,7 @@ class bfit(object):
         menu_settings_dir = Menu(menu_settings)
         menu_settings_lab = Menu(menu_settings)
         menu_settings_probe = Menu(menu_settings,selectcolor=colors.selected)
+        menu_settings_forcemode = Menu(menu_settings,selectcolor=colors.selected)
         
         # Settings cascade commands
         menu_settings.add_cascade(menu=menu_settings_dir,label='Data directory')
@@ -331,6 +333,7 @@ class bfit(object):
                 command=self.set_draw_style)
         menu_settings.add_command(label='Fitting routines',
                 command=self.set_fit_routines)
+        menu_settings.add_cascade(menu=menu_settings_forcemode,label='Force Run Mode')
         menu_settings.add_command(label='Histograms',
                 command=self.set_histograms)
         menu_settings.add_cascade(menu=menu_settings_lab,label='Labels default')                
@@ -367,6 +370,15 @@ class bfit(object):
                         variable=self.probe_species,
                         value=k,
                         command=self.set_probe_species)
+        
+        # Settings: force run mode
+        self.forced_mode = StringVar()
+        self.forced_mode.set('auto')
+        menu_settings_forcemode.add_radiobutton(label='auto',
+                    variable=self.forced_mode,value='auto')
+        for k in self.asym_dict_keys:
+            menu_settings_forcemode.add_radiobutton(label=k,
+                    variable=self.forced_mode,value=k)
         
         # Draw style
         self.draw_style = StringVar()
