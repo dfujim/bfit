@@ -60,6 +60,8 @@ class global_fitter(object):
             
             fn                      list of fitting function handles
             fitfn                   handle for fitting function on ccat data
+            fixed                   list of fixed variables (flattened)
+            fixed_indiv             list of fixed variables (corresponds to input)
             
             npar                    number of parameters in input function
             nsets                   number of data sets
@@ -158,6 +160,8 @@ class global_fitter(object):
                 fixed_add = [np.full(sh[1],False) for i in range(self.nsets-sh[0])]
                 fixed = np.vstack((*fixed,*fixed_add))
             
+            self.fixed_indiv = fixed # fixed parameters for each data set
+            
             # fixed sharing
             for i,(f,s) in enumerate(zip(fixed.T,sharelist)): 
                 if s and any(f): 
@@ -170,7 +174,8 @@ class global_fitter(object):
             self.fixed = fixed[uidx] 
         else:
             self.fixed = np.full(len(uidx),False)
-        
+            self.fixed_indiv = [[False]*self.npar]*self.nsets
+            
     # ======================================================================= #
     def draw(self,mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,
              savefig='',**errorbar_args):
@@ -397,15 +402,15 @@ class global_fitter(object):
 
         # global
         tag = self.dyccat != 0
-        dof = len(self.xccat[tag])-len(np.unique(par_index))
+        dof = len(self.xccat[tag])-len(np.unique(par_index)+sum(self.fixed))
         self.chi_glbl = np.sum(np.square((self.yccat[tag]-\
                       self.fitfn(self.xccat[tag],*self.par))/self.dyccat[tag]))/dof
-
+    
         # single fn chisq
         self.chi = []
-        for x,y,dy,p,f in zip(self.xdata,self.ydata,self.dydata,pars,self.fn):
+        for x,y,dy,p,f,fx in zip(self.xdata,self.ydata,self.dydata,pars,self.fn,self.fixed_indiv):
             tag = dy != 0
-            dof = len(x[tag])-(self.npar)
+            dof = len(x[tag])-(self.npar-sum(fx))
             self.chi.append(\
                     np.sum(np.square((y[tag]-f(x[tag],*p))/dy[tag]))/dof)
         
@@ -572,7 +577,6 @@ class global_fitter(object):
             
         # make fit function: assign parameters  
         def fitfn(unused,*par):
-            
             return np.concatenate([f(x,*np.asarray(par)[p]) \
                                     for x,p,f in zip(xdata,par_index,self.fn)])
         return fitfn
