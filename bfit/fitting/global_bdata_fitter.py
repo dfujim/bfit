@@ -74,7 +74,7 @@ class global_bdata_fitter(global_fitter):
             
             # select subrange
             for i,xl in enumerate(xlims):
-                tag = (xl[0]<x[i])*(x[i]<xl[1])*dy[i]!=0
+                tag = (xl[0]<x[i])*(x[i]<xl[1])
                 xnew.append(x[i][tag])
                 ynew.append(y[i][tag])
                 dynew.append(dy[i][tag])
