@@ -685,6 +685,12 @@ class fit_files(object):
             dline.check_fit.set(True)
         self.bfit.fetch_files.check_state_fit.set(True)
         
+        # change fetch asymmetry mode to match fit tab
+        inv_map = {v: k for k, v in self.bfit.asym_dict.items()}
+        asym_mode_fit = inv_map[self.bfit.get_asym_mode(self)]
+        asym_mode_fetch = inv_map[self.bfit.get_asym_mode(self.bfit.fetch_files)]
+        self.bfit.fetch_files.asym_type.set(asym_mode_fit)
+        
         # draw fit results
         style = self.bfit.draw_style.get()
         
@@ -699,7 +705,9 @@ class fit_files(object):
             self.plt.gca('fit').get_legend().remove()
             self.plt.tight_layout('fit')
         
+        # reset style and asym mode 
         self.bfit.draw_style.set(style)
+        self.bfit.fetch_files.asym_type.set(asym_mode_fetch)
         
     # ======================================================================= #
     def do_fit_constraints(self):
