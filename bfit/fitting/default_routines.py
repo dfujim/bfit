@@ -278,7 +278,7 @@ class fitter(object):
             # set values
             par_values = {'amp':(amp,*amp_bounds),
                           '1_T1':(1./T1,0,np.inf),
-                          '1_T1b':(1./T1,0,np.inf),
+                          '1_T1b':(10./T1,0,np.inf),
                           'fraction_b':(0.5,0,1),
                           'beta':(0.5,0,1)}
                          
@@ -290,7 +290,7 @@ class fitter(object):
             
             peak = x[np.where(a==amin)[0][0]]
             base = np.mean(a[:5])
-            height = base-amin
+            height = abs(base-amin)
             width = 2*abs(peak-x[np.where(a<amin+height/2)[0][0]])
             
             # bounds
