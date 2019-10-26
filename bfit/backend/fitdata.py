@@ -34,7 +34,7 @@ class fitdata(object):
             bias_std:   platform bias in kV (float)
             
             id:         key for unique idenfication (str)    
-            fitfnname:  function (str)
+            fn_title:   function (str)
             fitfn:      function (function pointer)
             fitpar:     initial parameters {column:{parname:float}} and results
                         Columns are fit_files.fitinputtab.collist
@@ -43,6 +43,7 @@ class fitdata(object):
             drawarg:    drawing arguments for errorbars (dict)
             rebin:      rebin factor (IntVar)
             mode:       run mode (str)
+            ncomp:      number of components (int)
             omit:       omit bins, 1f only (StringVar)
             check_state:(BooleanVar)    
     """
@@ -70,6 +71,10 @@ class fitdata(object):
         
         # fit parameters dictionary
         self.fitpar = {}
+        
+        # fit title and comp (set in tab_fit_files)
+        self.fit_title = ""
+        self.ncomp = -1
         
         # key for IDing file 
         self.id = self.bfit.get_run_key(data=bd)

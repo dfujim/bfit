@@ -663,7 +663,9 @@ class fit_files(object):
         # set output results
         for key in fit_output.keys():
             self.bfit.data[key].set_fitresult(fit_output[key])
-
+            self.bfit.data[key].fit_title = self.fit_function_title.get()
+            self.bfit.data[key].ncomp = self.n_component.get()
+            
         # display run results
         for key in self.fit_lines.keys():
             self.fit_lines[key].show_fit_result()
@@ -1153,7 +1155,12 @@ class fit_files(object):
             
             # get fit data
             fitx = np.linspace(min(t),max(t),self.n_fitx_pts)
-            fit_par = [data.fitpar['res'][p] for p in data.parnames]
+            
+            try:
+                fit_par = [data.fitpar['res'][p] for p in data.parnames]
+            except AttributeError:
+                continue
+            dfit_par = [data.fitpar['dres'][p] for p in data.parnames]
             fity = data.fitfn(fitx,*fit_par)
             
             if data.mode == '1f': 
@@ -1169,10 +1176,28 @@ class fit_files(object):
                 fitxx = fitx
                 xlabel = self.xlabel_dict[self.mode]
 
-            # write
+            # write header
+            fname = filename%(data.year,data.run)
+            header = ['# %s' % data.title,
+                      '# Fit function : %s' % data.fit_title,
+                      '# Number of components: %d' % data.ncomp,
+                      '# Rebin: %d' % data.rebin.get(),
+                      '# Bin Omission: %s' % data.omit.get().replace(
+                                self.bfit.fetch_files.bin_remove_starter_line,''),
+                      '# Chi-Squared: %f' % data.chi,
+                      '# Parameter names: %s' % ', '.join(data.parnames),
+                      '# Parameter values: %s' % ', '.join(list(map(str,fit_par))),
+                      '# Parameter errors: %s' % ', '.join(list(map(str,dfit_par))),
+                      '#\n#\n']
+            
+            
+            with open(fname,'w') as fid:
+                fid.write('\n'.join(header))
+            
+            # write data
             df = pd.DataFrame({xlabel:fitx,'asymmetry':fity})
-            df.to_csv(filename%(data.year,data.run),index=False)
-            self.logger.info('Exporting fit to %s',filename%(data.year,data.run))
+            df.to_csv(fname,index=False,mode='a+')
+            self.logger.info('Exporting fit to %s',fname)
     
     # ======================================================================= #
     def get_values(self,select):
