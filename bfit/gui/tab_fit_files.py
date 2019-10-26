@@ -1190,7 +1190,6 @@ class fit_files(object):
                       '# Parameter errors: %s' % ', '.join(list(map(str,dfit_par))),
                       '#\n#\n']
             
-            
             with open(fname,'w') as fid:
                 fid.write('\n'.join(header))
             

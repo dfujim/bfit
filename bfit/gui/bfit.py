@@ -29,6 +29,8 @@ import subprocess
 import importlib
 import logging
 
+# ~ from scipy.optimize import curve_fit
+
 from bfit import __version__,logger_name,icon_path
 from bfit.gui.tab_fileviewer import fileviewer
 from bfit.gui.tab_fetch_files import fetch_files
@@ -124,6 +126,8 @@ class bfit(object):
     volt_unit_conv = 1.e-3   # conversion rate from original to display units
     freq_units = 'MHz'
     volt_units = 'V'
+    norm_alph_diff_time = 0.1   # number of seconds to take average over when 
+                                # normalizing alpha diffusion runs
     
     asym_dict_keys = {'20':("Combined Helicity","Split Helicity",
                             "Positive Helicity","Negative Helicity",
@@ -146,7 +150,7 @@ class bfit(object):
                       '2h':("Combined Helicity","Split Helicity",
                             "Positive Helicity","Negative Helicity",
                             "Matched Helicity",
-                            "Alpha Diffusion",
+                            "Alpha Diffusion", "Alpha Diff Normalized",
                             "Combined Hel (Alpha Tag)","Split Hel (Alpha Tag)",
                             "Combined Hel (!Alpha Tag)","Split Hel (!Alpha Tag)",
                             "Raw Histograms")}
@@ -168,6 +172,7 @@ class bfit(object):
                  "Split Hel Slopes"         :'sl_h',
                  "Split Hel Diff"           :'dif_h',
                  "Alpha Diffusion"          :'ad',
+                 "Alpha Diff Normalized"    :'adn',
                  "Combined Hel (Alpha Tag)" :"at_c",
                  "Split Hel (Alpha Tag)"    :"at_h",
                  "Combined Hel (!Alpha Tag)":"nat_c",
@@ -927,6 +932,27 @@ class bfit(object):
                 ax.data_id.append(data.id)
                 ax.lines_id.append(data.id)
                 self.plt.ylabel(figstyle,r'$N_\alpha/N_\beta$')
+                
+            # draw normalized alpha diffusion
+            elif asym_type == 'adn':
+                
+                a = data.asym('adif',rebin=1,hist_select=self.hist_select,
+                              nbm=self.use_nbm.get())
+                          
+                # take mean of first few points
+                idx = (a[0]<self.norm_alph_diff_time)*(~np.isnan(a[1]))
+                a0 = np.average(a[1][idx],weights=1/a[2][idx]**2)
+                
+                # normalize
+                a = data.asym('adif',rebin=rebin,hist_select=self.hist_select,
+                              nbm=self.use_nbm.get())
+                a[1] /= a0
+                a[2] /= a0
+                
+                self.plt.errorbar(figstyle,*a,label=label,**drawargs)
+                ax.data_id.append(data.id)
+                ax.lines_id.append(data.id)
+                self.plt.ylabel(figstyle,r'$N_\alpha/N_\beta$ (Normalized by t=0)')
                 
             # draw alpha tagged runs
             elif asym_type in ['at_c','at_h','nat_c','nat_h']:
