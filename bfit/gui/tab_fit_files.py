@@ -1092,6 +1092,8 @@ class fit_files(object):
             
             try:
                 v2 = self.get_values(v) 
+            except AttributeError:
+                continue
             except Exception: 
                 traceback.print_exc()
             else:
@@ -1110,9 +1112,8 @@ class fit_files(object):
         if savetofile:
             
             # get file name
-            filename = filedialog.asksaveasfile(mode='w',
-                                                filetypes=[('csv','*.csv'),
-                                                           ('allfiles','*')],
+            filename = filedialog.asksaveasfilename(filetypes=[('csv','*.csv'),
+                                                               ('allfiles','*')],
                                                 defaultextension='.csv')
             if not filename:    return
             self.logger.info('Exporting parameters to "%s"',filename)
@@ -1206,6 +1207,10 @@ class fit_files(object):
         
         elif select == 'Year':
             val = [data[r].year for r in runs]
+            err = [np.nan for r in runs]
+        
+        elif select == 'Unique Id':
+            val = ['%d.%d' % (data[r].year,data[r].run) for r in runs]
             err = [np.nan for r in runs]
 
         elif 'Beta-Avg 1/<T1' in select:
