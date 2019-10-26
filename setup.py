@@ -18,7 +18,7 @@ ext = Extension("bfit.fitting.integrator",
 
 setuptools.setup(
     name="bfit",
-    version="2.10.3",
+    version="2.11.0",
     author="Derek Fujimoto",
     author_email="fujimoto@phas.ubc.ca",
     description="BNMR/BNQR Data Fitting and Visualization",
@@ -32,7 +32,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=['cython>=0.28','numpy>=1.14','tqdm',
-                      'bdata>=4.3.1','matplotlib>=2.2.4','pandas>=0.23.0',
+                      'bdata>=4.3.2','matplotlib>=2.2.4','pandas>=0.23.0',
                       'pyyaml','scipy'],
     package_data={'': ['./images']},
     include_package_data=True,
