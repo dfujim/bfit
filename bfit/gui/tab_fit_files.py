@@ -744,9 +744,9 @@ class fit_files(object):
             self.pop_fitres = popup_fit_results(self.bfit)
     
     # ======================================================================= #
-    def do_gui_param(self,*args):
+    def do_gui_param(self,id=''):
         """Set initial parmeters with GUI"""
-        popup_param(self.bfit)
+        popup_param(self.bfit,id)
         
     # ======================================================================= #
     def do_set_result_as_initial(self,*args):
@@ -1126,7 +1126,6 @@ class fit_files(object):
             self.logger.info('Returned exported parameters')
             return df
         
-    # ======================================================================= #
     # ======================================================================= #
     def export_fit(self,savetofile=True):
         """Export the fit lines as csv files"""
@@ -1707,11 +1706,15 @@ class fitline(object):
                            bg=colors.foreground,fg=colors.background)
         self.run_label_title = Label(fitframe,text=self.dataline.bdfit.title,
                                         justify='right',fg='red3')
-     
+                        
         # Parameter input labels
+        gui_param_button = ttk.Button(fitframe,text='Initial Value',
+                        command=lambda : self.bfit.fit_files.do_gui_param(id=self.dataline.id),
+                        pad=0)
         c = 0
         ttk.Label(fitframe,text='Parameter').grid(    column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='Initial Value').grid(column=c,row=1,padx=5); c+=1
+        gui_param_button.grid(column=c,row=1,padx=5,pady=2); c+=1
+        # ~ ttk.Label(fitframe,text='Initial Value').grid(column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Low Bound').grid(    column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='High Bound').grid(   column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Result').grid(       column=c,row=1,padx=5); c+=1
@@ -1972,9 +1975,6 @@ class fitline(object):
             var = self.bfit.fit_files.share_var[parname]
             if var.get():
                 parentry['fixed'][0].set(False)
-                # ~ parentry['fixed'][1].config(state='disabled')
-            # ~ else:
-                # ~ parentry['fixed'][1].config(state='normal')
                     
         for p in self.parentry.keys():
             parentry = self.parentry[p]

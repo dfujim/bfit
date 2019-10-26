@@ -53,7 +53,7 @@ class popup_param(object):
              }
 
     # ====================================================================== #
-    def __init__(self,bfit):
+    def __init__(self,bfit,id=''):
         self.bfit = bfit
         
         # get logger
@@ -86,6 +86,12 @@ class popup_param(object):
         # gridding
         frame.grid(column=0,row=1,sticky=(N,W,E,S))
         select_box.grid(column=0,row=1,sticky=E)
+        
+        # start looking automatically
+        if id:
+            self.selection.set(id)
+            self.setup()
+            self.win.withdraw()
                 
     # ====================================================================== #
     def setup(self,*args):
