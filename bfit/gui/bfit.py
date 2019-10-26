@@ -29,8 +29,6 @@ import subprocess
 import importlib
 import logging
 
-# ~ from scipy.optimize import curve_fit
-
 from bfit import __version__,logger_name,icon_path
 from bfit.gui.tab_fileviewer import fileviewer
 from bfit.gui.tab_fetch_files import fetch_files
@@ -209,6 +207,7 @@ class bfit(object):
         
         # root 
         root = Tk()
+        self.root = root
         root.title("BFIT - BNMR/BNQR Data Fitting and Visualization "+\
                    "(version %s)" % __version__)
         root.columnconfigure(0, weight=1)
@@ -284,6 +283,8 @@ class bfit(object):
         
         root.bind("<Button-4>",self.scroll_binder) 
         root.bind("<Button-5>",self.scroll_binder)
+        
+        root.bind("<Control-Key-o>",self.do_load)
         
         # event bindings
         root.protocol("WM_DELETE_WINDOW",self.on_closing)
@@ -450,7 +451,6 @@ class bfit(object):
         self.fit_files = fit_files(fit_files_tab,wref.proxy(self))
         
         # set instance variables ---------------------------------------------
-        self.root = root
         self.mainframe = mainframe
         self.notebook = notebook
         
@@ -491,7 +491,7 @@ class bfit(object):
     def do_export_fit(self): self.fit_files.export_fit()
         
     # ======================================================================= #
-    def do_load(self): self.fit_files.load_state()
+    def do_load(self,*args): self.fit_files.load_state()
     
     # ======================================================================= #
     def do_save(self): self.fit_files.save_state()

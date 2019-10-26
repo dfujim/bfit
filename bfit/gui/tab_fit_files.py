@@ -107,6 +107,9 @@ class fit_files(object):
         self.fit_data_tab = fit_data_tab
         self.plt = self.bfit.plt
         
+        # additional button bindings
+        self.bfit.root.bind('<Control-Key-u>',self.update_param)
+        
         # make top level frames
         mid_fit_frame = ttk.Labelframe(fit_data_tab,
                                        text='Set Initial Parameters',pad=5)
@@ -271,8 +274,12 @@ class fit_files(object):
         # draw and export buttons
         button_frame = Frame(results_frame)
         draw_button = ttk.Button(button_frame,text='Draw',command=self.draw_param)
+        update_button = ttk.Button(button_frame,text='Update',command=self.update_param)
         export_button = ttk.Button(button_frame,text='Export',command=self.export)
         show_button = ttk.Button(button_frame,text='Compare',command=self.show_all_results)
+        model_fit_button = ttk.Button(button_frame,text='Fit a\nModel',
+                                      command=self.do_fit_model)
+        
         
         # menus for x and y values
         ttk.Label(results_frame,text="x axis:").grid(column=0,row=1)
@@ -295,19 +302,18 @@ class fit_files(object):
                                       textvariable=self.annotation,
                                       state='readonly',width=19)
         
-        model_fit_button = ttk.Button(results_frame,text='Fit a Model',
-                command=self.do_fit_model)
-        
         # gridding
         button_frame.grid(column=0,row=0,columnspan=2)
         draw_button.grid(column=0,row=0,padx=5,pady=5)
-        export_button.grid(column=1,row=0,padx=5,pady=5)
-        show_button.grid(column=2,row=0,padx=5,pady=5)
+        update_button.grid(column=0,row=1,padx=5,pady=5)
+        show_button.grid(column=1,row=0,padx=5,pady=5)
+        export_button.grid(column=1,row=1,padx=5,pady=5)
+        model_fit_button.grid(column=2,row=0,rowspan=2,pady=5,sticky=(N,S))
         
         self.xaxis_combobox.grid(column=1,row=1,pady=5)
         self.yaxis_combobox.grid(column=1,row=2,pady=5)
         self.annotation_combobox.grid(column=1,row=3,pady=5)
-        model_fit_button.grid(column=0,row=4,columnspan=2,pady=5,sticky=(E,W))
+        
         
         # save/load state -----------------------
         state_frame = ttk.Labelframe(fit_data_tab,text='Program State',pad=5)
@@ -1548,6 +1554,36 @@ class fit_files(object):
             self.fit_lines[k].set_input(source,par,column,setall)        
     
     # ======================================================================= #
+    def return_binder(self):
+        """
+            Binding to entery key press, depending on focus. 
+            
+            FOCUS                   ACTION
+            
+            comboboxes or buttons   draw_param
+                in right frame
+            else                    do_fit
+        """
+    
+        # get focus
+        focus = self.bfit.root.focus_get()
+        
+        # right frame items
+        draw_par_items = (  self.xaxis_combobox,
+                            self.yaxis_combobox,
+                            self.annotation_combobox)
+        
+        # do action 
+        if focus in draw_par_items:
+            self.draw_param()
+        elif focus == self.n_component_box:
+            self.populate_param(force_modify=True)
+        elif focus == self.bfit.root:
+            pass
+        else:
+            self.do_fit()
+    
+    # ======================================================================= #
     def save_state(self):
         """
             Save the state of the gui:
@@ -1622,35 +1658,43 @@ class fit_files(object):
         popup_show_param(df)
         
     # ======================================================================= #
-    def return_binder(self):
-        """
-            Binding to entery key press, depending on focus. 
-            
-            FOCUS                   ACTION
-            
-            comboboxes or buttons   draw_param
-                in right frame
-            else                    do_fit
-        """
-    
-        # get focus
-        focus = self.bfit.root.focus_get()
+    def update_param(self,*args):
+        """Update all figures with parameters drawn with new fit results"""
         
-        # right frame items
-        draw_par_items = (  self.xaxis_combobox,
-                            self.yaxis_combobox,
-                            self.annotation_combobox)
+        # get list of figure numbers for parameters
+        figlist = self.plt.plots['param']
         
-        # do action 
-        if focus in draw_par_items:
+        # set style to redraw
+        current_active = self.plt.active['param']
+        current_style = self.bfit.draw_style.get()
+        self.bfit.draw_style.set('redraw')
+        
+        # get current labels
+        current_xlab = self.xaxis.get()
+        current_ylab = self.yaxis.get()
+        
+        for fig_num in figlist:
+            
+            # get figure and drawn axes
+            ax = plt.figure(fig_num).axes[0]
+            xlab = ax.get_xlabel()
+            ylab = ax.get_ylabel()
+            
+            # set new labels
+            self.xaxis.set(xlab)
+            self.yaxis.set(ylab)
+            
+            # draw new labels
+            self.plt.active['param'] = fig_num
             self.draw_param()
-        elif focus == self.n_component_box:
-            self.populate_param(force_modify=True)
-        elif focus == self.bfit.root:
-            pass
-        else:
-            self.do_fit()
             
+        # reset to old settings
+        self.bfit.draw_style.set(current_style)
+        self.xaxis.set(current_xlab)
+        self.yaxis.set(current_ylab)
+        self.plt.active['param'] = current_active
+        plt.figure(current_active)
+        
     # ======================================================================= #
     def _annotate(self,x,y,ptlabels,color='k'):
         """Add annotation"""
