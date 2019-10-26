@@ -314,6 +314,7 @@ class bfit(object):
         menu_file.add_command(label='NQR B0 Calculator',command=calculator_nqr_B0)
         menu_file.add_command(label='Run Commands',command=lambda:popup_terminal(wref.proxy(self)))
         menu_file.add_command(label='Export Data',command=self.do_export)
+        menu_file.add_command(label='Export Fits',command=self.do_export_fit)
         menu_file.add_command(label='Save State',command=self.do_save)
         menu_file.add_command(label='Load State',command=self.do_load)
         menu_file.add_command(label='Exit',command=sys.exit)
@@ -481,6 +482,9 @@ class bfit(object):
         else:
             pass
     
+    # ======================================================================= #
+    def do_export_fit(self): self.fit_files.export_fit()
+        
     # ======================================================================= #
     def do_load(self): self.fit_files.load_state()
     

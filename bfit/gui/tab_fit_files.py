@@ -953,8 +953,7 @@ class fit_files(object):
         asym_mode = self.bfit.get_asym_mode(self)
         t,a,da = data.asym(asym_mode)
         
-        fitx = np.arange(self.n_fitx_pts)/float(self.n_fitx_pts)*\
-                                                    (max(t)-min(t))+min(t)
+        fitx = np.linspace(min(t),max(t),self.n_fitx_pts)
         
         if   data.mode == '1f': 
             fitxx = fitx*self.bfit.freq_unit_conv
@@ -985,7 +984,7 @@ class fit_files(object):
     
     # ======================================================================= #
     def draw_param(self,*args):
-        
+        """Draw the fit parameters"""
         figstyle = 'param'
         
         # make sure plot shows
@@ -1083,7 +1082,7 @@ class fit_files(object):
         
     # ======================================================================= #
     def export(self,savetofile=True):
-        
+        """Export the fit parameter and file headers"""
         # get values and errors
         val = {}
         
@@ -1127,6 +1126,55 @@ class fit_files(object):
             self.logger.info('Returned exported parameters')
             return df
         
+    # ======================================================================= #
+    # ======================================================================= #
+    def export_fit(self,savetofile=True):
+        """Export the fit lines as csv files"""
+        
+        # filename
+        filename = self.bfit.fileviewer.default_export_filename
+        filename = '_fit'.join(os.path.splitext(filename))
+        
+        if not filename: return
+        
+        try:
+            filename = filedialog.askdirectory()+'/'+filename
+        except TypeError:
+            pass
+        
+        # asymmetry type
+        asym_mode = self.bfit.get_asym_mode(self)
+        
+        # get data and write
+        for id in self.fit_lines.keys():
+            
+            # get data
+            data = self.bfit.data[id]
+            t,a,da = data.asym(asym_mode)
+            
+            # get fit data
+            fitx = np.linspace(min(t),max(t),self.n_fitx_pts)
+            fit_par = [data.fitpar['res'][p] for p in data.parnames]
+            fity = data.fitfn(fitx,*fit_par)
+            
+            if data.mode == '1f': 
+                fitxx = fitx*self.bfit.freq_unit_conv
+                xlabel = self.xlabel_dict[self.mode] % self.bfit.freq_units
+            elif data.mode == '2e': 
+                fitxx = fitx*self.bfit.freq_unit_conv
+                xlabel = self.xlabel_dict[self.mode] % self.bfit.freq_units
+            elif data.mode == '1n': 
+                fitxx = fitx*self.bfit.volt_unit_conv
+                xlabel = self.xlabel_dict[self.mode] % self.bfit.volt_units
+            else:                   
+                fitxx = fitx
+                xlabel = self.xlabel_dict[self.mode]
+
+            # write
+            df = pd.DataFrame({xlabel:fitx,'asymmetry':fity})
+            df.to_csv(filename%(data.year,data.run),index=False)
+            self.logger.info('Exporting fit to %s',filename%(data.year,data.run))
+    
     # ======================================================================= #
     def get_values(self,select):
         """ Get plottable values"""
