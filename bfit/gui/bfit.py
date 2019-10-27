@@ -129,19 +129,19 @@ class bfit(object):
     
     asym_dict_keys = {'20':("Combined Helicity","Split Helicity",
                             "Positive Helicity","Negative Helicity",
-                            "Matched Helicity","Raw Histograms"),
+                            "Matched Helicity","Histograms"),
                       '1f':("Combined Helicity","Split Helicity","Raw Scans",
                             "Positive Helicity","Negative Helicity",
-                            "Shifted Split","Shifted Combined","Raw Histograms"),
+                            "Shifted Split","Shifted Combined","Histograms"),
                       '1n':("Combined Helicity","Split Helicity","Raw Scans",
                             "Positive Helicity","Negative Helicity",
-                            "Matched Peak Finding","Raw Histograms"),
+                            "Matched Peak Finding","Histograms"),
                       '1e':("Combined Helicity","Split Helicity","Raw Scans",
                             "Positive Helicity","Negative Helicity",
-                            "Raw Histograms"),
+                            "Histograms"),
                       '1w':("Combined Helicity","Split Helicity","Raw Scans",
                             "Positive Helicity","Negative Helicity",
-                            "Shifted Split","Shifted Combined","Raw Histograms"),
+                            "Shifted Split","Shifted Combined","Histograms"),
                       '2e':("Combined Hel Slopes","Combined Hel Diff","Combined Hel Raw",
                             "Split Hel Slopes","Split Hel Diff","Split Hel Raw",
                             "Split Slopes Shifted","Split Diff Shifted","Split Raw Shifted"),
@@ -151,7 +151,7 @@ class bfit(object):
                             "Alpha Diffusion", "Alpha Diff Normalized",
                             "Combined Hel (Alpha Tag)","Split Hel (Alpha Tag)",
                             "Combined Hel (!Alpha Tag)","Split Hel (!Alpha Tag)",
-                            "Raw Histograms")}
+                            "Histograms")}
     
     asym_dict = {"Combined Helicity"        :'c',
                  "Split Helicity"           :'h',
@@ -162,7 +162,7 @@ class bfit(object):
                  "Shifted Combined"         :'cs',
                  "Matched Peak Finding"     :'hp',
                  "Raw Scans"                :'r',
-                 "Raw Histograms"           :'rhist',
+                 "Histograms"               :'rhist',
                  "Combined Hel Raw"         :'raw_c',
                  "Combined Hel Slopes"      :'sl_c',
                  "Combined Hel Diff"        :'dif_c',
@@ -179,6 +179,28 @@ class bfit(object):
                  "Combined Hel (!Alpha Tag)":"nat_c",
                  "Split Hel (!Alpha Tag)"   :"nat_h",
                  }
+    
+    # draw axis labels
+    xlabel_dict={'20':"Time (s)",
+                 '2h':"Time (s)",
+                 '2e':'Frequency (%s)',
+                 '1f':'Frequency (%s)',
+                 '1w':'x Parameter',
+                 '1n':'Voltage (%s)'}
+                 
+    ylabel_dict={'ad':r'$N_\alpha/N_\beta$', # otherwise, label as Asymmetry
+                 'adn':r'$N_\alpha/N_\beta$', 
+                 'hs':r'Asym-Asym($\nu_{min}$)',
+                 'cs':r'Asym-Asym($\nu_{min}$)',
+                 'rhist':'Counts'}
+    
+    # histogram names for x axis
+    x_tag={'20':"time_s",
+           '2h':"time_s",
+           '2e':"time",
+           '1f':'freq',
+           '1w':'xpar',
+           '1n':'mV'}
     
     data = {}   # for fitdata objects
     
@@ -522,24 +544,6 @@ class bfit(object):
                      self.draw_style.get(),
                      drawargs)
         
-        # Settings
-        xlabel_dict={'20':"Time (s)",
-                     '2h':"Time (s)",
-                     '2e':'Frequency (%s)',
-                     '1f':'Frequency (%s)',
-                     '1w':'x Parameter',
-                     '1n':'Voltage (%s)'}
-        ylabel_dict={'ad':r'$N_\alpha/N_\beta$', # otherwise, label as Asymmetry
-                     'hs':r'Asym-Asym($\nu_{min}$)',
-                     'cs':r'Asym-Asym($\nu_{min}$)',
-                     'rhist':'Counts'}
-        x_tag={'20':"time_s",
-               '2h':"time_s",
-               '2e':"time",
-               '1f':'freq',
-               '1w':'xpar',
-               '1n':'mV'}
-        
         # get draw setting 
         draw_style = self.draw_style
         plt.ion()
@@ -760,7 +764,7 @@ class bfit(object):
                     ax.data_id.append(data.id)
                     ax.lines_id.append(data.id)
                     
-                self.plt.xlabel(figstyle,xlabel_dict[data.mode] % self.freq_units)
+                self.plt.xlabel(figstyle,self.xlabel_dict[data.mode] % self.freq_units)
                 
                 if '_hs' in asym_type:
                     self.plt.ylabel(figstyle,r"Asym-Asym($\nu_{min}$)")
@@ -771,8 +775,8 @@ class bfit(object):
         else:
             a = data.asym(omit=option,rebin=rebin,hist_select=self.hist_select,
                           nbm=self.use_nbm.get())
-            x = a[x_tag[data.mode]]
-            xlabel = xlabel_dict[data.mode]
+            x = a[self.x_tag[data.mode]]
+            xlabel = self.xlabel_dict[data.mode]
             
             # unit conversions
             if   data.mode == '1n': 
@@ -1065,7 +1069,7 @@ class bfit(object):
                         ax.data_id.append(data.id)
                         ax.lines_id.append(data.id)
                         
-                self.plt.ylabel(figstyle,ylabel_dict[asym_type])
+                self.plt.ylabel(figstyle,self.ylabel_dict[asym_type])
                 self.plt.xlabel(figstyle,'Bin')
                             
             # unknown run type
@@ -1076,7 +1080,7 @@ class bfit(object):
         if data.mode != '2e' and asym_type != 'rhist':
             self.plt.xlabel(figstyle,xlabel)
             
-            if asym_type in ylabel_dict.keys(): label = ylabel_dict[asym_type]
+            if asym_type in self.ylabel_dict.keys(): label = self.ylabel_dict[asym_type]
             else:                               label = "Asymmetry"
             if self.use_nbm.get():              label = 'NBM ' + label    
             self.plt.ylabel(figstyle,label)    

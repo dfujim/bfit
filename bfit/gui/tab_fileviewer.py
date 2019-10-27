@@ -259,7 +259,9 @@ class fileviewer(object):
         if self.bfit.forced_mode.get() != 'auto':
             
             # circumvent readonly status of bdata objects
-            data.__dict__['mode'] = self.bfit.forced_mode.get() 
+            data.mode = self.bfit.forced_mode.get() 
+            data.bd.__dict__['mode'] = self.bfit.forced_mode.get() 
+            
         
         # set draw parameters
         self.bfit.set_asym_calc_mode_box(data.mode,self)
