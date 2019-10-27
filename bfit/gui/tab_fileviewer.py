@@ -71,7 +71,7 @@ class fileviewer(object):
             
         # draw button
         draw = ttk.Button(entry_frame,text='Draw',
-                          command=lambda:self.draw(figstyle='data'))
+                          command=lambda:self.draw(figstyle='inspect'))
         
         # grid and labels
         entry_frame.grid(column=0,row=0,sticky=N)
@@ -1073,7 +1073,7 @@ class fileviewer(object):
         if self.is_updating.get():
             
             # check that figure exists
-            if self.bfit.plt.active['periodic'] not in self.bfit.plt.plots['data']:
+            if self.bfit.plt.active['periodic'] not in self.bfit.plt.plots['inspect']:
                 self.is_updating.set(False)
                 del self.bfit.plt.plots['periodic'][0]
                 self.bfit.plt.active['periodic'] = 0

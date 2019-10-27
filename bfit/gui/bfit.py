@@ -559,7 +559,6 @@ class bfit(object):
             if k not in drawargs.keys():
                 drawargs[k] = self.style[k]
         
-        
         # make new window
         if draw_style.get() == 'new':
             self.plt.figure(figstyle)
@@ -1104,7 +1103,7 @@ class bfit(object):
         idx = self.notebook.index('current')
         self.logger.debug('Drawing for notebook index %d',idx)
         if idx == 0:        # data viewer
-            self.fileviewer.draw(figstyle='data')
+            self.fileviewer.draw(figstyle='inspect')
         elif idx == 1:        # data fetch_files
             self.fetch_files.draw_all(figstyle='data')
         elif idx == 2:        # fit viewer

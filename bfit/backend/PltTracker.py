@@ -15,10 +15,10 @@ class PltTracker(object):
     def __init__(self):
         
         # lists for tracking all plots 
-        self.plots = {'data':[],'fit':[],'param':[],'periodic':[]}
+        self.plots = {'inspect':[],'data':[],'fit':[],'param':[],'periodic':[]}
         
         # track the active plot 
-        self.active = {'data':0,'fit':0,'param':0,'periodic':0}
+        self.active = {'inspect':0,'data':0,'fit':0,'param':0,'periodic':0}
     
     # ======================================================================= #
     def _close_figure(self,event):
