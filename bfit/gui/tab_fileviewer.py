@@ -261,8 +261,16 @@ class fileviewer(object):
         if self.bfit.forced_mode.get() != 'auto':
             
             # circumvent readonly status of bdata objects
-            data.mode = self.bfit.forced_mode.get() 
-            data.bd.__dict__['mode'] = self.bfit.forced_mode.get() 
+            old_mode = data.mode
+            new_mode = self.bfit.forced_mode.get() 
+            x_tag = {'1f':'Frequency',
+                     '1w':'x parameter',
+                     '1n':'Rb Cell mV set'}
+            data.mode = new_mode
+            data.bd.__dict__['hist'][x_tag[new_mode]] = \
+                                    data.bd.__dict__['hist'].pop(x_tag[old_mode])
+            data.bd.__dict__['mode'] = new_mode
+        
             
         # set data field
         self.data = data
@@ -408,30 +416,30 @@ class fileviewer(object):
         hist = ('F+','F-','B-','B+') if data.area == 'BNMR' \
                                      else ('L+','L-','R-','R+')
         try:     
-            val = np.sum([data.hist[h].data for h in hist])
-            data_sw['Total Counts Sample'] = "%d" % (val)
+            val = int(np.sum([data.hist[h].data for h in hist]))
+            data_sw['Total Counts Sample'] = f'{val:,}'.replace(',',' ')
             key_order_sw.append('Total Counts Sample')
         except AttributeError:
             pass
         
         try: 
-            val = np.sum([data.hist[h].data for h in hist])/data.duration
-            data_sw['Rate Sample'] = "%d (1/s)" % (val)
+            val = int(np.sum([data.hist[h].data for h in hist])/data.duration)
+            data_sw['Rate Sample'] =  f'{val:,} (1/s)'.replace(',',' ')
             key_order_sw.append('Rate Sample')
         except AttributeError:
             pass
         
         hist = ('F+','F-','B-','B+')    
         try: 
-            val = np.sum([data.hist['NBM'+h].data for h in hist])
-            data_sw['Total Counts NBM'] = "%d" % (val)
+            val = int(np.sum([data.hist['NBM'+h].data for h in hist]))
+            data_sw['Total Counts NBM'] = f'{val:,}'.replace(',',' ')
             key_order_sw.append('Total Counts NBM')
         except AttributeError:
             pass
         
         try: 
-            val = np.sum([data.hist['NBM'+h].data for h in hist])/data.duration
-            data_sw['Rate NBM'] = "%d (1/s)" % (val)
+            val = int(np.sum([data.hist['NBM'+h].data for h in hist])/data.duration)
+            data_sw['Rate NBM'] = f'{val:,} (1/s)'.replace(',',' ')
             key_order_sw.append('Rate NBM')
         except AttributeError:
             pass
@@ -1057,12 +1065,12 @@ class fileviewer(object):
         # select period drawing figure
         if first:
             
-            did_draw_new = False
+            first = False
             
             # check that there is a canvas, if not, draw
             if self.bfit.plt.active['inspect'] == 0:
                 self.draw('inspect',quiet=False)
-                did_draw_new = True
+                first = True
             
             # set up updating canvas
             fig = self.bfit.plt.gcf('inspect')
@@ -1074,7 +1082,7 @@ class fileviewer(object):
             self.update_id = runid
             
             # repeat
-            if did_draw_new:
+            if not first:
                 self.bfit.root.after(self.bfit.update_period*1000,
                                      lambda:self.do_update(first=False,
                                                            runid=runid))
@@ -1083,8 +1091,12 @@ class fileviewer(object):
         # update 
         if self.is_updating.get():
             
-            # check that figure exists
-            if self.bfit.plt.active['periodic'] not in self.bfit.plt.plots['inspect']:
+            fig = self.bfit.plt.gcf('periodic')
+            title = fig.canvas.get_window_title()
+            
+            # check that figure exists or is not updating (was closed)
+            if self.bfit.plt.active['periodic'] not in self.bfit.plt.plots['inspect'] or \
+                    'Updating' not in title:
                 self.is_updating.set(False)
                 del self.bfit.plt.plots['periodic'][0]
                 self.bfit.plt.active['periodic'] = 0

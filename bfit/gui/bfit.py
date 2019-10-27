@@ -501,8 +501,8 @@ class bfit(object):
     def do_close_all(self):
         """Close all open figures"""
         plt.close('all')
-        for k in self.plt.plots:    self.plots[k] = []
-        for k in self.plt.active:   self.active[k] = 0
+        for k in self.plt.plots:    self.plt.plots[k] = []
+        for k in self.plt.active:   self.plt.active[k] = 0
         
     # ======================================================================= #
     def do_export(self):
