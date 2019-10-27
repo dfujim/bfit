@@ -5,9 +5,12 @@ Beta-NMR GUI for reading, drawing, fitting data.
 
 To run, call `python3 -m bfit`
 
-## Setup after Install
+## Setup
 
-Install is done simply by `pip install bfit`. Afterwards, you may want to tell bfit where the data is stored. This is done by defining environment variables
+Install: `pip install bfit`
+Note that `Cython` is required for install. You can get that with `pip install Cython`.
+
+Afterwards, you may want to tell bfit where the data is stored. This is done by defining environment variables
 `BNMR_ARCHIVE` and `BNQR_ARCHIVE` (for convenience add this to your .bashrc script). The expected file format is as follows: 
 
     /path/
