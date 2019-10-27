@@ -348,6 +348,7 @@ class bfit(object):
         menu_file.add_command(label='Export Fits',command=self.do_export_fit)
         menu_file.add_command(label='Save State',command=self.do_save)
         menu_file.add_command(label='Load State',command=self.do_load)
+        menu_file.add_command(label='Close All Figures',command=self.do_close_all)
         menu_file.add_command(label='Exit',command=sys.exit)
         menubar.add_cascade(menu=menu_file, label='File')
         
@@ -496,6 +497,13 @@ class bfit(object):
         except ImportError:
             pass
     
+    # ======================================================================= #
+    def do_close_all(self):
+        """Close all open figures"""
+        plt.close('all')
+        for k in self.plt.plots:    self.plots[k] = []
+        for k in self.plt.active:   self.active[k] = 0
+        
     # ======================================================================= #
     def do_export(self):
         """Export selected files to csv format. Calls the appropriate function 
