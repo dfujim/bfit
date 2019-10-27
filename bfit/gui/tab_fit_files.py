@@ -2074,26 +2074,34 @@ class fitline(object):
         values = None
         res = self.bfit.data[run].fitpar['res']
         isfitted = any([res[k] for k in res]) # is this run fitted?
+        fixed = None
         
         if fit_files.set_prior_p0.get() and not isfitted:
             r = 0
             for rkey in self.bfit.data:
                 data = self.bfit.data[rkey]
                 res = data.fitpar['res']
+                
                 isfitted = any([res[k] for k in res]) # is the latest run fitted?
                 if isfitted and data.run > r:
                     r = data.run
                     values = {k:(res[k],
                                  data.fitpar['blo'][k],
                                  data.fitpar['bhi'][k]) for k in res}
-            
+                    parentry = self.bfit.fit_files.fit_lines[rkey].parentry
+                    fixed = {k:parentry[k]['fixed'][0].get() for k in res}
+                    
         # get calcuated initial values
         if values is None:
             values = fitter.gen_init_par(fn_title,ncomp,self.bfit.data[run].bd,
                                      self.bfit.get_asym_mode(fit_files))
-        
+            
         # set to data
         self.bfit.data[run].set_fitpar(values)
+        if fixed is not None and self.parentry:
+            for k in fixed.keys():
+                self.parentry[k]['fixed'][0].set(fixed[k])
+            
         return tuple(plist)
         
     # ======================================================================= #
