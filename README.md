@@ -8,6 +8,7 @@ To run, call `python3 -m bfit`
 ## Setup
 
 Install: `pip install bfit`
+
 Note that `Cython` is required for install. You can get that with `pip install Cython`.
 
 Afterwards, you may want to tell bfit where the data is stored. This is done by defining environment variables
