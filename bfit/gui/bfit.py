@@ -143,8 +143,8 @@ class bfit(object):
                             "Positive Helicity","Negative Helicity",
                             "Shifted Split","Shifted Combined","Raw Histograms"),
                       '2e':("Combined Hel Slopes","Combined Hel Diff","Combined Hel Raw",
-                            "Positive Helicity","Negative Helicity",
-                            "Split Hel Slopes","Split Hel Diff","Split Hel Raw",),
+                            "Split Hel Slopes","Split Hel Diff","Split Hel Raw",
+                            "Split Slopes Shifted","Split Diff Shifted","Split Raw Shifted"),
                       '2h':("Combined Helicity","Split Helicity",
                             "Positive Helicity","Negative Helicity",
                             "Matched Helicity",
@@ -169,6 +169,9 @@ class bfit(object):
                  "Split Hel Raw"            :'raw_h',
                  "Split Hel Slopes"         :'sl_h',
                  "Split Hel Diff"           :'dif_h',
+                 "Split Raw Shifted"        :'raw_hs',
+                 "Split Slopes Shifted"     :'sl_hs',
+                 "Split Diff Shifted"       :'dif_hs',
                  "Alpha Diffusion"          :'ad',
                  "Alpha Diff Normalized"    :'adn',
                  "Combined Hel (Alpha Tag)" :"at_c",
@@ -636,7 +639,7 @@ class bfit(object):
             a = data.asym(hist_select=self.hist_select)
         
             # draw
-            if asym_type in ["raw_c","raw_h"]:
+            if asym_type in ["raw_c","raw_h","raw_hs"]:
                 
                 # make 3D axes
                 if type(self.plt.gcf(figstyle)) == type(None):   
@@ -664,27 +667,45 @@ class bfit(object):
                     z = a.raw_c[0].transpose()
                     z = np.hstack(z)
                     ax.plot(x,y,z,label=label,**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
+                    ax.data_id = data.id
+                    ax.lines_id = data.id
                     
                 elif asym_type == "raw_h":
                 
                     z = a.raw_p[0].transpose()
                     z = np.hstack(z)
                     ax.plot(x,y,z,label=label+' ($+$)',**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
-
+                    ax.data_id = data.id
+                    ax.lines_id = data.id
+                    
                     z = a.raw_n[0].transpose()
                     z = np.hstack(z)
                     ax.plot(x,y,z,label=label+' ($-$)',**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
+                    ax.data_id = data.id
+                    ax.lines_id = data.id
                 
+                elif asym_type == "raw_hs":
+                
+                    z = (a.raw_p[0]-a.raw_p[0][0]).transpose()
+                    z = np.hstack(z)
+                    ax.plot(x,y,z,label=label+' ($+$)',**drawargs)
+                    ax.data_id = data.id
+                    ax.lines_id = data.id
+                    
+                    z = (a.raw_n[0]-a.raw_n[0][0]).transpose()
+                    z = np.hstack(z)
+                    ax.plot(x,y,z,label=label+' ($-$)',**drawargs)
+                    ax.data_id = data.id
+                    ax.lines_id = data.id
+                    
                 # plot elements
                 ax.set_xlabel('Time (s)')
                 ax.set_ylabel('Frequency (%s)' % self.freq_units)
-                ax.set_zlabel('Asymmetry')
+                
+                if asym_type != "raw_hs":
+                    ax.set_zlabel('Asymmetry')
+                else:
+                    ax.set_zlabel(r"Asym-Asym($\nu_{min}$)")
                 ax.get_yaxis().get_major_formatter().set_useOffset(False)
                 ax.get_xaxis().set_ticks(a.time)
             
@@ -719,9 +740,32 @@ class bfit(object):
                                  label=label+' ($-$)',**drawargs)
                     ax.data_id.append(data.id)
                     ax.lines_id.append(data.id)
+                elif asym_type == 'sl_hs':
+                    self.plt.errorbar(figstyle,f,a.sl_p[0]-a.sl_p[0][0],a.sl_p[1],
+                                 label=label+' ($+$)',**drawargs)
+                    ax.data_id.append(data.id)
+                    ax.lines_id.append(data.id)
+                                 
+                    self.plt.errorbar(figstyle,f,a.sl_n[0]-a.sl_n[0][0],a.sl_n[1],
+                                 label=label+' ($-$)',**drawargs)
+                    ax.data_id.append(data.id)
+                    ax.lines_id.append(data.id)
+                elif asym_type == 'dif_hs':
+                    self.plt.errorbar(figstyle,f,a.dif_p[0]-a.dif_p[0][0],a.dif_p[1],
+                                 label=label+' ($+$)',**drawargs)
+                    ax.data_id.append(data.id)
+                    ax.lines_id.append(data.id)
+                    self.plt.errorbar(figstyle,f,a.dif_n[0]-a.dif_n[0][0],a.dif_n[1],
+                                 label=label+' ($-$)',**drawargs)
+                    ax.data_id.append(data.id)
+                    ax.lines_id.append(data.id)
                     
                 self.plt.xlabel(figstyle,xlabel_dict[data.mode] % self.freq_units)
-                self.plt.ylabel(figstyle,"Asymmetry")
+                
+                if '_hs' in asym_type:
+                    self.plt.ylabel(figstyle,r"Asym-Asym($\nu_{min}$)")
+                else:
+                    self.plt.ylabel(figstyle,"Asymmetry")
             
         # get asymmetry: not raw scans, not 2e
         else:
