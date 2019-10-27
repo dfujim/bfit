@@ -27,18 +27,20 @@ __doc__ = """
 class fileviewer(object):
     """
         Data fields:
-            year: IntVar() year of exp 
-            runn: IntVar() run number
-            entry_asym_type: combobox for asym calculations
-            text: Text widget for displaying run information
-            bfit: bfit object
-            fig_list: list of figures
             asym_type: drawing style
-            is_updating: True if update draw
+            bfit: bfit object
             data: bdata object for drawing
+            entry_asym_type: combobox for asym calculations
+            fig_list: list of figures
+            is_updating: True if update draw
+            runn: IntVar() run number
+            text: Text widget for displaying run information
+            update_id: string, run id for the currently updating run
+            year: IntVar() year of exp 
     """
     
     default_export_filename = "%d_%d.csv" # year_run.csv
+    update_id = ''
     
     # ======================================================================= #
     def __init__(self,file_tab,bfit):
@@ -161,9 +163,9 @@ class fileviewer(object):
         pass
         
     # ======================================================================= #
-    def draw(self,figstyle):
+    def draw(self,figstyle,quiet=False):
         """Get data then draw."""
-        if self.get_data():
+        if self.get_data(quiet=quiet):
             self.bfit.draw(self.data,
                     self.bfit.asym_dict[self.asym_type.get()],rebin=self.rebin.get(),
                     label=self.bfit.get_label(self.data),
@@ -192,7 +194,7 @@ class fileviewer(object):
             self.bfit.export(data,filename)
     
     # ======================================================================= #
-    def get_data(self):
+    def get_data(self,quiet=False):
         """Display data and send bdata object to bfit draw list. 
         Return True on success, false on Failure
         """
@@ -262,8 +264,14 @@ class fileviewer(object):
             data.mode = self.bfit.forced_mode.get() 
             data.bd.__dict__['mode'] = self.bfit.forced_mode.get() 
             
+        # set data field
+        self.data = data
+        
         # set draw parameters
         self.bfit.set_asym_calc_mode_box(data.mode,self)
+        
+        # quiet mode: don't update text
+        if quiet: return True
         
         # NE -----------------------------------------------------------------
         
@@ -1030,9 +1038,6 @@ class fileviewer(object):
         set_str(data_sw,key_order_sw,self.text_sw)
         set_str(data_se,key_order_se,self.text_se)
         
-        # set data field
-        self.data = data
-        
         return True
    
     # ======================================================================= #
@@ -1042,9 +1047,12 @@ class fileviewer(object):
         textbox.insert('1.0',text)
         
     # ======================================================================= #
-    def do_update(self,first=True):
-        
+    def do_update(self,first=True,runid=''):
         self.logger.debug('Draw via periodic update')
+        
+        # update stop condition
+        if runid and runid != self.update_id:
+            return
         
         # select period drawing figure
         if first:
@@ -1052,21 +1060,24 @@ class fileviewer(object):
             did_draw_new = False
             
             # check that there is a canvas, if not, draw
-            if self.bfit.plt.active['data'] == 0:
-                self.draw('data')
+            if self.bfit.plt.active['inspect'] == 0:
+                self.draw('inspect',quiet=False)
                 did_draw_new = True
             
             # set up updating canvas
-            fig = self.bfit.plt.gcf('data')
-            fig.canvas.set_window_title('Figure %d (Data - Updating)'%fig.number)
+            fig = self.bfit.plt.gcf('inspect')
+            fig.canvas.set_window_title('Figure %d (Inspect - Updating)'%fig.number)
             self.bfit.plt.plots['periodic'] = [fig.number]
-            self.bfit.plt.active['periodic'] = self.bfit.plt.active['data']
+            self.bfit.plt.active['periodic'] = self.bfit.plt.active['inspect']
             
+            runid = self.data.id
+            self.update_id = runid
             
             # repeat
             if did_draw_new:
                 self.bfit.root.after(self.bfit.update_period*1000,
-                                     lambda:self.do_update(first=False))
+                                     lambda:self.do_update(first=False,
+                                                           runid=runid))
                 return
         
         # update 
@@ -1079,11 +1090,24 @@ class fileviewer(object):
                 self.bfit.plt.active['periodic'] = 0
                 return
             
+            # update run
+            year,run = tuple(map(int,runid.split('.')[:2]))
+            current_year = self.year.get()
+            curent_run = self.runn.get()
+            
+            self.year.set(year)
+            self.runn.set(run)
+            
             # update only in stack mode
             draw_style = self.bfit.draw_style.get()
             self.bfit.draw_style.set('stack')
-            self.draw(figstyle='periodic')
+            self.draw(figstyle='periodic',quiet=True)
             draw_style = self.bfit.draw_style.set(draw_style)
+            
+            # reset year and run 
+            self.year.set(current_year)
+            self.runn.set(curent_run)
+            self.get_data(quiet=True)
             
             # Print update message
             print('Updated figure at:',str(datetime.datetime.now()).split('.')[0],
@@ -1091,7 +1115,7 @@ class fileviewer(object):
             
             # repeat
             self.bfit.root.after(self.bfit.update_period*1000,
-                                 lambda:self.do_update(first=False))
+                                 lambda:self.do_update(first=False,runid=runid))
             
         # remove window from updating list
         else:
@@ -1100,7 +1124,7 @@ class fileviewer(object):
                 
                 # remove window
                 fig = self.bfit.plt.gcf('periodic')
-                fig.canvas.set_window_title('Figure %d (Data)'%fig.number)
+                fig.canvas.set_window_title('Figure %d (Inspect)'%fig.number)
                 del self.bfit.plt.plots['periodic'][0]
                 self.bfit.plt.active['periodic'] = 0
             
