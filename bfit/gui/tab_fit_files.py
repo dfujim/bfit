@@ -1679,6 +1679,8 @@ class fit_files(object):
             ax = plt.figure(fig_num).axes[0]
             xlab = ax.get_xlabel()
             ylab = ax.get_ylabel()
+            xscale = ax.get_xscale()
+            yscale = ax.get_yscale()
             
             # set new labels
             self.xaxis.set(xlab)
@@ -1687,6 +1689,11 @@ class fit_files(object):
             # draw new labels
             self.plt.active['param'] = fig_num
             self.draw_param()
+            
+            # scale the plot
+            ax = plt.figure(fig_num).axes[0]
+            ax.set_xscale(xscale)
+            ax.set_yscale(yscale)
             
         # reset to old settings
         self.bfit.draw_style.set(current_style)
