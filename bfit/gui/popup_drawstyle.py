@@ -6,6 +6,7 @@ from tkinter import *
 from tkinter import ttk
 from bfit import logger_name
 import logging
+import webbrowser
 
 # ========================================================================== #
 class popup_drawstyle(object):
