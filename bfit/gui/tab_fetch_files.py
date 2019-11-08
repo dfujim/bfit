@@ -409,7 +409,6 @@ class fetch_files(object):
         # get data
         data = {}
         s = ['Failed to open run']
-        mode = self.bfit.forced_mode.get()
         for r in run_numbers:
             
             # get key for data storage
@@ -429,12 +428,7 @@ class fetch_files(object):
                 # new data
                 else:
                     data[runkey] = fitdata(self.bfit,new_data)
-        
-                    # force run mode 
-                    if mode != 'auto':
-                        # circumvent readonly status of bdata objects
-                        data[runkey].__dict__['mode'] = mode
-            
+                    
         # print error message
         if len(s)>1:
             s = '\n'.join(s)

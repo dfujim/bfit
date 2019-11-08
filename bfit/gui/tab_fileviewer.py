@@ -257,21 +257,6 @@ class fileviewer(object):
                 self.set_textbox_text(t,'File does not exist.')
             return False
         
-        # force run mode 
-        if self.bfit.forced_mode.get() != 'auto':
-            
-            # circumvent readonly status of bdata objects
-            old_mode = data.mode
-            new_mode = self.bfit.forced_mode.get() 
-            x_tag = {'1f':'Frequency',
-                     '1w':'x parameter',
-                     '1n':'Rb Cell mV set'}
-            data.mode = new_mode
-            data.bd.__dict__['hist'][x_tag[new_mode]] = \
-                                    data.bd.__dict__['hist'].pop(x_tag[old_mode])
-            data.bd.__dict__['mode'] = new_mode
-        
-            
         # set data field
         self.data = data
         
