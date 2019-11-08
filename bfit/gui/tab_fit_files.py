@@ -1109,7 +1109,7 @@ class fit_files(object):
         
         # make data frame for output
         df = pd.DataFrame(val)
-        df.set_index('Run Number',inplace=True)
+        # ~ df.set_index('Run Number',inplace=True)
         
         # drop completely empty columns
         bad_cols = [c for c in df.columns if all(df[c].isna())]
@@ -1128,7 +1128,19 @@ class fit_files(object):
             # check extension 
             if os.path.splitext(filename)[1] == '':
                 filename += '.csv'
-            df.to_csv(filename)
+            
+            # write header
+            data = self.bfit.data[list(self.fit_lines.keys())[0]]
+            header = ['# Fit function : %s' % data.fit_title,
+                      '# Number of components: %d' % data.ncomp,
+                      '# Global Chi-Squared: %s' % self.gchi_label['text'],
+                      '#\n#\n']
+            
+            with open(filename,'w') as fid:
+                fid.write('\n'.join(header))
+            
+            # write data
+            df.to_csv(filename,index=False,mode='a+')
             self.logger.debug('Export success')
         else:
             self.logger.info('Returned exported parameters')
