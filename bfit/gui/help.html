@@ -6264,7 +6264,7 @@ Error message and password prompt
 <div modified="20171215084937325" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/EditToolbar</pre>
 </div>
-<div list="[[Help Index]]" title="$:/StoryList">
+<div list="[[Help Index]] [[Plugging in Fitting Routines]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div modified="20171215083831245" title="$:/temp/advancedsearch">
@@ -6877,7 +6877,7 @@ The fitter is dynamically loaded and is ready to use. bfit reverts to the defaul
 * ''Fit Data''
 ** Fit the fetched data, set fitting parameters, view fit results, plot fit parameters. </pre>
 </div>
-<div created="20180805223140058" modified="20181118232334000" title="Plugging in Fitting Routines">
+<div created="20180805223140058" modified="20191108171059145" title="Plugging in Fitting Routines">
 <pre>`bfit` allows for users to build their own fitting modules. The module must follow the below template, but otherwise developers may use their plugin to link to any fitting procedure they wish. Note the expected input/output of the `__call__` function.  
 
 Default source code [ext[here|https://ms-code.phas.ubc.ca:2633/dfujim_public/bfit/src/branch/master/bfit/fitting/default_routines.py]].
@@ -6885,7 +6885,7 @@ Default source code [ext[here|https://ms-code.phas.ubc.ca:2633/dfujim_public/bfi
 
 ! Module Plugin Template
 
-In the following example, the class name, function names, and the dictionaries &quot;function_names&quot; and &quot;param_names&quot; must be maintained. Additionally the `__call__` function ''MUST'' return the parameters with the proper format. 
+In the following minimal example, all the shown variables and functions &quot;MUST&quot; be defined and have &quot;EXACTLY&quot; the same input/output. 
 
 ```python
 class fitter(object):
@@ -6894,28 +6894,27 @@ class fitter(object):
     __name__ = 'default'
     
     # Define possible fit functions for given run modes:
-    function_names = {  '20':('Exp','Str Exp')}
+    function_names = {  '20':('Exp',)}
      
     # Define names of fit parameters:
-    param_names = {     'Exp'       :('1/T1','amp','baseline')}
+    param_names = {     'Exp'       :('1/T1','amp')}
 
-    # dictionary of initial parameters
-    par_values = {}
-    fn_list = {}
+    # define list of ok run modes
+    # to get a complete list of the possible modes, run &quot;print(bfit.asym_dict)&quot; in the Run Commands window.  
+    valid_asym_modes = ('c','p','n',)
 
     # ======================================================================= #
-    def __init__(self):
-        pass
+    def __init__(self,probe_species='8Li'):        
+        self.probe_species = probe_species  # one of the keys in the bdata.life dictionary.
         
     # ======================================================================= #
-    def __call__(self,fn_name,ncomp,data_list,hist_select):
+    def __call__(self,fn_name,ncomp,data_list,hist_select,xlims):
         &quot;&quot;&quot;
             Fitting controller. 
             
             fn_name: name of function to fit
             ncomp : number of components to incude (2 = biexp, for example)
             data_list: list of [[bdata object,pdict,doptions],]
-            hist_select: string for selection of histograms
             
                 where pdict = {par:(init val,   # initial guess
                                     bound_lo,   # lower fitting bound
@@ -6928,11 +6927,28 @@ class fitter(object):
                                     'rebin':int,    # rebinning factor
                                     'group':int,    # fitting group
                                  }
-                                            
-            returns dictionary of {run: [[par_names],[par_values],[par_errors],
-                                        [chisquared],[fitfunction pointers]]}
+                                 
+            hist_select: string for selection of histograms
+            asym_mode:  input for asymmetry calculation type 
+                            c: combined helicity
+                            h: split helicity
+                            p: positive helicity
+                            n: negative helicity
+                            
+                        For 2e mode, prefix with:
+                            sl_: combined timebins using slopes
+                            dif_: combined timebins using differences
+                            raw_: raw time-resolved
+                            
+                            ex: sl_c or raw_h or dif_c
+            xlims: fit subrange of x axis
+            returns ({run: [[par_names],[par_values],[par_errors],
+                                        [chisquared],[fitfunction pointers]]},
+                         global chisquared) # tuple
         &quot;&quot;&quot;
         # do stuff
+
+        return (output_dict,gchi)
 
     # ======================================================================= #
     def gen_param_names(self,fn_name,ncomp):
@@ -6942,22 +6958,27 @@ class fitter(object):
             fn_name: name of function (should match those in param_names)
             ncomp: number of components
             
-            return (names)
+            return (names) # tuple
         &quot;&quot;&quot;
         # do stuff
+
+        return tuple(names)
         
     # ======================================================================= #
-    def gen_init_par(self,fn_name,ncomp,bdataobj):
+    def gen_init_par(self,fn_name,ncomp,bdataobj,asym_mode='combined'):
         &quot;&quot;&quot;Generate initial parameters for a given function.
         
             fname: name of function. Should be the same as the param_names keys
             ncomp: number of components
             bdataobj: a bdata object representative of the fitting group. 
+            asym_mode: what kind of asymmetry to fit
             
             Set and return dictionary of initial parameters. 
                 {par_name:par_value}
         &quot;&quot;&quot;
         # do stuff
+
+        return init_params_dict
         
     # ======================================================================= #
     def get_fn(self,fn_name,ncomp=1,pulse_len=-1,lifetime=-1):
@@ -6972,6 +6993,8 @@ class fitter(object):
             Returns python function(x,*pars)
         &quot;&quot;&quot;
         # do stuff        
+
+        return fn
  ```</pre>
 </div>
 <div created="20181118232735594" modified="20181118234850981" tags="HowTo" title="Redraw Periodically">
