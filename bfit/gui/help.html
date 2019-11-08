@@ -295,11 +295,31 @@ Error message and password prompt
 
 <li>Asymmetry Calculation Details</li>
 
+<li>Close All Figures</li>
+
+<li>Data directory</li>
+
+<li>Draw 1f as PPM shift</li>
+
+<li>Draw in new window</li>
+
+<li>Draw residuals as standardized</li>
+
+<li>Drawing style</li>
+
+<li>Exit</li>
+
 <li>Export Data</li>
+
+<li>Export Fits</li>
+
+<li>Fitting routines</li>
 
 <li>Global Fitting</li>
 
 <li>Help Index</li>
+
+<li>Histograms</li>
 
 <li>Hotkeys</li>
 
@@ -307,17 +327,51 @@ Error message and password prompt
 
 <li>Installation and First Startup</li>
 
+<li>Labels default</li>
+
+<li>Load State</li>
+
 <li>Loading Your Fitting Routine</li>
 
 <li>Navigation Map</li>
 
-<li>Plugging in Fitting Routines</li>
+<li>NMR B1 Calculator</li>
+
+<li>NQR B0 Calculator</li>
+
+<li>PPM reference frequency</li>
+
+<li>Probe species</li>
+
+<li>Redraw in existing window</li>
+
+<li>Redraw period</li>
 
 <li>Redraw Periodically</li>
 
+<li>Report an issue</li>
+
+<li>Run Commands</li>
+
+<li>Save State</li>
+
+<li>Search Archive</li>
+
 <li>Set New Drawing Styles</li>
 
+<li>Show help wiki.</li>
+
+<li>Stack in existing window</li>
+
 <li>Superimposing Runs</li>
+
+<li>System matplotlibrc</li>
+
+<li>Units</li>
+
+<li>Update bfit</li>
+
+<li>Use NBM</li>
 
 </ul>
 </p>
@@ -6264,7 +6318,7 @@ Error message and password prompt
 <div modified="20171215084937325" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/EditToolbar</pre>
 </div>
-<div list="[[Help Index]] [[Plugging in Fitting Routines]]" title="$:/StoryList">
+<div list="" title="$:/StoryList">
 <pre></pre>
 </div>
 <div modified="20171215083831245" title="$:/temp/advancedsearch">
@@ -6284,7 +6338,7 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20181118232722361" modified="20181118234912800" title="$:/temp/NewTagName">
+<div created="20181118232722361" modified="20191108174115767" title="$:/temp/NewTagName">
 <pre></pre>
 </div>
 <div author="Paco Rivière" core-version="&gt;=5.0.0" created="20160103221746029" dependents="" description="Catalan (Spain)" icon="data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22810%22%20height%3D%22540%22%3E%0A%3Crect%20width%3D%22810%22%20height%3D%22540%22%20fill%3D%22%23FCDD09%22%2F%3E%0A%3Cpath%20stroke%3D%22%23DA121A%22%20stroke-width%3D%2260%22%20d%3D%22M0%2C90H810m0%2C120H0m0%2C120H810m0%2C120H0%22%2F%3E%0A%3C%2Fsvg%3E" modified="20160103221746029" name="ca-ES" original-plugin-type="language" original-tags="" original-title="$:/languages/ca-ES" original-type="application/json" server-url="http://tiddlywiki.com/library/v5.1.9/index.html" tags="$:/tags/RemoteAssetInfo" title="$:/temp/RemoteAssetInfo/http://tiddlywiki.com/library/v5.1.9/index.html/$:/languages/ca-ES" type="text/vnd.tiddlywiki" version="5.1.9">
@@ -6738,146 +6792,55 @@ Working off of the raw asymmetry calculations we can combine asymmetries in the 
 # Take the difference 
 </pre>
 </div>
-<div created="20181118233304697" modified="20181118233629511" tags="HowTo" title="Export Data">
-<pre>!! Exporting Raw Data
-
-To export the asymmetry of the selected runs, in the menu bar select ''File'' $$\rightarrow$$ ''Export''. 
-
-* In the ''File Details'' tab, this will write the selected data as a csv file to the file name of your choosing. 
-* In the ''Fetch Data'' tab, this will write all the fetched data as a set of csv files to a directory of your choosing, with file names tagged by run number and year. 
-
-!! Exporting Fit Results and File Details
-
-In the ''Fit Data'' tab, there is an ''Export'' button on the right side of the window. This will export the run metadata and fit parameters to a csv file of your choosing. </pre>
+<div created="20191108174657773" modified="20191108174728842" tags="[[menu option]]" title="Close All Figures">
+<pre>Runs `matplotlib.pyplot.close(&quot;all&quot;)`</pre>
 </div>
-<div created="20181118234905315" modified="20181118235123434" tags="HowTo" title="Global Fitting">
-<pre>In the ''Fit Data'' tab, select the ''Shared'' checkbox to set the parameter globally for the fitting group. 
-
-To share parameters globally in a subset of runs, make a new fitting group. </pre>
+<div created="20191108174833143" modified="20191108174937810" tags="[[menu option]]" title="Data directory">
+<pre>By default, bfit uses the [[bdata|https://github.com/dfujim/bdata]] directory defaults to fetch data. If a different directory is desired, select it here. Set directly is not persistent across instances. </pre>
 </div>
-<div created="20171215083659362" modified="20181118232627715" title="Help Index">
-<pre>&quot;&quot;&quot;
-[[Installation and First Startup]]
-[[Hotkeys]]
-[[Navigation Map]]
-[[Asymmetry Calculation Details]]
-[[Plugging in Fitting Routines]]
-[[How To List]]
-&quot;&quot;&quot;
+<div created="20191108181424365" modified="20191108181638853" tags="[[menu option]]" title="Draw 1f as PPM shift">
+<pre>Draw 1f runs as a PPM shift which is calculated as: 
+
+$$\nu_{shift} = \frac{\nu-\nu_{ref}}{\nu_{ref}} \times 10^6$$</pre>
+</div>
+<div created="20191108180351806" modified="20191108180818960" tags="[[menu option]]" title="Draw in new window">
+<pre>!! Inspect Tab
+
+Create a new figure window for each run drawn, except the updating run. The updating run is always drawn as stacked. 
+
+!! Fetch Tab
+
+''Drawing from run list'': Create a new figure window for each run drawn. Fit lines are drawn as stacked in the window of the corresponding data.
+
+''Drawing from operations on checked items button'': Create a new figure window for each set of runs drawn. All selected runs are drawn as stacked within this new window. 
 </pre>
 </div>
-<div created="20171215082810696" modified="20180830212549820" title="Hotkeys">
-<pre>Hotkey assignment varies depending on the tab shown. Global hotkeys are constant. 
-
-! Global hotkeys
-
-| !Command | !Effect |
-| ctrl+n | set draw mode &quot;new&quot; |
-| ctrl+s | set draw mode &quot;stack&quot; |
-| ctrl+r | set draw mode &quot;redraw&quot; |
-| ctrl+1 | switch to file viewer tab |
-| ctrl+2 | switch to fetch data tab |
-| ctrl+3 | switch to fit data tab |
-
-! File Details Tab
-
-| !Command | !Effect |
-| return | fetch file |
-| ctrl+return | draw file |
-| shift+return | draw file |
-
-! Fetch Data Tab
-| !Command | !Focus | !Effect |
-| return | run &amp; year entry | fetch |
-|~| SLR rebin | set checked |
-|~|bin omit entry | set checked |
-| ctrl+return || draw file |
-| shift+return || draw file |
-| ctrl+a || toggle check all |
-
-! Fit Data Tab
-| !Command | !Effect |
-| return | fit data |
-| ctrl+return | draw fit parameters |</pre>
+<div created="20191108181704856" modified="20191108181820497" tags="popup" title="Draw residuals as standardized">
+<pre>Draw residuals in units of each point's error. Allows one to easily check for outlier sections of data which do not follow the trend, regardless of variance. </pre>
 </div>
-<div created="20181118232632065" modified="20181118234722198" tags="HowTo" title="How To List">
-<pre>&lt;$list filter=&quot;[tag[HowTo]sort[title]] -[title[How To List]]&quot;/&gt;
+<div created="20191108174954175" modified="20191108175211587" tags="popup [[menu option]]" title="Drawing style">
+<pre>Set [[matplotlib drawing options|https://matplotlib.org/api/_as_gen/matplotlib.lines.Line2D.html#matplotlib.lines.Line2D]]. </pre>
+</div>
+<div created="20191108174741372" modified="20191108174807259" tags="[[menu option]]" title="Exit">
+<pre>Closes all windows. Equivalent to pressing &quot;x&quot; in the corner. </pre>
+</div>
+<div created="20181118233304697" modified="20191108174029709" tags="[[menu option]]" title="Export Data">
+<pre>Exports asymmetry calculations to csv file. Functionality differs based on active tab. 
+
+
+!! Inspect
+
+Writes the selected run to file, with the name of your choosing. 
+
+!! Fetch
+
+Writes all selected runs to file, with the default name year_run.csv. User only selects the directory to save to. 
 </pre>
 </div>
-<div created="20171215075709744" modified="20181118230456083" title="Installation and First Startup">
-<pre>! Installation
-
-Installation is as simple as `pip install bfit`. If you are on a machine and do not have root access, `pip install --user bfit` should work. 
-
-To update to new versions, do `pip install --upgrade bfit` (you may need to run this twice to ensure you get the new packages). 
-
-Documentation on source code and update history can be found [ext[here|https://ms-code.phas.ubc.ca:2633/dfujim_public/bfit/releases]].
-
-You need to set the environment variables `BNMR_ARCHIVE` and `BNQR_ARCHIVE`. If your files are in the year directory `2018`, then these variables should point to the directory containing all of the year directories. The structure is then
-
-```bash
-$BNMR_ARCHIVE/year/file.msr
-```
-
-! First Startup 
-
-The native way to call bfit is to navigate to the directory containing the package and call
-
-```bash
-python3 -m bfit
-```
-
-But it may be useful to add the alias to your ``.bashrc`` file:
-
-```bash
-alias bfit='python3 -m bfit'
-```
-
-You are now ready to run bit. Open a new shell and type ``bfit`` into the prompt. </pre>
+<div created="20191108174202463" modified="20191108174234532" tags="[[menu option]]" title="Export Fits">
+<pre>Export a csv file corresponding to the fit lines of every fitted run. </pre>
 </div>
-<div created="20181118234512332" modified="20181118234709877" tags="HowTo" title="Loading Your Fitting Routine">
-<pre>In the menu bar: ''Settings'' $$\rightarrow$$ ''Set fitting routines'' and select your ``.py`` module containing the class ``fitter``. See [[Plugging in Fitting Routines]] for details. 
-
-The fitter is dynamically loaded and is ready to use. bfit reverts to the default on restart. </pre>
-</div>
-<div created="20180706200413929" modified="20181118230939139" title="Navigation Map">
-<pre>! Menu bar: 
-
-* ''File''
-** Calculators for B0 in BNQR and B1 in BNMR
-** Export fetched data to csv file
-
-* ''Settings''
-** Set data directory. Defaults to environment variables `BNMR_ARCHIVE` and `BNQR_ARCHIVE`
-** Set label default: When drawn, runs are labelled by the quantity listed. Default is run number. 
-** Set matplotlib defaults: global drawing style defaults
-** Set draw style: set instance line and marker styles
-** Set fitting routines: import the file used to set the fitting backend. Imported dynamically. 
-** Set redraw period: fix how often the data is refreshed in the file details tab. 
-** Set PPM reference frequency in Hz. 
-** Set histograms used in asymmetry calculation. 
-
-* ''Draw Mode''
-** New: Make a new window for each object or sets of objects drawn
-** Stack: Draw new objects or sets of objects in the existing window, superimposed on previously drawn objects
-** Redraw: Draw new objects or sets of objects in the existing window, first clearing previously drawn objects
-** Draw as PPM Shift: Draw frequency scans as a shift relative to PPM reference frequency.  
-
-* ''Help''
-** Show this help wiki.
-
----
-
-! Tabs:
-
-* ''File Details''
-** File inspector. Use this to quickly view the contents and parameters of a given run. Use `return` to fetch and `ctrl+return` to quickly draw. See [[hotkey details|Hotkeys]]. 
-* ''Fetch Data''
-** Fetch many data files for quick superposition and to set up fitting routines. All the data fetched here will be fitted on the next tab regardless of check state.
-* ''Fit Data''
-** Fit the fetched data, set fitting parameters, view fit results, plot fit parameters. </pre>
-</div>
-<div created="20180805223140058" modified="20191108171059145" title="Plugging in Fitting Routines">
+<div created="20180805223140058" modified="20191108175313483" tags="[[menu option]]" title="Fitting routines">
 <pre>`bfit` allows for users to build their own fitting modules. The module must follow the below template, but otherwise developers may use their plugin to link to any fitting procedure they wish. Note the expected input/output of the `__call__` function.  
 
 Default source code [ext[here|https://ms-code.phas.ubc.ca:2633/dfujim_public/bfit/src/branch/master/bfit/fitting/default_routines.py]].
@@ -6997,12 +6960,210 @@ class fitter(object):
         return fn
  ```</pre>
 </div>
+<div created="20181118234905315" modified="20181118235123434" tags="HowTo" title="Global Fitting">
+<pre>In the ''Fit Data'' tab, select the ''Shared'' checkbox to set the parameter globally for the fitting group. 
+
+To share parameters globally in a subset of runs, make a new fitting group. </pre>
+</div>
+<div created="20171215083659362" modified="20191108175338408" title="Help Index">
+<pre>&quot;&quot;&quot;
+[[Installation and First Startup]]
+[[Hotkeys]]
+[[Navigation Map]]
+[[Asymmetry Calculation Details]]
+[[Plugging in Fitting Routines|Fitting routines]]
+[[How To List]]
+&quot;&quot;&quot;
+</pre>
+</div>
+<div created="20191108175400541" modified="20191108175613846" tags="[[menu option]] popup" title="Histograms">
+<pre>Allow setting of histograms for the calculation of asymmetries. Passed directly to [[bdata.bdata.asym|https://github.com/dfujim/bdata/blob/master/bdata/bdata.py]] function as the `hist_select` option. </pre>
+</div>
+<div created="20171215082810696" modified="20191108171741895" title="Hotkeys">
+<pre>Hotkey assignment varies depending on the tab shown. Global hotkeys are constant. 
+
+! Global hotkeys
+
+| !Command | !Effect |
+| ctrl+n | set draw mode &quot;new&quot; |
+| ctrl+s | set draw mode &quot;stack&quot; |
+| ctrl+r | set draw mode &quot;redraw&quot; |
+| ctrl+1 | switch to Inspect tab |
+| ctrl+2 | switch to Fetch tab |
+| ctrl+3 | switch to Fit tab |
+
+! Inspect Tab
+
+| !Command | !Effect |
+| return | fetch file |
+| ctrl+return | fetch and draw file |
+| shift+return | fetch and draw file |
+
+! Fetch Tab
+| !Command | !Focus | !Effect |
+| return | run &amp; year entry | fetch |
+|~| SLR rebin | set checked |
+|~|bin omit entry | set checked |
+| ctrl+return || draw file |
+| shift+return || draw file |
+| ctrl+a || toggle check all |
+
+! Fit Tab
+| !Command | !Effect |
+| return | fit data |
+| ctrl+return | draw fit parameters |
+| ctrl+u | update all drawn fit parameter windows |</pre>
+</div>
+<div created="20181118232632065" modified="20181118234722198" tags="HowTo" title="How To List">
+<pre>&lt;$list filter=&quot;[tag[HowTo]sort[title]] -[title[How To List]]&quot;/&gt;
+</pre>
+</div>
+<div created="20171215075709744" modified="20191108171525558" title="Installation and First Startup">
+<pre>! Installation
+
+Installation is as simple as `pip install bfit`. If you are on a machine and do not have root access, `pip install --user bfit` should work. 
+
+To update to new versions, do `pip install --upgrade bfit` (you may need to run this twice to ensure you get the new packages). 
+
+Documentation on source code and update history can be found [ext[here|https://ms-code.phas.ubc.ca:2633/dfujim_public/bfit/releases]].
+
+You may want to set the environment variables `BNMR_ARCHIVE` and `BNQR_ARCHIVE`. If your files are in the year directory `2018`, then these variables should point to the directory containing all of the year directories. The structure is then
+
+```bash
+$BNMR_ARCHIVE/year/file.msr
+```
+
+If these are not set, then bfit will fetch files from musr.ca and store them in the default location according to [[bdata|https://github.com/dfujim/bdata]]
+
+! First Startup 
+
+The native way to call bfit is to navigate to the directory containing the package and call
+
+```bash
+python3 -m bfit
+```
+
+But it may be useful to add the alias to your ``.bashrc`` file:
+
+```bash
+alias bfit='python3 -m bfit'
+```
+
+You are now ready to run bit. Open a new shell and type ``bfit`` into the prompt. </pre>
+</div>
+<div created="20191108175644661" modified="20191108175708602" tags="[[menu option]]" title="Labels default">
+<pre>Set the default labels for matplotlib legends. </pre>
+</div>
+<div created="20191108174618491" modified="20191108174646571" tags="[[menu option]]" title="Load State">
+<pre>Load the state from a saved yaml file. First clears all runs, then re-loads the selected ones. </pre>
+</div>
+<div created="20181118234512332" modified="20181118234709877" tags="HowTo" title="Loading Your Fitting Routine">
+<pre>In the menu bar: ''Settings'' $$\rightarrow$$ ''Set fitting routines'' and select your ``.py`` module containing the class ``fitter``. See [[Plugging in Fitting Routines]] for details. 
+
+The fitter is dynamically loaded and is ready to use. bfit reverts to the default on restart. </pre>
+</div>
+<div created="20180706200413929" modified="20191108172635689" title="Navigation Map">
+<pre>! Menu bar: 
+
+* ''File''
+** [[Search Archive]]
+** [[NMR B1 Calculator]]
+** [[NQR B0 Calculator]]
+** [[Run Commands]]
+** [[Export Data]]
+** [[Export Fits]]
+** [[Save State]]
+** [[Load State]]
+** [[Close All Figures]]
+** [[Exit]]
+
+* ''Settings''
+** [[Data directory]]
+** [[Drawing style]]
+** [[Fitting routines]]
+** [[Histograms]]
+** [[Labels default]]
+** [[PPM reference frequency]]
+** [[Probe species]]
+** [[Redraw period]]
+** [[System matplotlibrc]]
+** [[Units]]
+
+* ''Draw Mode''
+** [[Draw in new window]]
+** [[Stack in existing window]]
+** [[Redraw in existing window]]
+** [[Draw 1f as PPM shift]]
+** [[Draw residuals as standardized]]
+** [[Use NBM]]
+
+* ''Help''
+** [[Show help wiki.]]
+** [[Report an issue]]
+** [[Update bfit]]
+
+---
+
+! Tabs:
+
+* [[Inspect]]
+* [[Fetch]]
+* [[Fit]]</pre>
+</div>
+<div created="20191108172801019" modified="20191108174129038" tags="[[menu option]] popup" title="NMR B1 Calculator">
+<pre>Opens popup for calculating the BNMR B,,1,, (the oscillating magnetic field) based on the antenna readback peak-peak voltage. This is slightly frequency dependent and the popup contains a field for setting this. Press enter to convert the last input value to the new amount (depends on focus). 
+
+Conversion equation: 
+
+$$V [V]= \frac{B_1 [G]}{0.0396}\nu[MHz]$$
+
+Only valid for silver antenna and rigid RF coax (Prior Sept 2019). </pre>
+</div>
+<div created="20191108173305579" modified="20191108174140662" tags="[[menu option]] popup" title="NQR B0 Calculator">
+<pre>Opens popup for calculating the BNQR B,,0,, (the static magnetic field) based on the magnet current. Press enter to convert the last input value to the new amount (depends on focus).
+
+Calibration data [[here|http://bnmr.triumf.ca/?file=HH_Calibration]]. </pre>
+</div>
+<div created="20191108175723883" modified="20191108175759337" tags="[[menu option]] popup" title="PPM reference frequency">
+<pre>Set the reference frequency for the [[Draw 1f as PPM shift]] draw mode option. </pre>
+</div>
+<div created="20191108175812886" modified="20191108175937482" tags="popup" title="Probe species">
+<pre>Select probe species. This affects SLR fitting only, changing the lifetimes of the decay in the fit functions. 
+
+Default fitting module includes corrections accounting for ^^31^^Mg progeny, courtesy of R. M. L. McFadden. </pre>
+</div>
+<div created="20191108181257520" modified="20191108181409653" tags="[[menu option]]" title="Redraw in existing window">
+<pre>Similar to stacked mode, but removes all data and fit lines in the figure before drawing. User viewing range is preserved which may cause some issues when changing run modes or asymmetry calculation types. </pre>
+</div>
+<div created="20191108175955796" modified="20191108180027506" tags="popup [[menu option]]" title="Redraw period">
+<pre>Set the period for the periodic redraw checkbox in the Inspect tab. Default is 10 seconds. </pre>
+</div>
 <div created="20181118232735594" modified="20181118234850981" tags="HowTo" title="Redraw Periodically">
 <pre>In the ''File Details'' tab, look to the bottom of the screen. There is a checkbox labelled ''Periodic Redraw''. When checked this will draw the run fetched in this tab periodically in the active window (note that clicking a new matplotlib window will change the active window). 
 
 You can change the redraw period from the menu bar: ''Settings'' $$\rightarrow$$ ''Set redraw period'' (default: 20 seconds). 
 
 Use the stack drawing mode (set from the menu bar) to periodically redraw a run in comparison to other data. </pre>
+</div>
+<div created="20191108181925673" modified="20191108182034080" tags="[[menu option]]" title="Report an issue">
+<pre>Opens [[github issues page|https://github.com/dfujim/bfit/issues]] for users to submit feedback. Requires a github account. Note that this sends an email to the author so there's no need to follow up. </pre>
+</div>
+<div created="20191108173422908" modified="20191108174117445" tags="[[menu option]] popup" title="Run Commands">
+<pre>Opens a text window which acts as a pseudo-terminal. Gives command-line access to active bfit objects. 
+
+Press `ctrl+enter` to run all commands at, or below cursor position. 
+
+The bfit toplevel instance is given as the variable `bfit`. Note that matplotlib plots are globally available and commands such as `plt.title(&quot;&quot;)` will apply themselves to the last selected plot, as is normal. Also, defined variables are not persistent between executions.  
+
+Code application done through the `exec` command. </pre>
+</div>
+<div created="20191108174247139" modified="20191108174601702" tags="[[menu option]]" title="Save State">
+<pre>Save the state of the program to a yaml file. This human-readable and easily parse-able. This allows one to re-load the state of the program and continue working from a previous state of the analysis. 
+
+This largely sets the visible fields: inputs, outputs, displays; and does not set a few internal variables which may cause failures of some features.</pre>
+</div>
+<div created="20191108172657815" modified="20191108172742200" tags="[[menu option]]" title="Search Archive">
+<pre>Opens system's default web browser pointing to [[http://musr.ca/mud/runSel.html]]</pre>
 </div>
 <div created="20181118233646284" modified="20181118234455886" tags="HowTo" title="Set New Drawing Styles">
 <pre>!! Setting matplotlib defaults
@@ -7036,10 +7197,37 @@ To set some line properties for drawn objects in bfit, go to the menu bar: '''Se
 
 In this window, matplotlib defaults are unaffected. </pre>
 </div>
+<div created="20191108181859595" modified="20191108181910831" tags="[[menu option]]" title="Show help wiki.">
+<pre>Show this wiki in browser. </pre>
+</div>
+<div created="20191108181000189" modified="20191108181241878" tags="[[menu option]]" title="Stack in existing window">
+<pre>!! Inspect Tab
+
+Draw within the window which last had user focus (last selected). Removes data corresponding to the run which is being drawn, and re-draws it. 
+
+!! Fetch Tab
+
+''Drawing from run list'': Draw within the window which last had user focus (last selected). Removes data/fit corresponding to the run which is being drawn, and re-draws it. 
+
+''Drawing from operations on checked items button'': All selected runs are drawn as stacked within the window which last had focus. 
+</pre>
+</div>
 <div created="20181118233055354" modified="20181118234750598" tags="HowTo" title="Superimposing Runs">
 <pre>Ensure that you are in the stack draw mode: In the menu bar, select ''Draw Mode'' $$\rightarrow$$ ''Stack in existing window''. 
 
 When you draw from either the File Details tab or the Fetch Data tab, this will add the drawn object to the active window (last selected). </pre>
+</div>
+<div created="20191108180040688" modified="20191108180148904" tags="[[menu option]]" title="System matplotlibrc">
+<pre>Edit your system's matplotlibrc file. ''Warning: this will affect ALL matplotlib figures drawn on the target machine and is persistent until manually re-edited.''</pre>
+</div>
+<div created="20191108180205617" modified="20191108180245134" tags="[[menu option]] popup" title="Units">
+<pre>Set the scaling and units for the x-axis of several run modes. Useful for comparing 1w/1f modes or NMR/NQR runs. </pre>
+</div>
+<div created="20191108182047973" modified="20191108182151272" tags="[[menu option]]" title="Update bfit">
+<pre>Runs `pip install --user --upgrade bfit`. Note that no changes take place until the instance is closed and restarted. </pre>
+</div>
+<div created="20191108181830726" modified="20191108181851057" tags="popup" title="Use NBM">
+<pre>If selected, use neutral beam monitors in all asymmetry calculations. </pre>
 </div>
 
 </div>
