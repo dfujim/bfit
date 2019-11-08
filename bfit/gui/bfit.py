@@ -92,8 +92,6 @@ class bfit(object):
             draw_ppm:       BoolVar for drawing as ppm shift
             draw_standardized_res: BoolVar for drawing residuals as standardized
             forced_mode:    StringVar, mode type to force on data file
-            freq_unit_conv: conversion rate from original to display units
-            freq_units:     string, units to display
             hist_select:    histogram selection for asym calcs (blank for defaults)
             label_default:  StringVar() name of label defaults for fetch
             logger:         logging object 
@@ -109,10 +107,10 @@ class bfit(object):
             root:           tkinter root instance
             rounding:       number of decimal places to round results to in display
             routine_mod:    module with fitting routines
+            units:          dict:(float,str). conversion rate from original to display units
             update_period:  int, update spacing in s. 
             use_nbm:        BooleanVar, use NBM in asym calculations
-            volt_unit_conv: float, conversion rate from original to display units
-            volt_units:     string, units to display
+            
     """
     bnmr_archive_label = "BNMR_ARCHIVE"
     bnqr_archive_label = "BNQR_ARCHIVE"
@@ -120,13 +118,10 @@ class bfit(object):
     ppm_reference = 41270000 # Hz
     rounding = 5       # number of decimal places to round results to in display
     hist_select = ''    # histogram selection for asym calculations
-    freq_unit_conv = 1.e-6   # conversion rate from original to display units
-    volt_unit_conv = 1.e-3   # conversion rate from original to display units
-    freq_units = 'MHz'
-    volt_units = 'V'
     norm_alph_diff_time = 0.1   # number of seconds to take average over when 
                                 # normalizing alpha diffusion runs
     
+    # csymmetry calculation options
     asym_dict_keys = {'20':("Combined Helicity","Split Helicity",
                             "Positive Helicity","Negative Helicity",
                             "Matched Helicity","Histograms"),
@@ -153,6 +148,7 @@ class bfit(object):
                             "Combined Hel (!Alpha Tag)","Split Hel (!Alpha Tag)",
                             "Histograms")}
     
+    # asymmetry calculation codes
     asym_dict = {"Combined Helicity"        :'c',
                  "Split Helicity"           :'h',
                  "Positive Helicity"        :'p',
@@ -185,7 +181,7 @@ class bfit(object):
                  '2h':"Time (s)",
                  '2e':'Frequency (%s)',
                  '1f':'Frequency (%s)',
-                 '1w':'x Parameter',
+                 '1w':'x Parameter (%s)',
                  '1n':'Voltage (%s)'}
                  
     ylabel_dict={'ad':r'$N_\alpha/N_\beta$', # otherwise, label as Asymmetry
@@ -201,6 +197,12 @@ class bfit(object):
            '1f':'freq',
            '1w':'xpar',
            '1n':'mV'}
+    
+    # units: mode:[conversion rate from original to display units,unit]
+    units = {'1f':(1e-6,'MHz'),
+             '1w':(1,'Hz'),
+             '1n':(1e-3,'V'),
+             }
     
     data = {}   # for fitdata objects
     
@@ -786,9 +788,10 @@ class bfit(object):
             xlabel = self.xlabel_dict[data.mode]
             
             # unit conversions
-            if   data.mode == '1n': 
-                x *= self.volt_unit_conv
-                xlabel = xlabel % self.volt_units
+            if data.mode in ('1n','1w'): 
+                unit = self.units[data.mode]
+                x *= unit[0]
+                xlabel = xlabel % unit[1]
             elif data.mode == '1f': 
                 if self.draw_ppm.get():
                     self.logger.info('Drawing as PPM shift with reference %s Hz',
@@ -796,9 +799,10 @@ class bfit(object):
                     x = 1e6*(x-self.ppm_reference)/self.ppm_reference
                     xlabel = 'Frequency Shift (PPM)'
                 else: 
-                    x *= self.freq_unit_conv
-                    xlabel = xlabel % self.freq_units
-                    
+                    unit = self.units[data.mode]
+                    x *= unit[0]
+                    xlabel = xlabel % unit[1]
+            
             # plot split helicities
             if asym_type == 'h':
                 

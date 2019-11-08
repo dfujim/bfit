@@ -1109,7 +1109,7 @@ class fit_files(object):
         
         # make data frame for output
         df = pd.DataFrame(val)
-        # ~ df.set_index('Run Number',inplace=True)
+        df.set_index('Run Number',inplace=True)
         
         # drop completely empty columns
         bad_cols = [c for c in df.columns if all(df[c].isna())]
@@ -1140,7 +1140,7 @@ class fit_files(object):
                 fid.write('\n'.join(header))
             
             # write data
-            df.to_csv(filename,index=False,mode='a+')
+            df.to_csv(filename,mode='a+')
             self.logger.debug('Export success')
         else:
             self.logger.info('Returned exported parameters')
