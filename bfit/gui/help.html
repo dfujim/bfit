@@ -299,11 +299,15 @@ Error message and password prompt
 
 <li>Data directory</li>
 
+<li>Default Fitting Algorithms</li>
+
 <li>Draw 1f as PPM shift</li>
 
 <li>Draw in new window</li>
 
 <li>Draw residuals as standardized</li>
+
+<li>Drawing in Bfit</li>
 
 <li>Drawing style</li>
 
@@ -312,6 +316,8 @@ Error message and password prompt
 <li>Export Data</li>
 
 <li>Export Fits</li>
+
+<li>Fetch</li>
 
 <li>Fitting routines</li>
 
@@ -324,6 +330,8 @@ Error message and password prompt
 <li>Hotkeys</li>
 
 <li>How To List</li>
+
+<li>Inspect</li>
 
 <li>Installation and First Startup</li>
 
@@ -366,6 +374,8 @@ Error message and password prompt
 <li>Superimposing Runs</li>
 
 <li>System matplotlibrc</li>
+
+<li>The Basics</li>
 
 <li>Units</li>
 
@@ -6288,7 +6298,7 @@ Error message and password prompt
 <div created="20171215075607309" modified="20171215083758450" title="$:/SiteTitle">
 <pre>BFit Help</pre>
 </div>
-<div modified="20171215085919071" title="$:/state/showeditpreview">
+<div modified="20191111030923371" title="$:/state/showeditpreview">
 <pre>no</pre>
 </div>
 <div modified="20181118232629658" title="$:/state/sidebar">
@@ -6318,7 +6328,7 @@ Error message and password prompt
 <div modified="20171215084937325" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/EditToolbar</pre>
 </div>
-<div list="" title="$:/StoryList">
+<div list="[[Help Index]] [[Navigation Map]] [[Drawing in Bfit]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div modified="20171215083831245" title="$:/temp/advancedsearch">
@@ -6338,7 +6348,7 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20181118232722361" modified="20191108174115767" title="$:/temp/NewTagName">
+<div created="20181118232722361" modified="20191111032107138" title="$:/temp/NewTagName">
 <pre></pre>
 </div>
 <div author="Paco Rivière" core-version="&gt;=5.0.0" created="20160103221746029" dependents="" description="Catalan (Spain)" icon="data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22810%22%20height%3D%22540%22%3E%0A%3Crect%20width%3D%22810%22%20height%3D%22540%22%20fill%3D%22%23FCDD09%22%2F%3E%0A%3Cpath%20stroke%3D%22%23DA121A%22%20stroke-width%3D%2260%22%20d%3D%22M0%2C90H810m0%2C120H0m0%2C120H810m0%2C120H0%22%2F%3E%0A%3C%2Fsvg%3E" modified="20160103221746029" name="ca-ES" original-plugin-type="language" original-tags="" original-title="$:/languages/ca-ES" original-type="application/json" server-url="http://tiddlywiki.com/library/v5.1.9/index.html" tags="$:/tags/RemoteAssetInfo" title="$:/temp/RemoteAssetInfo/http://tiddlywiki.com/library/v5.1.9/index.html/$:/languages/ca-ES" type="text/vnd.tiddlywiki" version="5.1.9">
@@ -6697,7 +6707,7 @@ At this point it is largely for experimentation by @zooko.
 <div modified="20171215084105748" title="$:/view">
 <pre>pop</pre>
 </div>
-<div created="20171215084952848" modified="20181118231617493" title="Asymmetry Calculation Details">
+<div created="20171215084952848" modified="20191111035445878" title="Asymmetry Calculation Details">
 <pre>! Variable Assignment
 
 In the following we shall treat only the BNMR case. For BNQR, simply associate ''F'' with ''R'' and ''B'' with ''L''. For the case of 1n runs (Rb cell scans), the neutral beam monitors are used, therefore associate ''F'' with ''NBMF'' and ''B'' with ''NBMB''
@@ -6714,7 +6724,13 @@ $$A_{(+,-)} = \frac{F_{(+,-)}-B_{(+,-)}}{F_{(+,-)}+B_{(+,-)}}$$
 
 Let $$r = \sqrt{\frac{B_+F_-}{F_+B_-}}$$ then $$A = \frac{r-1}{r+1}$$.
 
-!! Alpha Diffusion
+This corrects for inherent differences in detector rates (alpha corrections). 
+
+!! Positive/Negative helicity
+
+Same calculation as the split helicity, but draws only one of the two helicites. 
+
+!! Alpha Diffusion (2h only)
 
 The ratio is the number of alpha counts divided by the number of beta counts, regardless of helicity: 
 
@@ -6724,15 +6740,15 @@ For example, this would be computed by
 
 $$\frac{(AL0_+)+(AL0_-)}{(R_+)+(R_-)+(L_+)+(L_-)}$$
 
-!! Matched Helicity (20 only)
+!! Matched Helicity (20, 2h only)
 
 Normal split helicity, with the (-) helicity mirrored across the mean. Use to check for rate distortion issues.
 
-!! Shifted Split (1f, 1n only)
+!! Shifted Split (1f, 1n, 1w only)
 
 Draw the difference between the split helicity and the helicity in the first bin. Crudely sets the baseline to zero. Use to compare spectra in different helicities. 
 
-!! Shifted Combined (1f, 1n only)
+!! Shifted Combined (1f, 1n, 1w only)
 
 Same as shifted split, but with combined asymmetry. Useful for comparing different runs with very different baselines. 
 
@@ -6740,22 +6756,15 @@ Same as shifted split, but with combined asymmetry. Useful for comparing differe
 
 Flip the (-) along the mean, find the position of the maximum and indicate it. Useful for setting the Rb cell bias voltage. 
 
-!! Raw Histograms
+!! Histograms
 
-Draw the counts in the histograms, superimposed. 
+Draw the counts in the histograms, superimposed. Does not label with run number
 
 ---
 
 ! 20 Mode 
 
-Removes prebeam bins. Subtracts the mean of prebeam bins from raw counts (does not treat error propagation from this. Errors are still treated as Poissonian, despite not being integers).
-
-Rebinning:
-
-* Returned time is average time over rebin range
-* Returned asym is weighted mean over the //n// rebinned measurements
-
-Note that the values for the times returned are that of the bin centers, not the leading edge. 
+Removes prebeam bins. Time bins are ID'd by their centers, not the leading edge. 
 
 ---
 
@@ -6798,6 +6807,30 @@ Working off of the raw asymmetry calculations we can combine asymmetries in the 
 <div created="20191108174833143" modified="20191108174937810" tags="[[menu option]]" title="Data directory">
 <pre>By default, bfit uses the [[bdata|https://github.com/dfujim/bdata]] directory defaults to fetch data. If a different directory is desired, select it here. Set directly is not persistent across instances. </pre>
 </div>
+<div created="20191111035557844" modified="20191111041603311" title="Default Fitting Algorithms">
+<pre>bfit uses [[scipy.optimize.curve_fit|https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html]] to do the minimization in all fitting operations (both global and individual). 
+
+! Unbounded problems
+
+If all the fitting bounds are $$\pm \infty$$ (that is, there are no bounds), then curve_fit uses the [[Levenberg-Marquardt|https://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm]] algorithm through [[scipy.optimize.leastsq|https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.leastsq.html#scipy.optimize.leastsq]], which is a wrapper about MINPACK's lmdif and lmder algorithms. This algorithm cannot handle bounded problems. 
+
+J. J. More, “The Levenberg-Marquardt Algorithm: Implementation and Theory,” Numerical Analysis, ed. G. A. Watson, Lecture Notes in Mathematics 630, Springer Verlag, pp. 105-116, 1977 ([[link|https://link.springer.com/chapter/10.1007%2FBFb0067700]]).
+
+! Bounded problems
+
+From the scipy documentation: 
+
+&quot;&quot;&quot;
+Method ‘trf’ (Trust Region Reflective) is motivated by the process of solving a system of equations, which constitute the first-order optimality condition for a bound-constrained minimization problem as formulated in [STIR]. The algorithm iteratively solves trust-region subproblems augmented by a special diagonal quadratic term and with trust-region shape determined by the distance from the bounds and the direction of the gradient. This enhancements help to avoid making steps directly into bounds and efficiently explore the whole space of variables. To further improve convergence, the algorithm considers search directions reflected from the bounds. To obey theoretical requirements, the algorithm keeps iterates strictly feasible. With dense Jacobians trust-region subproblems are solved by an exact method very similar to the one described in [JJMore] (and implemented in MINPACK). The difference from the MINPACK implementation is that a singular value decomposition of a Jacobian matrix is done once per iteration, instead of a QR decomposition and series of Givens rotation eliminations. For large sparse Jacobians a 2-d subspace approach of solving trust-region subproblems is used [STIR], [Byrd]. The subspace is spanned by a scaled gradient and an approximate Gauss-Newton solution delivered by scipy.sparse.linalg.lsmr. When no constraints are imposed the algorithm is very similar to MINPACK and has generally comparable performance. The algorithm works quite robust in unbounded and bounded problems, thus it is chosen as a default algorithm.
+&quot;&quot;&quot;
+
+M. A. Branch, T. F. Coleman, and Y. Li, “A Subspace, Interior, and Conjugate Gradient Method for Large-Scale Bound-Constrained Minimization Problems,” SIAM Journal on Scientific Computing, Vol. 21, Number 1, pp 1-23, 1999 ([[link|https://doi.org/10.1137/S1064827595289108]]).
+
+R. H. Byrd, R. B. Schnabel and G. A. Shultz, “Approximate solution of the trust region problem by minimization over two-dimensional subspaces”, Math. Programming, 40, pp. 247-263, 1988 ([[lnk|https://link.springer.com/article/10.1007/BF01580735]]).
+
+J. J. More, “The Levenberg-Marquardt Algorithm: Implementation and Theory,” Numerical Analysis, ed. G. A. Watson, Lecture Notes in Mathematics 630, Springer Verlag, pp. 105-116, 1977 ([[link|https://link.springer.com/chapter/10.1007%2FBFb0067700]]).
+</pre>
+</div>
 <div created="20191108181424365" modified="20191108181638853" tags="[[menu option]]" title="Draw 1f as PPM shift">
 <pre>Draw 1f runs as a PPM shift which is calculated as: 
 
@@ -6817,6 +6850,35 @@ Create a new figure window for each run drawn, except the updating run. The upda
 </div>
 <div created="20191108181704856" modified="20191108181820497" tags="popup" title="Draw residuals as standardized">
 <pre>Draw residuals in units of each point's error. Allows one to easily check for outlier sections of data which do not follow the trend, regardless of variance. </pre>
+</div>
+<div created="20191111044215302" modified="20191111045443427" tags="HowTo" title="Drawing in Bfit">
+<pre>This entry covers the drawing behaviour of the program. 
+
+! How
+
+The drawing is handled by the matplotlib python package. The figures that pop up are pure matplotlib windows and bfit does not alter these in any way (other than adding a few attributes to the figure instance to track what is being drawn, and changing some of the connected events). See [[bfit.backend.PltTracker|https://github.com/dfujim/bfit/blob/master/bfit/backend/PltTracker.py]] for details. 
+
+! Where
+
+The figure windows are divided into categories based on where the drawing is being performed from. The categories are as follows: 
+
+* Inspect
+* Data
+* Fit
+* Param
+* Periodic
+
+The category of any given figure is evident from the window title at the top.
+
+Here are the rules:
+
+# Figures are drawn in the last active figure corresponding to its category. One must click within the axis bounds to make a figure active. 
+# If the category does not have an active figure, a new figure is created. 
+# The periodic category can have only one active figure. This figure is pulled from the list of &quot;inspect&quot; figures if there is no active periodic figure. This figure belongs to both &quot;inspect&quot; and &quot;periodic&quot; categories simultaneously. 
+
+! Why
+
+This is meant to streamline window management. No one wants to draw and SLR run on top of the T,,1,, temperature dependence. Similarly, you may have spent time setting up an overlay of a few plots only to have a mass of data and fit lines accidentally overwrite your work when updating your fits. </pre>
 </div>
 <div created="20191108174954175" modified="20191108175211587" tags="popup [[menu option]]" title="Drawing style">
 <pre>Set [[matplotlib drawing options|https://matplotlib.org/api/_as_gen/matplotlib.lines.Line2D.html#matplotlib.lines.Line2D]]. </pre>
@@ -6839,6 +6901,64 @@ Writes all selected runs to file, with the default name year_run.csv. User only 
 </div>
 <div created="20191108174202463" modified="20191108174234532" tags="[[menu option]]" title="Export Fits">
 <pre>Export a csv file corresponding to the fit lines of every fitted run. </pre>
+</div>
+<div created="20191111032109590" modified="20191111034153071" tags="tab" title="Fetch">
+<pre>The main purpose of the Fetch tab is to select and prepare the data for fitting. 
+
+From top to bottom, left to right, here is a list of the interactive GUI objects in the tab:
+
+!!! Specify Files
+
+* ''Year spinbox'':
+** Choose the year of the run to select.
+** If focus is present on the box, use the arrow keys to navigate.
+
+* ''Run number entry'':
+** Select the next set of runs to fetch. Entry styles can include single runs as a list (&quot;1, 2, 3, 4, 5&quot;) or as a range (&quot;1-5&quot;) or as a combination of the two (&quot;1, 2, 3-5&quot;)
+** List deliminators include spaces (&quot; &quot;), commas (&quot; &quot;), or semi-colons (&quot;;&quot;)
+** Autocomplete: When a run number range is not terminated (&quot;1-&quot;), the range is autocompleted to include all runs until the last run on file. 
+
+* ''Fetch button'':
+** Load or update all runs entered in the run number entry.
+** Will only fetch runs of the same run mode. Will default to fetching either (A) runs of the same mode as those already fetched, or (B) runs of the same mode as the first run found. 
+** Runs fetched re-use GUI objects for speedup in long-lived instances. This may result in some history being preserved if the same run is loaded after being removed (a feature) but the history is inconsistent if these GUI objects are recycled first by a different run after removal. 
+** Max allowed number of runs fetched: 500
+
+!!! Fetched run list
+
+* ''Select checkbox'':
+** Label displays useful common run info: ID tag (year.number), temperature, magnetic field, HV bias, duration
+** If green: present in fitting tab and will show a point when drawing parameters
+** If white: run removed from fitting tab
+
+* ''Rebin spinbox'':
+** Allows for rebinning the run on draw and (possibly) fitting.
+** Will rebin all runs (not just runs from mode &quot;2&quot;). 
+
+* ''Bin removal entry'':
+** For mode &quot;1&quot; runs, remove bins which contain bad data from the drawing and fitting. 
+
+* ''Label entry'':
+** Enter how the run will be labelled in the figure. 
+** Set defaults in [[menu bar|Labels default]]
+
+* ''Data/Fit/Res drawing mode checkboxes'':
+* ''Draw button'':
+* ''Remove button'':
+
+!!! Operations on checked items
+
+* ''Force Check State checkbox'':
+* ''Data/Fit/Res drawing mode checkboxes'':
+* ''Toggle All Check States checkbox'':
+* ''Draw button'':
+* ''Remove button'':
+* ''Rebin spinbox'':
+* ''Bin removal spinbox'':
+
+!!! Asymmetry Calculation 
+
+* ''Asymmetry calculation listbox'':</pre>
 </div>
 <div created="20180805223140058" modified="20191108175313483" tags="[[menu option]]" title="Fitting routines">
 <pre>`bfit` allows for users to build their own fitting modules. The module must follow the below template, but otherwise developers may use their plugin to link to any fitting procedure they wish. Note the expected input/output of the `__call__` function.  
@@ -6965,12 +7085,15 @@ class fitter(object):
 
 To share parameters globally in a subset of runs, make a new fitting group. </pre>
 </div>
-<div created="20171215083659362" modified="20191108175338408" title="Help Index">
+<div created="20171215083659362" modified="20191111044207928" title="Help Index">
 <pre>&quot;&quot;&quot;
 [[Installation and First Startup]]
+[[The Basics]]
+[[Drawing in Bfit]]
 [[Hotkeys]]
 [[Navigation Map]]
 [[Asymmetry Calculation Details]]
+[[Default Fitting Algorithms]]
 [[Plugging in Fitting Routines|Fitting routines]]
 [[How To List]]
 &quot;&quot;&quot;
@@ -7018,6 +7141,58 @@ To share parameters globally in a subset of runs, make a new fitting group. </pr
 <pre>&lt;$list filter=&quot;[tag[HowTo]sort[title]] -[title[How To List]]&quot;/&gt;
 </pre>
 </div>
+<div created="20191111030557249" modified="20191111032019181" tags="tab" title="Inspect">
+<pre>The main purpose of the Inspect tab is to provide a space where all of the details of a single run can be reviewed. 
+
+From top to bottom, left to right, here is a list of the interactive GUI objects in the tab: 
+
+* ''Year spinbox'': 
+** Choose the year of the run to select. 
+** If focus is present on the box, use the arrow keys to navigate. 
+
+* ''Run number spinbox'': 
+** Choose the run number to select. 
+** Accepts only real runs (not test runs) since test runs do not inherently specify whether it is a NQR run or an NMR run. 
+** If focus is present on the box, use the arrow keys to navigate. 
+** Autocomplete: Fetches the last run which matches the digits already entered. `max(cast_to_int(glob(entry+'*.msr')))`
+
+* ''Fetch button'':
+** Retrieves the run from the file system and updates the text boxes for displaying the run info. 
+** Shortcut: `Enter` button
+
+* ''Draw button'':
+** Does a fetch (same as the fetch button) then draws the run according to the draw mode. 
+** Shortcut: `Shift+Enter` or `Ctrl+Enter` buttons
+
+* ''Run info text box'':
+** Display main run headers.
+** Output varies depending on the run mode. 
+
+* ''PPG parameters text box'':
+** Display PPG parameters in the order which they are entered in the MIDAS web interface. 
+** Output varies depending on the run mode. 
+
+* ''Camp variables text box'':
+** Display camp variables and some calculated run statistics
+
+* ''EPICS variables text box'':
+** Display EPICS variables
+
+* ''Rebin spinbox'':
+** Allows for rebinning the run on draw. 
+
+* ''Asymmetry calculation listbox'':
+** Choose calculation and draw method for the [[asymmetry|Asymmetry Calculation Details]]. 
+** Default: combined asymmetry
+** Options vary depending on the run mode. 
+
+* ''Periodic redraw checkbox'':
+** Starts periodically drawing the selected run in the previously selected window associated with the inspect tab. 
+** Redraw stops on figure closure or unchecking the box.
+** Only one run may be periodically redrawn at a time. 
+
+</pre>
+</div>
 <div created="20171215075709744" modified="20191108171525558" title="Installation and First Startup">
 <pre>! Installation
 
@@ -7051,14 +7226,45 @@ alias bfit='python3 -m bfit'
 
 You are now ready to run bit. Open a new shell and type ``bfit`` into the prompt. </pre>
 </div>
-<div created="20191108175644661" modified="20191108175708602" tags="[[menu option]]" title="Labels default">
-<pre>Set the default labels for matplotlib legends. </pre>
+<div created="20191108175644661" modified="20191111034424986" tags="[[menu option]]" title="Labels default">
+<pre>Set the default labels for matplotlib legends. 
+
+Default: run ID (year.run). 
+
+Options are the same as in the fit tab parameter draw listbox: 
+
+* 1000/T (1/K)
+* B0 Field (T)
+* Chi-Squared
+* Cryo Lift Read (mm)
+* Cryo Lift Set (mm)
+* CryoEx Mass Flow
+* He Mass Flow
+* Impl. Energy (keV)
+* Laser Power
+* NBM Rate (count/s)
+* Needle Read (turns)
+* Needle Set (turns)
+* Platform Bias (kV)
+* RF Level DAC
+* Run Duration (s)
+* Run Number
+* Sample
+* Sample Rate (count/s)
+* Start Time
+* Target Bias (kV)
+* Temperature (K)
+* Title
+* Unique Id
+* Year
+
+</pre>
 </div>
 <div created="20191108174618491" modified="20191108174646571" tags="[[menu option]]" title="Load State">
 <pre>Load the state from a saved yaml file. First clears all runs, then re-loads the selected ones. </pre>
 </div>
-<div created="20181118234512332" modified="20181118234709877" tags="HowTo" title="Loading Your Fitting Routine">
-<pre>In the menu bar: ''Settings'' $$\rightarrow$$ ''Set fitting routines'' and select your ``.py`` module containing the class ``fitter``. See [[Plugging in Fitting Routines]] for details. 
+<div created="20181118234512332" modified="20191108182445099" tags="HowTo" title="Loading Your Fitting Routine">
+<pre>In the menu bar: ''Settings'' $$\rightarrow$$ ''Set fitting routines'' and select your ``.py`` module containing the class ``fitter``. See [[Fitting routines]] for details. 
 
 The fitter is dynamically loaded and is ready to use. bfit reverts to the default on restart. </pre>
 </div>
@@ -7220,14 +7426,60 @@ When you draw from either the File Details tab or the Fetch Data tab, this will 
 <div created="20191108180040688" modified="20191108180148904" tags="[[menu option]]" title="System matplotlibrc">
 <pre>Edit your system's matplotlibrc file. ''Warning: this will affect ALL matplotlib figures drawn on the target machine and is persistent until manually re-edited.''</pre>
 </div>
+<div created="20191111042815315" modified="20191111044143202" tags="HowTo" title="The Basics">
+<pre>Once you have the program up and running, here's how to run bfit at a minimal level. 
+
+! Menu bar
+
+* File
+** Look here for [[load|Load State]]/[[save|Save State]] options as well as [[data|Export Data]] and [[fit|Export Fit]] export options. 
+** The calculators give you access to what [[B0|NQR B0 Calculator]] and [[B1|NMR B1 Calculator]] are for NQR and NMR respectively. 
+
+* Settings
+** The main thing to be aware of is setting the probe species, which is critically important for fitting mode &quot;2&quot; runs. Default is ^^8^^Li. 
+** Also useful are the label defaults which automatically change the legend entries in the drawn figures.
+
+* Draw Mode
+** Set the [[drawing mode|Drawing in Bfit]], which changes the behaviour of all the draw buttons
+
+! Inspect tab
+
+See run headers, statistics, settings. Draw single runs.
+
+* Fetch button: retrieve the data as indicated by the year and run number spinboxes. 
+* Draw button: fetch then draw the data. 
+* Set the asymmetry type at the bottom of the tab. 
+
+
+! Fetch tab
+
+Set things up for fitting, draw many runs in batch. 
+
+* Enter a list or range of run numbers to fetch your data. 
+* Selected runs for fitting are indicated by the green string of info on the left of each line. 
+* The Data/Fit/Res checkboxes change the functionality of the draw button, nothing on the fitting tab is altered. 
+
+! Fit tab
+
+Fit the data. 
+
+* Choose your fitting function in the drop down menu on the top left. 
+* Press fit to find the best parameters. 
+* Choose the shared/fixed checkboxes to determine how the parameters are treated. 
+* The most useful switch (on the right hand side) is the &quot;modify for all&quot;, which copies what you type for p,,0,, or the bounds into all the other corresponding boxes. 
+* Draw your fit results using the menus on the right column. &quot;Export&quot; will export all fit parameters and file headers regardless of drawing selection. 
+
+
+</pre>
+</div>
 <div created="20191108180205617" modified="20191108180245134" tags="[[menu option]] popup" title="Units">
 <pre>Set the scaling and units for the x-axis of several run modes. Useful for comparing 1w/1f modes or NMR/NQR runs. </pre>
 </div>
 <div created="20191108182047973" modified="20191108182151272" tags="[[menu option]]" title="Update bfit">
 <pre>Runs `pip install --user --upgrade bfit`. Note that no changes take place until the instance is closed and restarted. </pre>
 </div>
-<div created="20191108181830726" modified="20191108181851057" tags="popup" title="Use NBM">
-<pre>If selected, use neutral beam monitors in all asymmetry calculations. </pre>
+<div created="20191108181830726" modified="20191111030534849" tags="popup" title="Use NBM">
+<pre>If selected, use neutral beam monitors in all asymmetry calculations by setting the `NBM` flag in the bdata asymmetry calculation to True. </pre>
 </div>
 
 </div>
