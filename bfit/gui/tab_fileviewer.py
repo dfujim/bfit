@@ -1076,12 +1076,19 @@ class fileviewer(object):
         # update 
         if self.is_updating.get():
             
+            # check that figure exists or is not updating (was closed)
+            if self.bfit.plt.active['periodic'] not in self.bfit.plt.plots['inspect']: 
+                self.is_updating.set(False)
+                del self.bfit.plt.plots['periodic'][0]
+                self.bfit.plt.active['periodic'] = 0
+                return
+            
+            # Get the updating figure
             fig = self.bfit.plt.gcf('periodic')
             title = fig.canvas.get_window_title()
-            
-            # check that figure exists or is not updating (was closed)
-            if self.bfit.plt.active['periodic'] not in self.bfit.plt.plots['inspect'] or \
-                    'Updating' not in title:
+
+            # Check that the figure is still updating
+            if 'Updating' not in title:
                 self.is_updating.set(False)
                 del self.bfit.plt.plots['periodic'][0]
                 self.bfit.plt.active['periodic'] = 0
