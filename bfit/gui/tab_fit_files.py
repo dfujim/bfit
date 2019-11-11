@@ -729,7 +729,7 @@ class fit_files(object):
             
             # make a new window, using old inputs and outputs
             self.pop_fitconstr = popup_fit_constraints(self.bfit,
-                                    constr_text=p.constr_text,
+                                    input_fn_text=p.input_fn_text,
                                     output_par_text=p.output_par_text_val,
                                     output_text=p.output_text_val)
         
@@ -742,12 +742,20 @@ class fit_files(object):
         
         if hasattr(self,'pop_fitres'):
             p = self.pop_fitres
+            
+            # don't make more than one window
+            if Toplevel.winfo_exists(p.win): 
+                p.win.lift()
+                return
+            
+            # make a new window, using old inputs and outputs
             self.pop_fitres = popup_fit_results(self.bfit,
-                                    par_str=p.par_str,
-                                    fn_str=p.fn_str,
-                                    p0_str=p.p0_str,
-                                    result_str=p.result_str,
-                                    error_str=p.error_str)
+                                    input_fn_text=p.input_fn_text,
+                                    output_par_text=p.output_par_text_val,
+                                    output_text=p.output_text_val,
+                                    chi=p.chi)        
+        
+        # make entirely new window
         else:
             self.pop_fitres = popup_fit_results(self.bfit)
     
