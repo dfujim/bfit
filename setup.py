@@ -13,7 +13,7 @@ ext = Extension("bfit.fitting.integrator",
                 language="c++",             # generate C++ code                        
                 include_dirs=["./bfit/fitting/FastNumericalIntegration_src",numpy.get_include()],
                 libraries=["m"],
-                extra_compile_args=['-std=c++11',"-ffast-math"]
+                extra_compile_args=["-ffast-math"]
                 )
 
 setuptools.setup(
@@ -28,12 +28,15 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
-        "Operating System :: OS Independent",
+        "Programming Language :: Cython",
+        "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+        "Operating System :: POSIX :: Linux",
+        "Operating System :: MacOS",
+        "Development Status :: 5 - Production/Stable",
     ],
-    install_requires=['cython>=0.28','numpy>=1.14','tqdm',
+    install_requires=['cython>=0.28','numpy>=1.14','tqdm>=4.25.0',
                       'bdata>=4.3.2','matplotlib>=2.2.4','pandas>=0.23.0',
-                      'pyyaml','scipy'],
+                      'pyyaml>=5.1','scipy>=1.2.0'],
     package_data={'': ['./images']},
     include_package_data=True,
     ext_modules = cythonize([ext],include_path = [numpy.get_include()]),
