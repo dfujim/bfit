@@ -145,6 +145,8 @@ Error message and password prompt
 
 <li>$:/DefaultTiddlers</li>
 
+<li>$:/Import</li>
+
 <li>$:/isEncrypted</li>
 
 <li>$:/palette</li>
@@ -318,6 +320,8 @@ Error message and password prompt
 <li>Export Fits</li>
 
 <li>Fetch</li>
+
+<li>Fit</li>
 
 <li>Fitting routines</li>
 
@@ -6141,6 +6145,16 @@ Error message and password prompt
 <pre>[[Help Index]]
 </pre>
 </div>
+<div plugin-type="import" status="pending" title="$:/Import" type="application/json">
+<pre>{
+    &quot;tiddlers&quot;: {
+        &quot;Untitled&quot;: {
+            &quot;text&quot;: &quot;\n&quot;,
+            &quot;title&quot;: &quot;Untitled&quot;
+        }
+    }
+}</pre>
+</div>
 <div title="$:/isEncrypted">
 <pre>no</pre>
 </div>
@@ -6301,7 +6315,7 @@ Error message and password prompt
 <div modified="20191111030923371" title="$:/state/showeditpreview">
 <pre>no</pre>
 </div>
-<div modified="20181118232629658" title="$:/state/sidebar">
+<div modified="20191112073325272" title="$:/state/sidebar">
 <pre>yes</pre>
 </div>
 <div modified="20171215083831246" title="$:/state/tab--1498284803">
@@ -6328,7 +6342,7 @@ Error message and password prompt
 <div modified="20171215084937325" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/EditToolbar</pre>
 </div>
-<div list="[[Help Index]] [[Navigation Map]] [[Drawing in Bfit]]" title="$:/StoryList">
+<div list="Fit" title="$:/StoryList">
 <pre></pre>
 </div>
 <div modified="20171215083831245" title="$:/temp/advancedsearch">
@@ -6348,7 +6362,7 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20181118232722361" modified="20191111032107138" title="$:/temp/NewTagName">
+<div created="20181118232722361" modified="20191112072419016" title="$:/temp/NewTagName">
 <pre></pre>
 </div>
 <div author="Paco Rivière" core-version="&gt;=5.0.0" created="20160103221746029" dependents="" description="Catalan (Spain)" icon="data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22810%22%20height%3D%22540%22%3E%0A%3Crect%20width%3D%22810%22%20height%3D%22540%22%20fill%3D%22%23FCDD09%22%2F%3E%0A%3Cpath%20stroke%3D%22%23DA121A%22%20stroke-width%3D%2260%22%20d%3D%22M0%2C90H810m0%2C120H0m0%2C120H810m0%2C120H0%22%2F%3E%0A%3C%2Fsvg%3E" modified="20160103221746029" name="ca-ES" original-plugin-type="language" original-tags="" original-title="$:/languages/ca-ES" original-type="application/json" server-url="http://tiddlywiki.com/library/v5.1.9/index.html" tags="$:/tags/RemoteAssetInfo" title="$:/temp/RemoteAssetInfo/http://tiddlywiki.com/library/v5.1.9/index.html/$:/languages/ca-ES" type="text/vnd.tiddlywiki" version="5.1.9">
@@ -6902,7 +6916,7 @@ Writes all selected runs to file, with the default name year_run.csv. User only 
 <div created="20191108174202463" modified="20191108174234532" tags="[[menu option]]" title="Export Fits">
 <pre>Export a csv file corresponding to the fit lines of every fitted run. </pre>
 </div>
-<div created="20191111032109590" modified="20191111034153071" tags="tab" title="Fetch">
+<div created="20191111032109590" modified="20191112072856417" tags="tab" title="Fetch">
 <pre>The main purpose of the Fetch tab is to select and prepare the data for fitting. 
 
 From top to bottom, left to right, here is a list of the interactive GUI objects in the tab:
@@ -6943,27 +6957,114 @@ From top to bottom, left to right, here is a list of the interactive GUI objects
 ** Set defaults in [[menu bar|Labels default]]
 
 * ''Data/Fit/Res drawing mode checkboxes'':
+** Check the box to show what you want to draw button to draw when pressed. The checkboxes are drawn stacked in the same window (for each run) regardless of draw mode. 
+
 * ''Draw button'':
+** Draw the checked quantities (see above point).
+
 * ''Remove button'':
+** Remove the run from the list of fetched runs. 
 
 !!! Operations on checked items
 
 * ''Force Check State checkbox'':
+** Force all fetched runs to have the same checked state as this checkbox. 
+** Useful for aligning the check states of all runs
+
 * ''Data/Fit/Res drawing mode checkboxes'':
+** Same as the check boxes on a run-by-run basis, but applies to all checked runs
+
 * ''Toggle All Check States checkbox'':
+** Toggle the checked state of each run
+
 * ''Draw button'':
+** Draw all checked runs according to the draw mode. 
+
 * ''Remove button'':
+** Remove all checked runs from the list of fetched runs. 
+
 * ''Rebin spinbox'':
+** Apply a rebin to all checked runs.
+** Press enter to apply typed changes. 
+
 * ''Bin removal spinbox'':
+** Remove the same bins from all checked runs.
+** Press enter to apply typed changes. 
+
 
 !!! Asymmetry Calculation 
 
-* ''Asymmetry calculation listbox'':</pre>
+* ''Asymmetry calculation listbox'':
+** Choose calculation and draw method for the [[asymmetry|Asymmetry Calculation Details]]. 
+** Default: combined asymmetry
+** Options vary depending on the run mode. 
+</pre>
 </div>
-<div created="20180805223140058" modified="20191108175313483" tags="[[menu option]]" title="Fitting routines">
+<div created="20191112072417657" modified="20191112073318542" tags="tab" title="Fit">
+<pre>The main purpose of the Fit tab is to fit the fetched data, and to display the results. Also provides options for exporting and doing some basic processing of the fit results. 
+
+From top to bottom, left to right, here is a list of the interactive GUI objects in the tab:
+
+!!! Fit Function 
+
+* ''Fit function listbox'':
+* ''Number of components spinbox'':
+* ''Fit button'':
+* ''Constrained Fit button'':
+* ''Set Result as P0 button '':
+* ''Reset P0 button'':
+* ''P0 Finder button'':
+
+!!! Set Initial Parameters
+
+For each fetched run, the following options are available: 
+
+* ''Initial Value button'':
+* ''Initial Value entry'':
+* ''Low Bound entry'':
+* ''High Bound entry'':
+* ''Fixed checkbutton'':
+* ''Shared checkbutton'':
+
+!!! Asymmetry Calculation 
+
+* ''Asymmetry calculation listbox'':
+** Choose calculation and draw method for the [[asymmetry|Asymmetry Calculation Details]]. 
+** Default: combined asymmetry
+** Options vary depending on the run mode. 
+
+!!! Switches
+
+* ''Modify for all checkbutton'':
+* ''Rebin data (set in fetch) checkbutton'':
+* ''Set P0 of new run to prior result checkbutton'':
+
+!!! Restrict x limits
+
+* ''Low bound entry'':
+* ''High bound entry'':
+
+!!! Fit Results and Run Conditions
+
+* ''Draw button'':
+* ''Compare button'':
+* ''Update button'':
+* ''Export button'':
+* ''Fit a Model button'':
+* ''x-axis listbox'':
+* ''y-axis listbox'':
+* ''Annotation listbox'':
+
+!!! Program State
+
+* ''Save button'':
+* ''Load button'':
+</pre>
+</div>
+<div created="20180805223140058" modified="20191112071723174" tags="[[menu option]]" title="Fitting routines">
 <pre>`bfit` allows for users to build their own fitting modules. The module must follow the below template, but otherwise developers may use their plugin to link to any fitting procedure they wish. Note the expected input/output of the `__call__` function.  
 
-Default source code [ext[here|https://ms-code.phas.ubc.ca:2633/dfujim_public/bfit/src/branch/master/bfit/fitting/default_routines.py]].
+Default source code [ext[here|https://github.com/dfujim/bfit/blob/master/bfit/fitting/default_routines.py]].
 
 
 ! Module Plugin Template
