@@ -20,9 +20,11 @@ class popup_fit_results(template_fit_popup):
         Popup window for modelling the fit results with a function
         
         chi_label:      Label, chisquared output
-        data:           dict, keys: x,y,dy vals: np arrays of data to fit
         fittab:         notebook tab
         reserved_pars:  dict, keys: x,y vals: strings of parameter names
+        
+        xaxis:          StringVar, x axis drawing/fitting parameter
+        yaxis:          StringVar, y axis drawing/fitting parameter
         
     """
 
@@ -30,25 +32,42 @@ class popup_fit_results(template_fit_popup):
     modules = {'np':'numpy'}
 
     window_title = 'Fit the results with a model'
+    reserved_pars = ['x','y']
 
     # ====================================================================== #
     def __init__(self,bfit,input_fn_text='',output_par_text='',output_text='',
-                 chi=np.nan):
+                 chi=np.nan,x='',y=''):
         
         super().__init__(bfit,input_fn_text,output_par_text,output_text)
         self.fittab = self.bfit.fit_files
         self.chi = chi
         
-        # Keyword parameters
-        key_param_frame = ttk.Frame(self.left_frame,relief='sunken',pad=5)
-        s = 'Reserved variable names:\n\n'
-        self.reserved_pars = {'x':self.fittab.xaxis.get(),
-                              'y':self.fittab.yaxis.get()}
+        # menus for x and y values
+        axis_frame = ttk.Frame(self.left_frame,relief='sunken',pad=5)
         
-        maxk = max(list(map(len,list(self.reserved_pars.keys()))))
-        s += '\n'.join(['%s:   %s' % (k.rjust(maxk),d) for k,d in self.reserved_pars.items()])
-        s += '\n'
-        key_param_label = ttk.Label(key_param_frame,text=s,justify=LEFT)
+        ttk.Label(  axis_frame,
+                    text='Variable definitions:\n',
+                    justify=LEFT).grid(column=0,row=0,columnspan=2,sticky=W)
+        ttk.Label(axis_frame,text="x axis:").grid(column=0,row=1)
+        ttk.Label(axis_frame,text="y axis:").grid(column=0,row=2)
+        ttk.Label(axis_frame,text=' ').grid(column=0,row=3)
+        
+        self.xaxis = StringVar()
+        self.yaxis = StringVar()
+        
+        if x:   self.xaxis.set(x)
+        else:   self.xaxis.set(self.fittab.xaxis.get())
+        
+        if y:   self.yaxis.set(y)
+        else:   self.yaxis.set(self.fittab.yaxis.get())
+        
+        self.xaxis_combobox = ttk.Combobox(axis_frame,textvariable=self.xaxis,
+                                      state='readonly',width=19)
+        self.yaxis_combobox = ttk.Combobox(axis_frame,textvariable=self.yaxis,
+                                      state='readonly',width=19)
+        
+        self.xaxis_combobox['values'] = self.fittab.xaxis_combobox['values']
+        self.yaxis_combobox['values'] = self.fittab.yaxis_combobox['values']
         
         # module names 
         module_frame = ttk.Frame(self.left_frame,relief='sunken',pad=5)
@@ -66,41 +85,19 @@ class popup_fit_results(template_fit_popup):
                                     text='ChiSq: %.2f' % np.around(chi,2),
                                     justify=LEFT)
         
-        # get data values
-        try:
-            xvals, xerrs = self.fittab.get_values(self.reserved_pars['x'])
-            yvals, yerrs = self.fittab.get_values(self.reserved_pars['y'])
-        except UnboundLocalError as err:
-            self.logger.error('Bad input parameter selection')
-            messagebox.showerror("Error",'Select two input parameters')
-            raise err
-        except (KeyError,AttributeError) as err:
-            self.logger.error('Parameter "%s or "%s" not found for fitting',
-                              xstr,ystr)
-            messagebox.showerror("Error",
-                    'Parameter "%s" or "%s" not found' % (xstr,ystr))
-            raise err
-            
-        xvals = np.asarray(xvals)
-        yvals = np.asarray(yvals)
-        yerrs = np.asarray(yerrs)
-            
-        self.data = {'x':xvals,
-                     'y':yvals,
-                     'dy':yerrs}
-        
         # Text entry
-        self.entry_label['text'] = 'Enter a one line equation using "x" and "y"'+\
-                                 'to model the'+\
-                                 '\nselected fit parameters.'+\
+        self.entry_label['text'] = 'Enter a one line equation using "x"'+\
+                                 ' to model y(x)'+\
                                  '\nEx: "y = a*x+b"'
                 
         # gridding
-        key_param_label.grid(column=0,row=0)
         modules_label.grid(column=0,row=0)
         self.chi_label.grid(column=0,row=0)
+        self.xaxis_combobox.grid(column=1,row=1)
+        self.yaxis_combobox.grid(column=1,row=2)
         
-        key_param_frame.grid(column=0,row=0,rowspan=1,sticky=(E,W),padx=1,pady=1)
+        
+        axis_frame.grid(column=0,row=0,rowspan=1,sticky=(E,W),padx=1,pady=1)
         module_frame.grid(column=0,row=1,sticky=(E,W),padx=1,pady=1)
         chi_frame.grid(column=0,row=2,sticky=(E,W),padx=1,pady=1,rowspan=2)
         
@@ -108,8 +105,8 @@ class popup_fit_results(template_fit_popup):
     def _do_fit(self,text):
         
         # get fit data
-        xstr = self.fittab.xaxis.get()
-        ystr = self.fittab.yaxis.get()
+        xstr = self.xaxis.get()
+        ystr = self.yaxis.get()
         
         # Make model
         parnames = self.output_par_text.get('1.0',END).split('\n')[:-1]
@@ -133,10 +130,24 @@ class popup_fit_results(template_fit_popup):
         bhi = list(map(float,bhi))
                     
         # get data
-        xvals = self.data['x']
-        yvals = self.data['y']
-        yerrs = self.data['dy']
-                    
+        try:
+            xvals, xerrs = self.fittab.get_values(xstr)
+            yvals, yerrs = self.fittab.get_values(ystr)
+        except UnboundLocalError as err:
+            self.logger.error('Bad input parameter selection')
+            messagebox.showerror("Error",'Select two input parameters')
+            raise err
+        except (KeyError,AttributeError) as err:
+            self.logger.error('Parameter "%s or "%s" not found for fitting',
+                              xstr,ystr)
+            messagebox.showerror("Error",
+                    'Parameter "%s" or "%s" not found' % (xstr,ystr))
+            raise err
+            
+        xvals = np.asarray(xvals)
+        yvals = np.asarray(yvals)
+        yerrs = np.asarray(yerrs)
+                        
         # fit model 
         if all(np.isnan(yerrs)): yerrs = None
         
@@ -163,8 +174,8 @@ class popup_fit_results(template_fit_popup):
         figstyle = 'param'
         
         # get draw components
-        xstr = self.reserved_pars['x']
-        ystr = self.reserved_pars['y']
+        xstr = self.xaxis.get()
+        ystr = self.yaxis.get()
         
         self.logger.info('Draw model parameters "%s" vs "%s"',ystr,xstr)
         

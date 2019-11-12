@@ -753,7 +753,9 @@ class fit_files(object):
                                     input_fn_text=p.input_fn_text,
                                     output_par_text=p.output_par_text_val,
                                     output_text=p.output_text_val,
-                                    chi=p.chi)        
+                                    chi=p.chi,
+                                    x = p.xaxis.get(),
+                                    y = p.yaxis.get())        
         
         # make entirely new window
         else:
