@@ -386,8 +386,11 @@ class fetch_files(object):
         
         # get data and write
         for k in self.bfit.data.keys():
-            d = self.bfit.data[k].bd
-            self.bfit.export(d,filename%(d.year,d.run))
+            d = self.bfit.data[k]
+            omit = d.omit.get()
+            if omit == self.bin_remove_starter_line:    omit = ''
+            self.bfit.export(d,filename%(d.year,d.run),rebin=d.rebin.get(),
+                             omit=omit)
         self.logger.debug('Success.')
         
     # ======================================================================= #

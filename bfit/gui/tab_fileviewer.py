@@ -191,7 +191,7 @@ class fileviewer(object):
         
         # write to file
         if filename:
-            self.bfit.export(data,filename)
+            self.bfit.export(data,filename,rebin=self.rebin.get())
     
     # ======================================================================= #
     def get_data(self,quiet=False):
