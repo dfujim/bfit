@@ -10,7 +10,6 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 from bfit import logger_name
-from bfit.backend.get_model import get_model
 from bfit.gui.template_fit_popup import template_fit_popup
 from bfit.backend.raise_window import raise_window
 
@@ -116,7 +115,7 @@ class popup_fit_results(template_fit_popup):
         
         self.logger.info('Fitting model %s for x="%s", y="%s"',model,xstr,ystr)
         
-        model = get_model(model) 
+        model = eval(model)
         self.model_fn = model
         npar = len(parnames)
         
