@@ -299,6 +299,8 @@ Error message and password prompt
 
 <li>Close All Figures</li>
 
+<li>Constrained Fitting</li>
+
 <li>Data directory</li>
 
 <li>Default Fitting Algorithms</li>
@@ -326,6 +328,8 @@ Error message and password prompt
 <li>Fitting routines</li>
 
 <li>Global Fitting</li>
+
+<li>Graphical P0 Finding</li>
 
 <li>Help Index</li>
 
@@ -6342,7 +6346,7 @@ Error message and password prompt
 <div modified="20171215084937325" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/EditToolbar</pre>
 </div>
-<div list="Fit" title="$:/StoryList">
+<div list="[[Help Index]] Fit" title="$:/StoryList">
 <pre></pre>
 </div>
 <div modified="20171215083831245" title="$:/temp/advancedsearch">
@@ -6362,7 +6366,7 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20181118232722361" modified="20191112072419016" title="$:/temp/NewTagName">
+<div created="20181118232722361" modified="20191112104243922" title="$:/temp/NewTagName">
 <pre></pre>
 </div>
 <div author="Paco Rivière" core-version="&gt;=5.0.0" created="20160103221746029" dependents="" description="Catalan (Spain)" icon="data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22810%22%20height%3D%22540%22%3E%0A%3Crect%20width%3D%22810%22%20height%3D%22540%22%20fill%3D%22%23FCDD09%22%2F%3E%0A%3Cpath%20stroke%3D%22%23DA121A%22%20stroke-width%3D%2260%22%20d%3D%22M0%2C90H810m0%2C120H0m0%2C120H810m0%2C120H0%22%2F%3E%0A%3C%2Fsvg%3E" modified="20160103221746029" name="ca-ES" original-plugin-type="language" original-tags="" original-title="$:/languages/ca-ES" original-type="application/json" server-url="http://tiddlywiki.com/library/v5.1.9/index.html" tags="$:/tags/RemoteAssetInfo" title="$:/temp/RemoteAssetInfo/http://tiddlywiki.com/library/v5.1.9/index.html/$:/languages/ca-ES" type="text/vnd.tiddlywiki" version="5.1.9">
@@ -6818,6 +6822,25 @@ Working off of the raw asymmetry calculations we can combine asymmetries in the 
 <div created="20191108174657773" modified="20191108174728842" tags="[[menu option]]" title="Close All Figures">
 <pre>Runs `matplotlib.pyplot.close(&quot;all&quot;)`</pre>
 </div>
+<div created="20191112104339250" modified="20191112105122094" tags="popup" title="Constrained Fitting">
+<pre>Allows one to constrain the variables by some function, and fit for the parameters of that function which are shared globally. 
+
+''Usage'': Write one equation per line which defines a function parameter, using any of the functions in the indicated modules, and/or any of the reserved variable names. For example, 
+
+`peak = amp*np.sqrt(ENRG/E0)`
+
+Press fit at the bottom to run the fit. The global parameters defined in the constraints have their results shown in the popup window. The corresponding parameters are calculated for each run and copied into the main bfit fitting tab, as are the chisquared and the global chisquared. These are then exportable into a csv file, or drawn, or modelled, in the usual way.
+
+---
+
+* ''Reserved variable names'': Use these variables names (which are reserved) to insert run conditions into the fitting. For example if 1/T,,1,, was linearly temperature dependent, one could write `1_T1 = a*TEMP+b`. Global parameters &quot;a&quot; and &quot;b&quot; are fitted for, and the function calculates a 1/T,,1,, for each run based on the linear expression. 
+
+* ''Reserved module names'': One has access to all the functions in the list of modules, accessed as &quot;module.function&quot;
+
+* ''Reserved function parameter names'': Each constraint equation must define one of these names. The parameter is then appropriately replaced by the entered equation. 
+
+</pre>
+</div>
 <div created="20191108174833143" modified="20191108174937810" tags="[[menu option]]" title="Data directory">
 <pre>By default, bfit uses the [[bdata|https://github.com/dfujim/bdata]] directory defaults to fetch data. If a different directory is desired, select it here. Set directly is not persistent across instances. </pre>
 </div>
@@ -7000,7 +7023,7 @@ From top to bottom, left to right, here is a list of the interactive GUI objects
 ** Options vary depending on the run mode. 
 </pre>
 </div>
-<div created="20191112072417657" modified="20191112073318542" tags="tab" title="Fit">
+<div created="20191112072417657" modified="20191112104330035" tags="tab" title="Fit">
 <pre>The main purpose of the Fit tab is to fit the fetched data, and to display the results. Also provides options for exporting and doing some basic processing of the fit results. 
 
 From top to bottom, left to right, here is a list of the interactive GUI objects in the tab:
@@ -7008,23 +7031,52 @@ From top to bottom, left to right, here is a list of the interactive GUI objects
 !!! Fit Function 
 
 * ''Fit function listbox'':
+** Select the function whose parameters will be adjusted to best fit the data. 
+** Options vary depending on run mode. 
+
 * ''Number of components spinbox'':
+** Indicates the number of selected functions to add in superposition. 
+
 * ''Fit button'':
+** Do the fit, draw the results, and display the output to the screen.
+** Shortcut: `Enter` when focus is on tab, or not on the fit results frame. 
+
 * ''Constrained Fit button'':
+** Show options for [[constrained fitting|Constrained Fitting]]
+
 * ''Set Result as P0 button '':
+** Copy the fitting results to the corresponding initial value. 
+** Useful for global fitting: start with independent fits then set result as p0, then fit again with shared parameters. 
+
 * ''Reset P0 button'':
+** Reset the initial values to the default guesses provided by the fitting routine. 
+
 * ''P0 Finder button'':
+** Launches a menu to select which run to start the [[P0 finder|Graphical P0 Finding]]
 
 !!! Set Initial Parameters
 
 For each fetched run, the following options are available: 
 
 * ''Initial Value button'':
+** Same as the &quot;P0 Finder&quot; button, but skips the select menu and launches the [[P0 finder|Graphical P0 Finding]] for the corresponding run.
+
 * ''Initial Value entry'':
+** Initial guess for the function optimization
+
 * ''Low Bound entry'':
+** Low bound on fitting. Use &quot;-inf&quot; to deactivate.
+
 * ''High Bound entry'':
+** High bound on fitting. Use &quot;inf&quot; to deactivate.
+
 * ''Fixed checkbutton'':
+** Fix this parameter to the initial value. 
+** Degrees of freedom modified accordingly in both individual and global fits. 
+
 * ''Shared checkbutton'':
+** Set a parameter to be shared globally across all runs. The first run will determine the initial parameters. 
+** You cannot fix a shared parameter, instead use the &quot;Modify for all&quot; switch to fix and set the parameters for all runs. 
 
 !!! Asymmetry Calculation 
 
@@ -7036,30 +7088,63 @@ For each fetched run, the following options are available:
 !!! Switches
 
 * ''Modify for all checkbutton'':
+** Allows user to simultaneously modify inputs and flags for all runs. 
+
 * ''Rebin data (set in fetch) checkbutton'':
+** Fitting by default uses asymmetries calculated with rebin = 1. With this flag set to True, the rebin is the value set in the Fetch window. 
+
 * ''Set P0 of new run to prior result checkbutton'':
+** If true, set the initial value of newly selected runs to the result of the fitted run with the largest run number. For example, if runs 40001 and 40001 are fetched and fitted, then we fetch 40002, the initial values of 40002 will be the fit results of 40001.
 
 !!! Restrict x limits
 
 * ''Low bound entry'':
+** Fitting will crop the calculated asymmetries such that the corresponding x value is within the desired range. 
+** Use -inf to disable
+
 * ''High bound entry'':
+** Fitting will crop the calculated asymmetries such that the corresponding x value is within the desired range. 
+** Use inf to disable
 
 !!! Fit Results and Run Conditions
 
 * ''Draw button'':
+** Draw the fit parameters selected according to the drawing mode. 
+** Shortcut: `Ctrl+Enter`
+
 * ''Compare button'':
+** Draws a window with a table of the fit results and conditions (temperature, field, etc) for easy side-by-side numerical comparison. 
+
 * ''Update button'':
+** Re-draw all parameter figures with the corresponding data, as indicated by the axis titles. 
+** Useful for checking on the x dependence of various fit parameters 
+** Warning: this will overwrite any stacks of data that may be drawn.  
+** Shortcut: `Ctrl+u`
+
 * ''Export button'':
+** Write the fit results, errors, and run conditions to csv file. 
+
 * ''Fit a Model button'':
+** Launches a [[popup for fitting|Model fitting]] the parameters of best fit.
+
 * ''x-axis listbox'':
+** Select the variable to draw on the x axis. 
+
 * ''y-axis listbox'':
+** Select the variable to draw on the y axis. 
+
 * ''Annotation listbox'':
+** Select the variable to draw as an annotation: a text box accompanying each point. 
+** Useful for identifying which run has that strange behaviour.  
 
 !!! Program State
 
 * ''Save button'':
+** Same as [[menu option|Save State]]
+
 * ''Load button'':
-</pre>
+** Same as [[menu option|Load State]]
+** Shortcut: `Ctrl+o`</pre>
 </div>
 <div created="20180805223140058" modified="20191112071723174" tags="[[menu option]]" title="Fitting routines">
 <pre>`bfit` allows for users to build their own fitting modules. The module must follow the below template, but otherwise developers may use their plugin to link to any fitting procedure they wish. Note the expected input/output of the `__call__` function.  
@@ -7185,6 +7270,35 @@ class fitter(object):
 <pre>In the ''Fit Data'' tab, select the ''Shared'' checkbox to set the parameter globally for the fitting group. 
 
 To share parameters globally in a subset of runs, make a new fitting group. </pre>
+</div>
+<div created="20191112103641879" modified="20191112104219610" tags="popup" title="Graphical P0 Finding">
+<pre>Allows for graphical P0 selection. 
+
+Usage:
+
+* Drag the colored boxes around on the drawn figure. 
+* Press enter to close the figure and set the initial parameters.
+* Close the figure to cancel. 
+
+The superposition of all terms is shown as a solid line. Each component is shown as a dotted line, whose color corresponds to a set of draggable boxes.
+
+Available functions and their boxes:
+
+* ''Pulsed Exponential''
+** Left: amplitude
+** Bottom: 1/T,,1,, 
+* ''Pulsed Stretched Exponential''
+** Left: amplitude
+** Bottom: 1/T,,1,, 
+** Right: beta (top = 1, bottom = 0)
+* ''Lorentzian''
+** Baseline (common to all components)
+** Peak location + amplitude
+** Width (positioned at 2x FWHM, for implementation reasons)
+* ''Gaussian''
+** Baseline (common to all components)
+** Peak location + amplitude
+** Width (positioned at 2x FWHM, for implementation reasons)</pre>
 </div>
 <div created="20171215083659362" modified="20191111044207928" title="Help Index">
 <pre>&quot;&quot;&quot;
