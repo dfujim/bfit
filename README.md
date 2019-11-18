@@ -7,11 +7,20 @@ To run, call `python3 -m bfit`
 
 ## Setup
 
-Install: `pip3 install bfit`
+### Dependencies needed pre-install
 
-Note that `Cython` is required for install. You can get that with `pip3 install Cython`.
+* Cython: `pip3 install Cython`
+* numpy: `pip3 install numpy`
+* Tkinter for python3: `sudo apt-get install python3-tk` (for example), 
+* python version 3.6 or higher
 
-Afterwards, you may want to tell bfit where the data is stored. This is done by defining environment variables
+### Install instructions
+
+`pip3 install bfit`
+
+### Optional seteup
+
+You may want to tell bfit where the data is stored. This is done by defining environment variables
 `BNMR_ARCHIVE` and `BNQR_ARCHIVE` (for convenience add this to your .bashrc script). The expected file format is as follows: 
 
     /path/
@@ -25,6 +34,6 @@ In this example, you would set `BNQR_ARCHIVE=/path/bnqr/` to the directory conta
 
 If bfit cannot find the data, it will attempt to download the files from [musr.ca](http://musr.ca/mud/runSel.html) according to the defaults set in the [bdata](https://pypi.org/project/bdata/) package. 
 
-## Operation Details
+## Module Details
 
 See [here](https://github.com/dfujim/bfit/blob/master/bfit/fitting/README.md) for the bfit fitting submodule documentation. 
