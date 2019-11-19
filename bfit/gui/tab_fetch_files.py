@@ -143,7 +143,7 @@ class fetch_files(object):
         check_draw = ttk.Button(right_frame,text='Draw',\
                 command=lambda:self.draw_all('data'),pad=5)
         
-        check_rebin_label = ttk.Label(right_frame,text="SLR Rebin:",pad=5)
+        check_rebin_label = ttk.Label(right_frame,text="Rebin:",pad=5)
         check_rebin_box = Spinbox(right_frame,from_=1,to=100,width=3,\
                 textvariable=self.check_rebin,
                 command=self.set_all)
