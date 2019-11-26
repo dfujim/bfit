@@ -50,8 +50,11 @@ class pulsed(object):
         if name == '__code__':
             return code_wrapper(self.__call__.__code__)
         else:
-            return getattr(self,name)
-
+            try:
+                return self.__dict__[name]
+            except KeyError as err:
+                raise AttributeError(err) from None
+            
 class pulsed_exp(pulsed):
     def __call__(self,time,lambda_s,amp):
         return amp*self.pulser.exp(time,lambda_s)
