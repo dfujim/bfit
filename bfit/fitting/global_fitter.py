@@ -3,11 +3,11 @@
 # Nov 2018
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-# ~ from bfit.fitting.fit_bdata import _get_fixed_values
-import os, collections, warnings, textwrap
-
+import os, collections
+import time
 
 __doc__=\
 """
@@ -59,36 +59,34 @@ class global_fitter(object):
             chi                     list of chisquared values for each data set
             
             fn                      list of fitting function handles
-            fitfn                   handle for fitting function on ccat data
-            fixed                   list of fixed variables (flattened)
-            fixed_indiv             list of fixed variables (corresponds to input)
+            fixed                   list of fixed variables (corresponds to input)
             
             npar                    number of parameters in input function
             nsets                   number of data sets
-            par_index               index of parameters to do sharing
             
-            par                     fit results with unnecessary variables stripped
-            std                     fit errors with unnecessary variables stripped
+            par                     fit results with unnecessary variables stripped 
+            par_runwise             fit results run-by-run with all needed inputs
             cov                     fit covarince matrix with unnecessary variables stripped
+            cov_runwise             fit covarince matrix run-by-run with all needed inputs
             
-            sharelist               array of bool of len = nparameters, share parameter if true. 
+            shared                  array of bool of len = nparameters, share parameter if true. 
+            sharing_links           2D array of ints, linking global inputs to function-wise inputs
             
-            xccat                   concatenated xdata for global fitting
-            yccat                   concatenated ydata for global fitting
-            dyccat                  concatenated dydata for global fitting
+            xcat                    concatenated xdata for global fitting
+            ycat                    concatenated ydata for global fitting
+            dycat                   concatenated dydata for global fitting
             
-            xdata                   input array of x data sets [array1,array2,...]
-            ydata                   input array of y data sets [array1,array2,...]
-            dydata                  input array of y error sets [array1,array2,...]
+            x                       input array of x data sets [array1,array2,...]
+            y                       input array of y data sets [array1,array2,...]
+            dy                      input array of y error sets [array1,array2,...]
     """
     
     # class variables
-    x_split = 1                 # time to add between run (arb.)
-    draw_modes = ['stack','s','new','n','append','a']   # for checking modes
+    draw_modes = ('stack','s','new','n','append','a')   # for checking modes
     ndraw_pts = 500             # number of points to draw fits with
     
     # ======================================================================= #
-    def __init__(self,x,y,dy,fn,sharelist,npar=-1,fixed=None):
+    def __init__(self,x,y,dy,fn,shared,fixed=None):
         """
             x,y:        2-list of data sets of equal length. 
                         fmt: [[a1,a2,...],[b1,b2,...],...]
@@ -100,81 +98,103 @@ class global_fitter(object):
                         len(fn) = len(x) and all function must have the same 
                         inputs in the same order
             
-            sharelist:  tuple of booleans indicating which values to share. 
+            shared:     tuple of booleans indicating which values to share. 
                         len = number of parameters 
                         
-            npar:       number of free parameters in each fitting function.
-                        Set if number of parameters is not intuitable from 
-                            function code
-                            
             fixed:      list of booleans indicating if the paramter is to be 
                         fixed to p0 value (same length as p0). Returns best 
                         parameters in order presented, with the fixed 
                         parameters omitted.
         """
         
-        # save inputs
-        self.xdata = np.asarray(x)
-        self.ydata = np.asarray(y)
-        self.dydata = np.asarray(dy)
-        self.fn = fn
-        self.sharelist = sharelist
+        # data types
+        x = list(x)
+        y = list(y)
+        dy = list(dy)
+        
+        self.shared = np.asarray(shared)
         
         # get number of data sets
-        self.nsets = len(self.xdata)
+        self.nsets = len(x)
         
-        # check if input function is iterable
-        if not isinstance(self.fn,collections.Iterable):
-            self.fn = [self.fn for i in range(self.nsets)]
+        # ---------------------------------------------------------------------
+        # Build fitting functions
         
-        # get number of parameters
-        if npar < 0:
-            self.npar = len(self.fn[0].__code__.co_varnames)-1
+        # check if list of functions given 
+        if not isinstance(fn,collections.Iterable):
+            fn = [fn]*self.nsets
+        
+        # get number of input parameters
+        self.npar = len(shared)
+        
+        # expand fixed
+        if fixed is not None: 
+            if len(np.asarray(fixed).shape) == 1:
+                fixed = np.full((self.nsets,self.npar),fixed)
+            else:
+                fixed = np.asarray(fixed)
         else:
-            self.npar = npar
+            fixed = np.zeros((self.nsets,self.npar)).astype(bool)
         
-        # check that input data is of the right format
-        self._check_input_data()
+        fixed_flat = np.concatenate(fixed)
         
-        # get data for appended runs
-        self.xccat,self.yccat,self.dyccat = self._get_data()
+        # get linking indexes    
+        sharing_links = [] # [input index] organized by output index position
+        p_index = 0
+        par_numbers_shared = np.arange(self.npar)
         
-        # set index
-        self.par_index = self._get_shared_index()
-        
-        # get fit function
-        self.fitfn = self._get_fitfn()
-        
-        # final values which will be fixed in reduced, flattened set of params
-        _,uidx = np.unique(self.par_index,return_index=True)
-        
-        # build and flatten fixed
-        if fixed is not None:
+        for i in range(self.nsets):
             
-            # build
-            fixed = np.asarray(fixed)
-            sh = fixed.shape
-            if len(sh) == 1:    # one input
-                fixed = np.array([fixed for i in range(self.nsets)])
-            else:               # list input
-                fixed_add = [np.full(sh[1],False) for i in range(self.nsets-sh[0])]
-                fixed = np.vstack((*fixed,*fixed_add))
+            # parameter intdexes
+            par_numbers = par_numbers_shared+p_index
             
-            self.fixed_indiv = fixed # fixed parameters for each data set
+            # link shared variables
+            par_numbers[self.shared] = par_numbers_shared[self.shared]  
             
-            # fixed sharing
-            for i,(f,s) in enumerate(zip(fixed.T,sharelist)): 
-                if s and any(f): 
-                    raise RuntimeError('Cannot fix a shared parameter')
-                    
-            # flatten
-            fixed = np.concatenate(fixed)
-          
-            # reshuffle input p0 to have no excess inputs
-            self.fixed = fixed[uidx] 
-        else:
-            self.fixed = np.full(len(uidx),False)
-            self.fixed_indiv = [[False]*self.npar]*self.nsets
+            # link fixed variables
+            par_numbers[fixed[i]] = -par_numbers[fixed[i]]-1
+            sharing_links.append(par_numbers)
+            
+            # iterate
+            p_index += self.npar
+        
+        # reduce too-high indexes
+        sharing_links = np.array(sharing_links)        
+        unq = np.unique(sharing_links)
+        unq = unq[unq>=0]
+        for i,u in enumerate(unq):
+            sharing_links[sharing_links==u] = i
+        
+        # check that no shared parameters are fixed
+        shared_as_int = self.shared.astype(int)
+        for fix in fixed: 
+            if any(fix+shared_as_int>1):
+                raise RuntimeError('Cannot fix a shared parameter') 
+        
+        # test number of data sets
+        if not len(x) == len(y) == len(dy):
+            raise RuntimeError('Lengths of input data arrays do not match.\n'+\
+                'nsets: x, y, dy =  %d, %d, %d\n' % (len(x),len(y),len(dy)))            
+        
+        # remove points with zero error from data 
+        for i,(xdat,ydat,dydat) in enumerate(zip(x,y,dy)):
+            idx = dydat != 0
+            x[i] = xdat[idx]
+            y[i] = ydat[idx]
+            dy[i] = dydat[idx]
+        
+        # save results
+        self.fn = fn
+        self.x = x
+        self.y = y
+        self.dy = dy
+        self.fixed = fixed
+        self.sharing_links = sharing_links
+        
+        # get concatenated data
+        self.xcat = np.concatenate(x)
+        self.ycat = np.concatenate(y)
+        self.dycat = np.concatenate(dy)
             
     # ======================================================================= #
     def draw(self,mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,
@@ -210,14 +230,11 @@ class global_fitter(object):
         if labels is None:
             labels = ['_no_label_' for i in range(self.nsets)]
         
-        # get fit parameters
-        par_index = self.par_index.reshape(-1,self.npar)
-        
         # draw all
         for i in range(self.nsets):
             
             # get data
-            x,y,dy = self.xdata[i], self.ydata[i], self.dydata[i]
+            x,y,dy = self.x[i], self.y[i], self.dy[i]
             f = self.fn[i]
             
             # make new figure
@@ -228,7 +245,7 @@ class global_fitter(object):
             
             # shift x values
             if mode in ['append','a']:
-                x_draw = x+last+self.x_split
+                x_draw = x+last
                 last = x_draw[-1]
             else:
                 x_draw = x
@@ -243,9 +260,9 @@ class global_fitter(object):
                 color = 'k'
             
             # draw fit
-            xfit = np.arange(self.ndraw_pts)/self.ndraw_pts*(max(x)-min(x))+min(x)
-            xdraw = np.arange(self.ndraw_pts)/self.ndraw_pts*(max(x_draw)-min(x_draw))+min(x_draw)
-            plt.plot(xdraw,f(xfit,*self.par[par_index[i]]),color=color,zorder=10)
+            xfit = np.linspace(min(x),max(x),self.ndraw_pts)
+            xdraw = np.linspace(min(x_draw),max(x_draw),self.ndraw_pts)
+            plt.plot(xdraw,f(xfit,*self.par_runwise[i]),color=color,zorder=10)
         
             # plot elements
             plt.ylabel(ylabel)
@@ -290,100 +307,108 @@ class global_fitter(object):
             returns (parameters,covariance matrix)
         """
         
-        # get rid of zero errors
-        tag = self.dyccat != 0
+        # get values from self
+        fixed = self.fixed
+        shared = self.shared
+        sharing_links = self.sharing_links
+        fn = self.fn
         
         # set default p0
         if 'p0' in fitargs:
             p0 = np.asarray(fitargs['p0'])
+            del fitargs['p0']
+            
+            # expand p0
+            if len(p0.shape) == 1:
+                p0 = np.full((self.nsets,self.npar),p0)
+                
         else:
             p0 = np.ones((self.nsets,self.npar))
-            
-        # build and flatten p0
-        sh = p0.shape
-        if len(sh) == 1:    # one input
-            p0 = np.concatenate([p0 for i in range(self.nsets)])
-        else:               # list input
-            p0_add = [p0[-1] for i in range(self.nsets-sh[0])]
-            p0 = np.concatenate((*p0,*p0_add))
         
-        # reshuffle input p0 to have no excess inputs
-        _,uidx = np.unique(self.par_index,return_index=True)
-        p0 = fitargs['p0'] = p0[uidx] 
+        # for fixed parameters
+        p0_flat_inv = np.concatenate(p0)[::-1]
         
-        # build and flatten bounds
+        # get flattened p0 values which are not fixed
+        p0_first = self._flatten(p0)
+        
+        # set default bounds
         try:
             bounds = np.asarray(fitargs['bounds'])
         except KeyError:
             bounds = None
         else:
-            # get expanded bounds
-            bounds = self._get_expanded_bounds(bounds)
-    
-            # reshuffle bounds
-            lo = np.concatenate(bounds[:,0,:])[uidx]
-            hi = np.concatenate(bounds[:,1,:])[uidx]
-            bounds = fitargs['bounds'] = np.array((lo,hi))
-               
-        # fixed parameters
-        did_fixed = False
-        fixed = self.fixed
-        if fixed is not None and any(fixed):
             
-            # save stuff for inflation
-            did_fixed = True
-            p0 = np.copy(fitargs['p0'])
-            npar = len(p0)
+            # treat low and high bounds seperately 
+            if len(bounds.shape) > 2:
+                lo = bounds[:,0,:]
+                hi = bounds[:,1,:]
+            else:
+                lo = np.asarray(bounds[0])
+                hi = np.asarray(bounds[1])
             
-            # prep inputs
-            if 'bounds' in fitargs: bounds = fitargs['bounds']
-            else:                   bounds = None
-                
-            # modify fiting inputs
-            if bounds is not None:  fitargs['bounds'] = bounds
+            # expand bounds
+            lo = self._expand_bound_lim(lo)
+            hi = self._expand_bound_lim(hi)
+            
+            # flatten bounds 
+            lo = self._flatten(lo)
+            hi = self._flatten(hi)
+            
+            # construct bounds
+            bounds = (lo,hi)
+            fitargs['bounds'] = bounds
         
-            # get fixed versions of p0, bounds
-            fitfn,fitargs['p0'],bounds = _get_fixed_values(self.fixed,self.fitfn,p0,bounds)
-            if bounds is not None: fitargs['bounds'] = bounds
-        else:
-            fitfn = self.fitfn
+        # make the master function 
+        x = self.x
+        rng = range(self.nsets)
+        def master_fn(x_unused,*par):            
+            inputs = np.take(np.hstack((par,p0_flat_inv)),sharing_links)
+            return np.concatenate([fn[i](x[i],*inputs[i]) for i in rng])
         
+        self.master_fn = master_fn
+          
         # do fit
-        par,cov = curve_fit(fitfn,
-                            self.xccat[tag],
-                            self.yccat[tag],
-                            sigma=self.dyccat[tag],
+        par,cov = curve_fit(master_fn,
+                            self.xcat,
+                            self.ycat,
+                            sigma=self.dycat,
                             absolute_sigma=True,
-                            **fitargs)
+                            p0 = p0_first,
+                            **fitargs)                    
         
         # to array
         par = np.asarray(par)
         cov = np.asarray(cov)
         
-        # inflate parameters from fixing
-        if did_fixed:
-            
-            # inflate parameters
-            par_inflated = np.zeros(npar)
-            par_inflated[fixed] = p0[fixed]
-            par_inflated[~fixed] = par
-            par = par_inflated
-            
-            # inflate cov matrix with NaN
-            nfixed_flat = np.concatenate(np.outer(~fixed,~fixed))
-            c_inflated = np.full(npar**2,np.nan)
-            c_inflated[nfixed_flat] = np.concatenate(cov)
-            cov = c_inflated.reshape(npar,-1)
+        # inflate parameters
+        par_out = np.hstack((par,p0_flat_inv))[sharing_links]
         
-        # expand parameters
-        par_out = par[self.par_index].reshape(-1,self.npar)
-        cov_out = cov.transpose()[self.par_index].transpose()[self.par_index]        
-        cov_out = np.array([cov_out[i:i+self.npar,i:i+self.npar] \
-                            for i in np.arange(0,len(cov_out),self.npar)])
-        
+        # inflate covariance matrix
+        cov_out = []
+        for lnk in sharing_links:
+            
+            # init
+            cov_run = np.zeros((self.npar,self.npar))
+            
+            # assign
+            for i in range(self.npar):
+                for j in range(self.npar):
+                    
+                    # fixed values
+                    if lnk[j] < 0 or lnk[i] < 0: 
+                        cov_run[i,j] = np.nan
+                    
+                    # cov
+                    else:
+                        cov_run[i,j] = cov[lnk[i],lnk[j]]
+            cov_out.append(cov_run)
+                    
         # return
         self.par = par
         self.cov = cov
+        self.par_runwise = par_out
+        self.cov_runwise = cov_out
+        
         return (par_out,cov_out)
     
     # ======================================================================= #
@@ -395,272 +420,74 @@ class global_fitter(object):
             
             return (global chi, list of chi for each fn)
         """
-        
-        # get fit parameters, with sharing
-        par_index = self.par_index.reshape(-1,self.npar)
-        pars = (self.par[p] for p in par_index)
 
         # global
-        tag = self.dyccat != 0
-        dof = len(self.xccat[tag])-len(np.unique(par_index)+sum(self.fixed))
-        self.chi_glbl = np.sum(np.square((self.yccat[tag]-\
-                      self.fitfn(self.xccat[tag],*self.par))/self.dyccat[tag]))/dof
+        dof = len(self.xcat)-len(self.par)
+        self.chi_glbl = np.sum(np.square((self.ycat-\
+                      self.master_fn(self.xcat,*self.par))/self.dycat))/dof
     
         # single fn chisq
         self.chi = []
-        for x,y,dy,p,f,fx in zip(self.xdata,self.ydata,self.dydata,pars,self.fn,self.fixed_indiv):
-            tag = dy != 0
-            dof = len(x[tag])-(self.npar-sum(fx))
-            self.chi.append(\
-                    np.sum(np.square((y[tag]-f(x[tag],*p))/dy[tag]))/dof)
+        for x,y,dy,p,f,fx in zip(self.x,self.y,self.dy,self.par_runwise,self.fn,self.fixed):
+            dof = len(x)-self.npar+sum(fx)
+            self.chi.append(np.sum(np.square((y-f(x,*p))/dy))/dof)
         
         return (self.chi_glbl,self.chi)
 
     # ======================================================================= #
     def get_par(self):
         """
-            Fetch fit parameters as dictionary
+            Fetch fit parameters
             
             return 2-tuple of (par,cov) with format
             
             ([data1:[par1,par2,...],data2:[],...],
-             [data1:[cov1,cov2,...],data2:[],...],
-            )
+             [data1:[cov1,cov2,...],data2:[],...])
         """
-    
-        par = self.par[self.par_index].reshape(-1,self.npar)
-        cov = self.cov.transpose()[self.par_index].transpose()[self.par_index]
-        cov = np.array([cov[i:i+self.npar,i:i+self.npar] \
-                        for i in np.arange(0,self.npar*self.nsets,self.npar)])
-        return (par,cov)
+        cov = self.cov_runwise
+        std = np.array(list(map(np.diag,cov)))**0.5
+        
+        return (self.par_runwise,cov,std)
     
     # ======================================================================= #
-    def _check_input_data(self):
-        """Check input data lengths match. Raise exception on failure."""
-        
-        # test number of data sets
-        if not len(self.xdata) == len(self.ydata) == len(self.dydata):
-            raise RuntimeError('Lengths of input data arrays do not match.\n'+\
-                'nsets: x, y, dy =  %d, %d, %d\n' % (len(self.xdata),
-                                                     len(self.ydata),
-                                                     len(self.dydata)))            
-        
-        # TEST SHARED INPUT ===================================================
-        if len(self.sharelist) > self.npar:
-            raise RuntimeError('Length of sharelist is too large. '+\
-                       'len(sharelist) [%d] == len(fn parameters [%d])'%\
-                        (len(self.sharelist),self.npar))
-    
-    # ======================================================================= #
-    def _get_expanded_bounds(self,bounds):
-        """For various bound input formats expand such that all bounds are 
-        defined explicitly. """
-        
-        # get shapes (nsets,2,npar)
-        sh = bounds.shape
-        max_depth = self._get_full_depth(bounds)
-        
-        # easy cases: all explicit for set all data sets the same -------------
-        #         OR  fully explicit implementation
-        #         OR  some integers present in otherwise full explicit
-        if len(sh) in (1,3) or (len(sh) == 2 and max_depth == 3):
-            
-            # increase depth
-            if len(sh) == 1:
-                bounds = np.array([bounds]).tolist()
+    def _expand_bound_lim(self,lim):
+        """
+            For various bound input formats expand such that all bounds are 
+            defined explicitly. 
+        """
 
-            # look at bounds for individual data sets
-            for i,bnd in enumerate(bounds):
-                
-                # look at low,high bounds
-                for j,b in enumerate(bnd):
-                    
-                    # expand NoneType
-                    if b is None:
-                        bounds[i][j] = np.ones(self.npar)*np.nan*pow(-1,j+1)
-                    
-                    # expand int, float
-                    elif not isinstance(b,collections.Iterable):
-                        bounds[i][j] = np.ones(self.npar)*b
+        lim = np.asarray(lim)
         
-        # hard case: mixed input specification --------------------------------
-        elif len(sh) == 2:
+        # single float case
+        if not lim.shape:
+            return np.full((self.nsets,self.npar),np.full(self.npar,lim))
             
-            
-            # set pars the same for all sets (pars explicit) 
-            # or set pars the same for each set (sets explicit)
-            if max_depth == 2:
-                
-                # pars are explicit case: check lo<hi and match length to npars
-                if all([all(bounds[0][i] < np.array(bounds[1])) \
-                        for i in range(len(bounds[0]))]) \
-                        and len(bounds[0]) == len(bounds[1]) == self.npar:
-                        
-                    warnings.warn(textwrap.fill(textwrap.dedent("""\
-                        Attempting to intuit ambiguous bounds input. Determined
-                        that values are set explicity for each parameter, and
-                        bounds are common to all data sets."""),100),
-                        RuntimeWarning)
-                            
-                    # add depth
-                    bounds = np.array([bounds])                             
-                    
-                # sets are explicit case
-                else:
-                    warnings.warn(textwrap.fill(textwrap.dedent("""\
-                        Attempting to intuit ambiguous bounds input. Determined
-                        that values are common to for parameters in that bound,
-                        and bounds are set explicity for each data set."""),100),
-                        RuntimeWarning)
-                    
-                    # allow adding depth
-                    bounds = bounds.tolist()
-                            
-                    # look at bounds for individual data sets
-                    for i,bnd in enumerate(bounds):
-                        
-                        # look at low,high bounds
-                        for j,b in enumerate(bnd):
-                            
-                            # expand NoneType
-                            if b is None:
-                                bounds[i][j] = np.ones(self.npar)*np.nan*\
-                                                    pow(-1,j+1)
-                            
-                            # expand int, float
-                            elif not isinstance(b,collections.Iterable):
-                                bounds[i][j] = np.ones(self.npar)*b
-            else:
-                raise RuntimeError('Uncertain bounds input format')
-            
-        # duplicate top level until number of sets is reached
-        bounds = np.asarray(bounds)
-        sh = bounds.shape
-        if sh[0] < self.nsets:
-            add = [bounds[-1] for i in range(self.nsets-sh[0])]
-            bounds = np.concatenate((bounds,add))
+        # list case: probably each variable defined
+        if len(lim.shape) == 1 and len(lim) == self.npar:
+            return np.full((self.nsets,self.npar),lim)
         
-        return bounds
+        # list case: probably each data set defined in full
+        if lim.shape == (self.nsets,self.npar):
+            return lim
+        
+        # we don't know what's happening
+        raise RuntimeError('Unexpected bound size input')
         
     # ======================================================================= #
-    def _get_data(self):
+    def _flatten(self,arr):
         """
-            Get list of concatenated data
-            
-            return (x,y,dy)
+            Flatten input array based on sharing and fixing. 
+            Use for p0,bounds
         """
-        
-        # space out x data 
-        xdata = np.copy(self.xdata)
-        for i in range(1,len(xdata)):
-            xdata[i] += xdata[i-1][-1]+self.x_split
-        
-        # concatenate
-        x = np.concatenate(xdata)
-        y = np.concatenate(self.ydata)
-        dy =np.concatenate(self.dydata)
-
-        return (x,y,dy)
-
-    # ======================================================================= #
-    def _get_fitfn(self):
-        """
-            Get fitfn for appended data
-            return fit function handle
-        """
-        
-        # set parameter indexes with sharing
-        par_index = self.par_index.reshape(-1,self.npar)
-        
-        # get data without zeros
-        xdata = np.array([x[dy!=0] for x,dy in zip(self.xdata,self.dydata)])
-            
-        # make fit function: assign parameters  
-        def fitfn(unused,*par):
-            return np.concatenate([f(x,*np.asarray(par)[p]) \
-                                    for x,p,f in zip(xdata,par_index,self.fn)])
-        return fitfn
-        
-    # ======================================================================= #
-    def _get_full_depth(self,nested_list,depth=0):
-        """Get maximum depth of nested list set recursively."""
-        if not isinstance(nested_list,collections.Iterable):    
-            return depth
-        depth += 1
-        return max((self._get_full_depth(n,depth) for n in nested_list))
     
-    # ======================================================================= #
-    def _get_shared_index(self):
-        """
-            Indexes of parameters in parameter input list, with sharing
-            
-            return list of indexes to access parameters.
-        """
-        
-        npar = self.npar
-        nsets = self.nsets
-        
-        # set parameter indexes with sharing
-        par_index = np.arange(npar*nsets)
-        par_shared = np.zeros(len(par_index))
-        
-        # set indexes for sharing.
-        add = np.arange(npar,npar*nsets,npar)   # offsets to set all other pars
-        for i,s in enumerate(self.sharelist):
-            
-            # parameter is shared
-            if s:
-                
-                # get positions of shared parameters
-                addi = add+i
-                
-                # equate shared parameters, tag
-                par_index[addi] = par_index[i] 
-                par_shared[addi] = 1
-                
-                # shift indexes of intermediate parameters
-                offset = 1
-                for j in range(addi[0]+1,len(par_index)):
-                    if j in addi: 
-                        offset += 1
-                    elif not par_shared[j]:
-                        par_index[j] -= offset
-        return par_index
-
-# =========================================================================== #
-def _get_fixed_values(fixed,fn,p0,bounds=None):
-    """
-        Get fixed function, p0, bounds
-    """
+        fixed = self.fixed
+        shared = self.shared
     
-    # save original inputs
-    fn_orig = fn
-    p0_orig = np.copy(p0)
-    npar_orig = len(p0_orig)
-            
-    # make new fitting function with fixed parameter(s)
-    def fn(x,*args):
-        args_fixed = np.zeros(npar_orig)
-        args_fixed[fixed] = p0_orig[fixed]
-        args_fixed[~fixed] = args
-        return fn_orig(x,*args_fixed)
+        arr2 = list(arr[0][~fixed[0]])
+        for i in range(1,len(arr)):
+            arr2.extend(arr[i][(~fixed[i])*(~shared)])
+        return np.array(arr2)
     
-    # make new p0
-    p0 = np.asarray(p0_orig)[~fixed]
-    
-    # bounds
-    if bounds is not None:
-        bounds = list(bounds)
-        try:
-            bounds[0] = np.asarray(bounds[0])[~fixed]
-            bounds[1] = np.asarray(bounds[1])[~fixed]
-        except IndexError:
-            pass
-        else:
-            bounds = np.asarray(bounds)
-    
-    return (fn,p0,bounds)
-
 # Add to module docstring
 __doc__ = __doc__ % (global_fitter.__init__.__doc__,
                      global_fitter.fit.__doc__,
