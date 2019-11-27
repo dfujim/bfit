@@ -10,16 +10,14 @@ from tqdm import tqdm
 from bfit.fitting.global_bdata_fitter import global_bdata_fitter
 
 # ========================================================================== #
-def fit_list(runs,years,fnlist,omit=None,rebin=None,shared=None,npar=-1,
-              hist_select='',xlims=None,asym_mode='c',fixed=None,**kwargs):
+def fit_bdata(data,fn,omit=None,rebin=None,shared=None,hist_select='',
+              xlims=None,asym_mode='c',fixed=None,**kwargs):
     """
         Fit combined asymetry from bdata.
     
-        runs:           list of run numbers
-        
-        years:          list of years corresponding to run numbers, or int which applies to all
-        
-        fnlist:         list of function handles to fit (or single which applies to all)
+        data:           list of bdata objects (or single object)    
+    
+        fn:             list of function handles to fit (or single which applies to all)
                         must specify inputs explicitly (do not do def fn(*par)!)
                         must have len(fn) = len(runs) if list
         
@@ -64,57 +62,52 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,shared=None,npar=-1,
             chi: chisquared of fits
             gchi:global chisquared of fits
     """
+    try:
+        ndata = len(data)
+    except TypeError:
+        data = [data]
+        ndata = 1
     
-    nruns = len(runs)
-    
-    # get fnlist
-    if not isinstance(fnlist,collections.Iterable):
-        fnlist = [fnlist]
+    # get fn
+    if not isinstance(fn,collections.Iterable):
+        fn = [fn]
+    fn.extend([fn[-1] for i in range(ndata-len(fn))])
     
     # get number of parameters
-    if npar < 0:
-        npar = fnlist[0].__code__.co_argcount-1
-
-    # get fnlist again
-    fnlist.extend([fnlist[-1] for i in range(nruns-len(fnlist))])
-
+    try:
+        npar = len(kwargs['p0'])
+    except KeyError:
+        npar = fn[0].__code__.co_argcount-1
+        kwargs['p0'] = np.ones(npar)
+        if not npar: 
+            raise RuntimeError('Unknown number of function arguments. '+\
+                               'Define p0 to resolve.') from None
+                               
     # get shared
     if shared is None:
         shared = np.zeros(npar,dtype=bool)
 
     # get omit
     if omit is None:
-        omit = ['']*nruns
-    elif len(omit) < nruns:
-        omit = np.concatenate(omit,['']*(nruns-len(omit)))
+        omit = ['']*ndata
+    elif len(omit) < ndata:
+        omit = np.concatenate(omit,['']*(ndata-len(omit)))
         
     # get rebin
     if rebin is None:
-        rebin = np.ones(nruns)
+        rebin = np.ones(ndata)
     elif type(rebin) is int:
-        rebin = np.ones(nruns)*rebin
-    elif len(rebin) < nruns:
-        rebin = np.concatenate((rebin,np.ones(nruns-len(rebin))))
-    
+        rebin = np.ones(ndata)*rebin
+    elif len(rebin) < ndata:
+        rebin = np.concatenate((rebin,np.ones(ndata-len(rebin))))
     rebin = np.asarray(rebin).astype(int)
-    
-    # get years
-    if type(years) in (int,float):
-        years = np.ones(nruns,dtype=int)*years
         
-    # get p0 list
-    if 'p0' in kwargs.keys():
-        p0 = kwargs['p0']
-        del kwargs['p0']
-    else:
-        p0 = [np.ones(npar)]*nruns
-
     # fit globally -----------------------------------------------------------
-    if any(shared) and len(runs)>1:
+    if any(shared) and ndata>1:
         print('Running shared parameter fitting...')
-        g = global_bdata_fitter(runs,years,fnlist,shared,xlims,
+        g = global_bdata_fitter(data,fn,shared,xlims,
                                 asym_mode=asym_mode,rebin=rebin,fixed=fixed)
-        g.fit(p0=p0,**kwargs)
+        g.fit(**kwargs)
         gchi,chis = g.get_chi() # returns global chi, individual chi
         pars,covs,stds = g.get_par()
         
@@ -126,41 +119,44 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,shared=None,npar=-1,
             bounds = kwargs['bounds']
             del kwargs['bounds']
         else:
-            bounds = [(-np.inf,np.inf)]*nruns 
+            bounds = [(-np.inf,np.inf)]*ndata 
             
         # check p0 dimensionality
-        if len(np.asarray(p0).shape) < 2:
-            p0 = [p0]*nruns
+        if len(np.asarray(kwargs['p0']).shape) < 2:
+            p0 = [kwargs['p0']]*ndata
+        else:
+            p0 = kwargs['p0']
         
         # check xlims shape - should match number of runs
         if xlims is None:
-            xlims = [None]*nruns
+            xlims = [None]*ndata
         elif len(np.asarray(xlims).shape) < 2:
-            xlims = [xlims for i in range(nruns)]
+            xlims = [xlims for i in range(ndata)]
         else:
             xlims = list(xlims)
-            xlims.extend([xlims[-1] for i in range(len(runs)-len(xlims))])
+            xlims.extend([xlims[-1] for i in range(ndata-len(xlims))])
         
         # check fixed shape
         if fixed is not None: 
             fixed = np.asarray(fixed)
             if len(fixed.shape) < 2:
-                fixed = [fixed]*nruns
+                fixed = [fixed]*ndata
         else:
-            fixed = [[False]*npar]*nruns
+            fixed = [[False]*npar]*ndata
         
         pars = []
         covs = []
         chis = []
+        stds = []
         gchi = 0.
         dof = 0.
         
-        iter_obj = tqdm(zip(runs,years,fnlist,omit,rebin,p0,bounds,xlims,fixed),
-                        total=len(runs),desc='Independent Fitting')
-        for r,yr,fn,om,re,p,b,xl,fix in iter_obj:
+        iter_obj = tqdm(zip(data,fn,omit,rebin,p0,bounds,xlims,fixed),
+                        total=ndata,desc='Independent Fitting')
+        for d,f,om,re,p,b,xl,fix in iter_obj:
             
             # get data for chisq calculations
-            x,y,dy = _get_asym(bdata(r,year=yr),asym_mode,rebin=re,omit=om)
+            x,y,dy = _get_asym(d,asym_mode,rebin=re,omit=om)
             
             # get x limits
             if xl is None:  
@@ -179,38 +175,47 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,shared=None,npar=-1,
             if all(fix):
                 lenp = len(p)
                 s = np.full((lenp,lenp),np.nan)
-                c = np.sum(np.square((y-fn(x,*p))/dy))/len(y)
+                c = np.sum(np.square((y-f(x,*p))/dy))/len(y)
                 
             # fit with free parameters
             else:            
-                p,s,c = fit_single(r,yr,fn,om,re,hist_select,p0=p,bounds=b,
-                                   xlim=xl,asym_mode=asym_mode,fixed=fix,**kwargs)
+                kwargs['p0'] = p
+                kwargs['bounds'] = b
+                p,s,c = _fit_single(d,f,om,re,hist_select,xlim=xl,
+                                    asym_mode=asym_mode,fixed=fix,**kwargs)
             # outputs
             pars.append(p)
             covs.append(s)
             chis.append(c)
+            stds.append(np.diag(s)**0.5)
             
             # get global chi             
-            gchi += np.sum(np.square((y-fn(x,*p))/dy))
+            gchi += np.sum(np.square((y-f(x,*p))/dy))
             dof += len(x)-len(p)
         gchi /= dof
         
     pars = np.asarray(pars)
     covs = np.asarray(covs)
+    stds = np.asarray(stds)
     chis = np.asarray(chis)
-            
-    return(pars,covs,chis,gchi)
+    
+    # single data set fitting
+    if ndata == 1:
+        pars = pars[0]
+        stds = stds[0]
+        covs = covs[0]
+        chis = chis[0]
+    
+    return(pars,stds,covs,chis,gchi)
 
 # =========================================================================== #
-def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
+def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
                fixed=None,**kwargs):
     """
         Fit combined asymetry from bdata.
     
-        runs:           run number
-        
-        years:          year
-        
+        data:           bdata object
+
         fn:             function handle to fit
         
         omit:           string of space-separated bin ranges to omit
@@ -246,7 +251,6 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
     """
     
     # Get data input
-    data = bdata(run,year)
     x,y,dy = _get_asym(data,asym_mode,rebin=rebin,omit=omit)
             
     # check for values with error == 0. Omit these values. 
@@ -264,7 +268,11 @@ def fit_single(run,year,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c
     
     # p0
     if 'p0' not in kwargs:
-        kwargs['p0'] = np.ones(fn.__code__.co_argcount-1)
+        nargs = fn.__code__.co_argcount-1
+        if not nargs: 
+            raise RuntimeError('Unknown number of function arguments. '+\
+                               'Define p0 to resolve.')
+        kwargs['p0'] = np.ones(nargs)
     
     # fixed parameters
     did_fixed = False

@@ -3,7 +3,7 @@
 # Nov 2018
 
 from bfit.fitting.global_fitter import global_fitter
-from bdata import bdata
+import bdata as bd
 import numpy as np
 import collections
 
@@ -11,12 +11,9 @@ import collections
 class global_bdata_fitter(global_fitter):
     
     # ======================================================================= #
-    def __init__(self,runs,years,fn,shared,xlims=None,rebin=1,
-                 asym_mode='c',fixed=None):
+    def __init__(self,data,fn,shared,xlims=None,rebin=1,asym_mode='c',fixed=None):
         """
-            runs:       list of run numbers
-            
-            years:      list of years corresponding to run numbers, or int which applies to all
+            data:       list of bdata objects
             
             fn:         list of function handles to fit (or single which applies to all)
                         must specify inputs explicitly (do not do def fn(*par)!)
@@ -37,32 +34,33 @@ class global_bdata_fitter(global_fitter):
                         parameters in order presented, with the fixed 
                         parameters omitted.
             
-            asym_mode:  asymmetry type to calculate and fit (combined helicities only)
+            asym_mode:  asymmetry type to calculate and fit
         """
         
-        # Set years
-        if not isinstance(years,collections.Iterable):
-            years = [years]*len(runs)
+        # check input type
+        if type(data) in (bd.bdata,bd.bjoined):
+            data = [data]
+        ndata = len(data)
         
         # Set rebin
         if not isinstance(rebin,collections.Iterable):
-            rebin = [rebin]*len(runs)
+            rebin = [rebin]*ndata
         
         # Get asymmetry
-        data = [bdata(r,year=y).asym(asym_mode,rebin=re) for r,y,re in zip(runs,years,rebin)]
+        asym = np.asarray([d.asym(asym_mode,rebin=re) for d,re in zip(data,rebin)])
         
         # split into x,y,dy data sets
-        x = np.array([d[0] for d in data])
-        y = np.array([d[1] for d in data])
-        dy = np.array([d[2] for d in data])
+        x = asym[:,0]
+        y = asym[:,1]
+        dy = asym[:,2]
         
         # select subrange
         if xlims is not None:
             
             # check depth
             if len(np.array(xlims).shape) < 2:
-                xlims = [xlims for i in range(len(x))]
-            
+                xlims = [xlims]*ndata
+                            
             # initialize new inputs
             xnew = []
             ynew = []
