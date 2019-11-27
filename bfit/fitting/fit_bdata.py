@@ -91,7 +91,7 @@ def fit_bdata(data,fn,omit=None,rebin=None,shared=None,hist_select='',
     if omit is None:
         omit = ['']*ndata
     elif len(omit) < ndata:
-        omit = np.concatenate(omit,['']*(ndata-len(omit)))
+        omit = np.concatenate((omit,['']*(ndata-len(omit))))
         
     # get rebin
     if rebin is None:

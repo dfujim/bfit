@@ -2,7 +2,7 @@
 # Derek Fujimoto
 # Aug 2018
 
-from bfit.fitting.fit_bdata import fit_list
+from bfit.fitting.fit_bdata import fit_bdata
 import bfit.fitting.functions as fns
 from bfit.fitting.decay_31mg import fa_31Mg
 from functools import partial
@@ -100,8 +100,7 @@ class fitter(object):
         
         # gather list of data to fit 
         fn = []
-        runs = []
-        years = []
+        bdata_list = []
         p0 = []
         bounds = []
         omit = []
@@ -136,9 +135,8 @@ class fitter(object):
             else:                       
                 fn.append(self.get_fn(fn_name,ncomp,-1,life))
             
-            # get year and run
-            runs.append(dat.run)
-            years.append(dat.year)
+            # get bdata objects
+            bdata_list.append(dat)
             
             # get initial parameters
             p0.append(tuple(pdict[k][0] for k in keylist))
@@ -177,15 +175,15 @@ class fitter(object):
                 omit.append('')                
             
         # fit data
-        pars,covs,chis,gchi = fit_list(runs,years,fn,omit,rebin,sharelist,
-                                       npar=npar,hist_select=hist_select,p0=p0,
-                                       bounds=bounds,asym_mode=asym_mode,
-                                       fixed=fixedlist,xlims=xlims)
-        stds = [np.sqrt(np.diag(c)) for c in covs]
+        kwargs = {'p0':p0,'bounds':bounds}
+        pars,stds,covs,chis,gchi = fit_bdata(bdata_list,fn,omit,rebin,sharelist,
+                                       hist_select=hist_select,
+                                       asym_mode=asym_mode,fixed=fixedlist,
+                                       xlims=xlims,**kwargs)
         
         # collect results
-        return ({'.'.join(map(str,(d[0].year,d[0].run))):[keylist,p,s,c,f] \
-                    for d,p,s,c,f in zip(data_list,pars,stds,chis,fn)},gchi)
+        return ({'.'.join(map(str,(d.year,d.run))):[keylist,p,s,c,f] \
+                    for d,p,s,c,f in zip(bdata_list,pars,stds,chis,fn)},gchi)
 
     # ======================================================================= #
     def gen_param_names(self,fn_name,ncomp):

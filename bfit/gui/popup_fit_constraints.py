@@ -13,7 +13,7 @@ import pandas as pd
 import bdata as bd
 
 from bfit.backend.ConstrainedFunction import ConstrainedFunction as CstrFnGenerator
-from bfit.fitting.fit_bdata import fit_list
+from bfit.fitting.fit_bdata import fit_bdata
 from bfit.gui.template_fit_popup import template_fit_popup
 
 # ========================================================================== #
@@ -211,21 +211,20 @@ class popup_fit_constraints(template_fit_popup):
         years = [int(k.split('.')[0]) for k in keylist]
         npar = len(sharelist)
         bounds = [[l,h] for l,h in zip(blo,bhi)]
+        data = [bd.bdata(r,y) for r,y in zip(runs,years)]
+        kwargs = {'p0':p0,'bounds':bounds}
         
         # do the fit and kill fitting window
-        par,cov,chi,gchi = fit_list(runs=runs,
-                                    years=years,
-                                    fnlist=fitfns,
-                                    sharelist=sharelist,
-                                    npar=npar,
-                                    p0=p0,
-                                    bounds=bounds,
+        par,cov,std,chi,gchi = fit_bdata(
+                                    data=data,
+                                    fn=fitfns,
+                                    shared=sharelist,
                                     asym_mode='c',
                                     rebin=rebin,
                                     omit=omit,
                                     xlims=None,
-                                    hist_select=self.bfit.hist_select)
-        std = np.array(list(map(np.diag,cov)))**0.5
+                                    hist_select=self.bfit.hist_select,
+                                    **kwargs)
         
         # calculate original parameter equivalents
         for i,k in enumerate(keylist):
