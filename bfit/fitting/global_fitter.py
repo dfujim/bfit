@@ -128,15 +128,25 @@ class global_fitter(object):
         # shared parameters
         self.shared = np.asarray(shared)
         
-        # get number of data sets
+        # get number of input parameters
+        self.npar = len(shared)
+        
+        # test number of data sets
+        if not len(x) == len(y) == len(dy):
+            raise RuntimeError('Lengths of input data arrays do not match.\n'+\
+                'nsets: x, y, dy =  %d, %d, %d\n' % (len(x),len(y),len(dy)))            
         self.nsets = len(x)
+        
+        # remove points with zero error from data 
+        for i,(xdat,ydat,dydat) in enumerate(zip(x,y,dy)):
+            idx = dydat != 0
+            x[i] = xdat[idx]
+            y[i] = ydat[idx]
+            dy[i] = dydat[idx]
         
         # check if list of functions given 
         if not isinstance(fn,collections.Iterable):
             fn = [fn]*self.nsets
-        
-        # get number of input parameters
-        self.npar = len(shared)
         
         # check metadata
         if metadata is not None:
@@ -163,6 +173,12 @@ class global_fitter(object):
             fixed = np.zeros((self.nsets,self.npar)).astype(bool)
         
         fixed_flat = np.concatenate(fixed)
+        
+                # check that no shared parameters are fixed
+        shared_as_int = self.shared.astype(int)
+        for fix in fixed: 
+            if any(fix+shared_as_int>1):
+                raise RuntimeError('Cannot fix a shared parameter') 
         
         # ---------------------------------------------------------------------
         # Build fitting functions
@@ -193,24 +209,6 @@ class global_fitter(object):
         unq = unq[unq>=0]
         for i,u in enumerate(unq):
             sharing_links[sharing_links==u] = i
-        
-        # check that no shared parameters are fixed
-        shared_as_int = self.shared.astype(int)
-        for fix in fixed: 
-            if any(fix+shared_as_int>1):
-                raise RuntimeError('Cannot fix a shared parameter') 
-        
-        # test number of data sets
-        if not len(x) == len(y) == len(dy):
-            raise RuntimeError('Lengths of input data arrays do not match.\n'+\
-                'nsets: x, y, dy =  %d, %d, %d\n' % (len(x),len(y),len(dy)))            
-        
-        # remove points with zero error from data 
-        for i,(xdat,ydat,dydat) in enumerate(zip(x,y,dy)):
-            idx = dydat != 0
-            x[i] = xdat[idx]
-            y[i] = ydat[idx]
-            dy[i] = dydat[idx]
         
         # save results
         self.fn = fn
