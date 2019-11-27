@@ -215,7 +215,7 @@ class popup_fit_constraints(template_fit_popup):
         kwargs = {'p0':p0,'bounds':bounds}
         
         # do the fit and kill fitting window
-        par,cov,std,chi,gchi = fit_bdata(
+        par,std,cov,chi,gchi = fit_bdata(
                                     data=data,
                                     fn=fitfns,
                                     shared=sharelist,
