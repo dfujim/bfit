@@ -61,6 +61,9 @@ class global_fitter(object):
             fn                      list of fitting function handles
             fixed                   list of fixed variables (corresponds to input)
             
+            metadata                array of additional inputs, fixed for each data set
+                                    (if len(shared) < len(actual inputs))
+            
             npar                    number of parameters in input function
             nsets                   number of data sets
             
@@ -86,7 +89,7 @@ class global_fitter(object):
     ndraw_pts = 500             # number of points to draw fits with
     
     # ======================================================================= #
-    def __init__(self,x,y,dy,fn,shared,fixed=None):
+    def __init__(self,x,y,dy,fn,shared,fixed=None,metadata=None):
         """
             x,y:        2-list of data sets of equal length. 
                         fmt: [[a1,a2,...],[b1,b2,...],...]
@@ -105,20 +108,28 @@ class global_fitter(object):
                         fixed to p0 value (same length as p0). Returns best 
                         parameters in order presented, with the fixed 
                         parameters omitted.
+                        
+            metadata:   array of values to pass to fn which are fixed for each 
+                        data set (ex: the temperature of each data set). 
+                        format: len(metadata) = number of data sets. 
+                        
+                        number of parameters is set by len(shared), all 
+                        remaining inputs are expected to be metadata inputs
+                        function call: fn[i](x[i],*par[i],*metadata[i])
         """
+        # ---------------------------------------------------------------------
+        # Check and assign inputs
         
         # data types
         x = list(x)
         y = list(y)
         dy = list(dy)
         
+        # shared parameters
         self.shared = np.asarray(shared)
         
         # get number of data sets
         self.nsets = len(x)
-        
-        # ---------------------------------------------------------------------
-        # Build fitting functions
         
         # check if list of functions given 
         if not isinstance(fn,collections.Iterable):
@@ -126,6 +137,21 @@ class global_fitter(object):
         
         # get number of input parameters
         self.npar = len(shared)
+        
+        # check metadata
+        if metadata is not None:
+            
+            # check for not enough data
+            if len(metadata) != self.nsets:
+                raise RuntimeError('metadata has the wrong shape: len(metadata) = len(x)')  
+                
+            # check for 1D input
+            metadata = np.asarray(metadata)
+            if len(metadata.shape) == 1:
+                metadata = np.asarray([metadata]).T
+        else:
+            metadata = [[]]*self.nsets
+        self.metadata = metadata
         
         # expand fixed
         if fixed is not None: 
@@ -137,6 +163,9 @@ class global_fitter(object):
             fixed = np.zeros((self.nsets,self.npar)).astype(bool)
         
         fixed_flat = np.concatenate(fixed)
+        
+        # ---------------------------------------------------------------------
+        # Build fitting functions
         
         # get linking indexes    
         sharing_links = [] # [input index] organized by output index position
@@ -236,6 +265,7 @@ class global_fitter(object):
             # get data
             x,y,dy = self.x[i], self.y[i], self.dy[i]
             f = self.fn[i]
+            md = self.metadata[i]
             
             # make new figure
             if mode in ['new','n']:            
@@ -262,7 +292,7 @@ class global_fitter(object):
             # draw fit
             xfit = np.linspace(min(x),max(x),self.ndraw_pts)
             xdraw = np.linspace(min(x_draw),max(x_draw),self.ndraw_pts)
-            plt.plot(xdraw,f(xfit,*self.par_runwise[i]),color=color,zorder=10)
+            plt.plot(xdraw,f(xfit,*self.par_runwise[i],*md),color=color,zorder=10)
         
             # plot elements
             plt.ylabel(ylabel)
@@ -361,9 +391,10 @@ class global_fitter(object):
         # make the master function 
         x = self.x
         rng = range(self.nsets)
+        metadata = self.metadata
         def master_fn(x_unused,*par):            
             inputs = np.take(np.hstack((par,p0_flat_inv)),sharing_links)
-            return np.concatenate([fn[i](x[i],*inputs[i]) for i in rng])
+            return np.concatenate([fn[i](x[i],*inputs[i],*metadata[i]) for i in rng])
         
         self.master_fn = master_fn
           
@@ -425,12 +456,12 @@ class global_fitter(object):
         dof = len(self.xcat)-len(self.par)
         self.chi_glbl = np.sum(np.square((self.ycat-\
                       self.master_fn(self.xcat,*self.par))/self.dycat))/dof
-    
+            
         # single fn chisq
         self.chi = []
-        for x,y,dy,p,f,fx in zip(self.x,self.y,self.dy,self.par_runwise,self.fn,self.fixed):
+        for x,y,dy,p,f,fx,m in zip(self.x,self.y,self.dy,self.par_runwise,self.fn,self.fixed,self.metadata):
             dof = len(x)-self.npar+sum(fx)
-            self.chi.append(np.sum(np.square((y-f(x,*p))/dy))/dof)
+            self.chi.append(np.sum(np.square((y-f(x,*p,*m))/dy))/dof)
         
         return (self.chi_glbl,self.chi)
 
