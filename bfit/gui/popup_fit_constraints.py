@@ -138,7 +138,7 @@ class popup_fit_constraints(template_fit_popup):
                 eqn[i] = eqn[i].replace('1_T1','lambda1')
                 
         # make constrained functions
-        cgen= CstrFnGenerator(self.bfit,alldef,eqn,allpar,self.parnames)
+        cgen= CstrFnGenerator(alldef,eqn,allpar,self.parnames)
         
         # get the functions and initial parameters
         fit_files = self.bfit.fit_files

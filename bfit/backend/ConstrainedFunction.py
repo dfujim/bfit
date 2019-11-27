@@ -7,11 +7,11 @@ import numpy as np
 # =========================================================================== # 
 class ConstrainedFunction(object):
     """
-        bfit
         p1
         p2
         constraints
         defined
+        equation
     """
     
     # keywords used to identify variables
@@ -31,15 +31,17 @@ class ConstrainedFunction(object):
               }    
                        
     # ======================================================================= # 
-    def __init__(self,bfit,defined,equation,newpar,oldpar):
+    def __init__(self,defined,equation,newpar,oldpar):
         """
+            defined:        parameters which the equations define (equation LHS)
+                            in old parameter order
             equation:       list of strings corresponding to equation RHS in old 
                             parameter order
             newpar:         list of strings corresponding to new function 
                             parameters in order
+            oldpar:         list of strings corresponding to old function 
+                            parameters in order
         """
-
-        self.bfit = bfit
         self.header = 'lambda %s : ' % (','.join(newpar))
         self.oldpar = oldpar
         
