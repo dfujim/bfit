@@ -11,7 +11,7 @@ import collections
 class global_bdata_fitter(global_fitter):
     
     # ======================================================================= #
-    def __init__(self,runs,years,fn,sharelist,npar=-1,xlims=None,rebin=1,
+    def __init__(self,runs,years,fn,shared,xlims=None,rebin=1,
                  asym_mode='c',fixed=None):
         """
             runs:       list of run numbers
@@ -22,14 +22,10 @@ class global_bdata_fitter(global_fitter):
                         must specify inputs explicitly (do not do def fn(*par)!)
                         must have len(fn) = len(runs) if list
                         
-            sharelist:  list of bool to indicate which parameters are shared. 
+            shared:     list of bool to indicate which parameters are shared. 
                         True if shared
                         len = number of parameters.
                         
-            npar:       number of free parameters in each fitting function.
-                        Set if number of parameters is not intuitable from 
-                            function code.            
-            
             xlims:      list of 2-tuples for (low,high) bounds on fitting range 
                             based on x values. If list is not depth 2, use this 
                             range on all runs.
@@ -85,4 +81,4 @@ class global_bdata_fitter(global_fitter):
             dy = np.array(dynew)
             
         # intialize
-        super(global_bdata_fitter,self).__init__(x,y,dy,fn,sharelist,npar,fixed)
+        super(global_bdata_fitter,self).__init__(x,y,dy,fn,shared,fixed)

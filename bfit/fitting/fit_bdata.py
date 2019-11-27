@@ -10,7 +10,7 @@ from tqdm import tqdm
 from bfit.fitting.global_bdata_fitter import global_bdata_fitter
 
 # ========================================================================== #
-def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
+def fit_list(runs,years,fnlist,omit=None,rebin=None,shared=None,npar=-1,
               hist_select='',xlims=None,asym_mode='c',fixed=None,**kwargs):
     """
         Fit combined asymetry from bdata.
@@ -26,7 +26,7 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         omit:           list of strings of space-separated bin ranges to omit
         rebin:          list of rebinning of data prior to fitting. 
         
-        sharelist:      list of bool to indicate which parameters are shared. 
+        shared:      list of bool to indicate which parameters are shared. 
                         True if shared
                         len = number of parameters.
         
@@ -78,9 +78,9 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
     # get fnlist again
     fnlist.extend([fnlist[-1] for i in range(nruns-len(fnlist))])
 
-    # get sharelist
-    if sharelist is None:
-        sharelist = np.zeros(npar,dtype=bool)
+    # get shared
+    if shared is None:
+        shared = np.zeros(npar,dtype=bool)
 
     # get omit
     if omit is None:
@@ -110,13 +110,13 @@ def fit_list(runs,years,fnlist,omit=None,rebin=None,sharelist=None,npar=-1,
         p0 = [np.ones(npar)]*nruns
 
     # fit globally -----------------------------------------------------------
-    if any(sharelist) and len(runs)>1:
+    if any(shared) and len(runs)>1:
         print('Running shared parameter fitting...')
-        g = global_bdata_fitter(runs,years,fnlist,sharelist,npar,xlims,
+        g = global_bdata_fitter(runs,years,fnlist,shared,xlims,
                                 asym_mode=asym_mode,rebin=rebin,fixed=fixed)
         g.fit(p0=p0,**kwargs)
         gchi,chis = g.get_chi() # returns global chi, individual chi
-        pars,covs = g.get_par()
+        pars,covs,stds = g.get_par()
         
     # fit runs individually --------------------------------------------------
     else:
