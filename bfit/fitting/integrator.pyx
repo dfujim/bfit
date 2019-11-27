@@ -23,14 +23,14 @@ cdef extern from 'integration_fns.h':
         double lifetime;
         Integrator(double);
         double StrExp(double,double,double,double) except +;
-        
+
 # =========================================================================== #
-# Integrator class
 cdef class PulsedFns:
     cdef double life            # probe lifetime in s
     cdef double pulse_len       # length of beam on in s
+    cdef Integrator* intr        # integrator
 
-# =========================================================================== #
+    # ======================================================================= #
     def __init__(self,lifetime,pulse_len):
         """
             Inputs:
@@ -39,8 +39,16 @@ cdef class PulsedFns:
         """
         self.life = lifetime
         self.pulse_len = pulse_len
+        self.intr = new Integrator(lifetime)
+    
+    # ======================================================================= #
+    def __dealloc__(self):
+        """
+            Stop c++ memory leaks
+        """
+        del self.intr
 
-# =========================================================================== #
+    # ======================================================================= #
     @cython.boundscheck(False)  # some speed up in exchange for instability
     cpdef exp(self,double[:] time, double Lambda):
         """
@@ -87,7 +95,7 @@ cdef class PulsedFns:
         
         return out
 
-# =========================================================================== #
+    # ======================================================================= #
     @cython.boundscheck(False)  # some speed up in exchange for instability
     cpdef str_exp(self,double[:] time, double Lambda, double Beta):
         """
@@ -113,11 +121,9 @@ cdef class PulsedFns:
         cdef double prefac_post
         cdef double life = self.life
         cdef double pulse_len = self.pulse_len
+        cdef Integrator* intr = self.intr
         
         prefac_post = life*(1.-exp(-pulse_len/life))
-        
-        # make integrator
-        intr = new Integrator(life)
         
         # Calculate pulsed str. exponential
         for i in range(n):    
@@ -139,5 +145,4 @@ cdef class PulsedFns:
             # save result
             out_arr[i] = out
         
-        del intr
         return out_arr
