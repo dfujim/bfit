@@ -55,6 +55,7 @@ class fit_files(object):
             
             n_component:    number of fitting components (IntVar)
             n_component_box:Spinbox for number of fitting components
+            par_label       StringVar, label for plotting parameter set
             plt:            self.bfit.plt
             pop_fitres:     modelling popup, for continuity between button presses
             probe_label:    Label for probe species
@@ -280,19 +281,21 @@ class fit_files(object):
         model_fit_button = ttk.Button(button_frame,text='Fit a\nModel',
                                       command=self.do_fit_model)
         
-        
         # menus for x and y values
         ttk.Label(results_frame,text="x axis:").grid(column=0,row=1)
         ttk.Label(results_frame,text="y axis:").grid(column=0,row=2)
         ttk.Label(results_frame,text="Annotation:").grid(column=0,row=3)
+        ttk.Label(results_frame,text="Label:").grid(column=0,row=4)
         
         self.xaxis = StringVar()
         self.yaxis = StringVar()
         self.annotation = StringVar()
+        self.par_label = StringVar()
         
         self.xaxis.set('')
         self.yaxis.set('')
         self.annotation.set('')
+        self.par_label.set('')
         
         self.xaxis_combobox = ttk.Combobox(results_frame,textvariable=self.xaxis,
                                       state='readonly',width=19)
@@ -301,6 +304,8 @@ class fit_files(object):
         self.annotation_combobox = ttk.Combobox(results_frame,
                                       textvariable=self.annotation,
                                       state='readonly',width=19)
+        par_label_entry = ttk.Entry(results_frame,
+                                    textvariable=self.par_label,width=21)
         
         # gridding
         button_frame.grid(column=0,row=0,columnspan=2)
@@ -313,7 +318,7 @@ class fit_files(object):
         self.xaxis_combobox.grid(column=1,row=1,pady=5)
         self.yaxis_combobox.grid(column=1,row=2,pady=5)
         self.annotation_combobox.grid(column=1,row=3,pady=5)
-        
+        par_label_entry.grid(column=1,row=4,pady=5)
         
         # save/load state -----------------------
         state_frame = ttk.Labelframe(fit_data_tab,text='Program State',pad=5)
@@ -1012,9 +1017,10 @@ class fit_files(object):
         xdraw = self.xaxis.get()
         ydraw = self.yaxis.get()
         ann = self.annotation.get()
+        label = self.par_label.get()
         
-        self.logger.info('Draw fit parameters "%s" vs "%s" with annotation "%s"',
-                          ydraw,xdraw,ann)
+        self.logger.info('Draw fit parameters "%s" vs "%s" with annotation "%s"'+\
+                         ' and label %s',ydraw,xdraw,ann,label)
         
         # get plottable data
         try:
@@ -1084,7 +1090,8 @@ class fit_files(object):
             ax.get_yaxis().get_major_formatter().set_useOffset(False)
             
         # draw
-        f = self.plt.errorbar(figstyle,xvals,yvals,xerr=xerrs,yerr=yerrs,fmt='.')
+        f = self.plt.errorbar(figstyle,xvals,yvals,xerr=xerrs,yerr=yerrs,
+                              label=label,**self.bfit.style)
         self._annotate(xvals,yvals,ann,color=f[0].get_color())
         
         # format date x axis
@@ -1094,6 +1101,7 @@ class fit_files(object):
         self.plt.xlabel(figstyle,xdraw)
         self.plt.ylabel(figstyle,ydraw)
         self.plt.tight_layout(figstyle)
+        if label: self.plt.legend(figstyle,fontsize='x-small')
         
         # bring window to front
         raise_window()
