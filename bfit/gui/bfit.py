@@ -1293,6 +1293,9 @@ class bfit(object):
                 del ax.lines[:]
                 del ax.containers[:]
                 
+            # reset the color cycle
+            ax.set_prop_cycle(None)
+                
             # reset
             ax.draw_objs = {}
         
