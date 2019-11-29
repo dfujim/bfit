@@ -1274,9 +1274,11 @@ class bfit(object):
             
             # check for id array
             if hasattr(ax,'draw_objs'):
+                
+                # remove everything
                 for item_list in ax.draw_objs.values():
-                    
                     for item in item_list:
+                        
                         # remove line
                         try:
                             item[0].remove()
@@ -1288,7 +1290,7 @@ class bfit(object):
                                 for i in item[1]:   i.remove()
                                 for i in item[2]:   i.remove()
                             del item
-                        
+                
                 del ax.draw_objs
                 del ax.lines[:]
                 del ax.containers[:]
