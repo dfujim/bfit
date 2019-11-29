@@ -6,6 +6,7 @@ from bfit.fitting.fit_bdata import fit_bdata
 import bfit.fitting.functions as fns
 from bfit.fitting.decay_31mg import fa_31Mg
 from functools import partial
+import collections
 import numpy as np
 import bdata as bd
 
@@ -182,7 +183,12 @@ class fitter(object):
                                        xlims=xlims,**kwargs)
         
         # collect results
-        return ({'.'.join(map(str,(d.year,d.run))):[keylist,p,s,c,f] \
+        if not isinstance(chis,collections.Iterable):   # single run
+            d = bdata_list[0]
+            return ({'.'.join(map(str,(d.year,d.run))):\
+                                        [keylist,pars,stds,chis,fn[0]]},gchi)
+        else:                                           # multiple runs    
+            return ({'.'.join(map(str,(d.year,d.run))):[keylist,p,s,c,f] \
                     for d,p,s,c,f in zip(bdata_list,pars,stds,chis,fn)},gchi)
 
     # ======================================================================= #
