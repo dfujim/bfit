@@ -932,34 +932,8 @@ class fit_files(object):
         label = drawargs['label']
         
         # set drawing style
-        if style == 'new':
-            self.plt.figure(figstyle)
-            ax = self.plt.gca(figstyle)
-            ax.data_id = []    
-            ax.lines_id = []    
-            
-        if style == 'stack':
-            ax = self.plt.gca(figstyle)
-            
-            # check for id array
-            if not hasattr(ax,'data_id'):
-                ax.lines_id = []
-            else:
-                while data.id+'fit' in ax.lines_id:
-                    idxl = ax.lines_id.index(data.id+'fit')
-                    
-                    # clear lines 
-                    del ax.lines[idxl]              
-                    
-                    # clear labels
-                    del ax.lines_id[idxl]
-            
-        elif style == 'redraw':
-            ylim = ax.get_ylim()
-            xlim = ax.get_xlim()
-            self.plt.clf(figstyle)
-            self.plt.ylim(figstyle,*ylim)
-            self.plt.xlim(figstyle,*xlim)
+        draw_id = data.id+'fit'
+        self.bfit.remove_drawn_object(figstyle,draw_id)
             
         # set drawing style arguments
         for k in self.bfit.style:
@@ -991,8 +965,7 @@ class fit_files(object):
             fitxx = fitx
             xlabel = self.xlabel_dict[self.mode]
     
-        self.plt.plot(figstyle,fitxx,fn(fitx,*fit_par),zorder=10,**drawargs)
-        ax.lines_id.append(data.id+'fit')        
+        self.plt.plot(figstyle,draw_id,fitxx,fn(fitx,*fit_par),zorder=10,**drawargs)
         
         # plot elements
         self.plt.ylabel(figstyle,'Asymmetry')
@@ -1060,14 +1033,20 @@ class fit_files(object):
                 if type(a) in [float,np.float64]:
                     ann[i] = number_string % np.around(a,self.bfit.rounding)
             
-        # get draw style
-        style = self.bfit.draw_style.get()
-        
-        if style == 'new':
-            self.plt.figure(figstyle)
-        elif style == 'redraw':
-            if self.plt.plots[figstyle]:
-                self.plt.clf(figstyle)
+        # get default data_id
+        if label:   
+            draw_id = label
+        else:
+            
+            draw_id = 'Set 0'
+            
+            if self.bfit.draw_style.get() == 'stack':
+                ax = self.plt.gca(figstyle)
+                if hasattr(ax,'draw_objs'):
+                    draw_id = 'Set %d' % len(ax.draw_objs.keys())    
+            
+        # remove objects from figure 
+        self.bfit.remove_drawn_object(figstyle,draw_id)
         
         # get axis 
         ax = self.plt.gca(figstyle)
@@ -1090,8 +1069,8 @@ class fit_files(object):
             ax.get_yaxis().get_major_formatter().set_useOffset(False)
             
         # draw
-        f = self.plt.errorbar(figstyle,xvals,yvals,xerr=xerrs,yerr=yerrs,
-                              label=label,**self.bfit.style)
+        f = self.plt.errorbar(figstyle,draw_id,xvals,yvals,xerr=xerrs,yerr=yerrs,
+                              label=draw_id,**self.bfit.style)
         self._annotate(xvals,yvals,ann,color=f[0].get_color())
         
         # format date x axis
@@ -1101,7 +1080,7 @@ class fit_files(object):
         self.plt.xlabel(figstyle,xdraw)
         self.plt.ylabel(figstyle,ydraw)
         self.plt.tight_layout(figstyle)
-        if label: self.plt.legend(figstyle,fontsize='x-small')
+        self.plt.legend(figstyle,fontsize='x-small')
         
         # bring window to front
         raise_window()
@@ -1700,7 +1679,7 @@ class fit_files(object):
         # set style to redraw
         current_active = self.plt.active['param']
         current_style = self.bfit.draw_style.get()
-        self.bfit.draw_style.set('redraw')
+        self.bfit.draw_style.set('stack')
         
         # get current labels
         current_xlab = self.xaxis.get()

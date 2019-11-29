@@ -45,6 +45,9 @@ from bfit.backend.PltTracker import PltTracker
 from bfit.backend.raise_window import raise_window
 import bfit.backend.colors as colors
 
+# interactive plotting
+plt.ion()
+
 __doc__="""
     BNMR/BNQR data visualization and curve fitting.
     
@@ -543,7 +546,6 @@ class bfit(object):
         
         # get draw setting 
         draw_style = self.draw_style
-        plt.ion()
         
         # default label value
         if 'label' not in drawargs.keys():
@@ -557,61 +559,9 @@ class bfit(object):
                 drawargs[k] = self.style[k]
         
         # make new window
-        if draw_style.get() == 'new':
-            self.plt.figure(figstyle)
-            ax = self.plt.gca(figstyle)
-            ax.data_id = []    
-            ax.lines_id = []    
-        
-        # get index of label in run and delete that run
-        elif draw_style.get() == 'stack':
-            ax = self.plt.gca(figstyle)
-        
-            # check for id array
-            if not hasattr(ax,'data_id'):
-                ax.data_id = []
-                ax.lines_id = []
-            else:
-                while data.id in ax.data_id:
-                    idx = ax.data_id.index(data.id)
-                    idxl = ax.lines_id.index(data.id)
-                    
-                    # clear lines 
-                    del ax.lines[idxl]              
-                    
-                    # clear errorbar object 
-                    if idx < len(ax.collections):   del ax.collections[idx]       
-                    
-                    # clear errorbar object
-                    if idx < len(ax.containers):    del ax.containers[idx]         
-                    
-                    # clear labels
-                    del ax.data_id[idx]
-                    del ax.lines_id[idxl]
-
-                # clear excess lines - not fits
-                dellist = [i for i,id in enumerate(ax.lines_id) \
-                                      if id == 'line']
-                dellist = sorted(dellist)[::-1]
-                for i in dellist:
-                    del ax.lines_id[i]
-                    del ax.lines[i]
-
-        # delete all runs
-        elif draw_style.get() == 'redraw':
-            ax = self.plt.gca(figstyle)
-
-            # check for id array
-            if not hasattr(ax,'data_id'):
-                ax.data_id = []
-                ax.lines_id = []
-            else:
-                del ax.lines[:]              # clear lines 
-                del ax.collections[:]        # clear errorbar object 
-                del ax.containers[:]         # clear errorbar object
-                del ax.data_id[:]
-                del ax.lines_id[:]
-                
+        self.remove_drawn_object(figstyle,data.id)
+        self.remove_drawn_object(figstyle,'line')
+        ax = self.plt.gca(figstyle)
         ax.get_xaxis().get_major_formatter().set_useOffset(False)
         
         # get asymmetry: raw scans
@@ -623,15 +573,12 @@ class bfit(object):
             idx_n = a.n[0]!=0
             
             xlabel = 'Bin'
-            self.plt.errorbar(figstyle,x[idx_p],a.p[0][idx_p],a.p[1][idx_p],
+            self.plt.errorbar(figstyle,data.id,x[idx_p],a.p[0][idx_p],a.p[1][idx_p],
                     label=label+"($+$)",**drawargs)
-            ax.data_id.append(data.id)
-            ax.lines_id.append(data.id)
-            self.plt.errorbar(figstyle,x[idx_n],a.n[0][idx_n],a.n[1][idx_n],
+            
+            self.plt.errorbar(figstyle,data.id,x[idx_n],a.n[0][idx_n],a.n[1][idx_n],
                     label=label+"($-$)",**drawargs)
-            ax.data_id.append(data.id)
-            ax.lines_id.append(data.id)
-        
+            
         # do 2e mode
         elif data.mode == '2e':
             
@@ -666,37 +613,33 @@ class bfit(object):
                 
                     z = a.raw_c[0].transpose()
                     z = np.hstack(z)
-                    ax.plot(x,y,z,label=label,**drawargs)
-                    ax.data_id = data.id
-                    ax.lines_id = data.id
+                    fig = ax.plot(x,y,z,label=label,**drawargs)
+                    
                     
                 elif asym_type == "raw_h":
                 
                     z = a.raw_p[0].transpose()
                     z = np.hstack(z)
-                    ax.plot(x,y,z,label=label+' ($+$)',**drawargs)
-                    ax.data_id = data.id
-                    ax.lines_id = data.id
+                    fig = ax.plot(x,y,z,label=label+' ($+$)',**drawargs)
+                    
                     
                     z = a.raw_n[0].transpose()
                     z = np.hstack(z)
-                    ax.plot(x,y,z,label=label+' ($-$)',**drawargs)
-                    ax.data_id = data.id
-                    ax.lines_id = data.id
+                    fig = ax.plot(x,y,z,label=label+' ($-$)',**drawargs)
+                    
+                    
                 
                 elif asym_type == "raw_hs":
                 
                     z = (a.raw_p[0]-a.raw_p[0][0]).transpose()
                     z = np.hstack(z)
-                    ax.plot(x,y,z,label=label+' ($+$)',**drawargs)
-                    ax.data_id = data.id
-                    ax.lines_id = data.id
+                    fig = ax.plot(x,y,z,label=label+' ($+$)',**drawargs)
+                    
                     
                     z = (a.raw_n[0]-a.raw_n[0][0]).transpose()
                     z = np.hstack(z)
-                    ax.plot(x,y,z,label=label+' ($-$)',**drawargs)
-                    ax.data_id = data.id
-                    ax.lines_id = data.id
+                    fig = ax.plot(x,y,z,label=label+' ($-$)',**drawargs)
+                    
                     
                 # plot elements
                 ax.set_xlabel('Time (s)')
@@ -712,53 +655,45 @@ class bfit(object):
             else:
                 f = a.freq*self.freq_unit_conv
                 if asym_type == 'sl_c':
-                    self.plt.errorbar(figstyle,f,a.sl_c[0],a.sl_c[1],label=label,
+                    self.plt.errorbar(figstyle,data.id,f,a.sl_c[0],a.sl_c[1],label=label,
                                  **drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
+                    
                 elif asym_type == 'dif_c':
-                    self.plt.errorbar(figstyle,f,a.dif_c[0],a.dif_c[1],label=label,
+                    self.plt.errorbar(figstyle,data.id,f,a.dif_c[0],a.dif_c[1],label=label,
                                  **drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
+                    
                 elif asym_type == 'sl_h':
-                    self.plt.errorbar(figstyle,f,a.sl_p[0],a.sl_p[1],
+                    self.plt.errorbar(figstyle,data.id,f,a.sl_p[0],a.sl_p[1],
                                  label=label+' ($+$)',**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
+                    
                                  
-                    self.plt.errorbar(figstyle,f,a.sl_n[0],a.sl_n[1],
+                    self.plt.errorbar(figstyle,data.id,f,a.sl_n[0],a.sl_n[1],
                                  label=label+' ($-$)',**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
+                    
                 elif asym_type == 'dif_h':
-                    self.plt.errorbar(figstyle,f,a.dif_p[0],a.dif_p[1],
+                    self.plt.errorbar(figstyle,data.id,f,a.dif_p[0],a.dif_p[1],
                                  label=label+' ($+$)',**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
-                    self.plt.errorbar(figstyle,f,a.dif_n[0],a.dif_n[1],
+                    
+                    self.plt.errorbar(figstyle,data.id,f,a.dif_n[0],a.dif_n[1],
                                  label=label+' ($-$)',**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
+                    
                 elif asym_type == 'sl_hs':
-                    self.plt.errorbar(figstyle,f,a.sl_p[0]-a.sl_p[0][0],a.sl_p[1],
+                    self.plt.errorbar(figstyle,data.id,f,a.sl_p[0]-a.sl_p[0][0],a.sl_p[1],
                                  label=label+' ($+$)',**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
+                    
                                  
-                    self.plt.errorbar(figstyle,f,a.sl_n[0]-a.sl_n[0][0],a.sl_n[1],
+                    self.plt.errorbar(figstyle,data.id,f,a.sl_n[0]-a.sl_n[0][0],a.sl_n[1],
                                  label=label+' ($-$)',**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
+                    
+                    
                 elif asym_type == 'dif_hs':
-                    self.plt.errorbar(figstyle,f,a.dif_p[0]-a.dif_p[0][0],a.dif_p[1],
+                    self.plt.errorbar(figstyle,data.id,f,a.dif_p[0]-a.dif_p[0][0],a.dif_p[1],
                                  label=label+' ($+$)',**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
-                    self.plt.errorbar(figstyle,f,a.dif_n[0]-a.dif_n[0][0],a.dif_n[1],
+                    
+                    
+                    self.plt.errorbar(figstyle,data.id,f,a.dif_n[0]-a.dif_n[0][0],a.dif_n[1],
                                  label=label+' ($-$)',**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
+                    
                     
                 self.plt.xlabel(figstyle,self.xlabel_dict[data.mode] % self.freq_units)
                 
@@ -804,16 +739,11 @@ class bfit(object):
                 avg = np.mean(ap[tag_cmb]+an[tag_cmb])/2
                 
                 # draw
-                self.plt.errorbar(figstyle,x[tag_p],ap[tag_p],a.p[1][tag_p],label=label+" ($+$)",**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
-                
-                self.plt.errorbar(figstyle,x[tag_n],an[tag_n],a.n[1][tag_n],label=label+" ($-$)",**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
-                
-                self.plt.axhline(figstyle,avg,color='k',linestyle='--')
-                ax.lines_id.append('line')
+                self.plt.errorbar(figstyle,data.id,x[tag_p],ap[tag_p],
+                                a.p[1][tag_p],label=label+" ($+$)",**drawargs)
+                self.plt.errorbar(figstyle,data.id,x[tag_n],an[tag_n],
+                            a.n[1][tag_n],label=label+" ($-$)",**drawargs)
+                self.plt.axhline(figstyle,'line',avg,color='k',linestyle='--')
                 
             # plot positive helicity
             elif asym_type == 'p':
@@ -823,10 +753,9 @@ class bfit(object):
                 tag = ap!=0
                 
                 # draw
-                self.plt.errorbar(figstyle,x[tag],ap[tag],a.p[1][tag],label=label+" ($+$)",**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
-            
+                self.plt.errorbar(figstyle,data.id,x[tag],ap[tag],a.p[1][tag],
+                                        label=label+" ($+$)",**drawargs)
+                
             # plot negative helicity
             elif asym_type == 'n':
                 
@@ -835,9 +764,8 @@ class bfit(object):
                 tag = an!=0
                 
                 # draw
-                self.plt.errorbar(figstyle,x[tag],an[tag],a.n[1][tag],label=label+" ($-$)",**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
+                self.plt.errorbar(figstyle,data.id,x[tag],an[tag],a.n[1][tag],
+                                        label=label+" ($-$)",**drawargs)
                 
             # plot split helicities, shifted by baseline
             elif asym_type == 'hs':
@@ -855,16 +783,11 @@ class bfit(object):
                 ap -= ap[loc]
                 an -= an[loc]
                 
-                self.plt.errorbar(figstyle,x[tag_p],ap,a.p[1][tag_p],
+                self.plt.errorbar(figstyle,data.id,x[tag_p],ap,a.p[1][tag_p],
                         label=label+" ($+$)",**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
-                
-                self.plt.errorbar(figstyle,x[tag_n],an,a.n[1][tag_n],
+                self.plt.errorbar(figstyle,data.id,x[tag_n],an,a.n[1][tag_n],
                         label=label+" ($-$)",**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
-            
+                
             # plot split helicities, flipped about the average
             elif asym_type == 'hm':
                 
@@ -877,18 +800,11 @@ class bfit(object):
             
                 avg = np.mean(ap[tag_cmb]+an[tag_cmb])/2
                 
-                self.plt.errorbar(figstyle,x[tag_p],a.p[0][tag_p],a.p[1][tag_p],
+                self.plt.errorbar(figstyle,data.id,x[tag_p],a.p[0][tag_p],a.p[1][tag_p],
                         label=label+" ($+$)",**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
-                
-                self.plt.errorbar(figstyle,x[tag_n],2*avg-a.n[0][tag_n],a.n[1][tag_n],
+                self.plt.errorbar(figstyle,data.id,x[tag_n],2*avg-a.n[0][tag_n],a.n[1][tag_n],
                         label=label+" ($-$)",**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
-                
-                self.plt.axhline(figstyle,avg,color='k',linestyle='--')
-                ax.lines_id.append('line')
+                self.plt.axhline(figstyle,'line',avg,color='k',linestyle='--')
             
             # plot split helicities, flipped about the average, find the largest 
             elif asym_type == 'hp':
@@ -924,31 +840,20 @@ class bfit(object):
                 print('Max asymmetry is %f at V = %f V' % (largest,vmax))
                 
                 # draw    
-                self.plt.errorbar(figstyle,x[tag_p],ap,a.p[1][tag_p],
+                self.plt.errorbar(figstyle,data.id,x[tag_p],ap,a.p[1][tag_p],
                                   label=label+" ($+$)",**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
-                
-                self.plt.errorbar(figstyle,x[tag_n],an,a.n[1][tag_n],
+                self.plt.errorbar(figstyle,data.id,x[tag_n],an,a.n[1][tag_n],
                                   label=label+" ($-$)",**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
-                
-                
-                self.plt.axhline(figstyle,largest,color='k',linestyle='--')
-                self.plt.axvline(figstyle,vmax,color='k',linestyle='--')
+                self.plt.axhline(figstyle,'line',largest,color='k',linestyle='--')
+                self.plt.axvline(figstyle,'line',vmax,color='k',linestyle='--')
                 self.plt.text(figstyle,vmax+0.5,largest+0.0001,'%g V' % vmax)
-                ax.lines_id.append('line')
-                ax.lines_id.append('line')
                 
             # plot comined helicities
             elif asym_type == 'c':
                 tag = a.c[0]!=0 # remove zero asym
-                self.plt.errorbar(figstyle,x[tag],a.c[0][tag],a.c[1][tag],
+                self.plt.errorbar(figstyle,data.id,x[tag],a.c[0][tag],a.c[1][tag],
                                   label=label,**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
-                
+                         
             # plot combined helicities, shifted by baseline
             elif asym_type == 'cs':
                 
@@ -962,9 +867,7 @@ class bfit(object):
                 loc = np.where(x==min(x))[0][0]
                 ac -= ac[loc]
                 
-                self.plt.errorbar(figstyle,x,ac,a.c[1][tag],label=label,**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
+                self.plt.errorbar(figstyle,data.id,x,ac,a.c[1][tag],label=label,**drawargs)
                 
             # attempting to draw raw scans unlawfully
             elif asym_type == 'r':
@@ -974,9 +877,7 @@ class bfit(object):
             elif asym_type == 'ad':
                 a = data.asym('adif',rebin=rebin,hist_select=self.hist_select,
                               nbm=self.use_nbm.get())
-                self.plt.errorbar(figstyle,*a,label=label,**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
+                self.plt.errorbar(figstyle,data.id,*a,label=label,**drawargs)
                 self.plt.ylabel(figstyle,r'$N_\alpha/N_\beta$')
                 
             # draw normalized alpha diffusion
@@ -995,9 +896,7 @@ class bfit(object):
                 a[1] /= a0
                 a[2] /= a0
                 
-                self.plt.errorbar(figstyle,*a,label=label,**drawargs)
-                ax.data_id.append(data.id)
-                ax.lines_id.append(data.id)
+                self.plt.errorbar(figstyle,data.id,*a,label=label,**drawargs)
                 self.plt.ylabel(figstyle,r'$N_\alpha/N_\beta$ (Normalized by t=0)')
                 
             # draw alpha tagged runs
@@ -1008,38 +907,26 @@ class bfit(object):
                 t = a.time_s
                 
                 if asym_type == 'at_c':
-                    self.plt.errorbar(figstyle,t,a.c_wiA[0],a.c_wiA[1],
+                    self.plt.errorbar(figstyle,data.id,t,a.c_wiA[0],a.c_wiA[1],
                                  label=label+r" $\alpha$",**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
                     
                 elif asym_type == 'nat_c':
-                    self.plt.errorbar(figstyle,t,a.c_noA[0],a.c_noA[1],
+                    self.plt.errorbar(figstyle,data.id,t,a.c_noA[0],a.c_noA[1],
                                  label=label+r" !$\alpha$",**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
-                                 
-                elif asym_type == 'at_h':
-                    self.plt.errorbar(figstyle,t,a.p_wiA[0],a.p_wiA[1],
-                                 label=label+r" $\alpha$ ($+$)",**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
                     
-                    self.plt.errorbar(figstyle,t,a.n_wiA[0],a.n_wiA[1],
+                elif asym_type == 'at_h':
+                    self.plt.errorbar(figstyle,data.id,t,a.p_wiA[0],a.p_wiA[1],
+                                 label=label+r" $\alpha$ ($+$)",**drawargs)
+                    
+                    self.plt.errorbar(figstyle,data.id,t,a.n_wiA[0],a.n_wiA[1],
                                  label=label+r" $\alpha$ ($-$)",**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
                     
                 elif asym_type == 'nat_h':
-                    self.plt.errorbar(figstyle,t,a.p_noA[0],a.p_noA[1],
+                    self.plt.errorbar(figstyle,data.id,t,a.p_noA[0],a.p_noA[1],
                                  label=label+r" !$\alpha$ ($+$)",**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
                     
-                    self.plt.errorbar(figstyle,t,a.n_noA[0],a.n_noA[1],
+                    self.plt.errorbar(figstyle,data.id,t,a.n_noA[0],a.n_noA[1],
                                  label=label+r" !$\alpha$ ($-$)",**drawargs)
-                    ax.data_id.append(data.id)
-                    ax.lines_id.append(data.id)
                     
             # draw raw histograms
             elif asym_type == 'rhist':
@@ -1063,9 +950,7 @@ class bfit(object):
                     
                     # check for non-empty histograms, then draw
                     if np.mean(hist[h].data) > 0:                        
-                        self.plt.plot(figstyle,x,hist[h].data,label=h)
-                        ax.data_id.append(data.id)
-                        ax.lines_id.append(data.id)
+                        self.plt.plot(figstyle,data.id,x,hist[h].data,label=h)
                         
                 self.plt.ylabel(figstyle,self.ylabel_dict[asym_type])
                 self.plt.xlabel(figstyle,'Bin')
@@ -1328,6 +1213,89 @@ class bfit(object):
         self.root.destroy()
         self.logger.info('Finished     ' + '-'*50)
     
+    # ======================================================================= #
+    def remove_drawn_object(self,figstyle,draw_id):
+        """
+            Remove an object labelled by draw_id from the figure, based on draw 
+            style.
+        """
+        
+        # get drawing style
+        style = self.draw_style.get()
+        
+        # ------------------------------------------------------------------- #
+        if style == 'new':
+            self.plt.figure(figstyle)
+            ax = self.plt.gca(figstyle)
+            ax.draw_objs = {}    
+        
+        # get axis    
+        ax = self.plt.gca(figstyle)
+        
+        # ------------------------------------------------------------------- #    
+        if style == 'stack':
+            
+            # check for id array
+            if not hasattr(ax,'draw_objs'):
+                ax.draw_objs = {}
+            else:
+                
+                # check if id is present in drawn data
+                if draw_id in ax.draw_objs.keys():
+
+                    # get item
+                    for item in ax.draw_objs[draw_id]:
+                    
+                        # remove line
+                        try:
+                            item[0].remove()
+                        except TypeError:
+                            item.remove()
+                        else: 
+                            # remove errorbars
+                            if type(item) == mpl.container.ErrorbarContainer:    
+                                for i in item[1]:   i.remove()
+                                for i in item[2]:   i.remove()
+                                del ax.containers[ax.containers.index(item)]
+                            
+                            # remove lines
+                            else:
+                                try:
+                                    del ax.lines[ax.lines.index(item)]
+                                except ValueError:
+                                    pass
+                        del item 
+                    
+                    # clear labels
+                    del ax.draw_objs[draw_id]
+            
+        # ------------------------------------------------------------------- #            
+        elif style == 'redraw':
+            
+            # check for id array
+            if hasattr(ax,'draw_objs'):
+                for item_list in ax.draw_objs.values():
+                    
+                    for item in item_list:
+                        # remove line
+                        try:
+                            item[0].remove()
+                        except TypeError:
+                            item.remove()
+                        else: 
+                            # remove errorbars
+                            if type(item) == mpl.container.ErrorbarContainer:    
+                                for i in item[1]:   i.remove()
+                                for i in item[2]:   i.remove()
+                            del item
+                        
+                del ax.draw_objs
+                del ax.lines[:]
+                del ax.containers[:]
+                
+            # reset
+            ax.draw_objs = {}
+        
     # ======================================================================= #
     def report_issue(self):
         """Display github issue page"""

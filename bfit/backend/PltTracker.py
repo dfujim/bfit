@@ -46,7 +46,7 @@ class PltTracker(object):
             self.active[style] = 0
                         
     # ======================================================================= #
-    def _decorator(self,style,fn,*args,**kwargs):
+    def _decorator(self,style,fn,*args,id=None,**kwargs):
         """
             Function wrapper
             
@@ -58,9 +58,14 @@ class PltTracker(object):
         
         # switch 
         plt.figure(self.active[style])
-
+        
         # run function 
         output = fn(*args,**kwargs)
+        
+        # track the drawn object
+        if id is not None:
+            ax = plt.gca()
+            ax.draw_objs.setdefault(id,[]).append(output) 
         
         return output
     
@@ -78,20 +83,20 @@ class PltTracker(object):
         return self._decorator(style,plt.annotate,*args,**kwargs)
     
     # ======================================================================= #
-    def axhline(self,style,*args,**kwargs):
-        return self._decorator(style,plt.axhline,*args,**kwargs)
-    
+    def axhline(self,style,id,*args,**kwargs):
+        return self._decorator(style,plt.axhline,*args,id=id,**kwargs)
+        
     # ======================================================================= #
-    def axvline(self,style,*args,**kwargs):
-        return self._decorator(style,plt.axvline,*args,**kwargs)
-            
+    def axvline(self,style,id,*args,**kwargs):
+        return self._decorator(style,plt.axvline,*args,id=id,**kwargs)
+        
     # ======================================================================= #
     def clf(self,style):
         """Get the current axes for the style"""
         return self._decorator(style,plt.clf)
         
     # ======================================================================= # 
-    def errorbar(self, style, x, y, yerr=None, xerr=None, fmt='', ecolor=None, 
+    def errorbar(self, style, id, x, y, yerr=None, xerr=None, fmt='', ecolor=None, 
                  elinewidth=None, capsize=None, barsabove=False, lolims=False, 
                  uplims=False, xlolims=False, xuplims=False, errorevery=1, 
                  capthick=None, *, data=None, **kwargs):
@@ -112,11 +117,13 @@ class PltTracker(object):
         
         # draw in active style 
         plt.figure(active_style)
+        ax = plt.gca()
         obj = plt.errorbar(x, y, yerr=yerr, xerr=xerr, fmt=fmt, ecolor=ecolor, 
                      elinewidth=elinewidth, capsize=capsize, 
                      barsabove=barsabove, lolims=lolims, uplims=uplims, 
                      xlolims=xlolims, xuplims=xuplims, errorevery=errorevery, 
                      capthick=capthick, data=data, **kwargs)
+        ax.draw_objs.setdefault(id,[]).append(obj)
         
         return obj
     
@@ -163,7 +170,7 @@ class PltTracker(object):
         self._decorator(style,plt.legend,*args,**kwargs)
         
     # ======================================================================= #
-    def plot(self,style, *args, scalex=True, scaley=True, data=None, **kwargs):
+    def plot(self,style,id,*args,scalex=True,scaley=True,data=None,**kwargs):
         """
             Plot data.
             
@@ -180,7 +187,9 @@ class PltTracker(object):
         
         # draw in active style 
         plt.figure(active_style)
+        ax = plt.gca()
         obj = plt.plot(*args,scalex=scalex, scaley=scaley, data=data,**kwargs)
+        ax.draw_objs.setdefault(id,[]).append(obj)
         
         return obj
 
