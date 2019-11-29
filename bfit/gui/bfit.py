@@ -560,7 +560,6 @@ class bfit(object):
         
         # make new window
         self.remove_drawn_object(figstyle,data.id)
-        self.remove_drawn_object(figstyle,'line')
         ax = self.plt.gca(figstyle)
         ax.get_xaxis().get_major_formatter().set_useOffset(False)
         
@@ -1224,10 +1223,13 @@ class bfit(object):
         style = self.draw_style.get()
         
         # ------------------------------------------------------------------- #
-        if style == 'new':
-            self.plt.figure(figstyle)
+        if style == 'new' and draw_id != 'line':
+            fig = self.plt.figure(figstyle)
             ax = self.plt.gca(figstyle)
             ax.draw_objs = {}    
+        
+        elif draw_id != 'line':
+            self.remove_drawn_object(figstyle,'line')
         
         # get axis    
         ax = self.plt.gca(figstyle)
@@ -1257,7 +1259,7 @@ class bfit(object):
                                 for i in item[1]:   i.remove()
                                 for i in item[2]:   i.remove()
                                 del ax.containers[ax.containers.index(item)]
-                            
+                                
                             # remove lines
                             else:
                                 try:
