@@ -392,6 +392,30 @@ class fit_files(object):
         except Exception:
             pass
             
+     # ======================================================================= #
+    def _annotate(self,id,x,y,ptlabels,color='k'):
+        """Add annotation"""
+        
+        # base case
+        if ptlabels is None: return
+        
+        # do annotation
+        for label,xcoord,ycoord in zip(ptlabels,x,y):        
+            if type(label) != type(None):
+                self.plt.annotate('param',id,label,
+                             xy=(xcoord,ycoord),
+                             xytext=(-3, 20),
+                             textcoords='offset points', 
+                             ha='right', 
+                             va='bottom',
+                             bbox=dict(boxstyle='round,pad=0.1',
+                                       fc=color, 
+                                       alpha=0.1),
+                             arrowprops=dict(arrowstyle = '->', 
+                                             connectionstyle='arc3,rad=0'),
+                            fontsize='xx-small',
+                            )    
+   
     # ======================================================================= #
     def _make_shared_var_dict(self):
         """Make the dictionary to make sure all shared checkboxes are synched"""
@@ -1071,7 +1095,7 @@ class fit_files(object):
         # draw
         f = self.plt.errorbar(figstyle,draw_id,xvals,yvals,xerr=xerrs,yerr=yerrs,
                               label=draw_id,**self.bfit.style)
-        self._annotate(xvals,yvals,ann,color=f[0].get_color())
+        self._annotate(draw_id,xvals,yvals,ann,color=f[0].get_color())
         
         # format date x axis
         if xerrs is None:   self.plt.gcf(figstyle).autofmt_xdate()
@@ -1714,30 +1738,6 @@ class fit_files(object):
         self.plt.active['param'] = current_active
         plt.figure(current_active)
         
-    # ======================================================================= #
-    def _annotate(self,x,y,ptlabels,color='k'):
-        """Add annotation"""
-        
-        # base case
-        if ptlabels is None: return
-        
-        # do annotation
-        for label,xcoord,ycoord in zip(ptlabels,x,y):        
-            if type(label) != type(None):
-                self.plt.annotate('param',label,
-                             xy=(xcoord,ycoord),
-                             xytext=(-3, 20),
-                             textcoords='offset points', 
-                             ha='right', 
-                             va='bottom',
-                             bbox=dict(boxstyle='round,pad=0.1',
-                                       fc=color, 
-                                       alpha=0.1),
-                             arrowprops=dict(arrowstyle = '->', 
-                                             connectionstyle='arc3,rad=0'),
-                            fontsize='xx-small',
-                            )    
-                            
 # =========================================================================== #
 # =========================================================================== #
 class fitline(object):

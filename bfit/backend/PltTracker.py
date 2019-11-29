@@ -79,8 +79,8 @@ class PltTracker(object):
         self.active[style] = number
     
     # ======================================================================= #
-    def annotate(self,style,*args,**kwargs):
-        return self._decorator(style,plt.annotate,*args,**kwargs)
+    def annotate(self,style,id,*args,**kwargs):
+        return self._decorator(style,plt.annotate,*args,id=id,**kwargs)
     
     # ======================================================================= #
     def axhline(self,style,id,*args,**kwargs):
