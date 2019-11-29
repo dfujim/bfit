@@ -868,7 +868,7 @@ class dataline(object):
             if self.check_data.get():
                 mode = self.bfit.draw_style.get()
                 self.bfit.draw_style.set('stack')
-                self.bfit.fit_files.draw_fit(id=self.id,figstyle=figstyle)
+                self.bfit.fit_files.draw_fit(id=self.id,unique=False,figstyle=figstyle)
                 self.bfit.draw_style.set(mode)
             else:
                 self.bfit.fit_files.draw_fit(id=self.id,figstyle=figstyle)

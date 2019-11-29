@@ -178,16 +178,16 @@ class popup_fit_results(template_fit_popup):
         
         self.logger.info('Draw model parameters "%s" vs "%s"',ystr,xstr)
         
-        # get fit function
+        # get fit function and label id
         fn = self.model_fn
+        id = self.fittab.par_label.get()
 
-        # draw data in new window
-        self.bfit.plt.figure('param')
-        self.fittab.plt.errorbar('param',xvals,yvals,yerrs,fmt='.')
+        # draw data
+        self.fittab.plt.errorbar('param',id,xvals,yvals,yerrs,fmt='.')
 
-        # draw
+        # draw fit
         fitx = np.linspace(min(xvals),max(xvals),self.fittab.n_fitx_pts)
-        f = self.fittab.plt.plot(figstyle,fitx,fn(fitx,*par),color='k')
+        f = self.fittab.plt.plot(figstyle,id+'fit',fitx,fn(fitx,*par),color='k')
         
         # plot elements
         self.fittab.plt.xlabel(figstyle,xstr)

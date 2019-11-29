@@ -393,7 +393,7 @@ class fit_files(object):
             pass
             
      # ======================================================================= #
-    def _annotate(self,id,x,y,ptlabels,color='k'):
+    def _annotate(self,id,x,y,ptlabels,color='k',unique=True):
         """Add annotation"""
         
         # base case
@@ -414,6 +414,7 @@ class fit_files(object):
                              arrowprops=dict(arrowstyle = '->', 
                                              connectionstyle='arc3,rad=0'),
                             fontsize='xx-small',
+                            unique=unique
                             )    
    
     # ======================================================================= #
@@ -857,29 +858,13 @@ class fit_files(object):
                 drawargs[k] = self.bfit.style[k]
         
         # make new window
-        if draw_style.get() == 'new':
+        style = self.bfit.draw_style.get()
+        if style == 'new' or not self.plt.active[figstyle]:
             self.plt.figure(figstyle)
-            ax = self.plt.gca(figstyle)
+        elif style == 'redraw':
+            self.plt.clf(figstyle)
             
-        # get index of label in run and delete that run
-        elif draw_style.get() == 'stack':
-            ax = self.plt.gca(figstyle)
-            try:
-                idx = [ell.get_label() for ell in ax.containers].index(label)
-            except ValueError as err:
-                pass
-            else:
-                del ax.lines[idx]              # clear lines 
-                del ax.collections[idx]        # clear errorbar object 
-                del ax.containers[idx]         # clear errorbar object
-        
-        # delete all runs
-        elif draw_style.get() == 'redraw':
-            ax = self.plt.gca(figstyle)
-            del ax.lines[:]              # clear lines 
-            del ax.collections[:]        # clear errorbar object 
-            del ax.containers[:]         # clear errorbar object
-            
+        ax = self.plt.gca(figstyle)
         ax.get_xaxis().get_major_formatter().set_useOffset(False)
         
         # get draw style
@@ -901,8 +886,8 @@ class fit_files(object):
 
         # draw 
         if self.bfit.draw_standardized_res.get():
-            self.plt.errorbar(figstyle,x,res/da,np.zeros(len(x)),label=label,
-                              **drawargs)
+            self.plt.errorbar(figstyle,id,x,res/da,np.zeros(len(x)),
+                              label=label,**drawargs)
             
             # draw fill
             ax = self.plt.gca(figstyle)
@@ -912,16 +897,20 @@ class fit_files(object):
             self.plt.xlim(figstyle,lim)
             self.plt.ylabel(figstyle,r'Standardized Residual ($\sigma$)')
         else:
-            self.plt.errorbar(figstyle,x,res,da,label=label,**drawargs)
+            self.plt.errorbar(figstyle,id,x,res,da,label=label,**drawargs)
             self.plt.ylabel(figstyle,'Residual')
         
         # draw pulse marker
         if '2' in data.mode: 
-            self.plt.axvline(figstyle,data.get_pulse_s(),ls='--',color='k')
+            self.plt.axvline(figstyle,'line',data.get_pulse_s(),ls='--',color='k')
+            unq = False
+        else:
+            unq = True
             
-        # plot elementsplt.ylabel('Residual')
+        # plot elements
         self.plt.xlabel(figstyle,xlabel)
-        self.plt.axhline(figstyle,0,color='k',linestyle='-',zorder=20)
+        self.plt.axhline(figstyle,'line',0,color='k',linestyle='-',zorder=20,
+                        unique=unq)
         
         # show
         self.plt.tight_layout(figstyle)
@@ -930,7 +919,7 @@ class fit_files(object):
         raise_window()
         
     # ======================================================================= #
-    def draw_fit(self,id,figstyle,**drawargs):
+    def draw_fit(self,id,figstyle,unique=True,**drawargs):
         """
             Draw fit for a single run
             
@@ -956,8 +945,14 @@ class fit_files(object):
         label = drawargs['label']
         
         # set drawing style
-        draw_id = data.id+'fit'
-        self.bfit.remove_drawn_object(figstyle,draw_id)
+        draw_id = data.id
+        
+        # make new window
+        if style == 'new' or not self.plt.active[figstyle]:
+            self.plt.figure(figstyle)
+        elif style == 'redraw':
+            self.plt.figure(figstyle)
+            self.plt.clf(figstyle)
             
         # set drawing style arguments
         for k in self.bfit.style:
@@ -989,7 +984,7 @@ class fit_files(object):
             fitxx = fitx
             xlabel = self.xlabel_dict[self.mode]
     
-        self.plt.plot(figstyle,draw_id,fitxx,fn(fitx,*fit_par),zorder=10,**drawargs)
+        self.plt.plot(figstyle,draw_id,fitxx,fn(fitx,*fit_par),zorder=10,unique=unique,**drawargs)
         
         # plot elements
         self.plt.ylabel(figstyle,'Asymmetry')
@@ -1069,8 +1064,12 @@ class fit_files(object):
                 if hasattr(ax,'draw_objs'):
                     draw_id = 'Set %d' % len(ax.draw_objs.keys())    
             
-        # remove objects from figure 
-        self.bfit.remove_drawn_object(figstyle,draw_id)
+        # make new window
+        style = self.bfit.draw_style.get()
+        if style == 'new' or not self.plt.active[figstyle]:
+            self.plt.figure(figstyle)
+        elif style == 'redraw':
+            self.plt.clf(figstyle)
         
         # get axis 
         ax = self.plt.gca(figstyle)
@@ -1095,7 +1094,7 @@ class fit_files(object):
         # draw
         f = self.plt.errorbar(figstyle,draw_id,xvals,yvals,xerr=xerrs,yerr=yerrs,
                               label=draw_id,**self.bfit.style)
-        self._annotate(draw_id,xvals,yvals,ann,color=f[0].get_color())
+        self._annotate(draw_id,xvals,yvals,ann,color=f[0].get_color(),unique=False)
         
         # format date x axis
         if xerrs is None:   self.plt.gcf(figstyle).autofmt_xdate()

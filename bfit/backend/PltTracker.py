@@ -2,6 +2,7 @@
 # Derek Fujimoto
 # June 2019
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 # =========================================================================== #
@@ -46,7 +47,7 @@ class PltTracker(object):
             self.active[style] = 0
                         
     # ======================================================================= #
-    def _decorator(self,style,fn,*args,id=None,**kwargs):
+    def _decorator(self,style,fn,*args,id=None,unique=True,**kwargs):
         """
             Function wrapper
             
@@ -57,18 +58,59 @@ class PltTracker(object):
         """
         
         # switch 
-        plt.figure(self.active[style])
+        fig = plt.figure(self.active[style])
+        ax = plt.gca()
+            
+        # clear old objects
+        if unique and id is not None:
+            self._remove_drawn_object(ax,id)
         
         # run function 
         output = fn(*args,**kwargs)
         
         # track the drawn object
         if id is not None:
-            ax = plt.gca()
             ax.draw_objs.setdefault(id,[]).append(output) 
         
         return output
     
+    # ======================================================================= #
+    def _remove_drawn_object(self,ax,draw_id):
+        """
+            Remove an object labelled by draw_id from the figure, based on draw 
+            style.
+        """
+        color=None
+        
+        # check if id is present in drawn data
+        if draw_id in ax.draw_objs.keys():
+
+            # get item
+            for item in ax.draw_objs[draw_id]:
+            
+                # remove line
+                try:
+                    item[0].remove()
+                except TypeError:
+                    item.remove()
+                else: 
+                    # remove errorbars
+                    if type(item) == mpl.container.ErrorbarContainer:    
+                        for i in item[1]:   i.remove()
+                        for i in item[2]:   i.remove()
+                        del ax.containers[ax.containers.index(item)]
+                        
+                    # remove lines
+                    else:
+                        try:
+                            del ax.lines[ax.lines.index(item)]
+                        except ValueError:
+                            pass
+                del item 
+            
+            # clear labels
+            del ax.draw_objs[draw_id]
+        
     # ======================================================================= #
     def _update_active_id(self,event):
         """
@@ -79,27 +121,29 @@ class PltTracker(object):
         self.active[style] = number
     
     # ======================================================================= #
-    def annotate(self,style,id,*args,**kwargs):
-        return self._decorator(style,plt.annotate,*args,id=id,**kwargs)
+    def annotate(self,style,id,*args,unique=True,**kwargs):
+        return self._decorator(style,plt.annotate,*args,id=id,unique=unique,**kwargs)
     
     # ======================================================================= #
-    def axhline(self,style,id,*args,**kwargs):
-        return self._decorator(style,plt.axhline,*args,id=id,**kwargs)
+    def axhline(self,style,id,*args,unique=True,**kwargs):
+        return self._decorator(style,plt.axhline,*args,id=id,unique=unique,**kwargs)
         
     # ======================================================================= #
-    def axvline(self,style,id,*args,**kwargs):
-        return self._decorator(style,plt.axvline,*args,id=id,**kwargs)
+    def axvline(self,style,id,*args,unique=True,**kwargs):
+        return self._decorator(style,plt.axvline,*args,id=id,unique=unique,**kwargs)
         
     # ======================================================================= #
     def clf(self,style):
-        """Get the current axes for the style"""
-        return self._decorator(style,plt.clf)
+        """Clear the figure for a given style"""
+        out = self._decorator(style,plt.clf)
+        ax = plt.gca()
+        ax.draw_objs = {}
         
     # ======================================================================= # 
     def errorbar(self, style, id, x, y, yerr=None, xerr=None, fmt='', ecolor=None, 
                  elinewidth=None, capsize=None, barsabove=False, lolims=False, 
                  uplims=False, xlolims=False, xuplims=False, errorevery=1, 
-                 capthick=None, *, data=None, **kwargs):
+                 capthick=None, *, data=None, unique=True, **kwargs):
         """
             Plot data.
             
@@ -114,15 +158,20 @@ class PltTracker(object):
         if active_style == 0:   
             self.figure(style)
             active_style = self.active[style]
+        fig = plt.figure(active_style)
+        ax = fig.axes[0]
+        
+        # redraw old objects and lines
+        if unique:  self._remove_drawn_object(ax,id)
+        self._remove_drawn_object(ax,'line')
         
         # draw in active style 
-        plt.figure(active_style)
-        ax = plt.gca()
         obj = plt.errorbar(x, y, yerr=yerr, xerr=xerr, fmt=fmt, ecolor=ecolor, 
                      elinewidth=elinewidth, capsize=capsize, 
                      barsabove=barsabove, lolims=lolims, uplims=uplims, 
                      xlolims=xlolims, xuplims=xuplims, errorevery=errorevery, 
                      capthick=capthick, data=data, **kwargs)
+
         ax.draw_objs.setdefault(id,[]).append(obj)
         
         return obj
@@ -153,6 +202,11 @@ class PltTracker(object):
         self.plots[style].append(fig.number)
         self.active[style] = fig.number
         
+        # track drawn objects
+        ax = plt.gca()
+        if not hasattr(ax,'draw_objs'):
+            ax.draw_objs = {}
+        
         return fig
 
     # ======================================================================= #
@@ -170,7 +224,7 @@ class PltTracker(object):
         self._decorator(style,plt.legend,*args,**kwargs)
         
     # ======================================================================= #
-    def plot(self,style,id,*args,scalex=True,scaley=True,data=None,**kwargs):
+    def plot(self,style,id,*args,scalex=True,scaley=True,data=None,unique=True,**kwargs):
         """
             Plot data.
             
@@ -186,16 +240,21 @@ class PltTracker(object):
             self.figure(style)
         
         # draw in active style 
-        plt.figure(active_style)
-        ax = plt.gca()
+        fig = plt.figure(active_style)
+        ax = fig.axes[0]
+        
+        # redraw old objects and lines
+        if unique:  self._remove_drawn_object(ax,id)
+        self._remove_drawn_object(ax,'line')
+        
         obj = plt.plot(*args,scalex=scalex, scaley=scaley, data=data,**kwargs)
         ax.draw_objs.setdefault(id,[]).append(obj)
         
         return obj
 
     # ======================================================================= #
-    def text(self,style,*args,**kwargs):
-        return self._decorator(style,plt.text,*args,**kwargs)
+    def text(self,style,*args,id=None,unique=True,**kwargs):
+        return self._decorator(style,plt.text,*args,id=id,unique=unique,**kwargs)
 
     # ======================================================================= #
     def tight_layout(self,style,*args,**kwargs):

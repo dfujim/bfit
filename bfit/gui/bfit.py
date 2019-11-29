@@ -558,8 +558,16 @@ class bfit(object):
             if k not in drawargs.keys():
                 drawargs[k] = self.style[k]
         
+        # get drawing style
+        style = self.draw_style.get()
+        
         # make new window
-        self.remove_drawn_object(figstyle,data.id)
+        if style == 'new' or not self.plt.active[figstyle]:
+            self.plt.figure(figstyle)
+        elif style == 'redraw':
+            self.plt.figure(figstyle)
+            self.plt.clf(figstyle)
+            
         ax = self.plt.gca(figstyle)
         ax.get_xaxis().get_major_formatter().set_useOffset(False)
         
@@ -576,7 +584,7 @@ class bfit(object):
                     label=label+"($+$)",**drawargs)
             
             self.plt.errorbar(figstyle,data.id,x[idx_n],a.n[0][idx_n],a.n[1][idx_n],
-                    label=label+"($-$)",**drawargs)
+                    label=label+"($-$)",unique=False,**drawargs)
             
         # do 2e mode
         elif data.mode == '2e':
@@ -741,7 +749,8 @@ class bfit(object):
                 self.plt.errorbar(figstyle,data.id,x[tag_p],ap[tag_p],
                                 a.p[1][tag_p],label=label+" ($+$)",**drawargs)
                 self.plt.errorbar(figstyle,data.id,x[tag_n],an[tag_n],
-                            a.n[1][tag_n],label=label+" ($-$)",**drawargs)
+                            a.n[1][tag_n],label=label+" ($-$)",unique=False,
+                            **drawargs)
                 self.plt.axhline(figstyle,'line',avg,color='k',linestyle='--')
                 
             # plot positive helicity
@@ -802,7 +811,7 @@ class bfit(object):
                 self.plt.errorbar(figstyle,data.id,x[tag_p],a.p[0][tag_p],a.p[1][tag_p],
                         label=label+" ($+$)",**drawargs)
                 self.plt.errorbar(figstyle,data.id,x[tag_n],2*avg-a.n[0][tag_n],a.n[1][tag_n],
-                        label=label+" ($-$)",**drawargs)
+                        label=label+" ($-$)",unique=False,**drawargs)
                 self.plt.axhline(figstyle,'line',avg,color='k',linestyle='--')
             
             # plot split helicities, flipped about the average, find the largest 
@@ -842,10 +851,12 @@ class bfit(object):
                 self.plt.errorbar(figstyle,data.id,x[tag_p],ap,a.p[1][tag_p],
                                   label=label+" ($+$)",**drawargs)
                 self.plt.errorbar(figstyle,data.id,x[tag_n],an,a.n[1][tag_n],
-                                  label=label+" ($-$)",**drawargs)
+                                  label=label+" ($-$)",unique=False,**drawargs)
                 self.plt.axhline(figstyle,'line',largest,color='k',linestyle='--')
-                self.plt.axvline(figstyle,'line',vmax,color='k',linestyle='--')
-                self.plt.text(figstyle,vmax+0.5,largest+0.0001,'%g V' % vmax)
+                self.plt.axvline(figstyle,'line',vmax,color='k',linestyle='--',
+                                 unique=False)
+                self.plt.text(figstyle,vmax+0.5,largest+0.0001,'%g V' % vmax,
+                              id='line',unique=False)
                 
             # plot comined helicities
             elif asym_type == 'c':
@@ -939,7 +950,7 @@ class bfit(object):
                 # draw
                 keylist = ('F+','F-','B+','B-','L+','R+','L-','R-',
                              'NBMF+','NBMF-','NBMB+','NBMB-','AL0+','AL0-')
-                for h in keylist:
+                for i,h in enumerate(keylist):
                     
                     # get bins
                     try:
@@ -949,7 +960,8 @@ class bfit(object):
                     
                     # check for non-empty histograms, then draw
                     if np.mean(hist[h].data) > 0:                        
-                        self.plt.plot(figstyle,data.id,x,hist[h].data,label=h)
+                        self.plt.plot(figstyle,data.id,x,hist[h].data,label=h,
+                                        unique=not bool(i))
                         
                 self.plt.ylabel(figstyle,self.ylabel_dict[asym_type])
                 self.plt.xlabel(figstyle,'Bin')
@@ -1212,96 +1224,96 @@ class bfit(object):
         self.root.destroy()
         self.logger.info('Finished     ' + '-'*50)
     
-    # ======================================================================= #
-    def remove_drawn_object(self,figstyle,draw_id):
-        """
-            Remove an object labelled by draw_id from the figure, based on draw 
-            style.
-        """
+    # ~ # ======================================================================= #
+    # ~ def remove_drawn_object(self,figstyle,draw_id):
+        # ~ """
+            # ~ Remove an object labelled by draw_id from the figure, based on draw 
+            # ~ style.
+        # ~ """
         
-        # get drawing style
-        style = self.draw_style.get()
+        # ~ # get drawing style
+        # ~ style = self.draw_style.get()
         
-        # ------------------------------------------------------------------- #
-        if style == 'new' and draw_id != 'line':
-            fig = self.plt.figure(figstyle)
-            ax = self.plt.gca(figstyle)
-            ax.draw_objs = {}    
+        # ~ # ------------------------------------------------------------------- #
+        # ~ if style == 'new' and draw_id != 'line':
+            # ~ fig = self.plt.figure(figstyle)
+            # ~ ax = self.plt.gca(figstyle)
+            # ~ ax.draw_objs = {}    
         
-        elif draw_id != 'line':
-            self.remove_drawn_object(figstyle,'line')
+        # ~ elif draw_id != 'line':
+            # ~ self.remove_drawn_object(figstyle,'line')
         
-        # get axis    
-        ax = self.plt.gca(figstyle)
+        # ~ # get axis    
+        # ~ ax = self.plt.gca(figstyle)
         
-        # ------------------------------------------------------------------- #    
-        if style == 'stack':
+        # ~ # ------------------------------------------------------------------- #    
+        # ~ if style == 'stack':
             
-            # check for id array
-            if not hasattr(ax,'draw_objs'):
-                ax.draw_objs = {}
-            else:
+            # ~ # check for id array
+            # ~ if not hasattr(ax,'draw_objs'):
+                # ~ ax.draw_objs = {}
+            # ~ else:
                 
-                # check if id is present in drawn data
-                if draw_id in ax.draw_objs.keys():
+                # ~ # check if id is present in drawn data
+                # ~ if draw_id in ax.draw_objs.keys():
 
-                    # get item
-                    for item in ax.draw_objs[draw_id]:
+                    # ~ # get item
+                    # ~ for item in ax.draw_objs[draw_id]:
                     
-                        # remove line
-                        try:
-                            item[0].remove()
-                        except TypeError:
-                            item.remove()
-                        else: 
-                            # remove errorbars
-                            if type(item) == mpl.container.ErrorbarContainer:    
-                                for i in item[1]:   i.remove()
-                                for i in item[2]:   i.remove()
-                                del ax.containers[ax.containers.index(item)]
+                        # ~ # remove line
+                        # ~ try:
+                            # ~ item[0].remove()
+                        # ~ except TypeError:
+                            # ~ item.remove()
+                        # ~ else: 
+                            # ~ # remove errorbars
+                            # ~ if type(item) == mpl.container.ErrorbarContainer:    
+                                # ~ for i in item[1]:   i.remove()
+                                # ~ for i in item[2]:   i.remove()
+                                # ~ del ax.containers[ax.containers.index(item)]
                                 
-                            # remove lines
-                            else:
-                                try:
-                                    del ax.lines[ax.lines.index(item)]
-                                except ValueError:
-                                    pass
-                        del item 
+                            # ~ # remove lines
+                            # ~ else:
+                                # ~ try:
+                                    # ~ del ax.lines[ax.lines.index(item)]
+                                # ~ except ValueError:
+                                    # ~ pass
+                        # ~ del item 
                     
-                    # clear labels
-                    del ax.draw_objs[draw_id]
+                    # ~ # clear labels
+                    # ~ del ax.draw_objs[draw_id]
             
-        # ------------------------------------------------------------------- #            
-        elif style == 'redraw':
+        # ~ # ------------------------------------------------------------------- #            
+        # ~ elif style == 'redraw':
             
-            # check for id array
-            if hasattr(ax,'draw_objs'):
+            # ~ # check for id array
+            # ~ if hasattr(ax,'draw_objs'):
                 
-                # remove everything
-                for item_list in ax.draw_objs.values():
-                    for item in item_list:
+                # ~ # remove everything
+                # ~ for item_list in ax.draw_objs.values():
+                    # ~ for item in item_list:
                         
-                        # remove line
-                        try:
-                            item[0].remove()
-                        except TypeError:
-                            item.remove()
-                        else: 
-                            # remove errorbars
-                            if type(item) == mpl.container.ErrorbarContainer:    
-                                for i in item[1]:   i.remove()
-                                for i in item[2]:   i.remove()
-                            del item
+                        # ~ # remove line
+                        # ~ try:
+                            # ~ item[0].remove()
+                        # ~ except TypeError:
+                            # ~ item.remove()
+                        # ~ else: 
+                            # ~ # remove errorbars
+                            # ~ if type(item) == mpl.container.ErrorbarContainer:    
+                                # ~ for i in item[1]:   i.remove()
+                                # ~ for i in item[2]:   i.remove()
+                            # ~ del item
                 
-                del ax.draw_objs
-                del ax.lines[:]
-                del ax.containers[:]
+                # ~ del ax.draw_objs
+                # ~ del ax.lines[:]
+                # ~ del ax.containers[:]
                 
-            # reset the color cycle
-            ax.set_prop_cycle(None)
+            # ~ # reset the color cycle
+            # ~ ax.set_prop_cycle(None)
                 
-            # reset
-            ax.draw_objs = {}
+            # ~ # reset
+            # ~ ax.draw_objs = {}
         
     # ======================================================================= #
     def report_issue(self):
