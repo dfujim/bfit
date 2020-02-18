@@ -56,10 +56,11 @@ def fit_bdata(data,fn,omit=None,rebin=None,shared=None,hist_select='',
         
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
-        Returns: (par,cov,ch,gchi)
-            par: best fit parameters
-            cov: covariance matrix
-            chi: chisquared of fits
+        Returns: (par,std,cov,chi,gchi)
+            par: array of best fit parameters
+            std: array of best fit errors
+            cov: 2D array, covariance matrix
+            chi: array of chisquare of each fit
             gchi:global chisquared of fits
     """
     try:
