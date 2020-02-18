@@ -13,3 +13,5 @@ entry_grey      = 'grey45'
 entry_white     = 'grey92'
 
 tab             = 'grey'
+
+font            = 'TkFixedFont 10'

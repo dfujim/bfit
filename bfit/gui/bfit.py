@@ -243,7 +243,7 @@ class bfit(object):
         
         # styling
         root.option_add('*tearOff', FALSE)
-        root.option_add("*Font", "TkFixedFont")
+        root.option_add("*Font", colors.font)
         root.option_add("*Background",          colors.background)
         root.option_add("*DisabledBackground",  colors.background)
         root.option_add("*ReadonlyBackground",  colors.readonly)
@@ -258,7 +258,7 @@ class bfit(object):
         root.option_add("*Scrollbar.Background",colors.foreground)
         
         ttk_style = ttk.Style()
-        ttk_style.configure('.', font='TkFixedFont',
+        ttk_style.configure('.', font=colors.font,
                                    background=colors.background,
                                    foreground=colors.foreground,
                                    arrowcolor=colors.foreground,
@@ -287,7 +287,6 @@ class bfit(object):
         
         ttk_style.configure('TSpinbox', borderwidth=0,background=colors.background)
         ttk_style.map('TSpinbox', borderwidth=[('selected', 1)])
-        
         
         # icon
         self.set_icon(root)
