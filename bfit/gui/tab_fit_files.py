@@ -413,8 +413,8 @@ class fit_files(object):
                                        alpha=0.1),
                              arrowprops=dict(arrowstyle = '->', 
                                              connectionstyle='arc3,rad=0'),
-                            fontsize='xx-small',
-                            unique=unique
+                             fontsize='xx-small',
+                             unique=unique
                             )    
    
     # ======================================================================= #
