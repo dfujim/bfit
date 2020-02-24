@@ -184,6 +184,7 @@ class bfit(object):
                  '2e':'Frequency (%s)',
                  '1f':'Frequency (%s)',
                  '1w':'x Parameter (%s)',
+                 '1e':'Field (G)',
                  '1n':'Voltage (%s)'}
                  
     ylabel_dict={'ad':r'$N_\alpha/N_\beta$', # otherwise, label as Asymmetry
@@ -202,6 +203,7 @@ class bfit(object):
     
     # units: mode:[conversion rate from original to display units,unit]
     units = {'1f':(1e-6,'MHz'),
+             '2e':(1e-6,'MHz'),
              '1w':(1,'Hz'),
              '1n':(1e-3,'V')}
     

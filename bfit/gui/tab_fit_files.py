@@ -84,14 +84,6 @@ class fit_files(object):
     chi_threshold = 1.5 # threshold for red highlight on bad fits 
     n_fitx_pts = 500    # number of points to draw in fitted curves
     
-    xlabel_dict={'20':"Time (s)",
-                 '2h':"Time (s)",
-                 '2e':'Frequency (%s)',
-                 '1f':'Frequency (%s)',
-                 '1w':'x Parameter',
-                 '1e':'Field (G)',
-                 '1n':'Voltage (%s)'}
-    
     # ======================================================================= #
     def __init__(self,fit_data_tab,bfit):
         
@@ -875,14 +867,12 @@ class fit_files(object):
         res = a - fn(x,*fit_par)
             
         # set x axis
-        if   data.mode == '1f': 
-            x *= self.bfit.freq_unit_conv
-            xlabel = self.xlabel_dict[self.mode] % self.bfit.freq_units
-        elif data.mode == '1n': 
-            x *= self.bfit.volt_unit_conv    
-            xlabel = self.xlabel_dict[self.mode] % self.bfit.volt_units
+        if data.mode in self.bfit.units: 
+            unit = self.bfit.units[data.mode]
+            x *= unit[0]
+            xlabel = self.bfit.xlabel_dict[self.mode] % unit[1]
         else:
-            xlabel = self.xlabel_dict[self.mode]
+            xlabel = self.bfit.xlabel_dict[self.mode]
 
         # draw 
         if self.bfit.draw_standardized_res.get():
@@ -971,20 +961,16 @@ class fit_files(object):
         
         fitx = np.linspace(min(t),max(t),self.n_fitx_pts)
         
-        if   data.mode == '1f': 
-            fitxx = fitx*self.bfit.freq_unit_conv
-            xlabel = self.xlabel_dict[self.mode] % self.bfit.freq_units
-        elif data.mode == '2e': 
-            fitxx = fitx*self.bfit.freq_unit_conv
-            xlabel = self.xlabel_dict[self.mode] % self.bfit.freq_units
-        elif data.mode == '1n': 
-            fitxx = fitx*self.bfit.volt_unit_conv
-            xlabel = self.xlabel_dict[self.mode] % self.bfit.volt_units
+        if self.mode in self.bfit.units: 
+            unit = self.bfit.units[self.mode]
+            fitxx = fitx*unit[0]
+            xlabel = self.bfit.xlabel_dict[self.mode] % unit[1]
         else:                   
             fitxx = fitx
-            xlabel = self.xlabel_dict[self.mode]
+            xlabel = self.bfit.xlabel_dict[self.mode]
     
-        self.plt.plot(figstyle,draw_id,fitxx,fn(fitx,*fit_par),zorder=10,unique=unique,**drawargs)
+        self.plt.plot(figstyle,draw_id,fitxx,fn(fitx,*fit_par),zorder=10,
+                      unique=unique,**drawargs)
         
         # plot elements
         self.plt.ylabel(figstyle,'Asymmetry')
@@ -1201,18 +1187,13 @@ class fit_files(object):
             dfit_par = [data.fitpar['dres'][p] for p in data.parnames]
             fity = data.fitfn(fitx,*fit_par)
             
-            if data.mode == '1f': 
-                fitxx = fitx*self.bfit.freq_unit_conv
-                xlabel = self.xlabel_dict[self.mode] % self.bfit.freq_units
-            elif data.mode == '2e': 
-                fitxx = fitx*self.bfit.freq_unit_conv
-                xlabel = self.xlabel_dict[self.mode] % self.bfit.freq_units
-            elif data.mode == '1n': 
-                fitxx = fitx*self.bfit.volt_unit_conv
-                xlabel = self.xlabel_dict[self.mode] % self.bfit.volt_units
+            if data.mode in self.bfit.units: 
+                unit = self.bfit.units[data.mode]
+                fitxx = fitx*unit[0]
+                xlabel = self.bfit.xlabel_dict[self.mode] % unit[1]
             else:                   
                 fitxx = fitx
-                xlabel = self.xlabel_dict[self.mode]
+                xlabel = self.bfit.xlabel_dict[self.mode]
 
             # write header
             fname = filename%(data.year,data.run)
