@@ -14,4 +14,5 @@ entry_white     = 'grey92'
 
 tab             = 'grey'
 
-font            = 'TkFixedFont 10'
+font            = 'TkFixedFont'
+# ~ font            = 'Courier 10 bold'
