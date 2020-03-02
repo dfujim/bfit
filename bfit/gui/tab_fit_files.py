@@ -751,7 +751,6 @@ class fit_files(object):
             
             # make a new window, using old inputs and outputs
             self.pop_fitconstr = popup_fit_constraints(self.bfit,
-                                    input_fn_text=p.input_fn_text,
                                     output_par_text=p.output_par_text_val,
                                     output_text=p.output_text_val)
         
