@@ -226,8 +226,12 @@ class bfit(object):
         bnqr_data_dir = os.getcwd()
         
     # ======================================================================= #
-    def __init__(self):
-        
+    def __init__(self,testfn=None):
+        """
+            testfn: if not none, expect a function handle with input self to run
+                    automate setting parameters, button pushes, etc for rapid 
+                    testing
+        """
         # logging
         self.logger = logging.getLogger(logger_name)
         self.logger.info('Initializing ' + '-'*50)
@@ -473,11 +477,16 @@ class bfit(object):
         self.mainframe = mainframe
         self.notebook = notebook
         
+        # testing
+        if testfn is not None: 
+            testfn(self)
+        
         # logging 
         self.logger.debug('Initialization success. Starting mainloop.')
-        
+    
         # runloop
         self.root.mainloop()
+    
         
     # ======================================================================= #
     def __del__(self):
