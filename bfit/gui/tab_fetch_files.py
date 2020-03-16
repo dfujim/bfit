@@ -5,7 +5,7 @@
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from bfit import logger_name
-from bdata import bdata
+from bdata import bdata, bjoined
 from functools import partial
 from bfit.backend.fitdata import fitdata
 from bfit.backend.entry_color_set import on_focusout,on_entry_click
@@ -13,7 +13,7 @@ import bfit.backend.colors as colors
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import time,datetime,os,logging,glob
+import time,datetime,os,logging,glob,re
 
 __doc__="""
     """
@@ -56,7 +56,7 @@ class fetch_files(object):
                        '1n':'Rb Cell Scan (1n)',
                        '1e':'Field Scan (1e)',
                        '2h':'Alpha Tagged (2h)'}
-    run_number_starter_line = '40001 40005-40010 (run numbers)'
+    run_number_starter_line = '40001 40002+40003 40005-40010 (run numbers)'
     bin_remove_starter_line = '24 100-200 (bins)'
     max_number_fetched = 500
     
@@ -176,6 +176,9 @@ class fetch_files(object):
         check_toggle_button = ttk.Button(right_frame,\
                 text='Toggle All Check States',command=self.toggle_all,pad=5)
         
+        # ~ merge_button = ttk.Button(right_frame,\
+                # ~ text='Merge Checked Runs',command=self.merge_all,pad=5)
+        
         # add grey to check_bin_remove_entry
         check_bin_remove_entry.insert(0,self.bin_remove_starter_line)
         
@@ -211,6 +214,7 @@ class fetch_files(object):
         check_toggle_button.grid(   column=0,row=r,sticky=(N,E,W),columnspan=2,pady=1,padx=5); r+= 1
         check_draw.grid(            column=0,row=r,sticky=(N,W,E),pady=5,padx=5);
         check_remove.grid(          column=1,row=r,sticky=(N,E,W),pady=5,padx=5); r+= 1
+        # ~ merge_button.grid(          column=0,row=r,sticky=(N,E,W),columnspan=2,pady=1,padx=5); r+= 1
         check_rebin_label.grid(     column=0,row=r)
         check_rebin_box.grid(       column=1,row=r); r+= 1
         check_bin_remove_entry.grid(column=0,row=r,sticky=(N),columnspan=2); r+= 1
@@ -404,33 +408,24 @@ class fetch_files(object):
             run_numbers = self.string2run(self.run.get())
         except ValueError:
             self.logger.exception('Bad run number string')
-            return
+            raise ValueError('Bad run number string')
+            
+        # get list of merged runs
+        merged_runs = self.get_merged_runs(self.run.get())
             
         # get the selected year
         year = int(self.year.get())
         
         # get data
-        data = {}
+        all_data = {}
         s = ['Failed to open run']
         for r in run_numbers:
             
-            # get key for data storage
-            runkey = self.bfit.get_run_key(r=r,y=year)
-            
             # read from archive
             try:
-                new_data = bdata(r,year=year)
+                all_data[r] = bdata(r,year=year)
             except (RuntimeError,ValueError):
                 s.append("%d (%d)" % (r,year))
-            else:
-                
-                # update data
-                if runkey in self.bfit.data.keys():
-                    self.bfit.data[runkey].bd = new_data
-                    
-                # new data
-                else:
-                    data[runkey] = fitdata(self.bfit,new_data)
                     
         # print error message
         if len(s)>1:
@@ -439,6 +434,37 @@ class fetch_files(object):
             self.logger.warning(s)
             messagebox.showinfo(message=s)
         
+        # merge runs
+        new_data = []
+        for merge in merged_runs: 
+            
+            # collect data
+            dat_to_merge = []
+            for r in merge: 
+                dat_to_merge.append(all_data.pop(r))
+            
+            # make bjoined object
+            joined_data = bjoined(dat_to_merge)
+            
+            # add to data list 
+            new_data.append(joined_data)
+        new_data.extend(list(all_data.values()))
+        
+        # update object data lists
+        data = {}
+        for new_dat in new_data:
+            
+            # get key for data storage
+            runkey = self.bfit.get_run_key(new_dat)
+            
+            # update data
+            if runkey in self.bfit.data.keys():
+                self.bfit.data[runkey].bd = new_dat
+                
+            # new data
+            else:
+                data[runkey] = fitdata(self.bfit,new_dat)
+    
         # check that data is all the same runtype
         run_types = [self.bfit.data[k].mode for k in self.bfit.data.keys()]
         run_types = run_types + [data[k].mode for k in data.keys()]
@@ -507,6 +533,48 @@ class fetch_files(object):
                 self.data_lines[r].degrid()
             
         self.logger.info('Fetched runs %s',list(data.keys()))
+        
+    # ======================================================================= #
+    def get_merged_runs(self,string):
+        """
+            Parse string, return list of lists of run numbers corresponding to 
+            the data to merge
+        """
+        
+        # find plus locations
+        idx_plus = [m.start() for m in re.finditer('\+',string)]
+
+        # remove spaces around plus
+        for i in idx_plus[::-1]:
+            if string[i+1] == ' ':
+                string = string[:i+1]+string[i+2:]
+            if string[i-1] == ' ':
+                string = string[:i-1]+string[i:]
+            
+        # clean input
+        string = re.sub('[,;]',' ',string)
+
+        # add brackets
+        string = ' '.join(['[%s]' % s if '+' in s else s for s in string.split()])
+
+        # remove plusses
+        string = re.sub('\+',' ',string)
+
+        # get strings for merging
+        merge_strings = [*re.findall('\[(.*?)\]',string),
+                         *re.findall('\((.*?)\)',string),
+                         *re.findall('\{(.*?)\}',string)]
+
+        
+        # split up the input string by brackets
+        merge_strings = [*re.findall('\[(.*?)\]',string),
+                         *re.findall('\((.*?)\)',string),
+                         *re.findall('\{(.*?)\}',string)]
+
+        # get the run numbers in each of the merged string inputs
+        merge_runs = [self.string2run(s) for s in merge_strings]
+        
+        return merge_runs
         
     # ======================================================================= #
     def remove_all(self):
@@ -586,7 +654,7 @@ class fetch_files(object):
         """Parse string, return list of run numbers"""
         
         # standardize deliminators
-        full_string = string.replace(',',' ').replace(';',' ')
+        full_string = re.sub('[,;+\[\]\(\)\{\}]',' ',string)
         full_string = full_string.replace(':','-')
         part_string = full_string.split()
         
@@ -637,7 +705,8 @@ class fetch_files(object):
                           len(run_numbers),run_numbers)
         
         if len(run_numbers) > self.max_number_fetched:
-            raise RuntimeWarning("Too many files selected (max 50).")
+            raise RuntimeWarning("Too many files selected (max %d)." \
+                                                    % self.max_number_fetched)
         return run_numbers
     
     # ======================================================================= #
@@ -818,7 +887,7 @@ class dataline(object):
     def degrid(self):
         """Hide displayed dataline object from file selection. """
         
-        self.logger.info('Degridding run %d (%d)',self.run,self.year)
+        self.logger.info('Degridding run %s',self.id)
         
         self.line_frame.grid_forget()
         self.line_frame.update_idletasks()
@@ -849,7 +918,7 @@ class dataline(object):
             self.logger.debug('Draw run %d (%d)',self.run,self.year)
                     
             # get new data file
-            data = self.bfit.data[self.bfit.get_run_key(r=self.run,y=self.year)]
+            data = self.bfit.data[self.bfit.get_run_key(self.bdfit.bd)]
             data.read()
             
             # get data file run type
@@ -887,7 +956,7 @@ class dataline(object):
         
         # temperature
         try:
-            self.temperature = int(np.round(bdfit.temperature.mean))
+            self.temperature = int(np.round(bdfit.temperature))
         except AttributeError:
             self.temperature = -999
             
@@ -921,9 +990,14 @@ class dataline(object):
             duration_text = ' '
         
         # set the text    
-        info_str = "%d.%d, %3dK, %s, %s, %s" % (self.year,self.run,
-                                              self.temperature,field_text,
-                                              bias_text,duration_text)
+        if '+' in bdfit.id:
+            unique_id = '%s+' % bdfit.id.split('+')[0]
+        else:
+            unique_id = '%s,' % bdfit.id
+        
+        info_str = "%s %3dK, %s, %s, %s" %  (unique_id,
+                                             self.temperature,field_text,
+                                             bias_text,duration_text)
         self.check.config(text=info_str)
     
     # ======================================================================= #

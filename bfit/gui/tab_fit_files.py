@@ -18,6 +18,7 @@ from bfit.gui.popup_fit_constraints import popup_fit_constraints
 from bfit.fitting.decay_31mg import fa_31Mg
 from bfit.backend.entry_color_set import on_focusout,on_entry_click
 from bfit.backend.raise_window import raise_window
+from bfit.backend.weighted_mean import wmean, wstd
 
 import numpy as np
 import pandas as pd
@@ -95,7 +96,9 @@ class fit_files(object):
         self.bfit = bfit
         self.fit_output = {}
         self.share_var = {}
-        self.fitter = self.bfit.routine_mod.fitter(bfit.probe_species.get())
+        self.fitter = self.bfit.routine_mod.fitter(
+                                    keyfn = self.bfit.get_run_key,
+                                    probe_species = bfit.probe_species.get())
         self.draw_components = bfit.draw_components
         self.fit_data_tab = fit_data_tab
         self.plt = self.bfit.plt
@@ -672,7 +675,7 @@ class fit_files(object):
         
         # do fit then kill window
         for d in data_list:
-            self.logger.info('Fitting run %d (%d): %s',d[0].run,d[0].year,d[1:])    
+            self.logger.info('Fitting run %s: %s',self.bfit.get_run_key(d[0]),d[1:])    
         try:
             # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
             fit_output,gchi = fitter(fn_name=fn_name,ncomp=ncomp,
@@ -687,7 +690,7 @@ class fit_files(object):
         finally:
             fit_status_window.destroy()
             del fit_status_window
-
+            
         # set output results
         for key in fit_output.keys():
             self.bfit.data[key].set_fitresult(fit_output[key])
@@ -1238,8 +1241,8 @@ class fit_files(object):
         
         # Data file options
         if select == 'Temperature (K)':
-            val = [data[r].temperature.mean for r in runs]
-            err = [data[r].temperature.std for r in runs]
+            val = [data[r].temperature for r in runs]
+            err = [data[r].temperature_std for r in runs]
         
         elif select == 'B0 Field (T)':
             val = [data[r].field for r in runs]
@@ -1247,8 +1250,8 @@ class fit_files(object):
         
         elif select == 'RF Level DAC':
             try:
-                val = [data[r].camp.rf_dac.mean for r in runs]
-                err = [data[r].camp.rf_dac.std for r in runs]
+                val = [np.mean(data[r].camp.rf_dac.mean) for r in runs]
+                err = [np.nan for r in runs]
             except AttributeError:
                 pass
         
@@ -1260,11 +1263,11 @@ class fit_files(object):
                 pass
                 
         elif select == 'Impl. Energy (keV)':
-            val =  [data[r].bd.beam_kev() for r in runs]
-            err =  [data[r].bd.beam_kev(get_error=True) for r in runs]
+            val =  [np.mean(data[r].bd.beam_kev()) for r in runs]
+            err =  [np.sum(data[r].bd.beam_kev(get_error=True)**2)**0.5 for r in runs]
         
         elif select == 'Run Duration (s)':
-            val = [data[r].bd.duration for r in runs]
+            val = [np.sum(data[r].bd.duration) for r in runs]
             err = [np.nan for r in runs]
         
         elif select == 'Run Number':
@@ -1272,20 +1275,23 @@ class fit_files(object):
             err = [np.nan for r in runs]
         
         elif select == 'Sample':
-            val = [data[r].bd.sample for r in runs]
+            val = [data[r].bd.sample if type(data[r].bd) is bdata \
+                    else data[r].bd.sample[0] for r in runs]
             err = [np.nan for r in runs]
             
         elif select == 'Start Time':
-            val = [data[r].bd.start_time for r in runs]
+            val = [data[r].bd.start_time if type(data[r].bd) is bdata \
+                    else data[r].bd.start_time[0] for r in runs]
             err = [np.nan for r in runs]
         
         elif select == 'Title':
-            val = [data[r].bd.title for r in runs]
+            val = [data[r].bd.title if type(data[r].bd) is bdata \
+                    else data[r].bd.title[0] for r in runs]
             err = [np.nan for r in runs]
         
         elif select == '1000/T (1/K)':
-            val = [1000/data[r].temperature.mean for r in runs]
-            err = [1000*data[r].temperature.std/(data[r].temperature.mean**2) \
+            val = [1000/data[r].temperature for r in runs]
+            err = [1000*data[r].temperature_std/(data[r].temperature**2) \
                    for r in runs]
         
         elif select == 'Chi-Squared':
@@ -1298,11 +1304,11 @@ class fit_files(object):
             err = [np.nan for r in runs]
         
         elif select == 'Year':
-            val = [data[r].year for r in runs]
+            val = [np.mean(data[r].year) for r in runs]
             err = [np.nan for r in runs]
         
         elif select == 'Unique Id':
-            val = ['%d.%d' % (data[r].year,data[r].run) for r in runs]
+            val = [data[r].id for r in runs]
             err = [np.nan for r in runs]
 
         elif 'Beta-Avg 1/<T1' in select:
@@ -1336,49 +1342,51 @@ class fit_files(object):
                 err.append(dT1avg/(T1avg**2))
 
         elif 'Cryo Lift Set (mm)' in select:
-            val = [data[r].bd.camp.clift_set.mean for r in runs]
-            err = [data[r].bd.camp.clift_set.std for r in runs]
+            val = [wmean(data[r].bd.camp.clift_set) for r in runs]
+            err = [wstd(data[r].bd.camp.clift_set) for r in runs]
         
         elif 'Cryo Lift Read (mm)' in select:
-            val = [data[r].bd.camp.clift_read.mean for r in runs]
-            err = [data[r].bd.camp.clift_read.std for r in runs]
+            val = [wmean(data[r].bd.camp.clift_read) for r in runs]
+            err = [wstd(data[r].bd.camp.clift_read) for r in runs]
         
         elif 'He Mass Flow' in select:
             var = 'mass_read' if data[runs[0]].area == 'BNMR' else 'he_read'
-            val = [data[r].bd.camp[var].mean for r in runs]
-            err = [data[r].bd.camp[var].std for r in runs]
+            val = [wmean(data[r].bd.camp[var]) for r in runs]
+            err = [wstd(data[r].bd.camp[var]) for r in runs]
             
         elif 'CryoEx Mass Flow' in select:
-            val = [data[r].bd.camp.cryo_read.mean for r in runs]
-            err = [data[r].bd.camp.cryo_read.std for r in runs]
+            val = [wmean(data[r].bd.camp.cryo_read) for r in runs]
+            err = [wstd(data[r].bd.camp.cryo_read) for r in runs]
             
         elif 'Needle Set (turns)' in select:
-            val = [data[r].bd.camp.needle_set.mean for r in runs]
-            err = [data[r].bd.camp.needle_set.std for r in runs]
+            val = [wmean(data[r].bd.camp.needle_set) for r in runs]
+            err = [wstd(data[r].bd.camp.needle_set) for r in runs]
             
         elif 'Needle Read (turns)' in select:
-            val = [data[r].bd.camp.needle_pos.mean for r in runs]
-            err = [data[r].bd.camp.needle_pos.std for r in runs]
+            val = [wmean(data[r].bd.camp.needle_pos) for r in runs]
+            err = [wstd(data[r].bd.camp.needle_pos) for r in runs]
             
         elif 'Laser Power' in select:
-            val = [data[r].bd.epics.las_pwr.mean for r in runs]
-            err = [data[r].bd.epics.las_pwr.std for r in runs]
+            val = [wmean(data[r].bd.epics.las_pwr) for r in runs]
+            err = [wstd(data[r].bd.epics.las_pwr) for r in runs]
             
         elif 'Target Bias (kV)' in select:
-            val = [data[r].bd.epics.target_bias.mean for r in runs]
-            err = [data[r].bd.epics.target_bias.std for r in runs]        
+            val = [wmean(data[r].bd.epics.target_bias) for r in runs]
+            err = [wstd(data[r].bd.epics.target_bias) for r in runs]        
         
         elif 'NBM Rate (count/s)' in select:
-            rate = lambda b : np.sum([b.hist['NBM'+h].data \
-                                    for h in ('F+','F-','B-','B+')])/b.duration
+            rate = lambda b : np.sum([b.hist['NBM'+h].data for h in ('F+','F-','B-','B+')])/b.duration \
+                    if type(b) is bdata else \
+                        np.sum([np.concatenate(b.hist['NBM'+h].data) for h in ('F+','F-','B-','B+')])/np.sum(b.duration)
             val = [rate(data[r].bd) for r in runs]
             err = [np.nan for r in runs]        
             
         elif 'Sample Rate (count/s)' in select:
-            hist = ('F+','F-','B-','B+') if data[runs[0]].area == 'BNMR' \
-                                         else ('L+','L-','R-','R+')
+            hist = ('F+','F-','B-','B+') if data[runs[0]].area == 'BNMR' else ('L+','L-','R-','R+')
                 
-            rate = lambda b : np.sum([b.hist[h].data for h in hist])/b.duration
+            rate = lambda b : np.sum([b.hist[h].data for h in ('F+','F-','B-','B+')])/b.duration \
+                    if type(b) is bdata else \
+                        np.sum([np.concatenate(b.hist[h].data) for h in ('F+','F-','B-','B+')])/np.sum(b.duration)
             val = [rate(data[r].bd) for r in runs]
             err = [np.nan for r in runs]        
             
@@ -1766,11 +1774,22 @@ class fitline(object):
         fitframe = ttk.Frame(self.parent,pad=(5,0))
         
         # label for displyaing run number
-        self.run_label = Label(fitframe,
-                            text='[ %d - %d ]' % (self.dataline.run,
-                                                  self.dataline.year),
-                           bg=colors.foreground,fg=colors.background)
-        self.run_label_title = Label(fitframe,text=self.dataline.bdfit.title,
+        try:
+            self.run_label = Label(fitframe,
+                                text='[ %d - %d ]' % (  self.dataline.run,
+                                                        self.dataline.year),
+                                bg=colors.foreground,fg=colors.background)
+        # joined run
+        except TypeError:
+            self.run_label = Label(fitframe,
+                                text='[ %s ]' % ' + '.join(map(str,self.dataline.run)),
+                                bg=colors.foreground,fg=colors.background)
+            self.run_label_title = Label(fitframe,
+                                text='%d: %s' % (self.dataline.run[0],self.dataline.bdfit.title[0]),
+                                justify='right',fg='red3')
+        
+        else:
+            self.run_label_title = Label(fitframe,text=self.dataline.bdfit.title,
                                         justify='right',fg='red3')
                         
         # Parameter input labels

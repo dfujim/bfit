@@ -42,11 +42,14 @@ class fitter(object):
     valid_asym_modes = ('c','p','n','sl_c','dif_c',)
 
     # ======================================================================= #
-    def __init__(self,probe_species='8Li'):
+    def __init__(self,keyfn, probe_species='Li8'):
         """
+            keyfn:          function takes as input bdata or bjoined object, 
+                            returns string corresponding to unique id of that 
+                            object
             probe_species: one of the keys in the bdata.life dictionary.
         """
-        
+        self.keyfn = keyfn
         self.probe_species = probe_species
         
     # ======================================================================= #
@@ -84,8 +87,8 @@ class fitter(object):
                             
                             ex: sl_c or raw_h or dif_c
             xlims: fit subrange of x axis
-            returns dictionary of {run: [[par_names],[par_values],[par_errors],
-                                        [chisquared],[fitfunction pointers]]}
+            returns dictionary of {runid: [[par_names],[par_values],[par_errors],
+                                          [chisquared],[fitfunction pointers]]}
                                    and global chisquared
         """
 
@@ -185,10 +188,9 @@ class fitter(object):
         # collect results
         if not isinstance(chis,collections.Iterable):   # single run
             d = bdata_list[0]
-            return ({'.'.join(map(str,(d.year,d.run))):\
-                                        [keylist,pars,stds,chis,fn[0]]},gchi)
+            return ({self.keyfn(d):[keylist,pars,stds,chis,fn[0]]},gchi)
         else:                                           # multiple runs    
-            return ({'.'.join(map(str,(d.year,d.run))):[keylist,p,s,c,f] \
+            return ({self.keyfn(d):[keylist,p,s,c,f] \
                     for d,p,s,c,f in zip(bdata_list,pars,stds,chis,fn)},gchi)
 
     # ======================================================================= #
