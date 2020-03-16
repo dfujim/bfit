@@ -50,6 +50,18 @@ if __name__ == '__main__':
 
     logger.addHandler(handler)
     logger.setLevel(level)
-
+    
+    # testing
+    testfn = None
+    # ~ def testfn(self):
+        # ~ self.fetch_files.run.set("40123 40127 +40129")
+        # ~ self.fetch_files.get_data()
+        # ~ self.fit_files.populate()
+        # ~ self.fit_files.do_fit()
+        # ~ import matplotlib.pyplot as plt
+        # ~ plt.close('all')
+        # ~ self.notebook.select(2)
+        
     # Run bfit ----------------------------------------------------------------
-    bfit()
+    bfit(testfn)
+
