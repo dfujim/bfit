@@ -444,8 +444,9 @@ class bfit(object):
         menu_help = Menu(menubar)
         menubar.add_cascade(menu=menu_help, label='Help')
         menu_help.add_command(label='Show help wiki',command=self.help)
-        menu_help.add_command(label='Report an issue',command=self.report_issue)
+        menu_help.add_command(label="What's new?",command=self.whatsnew)
         menu_help.add_command(label='Update bfit',command=self.update_bfit)
+        menu_help.add_command(label='Report an issue',command=self.report_issue)
         
         # Top Notebook: File Viewer, Fit, Fit Viewer -------------------------
         noteframe = ttk.Frame(mainframe,relief='sunken',pad=5)
@@ -487,7 +488,6 @@ class bfit(object):
         # runloop
         self.root.mainloop()
     
-        
     # ======================================================================= #
     def __del__(self):
         if hasattr(self,'fileviewer'):  del self.fileviewer
@@ -1463,6 +1463,12 @@ class bfit(object):
         subprocess.call([sys.executable, "-m", "pip", "install", "--user", 
                          "--upgrade", 'bfit'])
         print('Done. Restart to implement updates.')
+     
+    # ======================================================================= #
+    def whatsnew(self):
+        """Display releases page"""
+        self.logger.info('Opening https://github.com/dfujim/bfit/releases')
+        webbrowser.open('https://github.com/dfujim/bfit/releases')
         
 # =========================================================================== #
 if __name__ == "__main__":
