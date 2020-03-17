@@ -5,7 +5,7 @@
 
 from tkinter import *
 from tkinter import ttk,filedialog,messagebox
-from bdata import bdata, bjoined
+from bdata import bdata
 from scipy.optimize import curve_fit
 
 # set MPL backend
@@ -43,7 +43,6 @@ from bfit.gui.popup_set_ppm_reference import popup_set_ppm_reference
 from bfit.gui.popup_set_histograms import popup_set_histograms
 from bfit.backend.PltTracker import PltTracker
 from bfit.backend.raise_window import raise_window
-from bfit.backend.fitdata import fitdata
 import bfit.backend.colors as colors
 
 # interactive plotting
@@ -545,9 +544,10 @@ class bfit(object):
             drawargs: passed to 
         """
         
-        self.logger.info('Drawing run %s. mode: %s, rebin: %d, '+\
+        self.logger.info('Drawing run %d (%d). mode: %s, rebin: %d, '+\
                      'option: %s, style: %s, %s',
-                     data.id,
+                     data.run,
+                     data.year,
                      asym_type,
                      rebin,
                      option,
@@ -1083,9 +1083,6 @@ class bfit(object):
             Input: fitdata object. 
         """
         
-        # check joined status
-        isjoined = type(data.bd) is bjoined
-        
         # the thing to switch on
         select = self.label_default.get()
         self.logger.debug('Fetching plot label for "%s" (run %d)',select,data.run)
@@ -1093,7 +1090,7 @@ class bfit(object):
         # Data file options
         try:
             if select == 'Temperature (K)':
-                label = "%d K" % int(round(data.temperature))
+                label = "%d K" % int(round(data.temperature.mean))
                 
             elif select == 'B0 Field (T)':
                 if data.field > 0.1:
@@ -1102,23 +1099,19 @@ class bfit(object):
                     label = "%3.2f G" % np.round(data.field*1e4)# field (Gauss)
                 
             elif select == 'RF Level DAC':
-                label = str(int(np.mean(data.bd.camp.rf_dac.mean)))
+                label = str(int(data.bd.camp.rf_dac.mean))
                 
             elif select == 'Platform Bias (kV)':
                 label = "%d kV" % int(np.round(data.bias))
                     
             elif select == 'Impl. Energy (keV)':
-                label = "%.2f keV" % np.around(np.mean(data.bd.beam_kev()))
+                label = "%.2f keV" % np.around(data.bd.beam_kev())
                 
             elif select == 'Run Duration (s)':
-                x = int(np.sum(data.duration))
-                label = "%s s" % (f'{x:,}'.replace(',',' '))
+                label = "%d s" % int(data.bd.duration)
                 
             elif select == 'Run Number':
-                if isjoined:
-                    label = ', '.join(map(str,data.run))
-                else:
-                    label = str(data.run)
+                label = str(data.run)
                 
             elif select == 'Sample':
                 label = data.bd.sample
@@ -1130,7 +1123,7 @@ class bfit(object):
                 label = data.bd.title
                 
             elif select == '1000/T (1/K)':
-                label = '%3.3f 1/K' % np.around(1000/data.temperature,2)
+                label = '%3.3f 1/K' % np.around(1000/data.temperature.mean,2)
                 
             elif select == 'Chi-Squared':
                 try:
@@ -1139,65 +1132,52 @@ class bfit(object):
                     label = ""
                 
             elif select == 'Year':
-                if isjoined:
-                    label = ', '.join(map(str,data.year))
-                else:
-                    label = str(data.year)
+                label = '%d' % data.year
             
             elif select == 'Unique Id':
-                label = data.id
+                label = '%d.%d' % (data.year,data.run)
                 
             elif 'Cryo Lift Set (mm)' in select:
-                label = '%3.2f mm' % np.around(np.mean(data.bd.camp.clift_set.mean),2)
+                label = '%3.2f mm' % np.around(data.bd.camp.clift_set.mean,2)
                 
             elif 'Cryo Lift Read (mm)' in select:
-                label = '%3.2f mm' % np.around(np.mean(data.bd.camp.clift_read.mean),2)
+                label = '%3.2f mm' % np.around(data.bd.camp.clift_read.mean,2)
                 
             elif 'He Mass Flow' in select:
                 var = 'mass_read' if data.area == 'BNMR' else 'he_read'
-                label = '%3.2f' % np.around(np.mean(data.bd.camp[var].mean),2)
+                label = '%3.2f' % np.around(data.bd.camp[var].mean,2)
                 
             elif 'CryoEx Mass Flow' in select:
-                label = '%3.2f' % np.around(np.mean(data.bd.camp.cryo_read.mean),2)
+                label = '%3.2f' % np.around(data.bd.camp.cryo_read.mean,2)
                 
             elif 'Needle Set (turns)' in select:
-                label = '%3.2f turns' % np.around(np.mean(data.bd.camp.needle_set.mean),2)
+                label = '%3.2f turns' % np.around(data.bd.camp.needle_set.mean,2)
                 
             elif 'Needle Read (turns)' in select:
-                label = '%3.2f turns' % np.around(np.mean(data.bd.camp.needle_pos.mean),2)
+                label = '%3.2f turns' % np.around(data.bd.camp.needle_pos.mean,2)
                 
             elif 'Laser Power' in select:
-                label = '%3.2f' % np.around(np.mean(data.bd.epics.las_pwr.mean),2)
+                label = '%3.2f' % np.around(data.bd.epics.las_pwr.mean,2)
                 
             elif 'Target Bias (kV)' in select:
-                label = '%3.2f kV' % np.around(np.mean(data.bd.epics.target_bias.mean),2)
+                label = '%3.2f kV' % np.around(data.bd.epics.target_bias.mean,2)
                 
             elif 'NBM Rate (count/s)' in select:
-                
-                x = [data.hist['NBM'+h].data for h in ('F+','F-','B-','B+')]
-                
-                if isjoined:
-                    x = tuple(map(np.concatenate,x))
-                    
-                rate = int(np.sum(x)/data.duration)
-                label = '%s count/s' % (f'{rate:,}'.replace(',',' '))
+                rate = np.sum([data.hist['NBM'+h].data \
+                               for h in ('F+','F-','B-','B+')])/data.duration            
+                label = '%3.2f count/s' % np.around(rate,2)
                 
             elif 'Sample Rate (count/s)' in select:
                 hist = ('F+','F-','B-','B+') if data.area == 'BNMR' \
                                              else ('L+','L-','R-','R+')
-                
-                x = [data.hist[h].data for h in hist]
-                
-                if isjoined:
-                    x = tuple(map(np.concatenate,x))
                     
-                rate = int(np.sum(x)/data.duration)
-                label = '%s count/s' % (f'{rate:,}'.replace(',',' '))
+                rate = np.sum([data.hist[h].data for h in hist])/data.duration
+                label = '%3.2f count/s' % np.around(rate,2)
                 
             else:
                 label = str(data.run)
         except Exception as err:
-            label = '%s (Error)' % data.id
+            label = '%d (Error)' % data.run
             
         return label
     
@@ -1232,16 +1212,8 @@ class bfit(object):
     def get_run_key(self,data=None,r=-1,y=-1):
         """For indexing data dictionary"""
         
-        if type(data) is fitdata:
-            data = data.bd
-        
-        if type(data) is bdata:
+        if data is not None:
             return '.'.join(map(str,(data.year,data.run)))
-        elif type(data) is bjoined:
-            out = []
-            for y,r in zip(data.year,data.run):
-                out.append('.'.join(map(str,(y,r))))
-            return '+'.join(out)
         elif r>0 and y>0:
             return '.'.join(map(str,(y,r)))
         else:
@@ -1367,7 +1339,7 @@ class bfit(object):
             
             # repopuate fitter
             self.logger.info('Repopulating fitter...')
-            self.fit_files.fitter = self.routine_mod.fitter(
+             self.fit_files.fitter = self.routine_mod.fitter(
                                         keyfn = self.get_run_key,
                                         probe_species = self.probe_species.get())
             self.fit_files.populate()

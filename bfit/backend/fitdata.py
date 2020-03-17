@@ -4,10 +4,9 @@
 # Nov 2018
 
 from tkinter import *
-from bdata import bdata, bjoined
+from bdata import bdata
 from bfit.gui.calculator_nqr_B0 import current2field
 from bfit import logger_name
-from bfit.backend.weighted_mean import wmean, wstd
 
 import numpy as np
 
@@ -35,7 +34,7 @@ class fitdata(object):
             bias_std:   platform bias in kV (float)
             
             id:         key for unique idenfication (str)    
-            fn_title:   function (str)
+            fitfnname:  function (str)
             fitfn:      function (function pointer)
             fitpar:     initial parameters {column:{parname:float}} and results
                         Columns are fit_files.fitinputtab.collist
@@ -44,7 +43,6 @@ class fitdata(object):
             drawarg:    drawing arguments for errorbars (dict)
             rebin:      rebin factor (IntVar)
             mode:       run mode (str)
-            ncomp:      number of components (int)
             omit:       omit bins, 1f only (StringVar)
             check_state:(BooleanVar)    
     """
@@ -73,10 +71,6 @@ class fitdata(object):
         # fit parameters dictionary
         self.fitpar = {}
         
-        # fit title and comp (set in tab_fit_files)
-        self.fit_title = ""
-        self.ncomp = -1
-        
         # key for IDing file 
         self.id = self.bfit.get_run_key(data=bd)
         
@@ -93,7 +87,7 @@ class fitdata(object):
             return self.__dict__[name]
         except KeyError:
             return getattr(self.bd,name)
-    
+
     # ======================================================================= #
     def asym(self,*args,**kwargs):  return self.bd.asym(*args,**kwargs)
 
@@ -102,33 +96,27 @@ class fitdata(object):
         """Read data file"""
         
         # bdata access
-        if type(self.bd) is bdata:
-            self.bd = bdata(self.run,self.year)    
-        elif type(self.bd) is bjoined:
-            self.bd = bjoined([bdata(r,y) for r,y in zip(self.run,self.year)])
-            
+        self.bd = bdata(self.run,self.year)
+                
         # set temperature 
         try:
-            self.temperature = wmean(self.bd.camp.smpl_read_A)
-            self.temperature_std = wstd(self.bd.camp.smpl_read_A)
+            self.temperature = self.bd.camp.smpl_read_A
         except AttributeError:
             self.logger.exception('Thermometer smpl_read_A not found')
             try:
-                self.temperature = wmean(self.bd.camp.oven_readC)
-                self.temperature_std = wstd(self.bd.camp.oven_readC)
+                self.temperature = self.bd.camp.oven_readC
             except AttributeError:
                 self.logger.exception('Thermometer oven_readC not found')
                 self.temperature = -1111
-                self.temperature_std = -1111
         
         # field
         try:
             if self.bd.area == 'BNMR':
-                self.field = wmean(self.bd.camp.b_field)
-                self.field_std = wstd(self.bd.camp.b_field)
+                self.field = self.bd.camp.b_field.mean
+                self.field_std = self.bd.camp.b_field.std
             else:
-                self.field = current2field(wmean(self.bd.epics.hh_current))*1e-4
-                self.field_std = current2field(wstd(self.bd.epics.hh_current))*1e-4
+                self.field = current2field(self.bd.epics.hh_current.mean)*1e-4
+                self.field_std = current2field(self.bd.epics.hh_current.std)*1e-4
         except AttributeError:
             self.logger.exception('Field not found')
             self.field = np.nan
@@ -137,21 +125,14 @@ class fitdata(object):
         # bias
         try:
             if self.bd.area == 'BNMR': 
-                self.bias = wmean(self.bd.epics.nmr_bias)
-                self.bias_std = wstd(self.bd.epics.nmr_bias)
+                self.bias = self.bd.epics.nmr_bias.mean
+                self.bias_std = self.bd.epics.nmr_bias.std
             else:
-                self.bias = wmean(self.bd.epics.nqr_bias)/1000.
-                self.bias_std = wstd(self.bd.epics.nqr_bias)/1000.
+                self.bias = self.bd.epics.nqr_bias.mean/1000.
+                self.bias_std = self.bd.epics.nqr_bias.std/1000.
         except AttributeError:
             self.logger.exception('Bias not found')
             self.bias = np.nan
-            
-        # duration 
-        try:
-            self.duration = int(np.sum(self.bd.duration))
-        except AttributeError:
-            self.logger.exception('duration not found')
-            self.duration = -1111
 
     # ======================================================================= #
     def set_fitpar(self,values):
