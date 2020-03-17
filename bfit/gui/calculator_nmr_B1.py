@@ -55,7 +55,7 @@ class calculator_nmr_B1(object):
         
         # Entry and other objects
         title_line = ttk.Label(mainframe,   
-                text='BNMR Magnetic Oscillating Field -- \n'+\
+                text='BNMR Magnetic Oscillating Field -- '+\
                      'Antenna Voltage (peak-peak)', 
                      justify=CENTER)
         self.entry_field = ttk.Entry(mainframe,textvariable=self.field,width=10,
@@ -80,15 +80,22 @@ class calculator_nmr_B1(object):
         self.entry_freq.grid(column=1,row=0,padx=5)
         freq2.grid(column=2,row=0,padx=5)
         
+        # caveat
+        warning = ttk.Label(root,
+                            text='WARNING: Calculation only valid for runs \n'+\
+                                 'with silver antenna (before Sept 2019)', 
+                            justify=CENTER)
+        
         # Gridding
-        title_line.grid(        column=0,row=0,padx=5,pady=5,columnspan=10)
+        title_line.grid(        column=0,row=0,padx=5,pady=5,columnspan=5)
         freq_frame.grid(        column=0,row=1,padx=5,pady=5,columnspan=5)
-        self.entry_field.grid(  column=0,row=2,padx=5,pady=5)
-        gauss.grid(             column=1,row=2,padx=5,pady=5)
-        equals.grid(            column=2,row=2,padx=20,pady=5)
-        self.entry_voltage.grid(column=3,row=2,padx=5,pady=5)
-        voltage.grid(           column=4,row=2,padx=5,pady=5)
+        self.entry_field.grid(  column=0,row=2,padx=5,pady=5,sticky=E)
+        gauss.grid(             column=1,row=2,padx=5,pady=5,sticky=E)
+        equals.grid(            column=2,row=2,padx=20,pady=5,sticky=(E,W))
+        self.entry_voltage.grid(column=3,row=2,padx=5,pady=5,sticky=W)
+        voltage.grid(           column=4,row=2,padx=5,pady=5,sticky=W)
         explanation.grid(       column=0,row=3,padx=5,pady=5,columnspan=5)
+        warning.grid(           column=0,row=2,padx=5,pady=5,columnspan=5)
         
         # runloop
         self.root = root
