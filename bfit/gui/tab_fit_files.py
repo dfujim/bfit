@@ -5,7 +5,7 @@
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from functools import partial
-from bdata import bdata
+from bdata import bdata, bmerged
 from bfit import logger_name,__version__
 from scipy.special import gamma, polygamma
 from pandas.plotting import register_matplotlib_converters
@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import bfit.backend.colors as colors
 
-import datetime, os, traceback, warnings, logging, yaml
+import datetime, os, traceback, warnings, logging, yaml, textwrap
 
 register_matplotlib_converters()
 
@@ -95,7 +95,8 @@ class fit_files(object):
         self.bfit = bfit
         self.fit_output = {}
         self.share_var = {}
-        self.fitter = self.bfit.routine_mod.fitter(bfit.probe_species.get())
+        self.fitter = self.bfit.routine_mod.fitter(keyfn = bfit.get_run_key,
+                                                   probe_species = bfit.probe_species.get())
         self.draw_components = bfit.draw_components
         self.fit_data_tab = fit_data_tab
         self.plt = self.bfit.plt
@@ -672,7 +673,7 @@ class fit_files(object):
         
         # do fit then kill window
         for d in data_list:
-            self.logger.info('Fitting run %d (%d): %s',d[0].run,d[0].year,d[1:])    
+            self.logger.info('Fitting run %s: %s',self.bfit.get_run_key(d[0]),d[1:])    
         try:
             # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
             fit_output,gchi = fitter(fn_name=fn_name,ncomp=ncomp,
@@ -1302,7 +1303,7 @@ class fit_files(object):
             err = [np.nan for r in runs]
         
         elif select == 'Unique Id':
-            val = ['%d.%d' % (data[r].year,data[r].run) for r in runs]
+            val = [data[r].id for r in runs]
             err = [np.nan for r in runs]
 
         elif 'Beta-Avg 1/<T1' in select:
@@ -1766,13 +1767,24 @@ class fitline(object):
         fitframe = ttk.Frame(self.parent,pad=(5,0))
         
         # label for displyaing run number
-        self.run_label = Label(fitframe,
+        if type(self.dataline.bdfit.bd) is bdata:
+            self.run_label = Label(fitframe,
                             text='[ %d - %d ]' % (self.dataline.run,
                                                   self.dataline.year),
                            bg=colors.foreground,fg=colors.background)
-        self.run_label_title = Label(fitframe,text=self.dataline.bdfit.title,
-                                        justify='right',fg='red3')
-                        
+            
+        elif type(self.dataline.bdfit.bd) is bmerged:
+            runs = textwrap.wrap(str(self.dataline.run),5)
+             
+            self.run_label = Label(fitframe,
+                                text='[ %s ]' % ' + '.join(runs),
+                                bg=colors.foreground,fg=colors.background)
+
+        # title of run
+        self.run_label_title = Label(fitframe,
+                            text=self.dataline.bdfit.title,
+                            justify='right',fg='red3')
+                    
         # Parameter input labels
         gui_param_button = ttk.Button(fitframe,text='Initial Value',
                         command=lambda : self.bfit.fit_files.do_gui_param(id=self.dataline.id),
@@ -2113,8 +2125,7 @@ class fitline(object):
     def degrid(self):
         """Remove displayed dataline object from file selection. """
         
-        self.logger.debug('Degridding fitline for run %d (%d)',self.dataline.run,
-                                                          self.dataline.year)
+        self.logger.debug('Degridding fitline for run %s',self.dataline.id)
         self.fitframe.grid_forget()
         self.fitframe.update_idletasks()
     
@@ -2159,7 +2170,7 @@ class fitline(object):
     # ======================================================================= #
     def show_fit_result(self):
         
-        self.logger.debug('Showing fit result for run %d',self.dataline.run)
+        self.logger.debug('Showing fit result for run %s',self.dataline.id)
         
         # Set up variables
         displays = self.parentry

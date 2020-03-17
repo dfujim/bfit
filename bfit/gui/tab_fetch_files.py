@@ -5,7 +5,7 @@
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from bfit import logger_name
-from bdata import bdata, bjoined
+from bdata import bdata, bmerged
 from functools import partial
 from bfit.backend.fitdata import fitdata
 from bfit.backend.entry_color_set import on_focusout,on_entry_click
@@ -444,10 +444,8 @@ class fetch_files(object):
                 dat_to_merge.append(all_data.pop(r))
             
             # make bjoined object
-            joined_data = bjoined(dat_to_merge)
+            new_data.append(bmerged(dat_to_merge))
             
-            # add to data list 
-            new_data.append(joined_data)
         new_data.extend(list(all_data.values()))
         
         # update object data lists
@@ -956,7 +954,7 @@ class dataline(object):
         
         # temperature
         try:
-            self.temperature = int(np.round(bdfit.temperature))
+            self.temperature = int(np.round(bdfit.temperature.mean))
         except AttributeError:
             self.temperature = -999
             

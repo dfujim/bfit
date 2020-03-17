@@ -5,7 +5,7 @@
 
 from tkinter import *
 from tkinter import ttk,filedialog,messagebox
-from bdata import bdata
+from bdata import bdata, bmerged
 from scipy.optimize import curve_fit
 
 # set MPL backend
@@ -18,7 +18,7 @@ except ImportError as errmsg:
     print('No 3D axes drawing available')
     print(errmsg)
 
-import sys,os,datetime
+import sys,os,datetime,textwrap
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -1135,7 +1135,7 @@ class bfit(object):
                 label = '%d' % data.year
             
             elif select == 'Unique Id':
-                label = '%d.%d' % (data.year,data.run)
+                label = '%s' % data.id
                 
             elif 'Cryo Lift Set (mm)' in select:
                 label = '%3.2f mm' % np.around(data.bd.camp.clift_set.mean,2)
@@ -1212,8 +1212,13 @@ class bfit(object):
     def get_run_key(self,data=None,r=-1,y=-1):
         """For indexing data dictionary"""
         
-        if data is not None:
+        if type(data) is bdata:
             return '.'.join(map(str,(data.year,data.run)))
+        elif type(data) is bmerged:
+            runs = textwrap.wrap(str(data.run),5)
+            years = textwrap.wrap(str(data.year),4)
+            return '+'.join(['%s.%s' % (y,r) for y,r in zip(years,runs)])
+            
         elif r>0 and y>0:
             return '.'.join(map(str,(y,r)))
         else:
@@ -1339,7 +1344,7 @@ class bfit(object):
             
             # repopuate fitter
             self.logger.info('Repopulating fitter...')
-             self.fit_files.fitter = self.routine_mod.fitter(
+            self.fit_files.fitter = self.routine_mod.fitter(
                                         keyfn = self.get_run_key,
                                         probe_species = self.probe_species.get())
             self.fit_files.populate()

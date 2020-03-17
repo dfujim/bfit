@@ -4,7 +4,7 @@
 # Nov 2018
 
 from tkinter import *
-from bdata import bdata
+from bdata import bdata,bmerged
 from bfit.gui.calculator_nqr_B0 import current2field
 from bfit import logger_name
 
@@ -12,6 +12,7 @@ import numpy as np
 
 import bfit
 import logging
+import textwrap
 
 # =========================================================================== #
 # =========================================================================== #
@@ -96,7 +97,12 @@ class fitdata(object):
         """Read data file"""
         
         # bdata access
-        self.bd = bdata(self.run,self.year)
+        if type(self.bd) is bdata:
+            self.bd = bdata(self.run,self.year)
+        elif type(self.bd) is bmerged:
+            years = list(map(int,textwrap.wrap(str(self.year),4)))
+            runs = list(map(int,textwrap.wrap(str(self.run),5)))
+            self.bd = bmerged([bdata(r,y) for r,y in zip(runs,years)])
                 
         # set temperature 
         try:
