@@ -37,7 +37,7 @@ setuptools.setup(
         "Development Status :: 5 - Production/Stable",
     ],
     install_requires=['cython>=0.28','numpy>=1.14','tqdm>=4.25.0',
-                      'bdata>=5.1.2','matplotlib>=2.2.4','pandas>=0.23.0',
+                      'bdata>=5.1.3','matplotlib>=2.2.4','pandas>=0.23.0',
                       'pyyaml>=5.1','scipy>=1.2.0'],
     package_data={'': ['./images']},
     include_package_data=True,
