@@ -207,11 +207,9 @@ class popup_fit_constraints(template_fit_popup):
         bhi = np.array(bhi).T
         
         # set up fitter inputs
-        runs = [int(k.split('.')[1]) for k in keylist]
-        years = [int(k.split('.')[0]) for k in keylist]
         npar = len(sharelist)
         bounds = [[l,h] for l,h in zip(blo,bhi)]
-        data = [bd.bdata(r,y) for r,y in zip(runs,years)]
+        data = [self.bfit.data[k] for k in keylist]
         kwargs = {'p0':p0,'bounds':bounds}
         
         # do the fit and kill fitting window
