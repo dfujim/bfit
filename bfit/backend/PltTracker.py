@@ -172,11 +172,16 @@ class PltTracker(object):
             Citation: https://stackoverflow.com/a/47166787
         """
     
+        i = ind["ind"][0]
         x,y = line.get_data()
         annot = ax.hover_annot
-        annot.xy = (x[ind["ind"][0]], y[ind["ind"][0]])
+        annot.xy = (x[i], y[i])
         
-        text = line.get_label()
+        if hasattr(line,'annot_label'):
+            text = line.annot_label[i]
+        else:
+            text = line.get_label()
+            
         annot.set_text(text)
         annot.set_backgroundcolor(line.get_color())
         annot.get_bbox_patch().set_alpha(0.4)
@@ -205,11 +210,13 @@ class PltTracker(object):
     def errorbar(self, style, id, x, y, yerr=None, xerr=None, fmt='', ecolor=None, 
                  elinewidth=None, capsize=None, barsabove=False, lolims=False, 
                  uplims=False, xlolims=False, xuplims=False, errorevery=1, 
-                 capthick=None, *, data=None, unique=True, **kwargs):
+                 capthick=None, *, data=None, unique=True, annot_label=None,
+                 **kwargs):
         """
             Plot data.
             
             style: one of "data", "fit", or "param"
+            annot_label: list of annotations for each point
             other arguments: defaults for matplotlib.pyplot.plot
         """
         
@@ -243,6 +250,10 @@ class PltTracker(object):
         # label the line object
         ax.lines[-1].set_label(label)
         
+        # set the annotation
+        if annot_label is not None: 
+            ax.lines[-1].annot_label = annot_label
+            
         # save the drawn object to the file
         ax.draw_objs.setdefault(id,[]).append(obj)
         

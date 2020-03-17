@@ -1031,6 +1031,9 @@ class fit_files(object):
         else:
             ann = None
         
+        # get mouseover annotation labels
+        mouse_label, _ = self.get_values('Unique Id')
+        
         # fix annotation values (round floats)
         if ann is not None: 
             number_string = '%.'+'%df' % self.bfit.rounding
@@ -1079,7 +1082,7 @@ class fit_files(object):
             
         # draw
         f = self.plt.errorbar(figstyle,draw_id,xvals,yvals,xerr=xerrs,yerr=yerrs,
-                              label=draw_id,**self.bfit.style)
+                              label=draw_id,annot_label=mouse_label,**self.bfit.style)
         self._annotate(draw_id,xvals,yvals,ann,color=f[0].get_color(),unique=False)
         
         # format date x axis
