@@ -42,6 +42,7 @@ class fit_files(object):
             draw_components:list of titles for labels, options to export, draw.
             entry_asym_type:combobox for asym calculations
             fit_canvas:     canvas object allowing for scrolling 
+            par_label_entry:draw parameter label entry box
             pop_fitconstr:  object for fitting with constrained functions
             fit_data_tab:   containing frame (for destruction)
             fit_function_title: title of fit function to use
@@ -297,7 +298,7 @@ class fit_files(object):
         self.annotation_combobox = ttk.Combobox(results_frame,
                                       textvariable=self.annotation,
                                       state='readonly',width=19)
-        par_label_entry = ttk.Entry(results_frame,
+        self.par_label_entry = ttk.Entry(results_frame,
                                     textvariable=self.par_label,width=21)
         
         # gridding
@@ -311,7 +312,7 @@ class fit_files(object):
         self.xaxis_combobox.grid(column=1,row=1,pady=5)
         self.yaxis_combobox.grid(column=1,row=2,pady=5)
         self.annotation_combobox.grid(column=1,row=3,pady=5)
-        par_label_entry.grid(column=1,row=4,pady=5)
+        self.par_label_entry.grid(column=1,row=4,pady=5)
         
         # save/load state -----------------------
         state_frame = ttk.Labelframe(fit_data_tab,text='Program State',pad=5)
@@ -1590,7 +1591,8 @@ class fit_files(object):
         # right frame items
         draw_par_items = (  self.xaxis_combobox,
                             self.yaxis_combobox,
-                            self.annotation_combobox)
+                            self.annotation_combobox,
+                            self.par_label_entry)
         
         # do action 
         if focus in draw_par_items:
