@@ -38,6 +38,8 @@ class fetch_files(object):
                 in the data_canvas
             
             entry_asym_type: combobox for asym calc and draw type
+            entry_run: entry to put in run number string
+            listbox_history: listbox for run input history
             year: IntVar of year to fetch runs from 
             run: StringVar input to fetch runs.
             bfit: pointer to parent class
@@ -59,6 +61,7 @@ class fetch_files(object):
     run_number_starter_line = '40001 40002+40003 40005-40010 (run numbers)'
     bin_remove_starter_line = '24 100-200 (bins)'
     max_number_fetched = 500
+    nhistory = 10
     
     # ======================================================================= #
     def __init__(self,fetch_data_tab,bfit):
@@ -88,13 +91,20 @@ class fetch_files(object):
                              from_=2000,to=datetime.datetime.today().year)
         entry_run = ttk.Entry(fet_entry_frame,textvariable=self.run,width=85)
         entry_run.insert(0,self.run_number_starter_line)
+        entry_run.config(foreground=colors.entry_grey)
+        
+        # history list
+        self.listbox_history = Listbox(fetch_data_tab,selectmode=SINGLE)
         entry_fn = partial(on_entry_click,text=self.run_number_starter_line,\
                             entry=entry_run)
         on_focusout_fn = partial(on_focusout,text=self.run_number_starter_line,\
                             entry=entry_run)
         entry_run.bind('<FocusIn>', entry_fn)
         entry_run.bind('<FocusOut>', on_focusout_fn)
-        entry_run.config(foreground=colors.entry_grey)
+        
+        entry_run.bind('<Enter>', self.history_show)
+        self.listbox_history.bind('<Leave>', self.history_hide)
+        self.listbox_history.bind("<<ListboxSelect>>", self.history_set)
         
         # fetch button
         fetch = ttk.Button(fet_entry_frame,text='Fetch',command=self.get_data)
@@ -106,10 +116,13 @@ class fetch_files(object):
         ttk.Label(fet_entry_frame,text="Run Number:").grid(column=2,row=0,sticky=W)
         entry_run.grid(column=3,row=0,sticky=W)
         fetch.grid(column=4,row=0,sticky=E)
+        self.listbox_history.grid(column=3,row=1,sticky=W)
         
         # padding 
         for child in fet_entry_frame.winfo_children(): 
             child.grid_configure(padx=5, pady=5)
+        
+        self.listbox_history.grid_forget()
         
         # Frame for run mode -------------------------------------------------
         runmode_label_frame = ttk.Labelframe(fetch_data_tab,pad=(10,5,10,5),\
@@ -575,6 +588,53 @@ class fetch_files(object):
         return merge_runs
         
     # ======================================================================= #
+    def history_set(self,x):
+        """
+            Set the history entry as the current fetch string
+        """
+        
+        idx = self.listbox_history.curselection() 
+        if not idx:
+            on_focusout_fn(0)
+            return 
+            
+        item = self.listbox_history.get(idx)
+        self.listbox_history.delete(idx)
+        self.listbox_history.insert(0,item)
+        self.entry_run.delete(0,END)
+        self.entry_run.insert(0,item)
+        self.history_hide()
+        self.entry_run.focus_set()
+        
+    # ======================================================================= #
+    def history_show(self,x=None):
+        """
+            Show list widget with input history
+        """
+        if self.listbox_history.size()>0:
+            self.listbox_history.config(height=self.listbox_history.size())
+            x = self.entry_run.winfo_x()
+            y = self.entry_run.winfo_y()
+            dx = self.entry_run.winfo_width()
+            self.listbox_history.place(x=x+6,y=y+30,width=dx)
+            self.listbox_history.lift()
+            
+    # ======================================================================= #
+    def history_hide(self,x=None):
+        """
+            Hide list widget with input history
+        """
+        self.listbox_history.place_forget()
+        string = self.run.get() 
+        
+        if string != self.listbox_history.get(0) and \
+           string != self.run_number_starter_line:
+            self.listbox_history.insert(0,string)
+            
+        if self.listbox_history.size()>self.nhistory:
+            self.listbox_history.delete(END)            
+    
+    # ======================================================================= #
     def remove_all(self):
         """Remove all data files from self.data_lines"""
         
@@ -597,6 +657,7 @@ class fetch_files(object):
         if focus_id in [self.entry_run, self.entry_year]:
             self.logger.debug('Focus is: run or year entry')
             self.get_data()
+            self.history_hide()
         
         # checked rebin or checked run omission
         elif focus_id in [self.check_rebin_box,\
