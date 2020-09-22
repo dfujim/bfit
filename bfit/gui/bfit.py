@@ -804,7 +804,7 @@ class bfit(object):
                 self.plt.errorbar(figstyle,data.id,x[tag_p],ap,a.p[1][tag_p],
                         label=label+" ($+$)",**drawargs)
                 self.plt.errorbar(figstyle,data.id,x[tag_n],an,a.n[1][tag_n],
-                        label=label+" ($-$)",**drawargs)
+                        label=label+" ($-$)",unique=False,**drawargs)
                 
             # plot split helicities, flipped about the average
             elif asym_type == 'hm':
