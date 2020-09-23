@@ -191,8 +191,9 @@ class bfit(object):
                  
     ylabel_dict={'ad':r'$N_\alpha/N_\beta$', # otherwise, label as Asymmetry
                  'adn':r'$N_\alpha/N_\beta$', 
-                 'hs':r'Asym-Asym($\nu_{min}$)',
-                 'cs':r'Asym-Asym($\nu_{min}$)',
+                 'hs':r'Asym-Asym($\nu_\mathrm{max}$)',
+                 'cs':r'Asym-Asym($\nu_\mathrm{max}$)',
+                 'cn':r'Asym/Asym($\nu_\mathrm{max}$)',
                  'rhist':'Counts'}
     
     # histogram names for x axis
@@ -793,19 +794,31 @@ class bfit(object):
                 # remove zero asym
                 ap = a.p[0]
                 an = a.n[0]
+                dap = a.p[1]
+                dan = a.n[1]
                 tag_p = ap!=0
                 tag_n = an!=0
                 ap = ap[tag_p]
                 an = an[tag_n]
+                dap = dap[tag_p]
+                dan = dan[tag_n]
                 
-                # subtract first value
-                loc = np.where(x==min(x))[0][0]
-                ap -= ap[loc]
-                an -= an[loc]
+                # subtract last 5 values
+                end = np.average(ap[-5:],weights=1/dap[-5:]**2)
+                dend = 1/np.sum(1/dap[-5:]**2)**0.5
                 
-                self.plt.errorbar(figstyle,data.id,x[tag_p],ap,a.p[1][tag_p],
+                ap -= end
+                dap = ((dend)**2+(dap)**2)**0.5
+                
+                end = np.average(an[-5:],weights=1/dan[-5:]**2)
+                dend = 1/np.sum(1/dan[-5:]**2)**0.5
+                
+                an -= end
+                dan = ((dend)**2+(dan)**2)**0.5
+                
+                self.plt.errorbar(figstyle,data.id,x[tag_p],ap,dap,
                         label=label+" ($+$)",**drawargs)
-                self.plt.errorbar(figstyle,data.id,x[tag_n],an,a.n[1][tag_n],
+                self.plt.errorbar(figstyle,data.id,x[tag_n],an,dan,
                         label=label+" ($-$)",unique=False,**drawargs)
                 
             # plot split helicities, flipped about the average
@@ -888,10 +901,9 @@ class bfit(object):
                 
                 # subtract last 5 values
                 x = x[tag]
-                # ~ loc = np.where(x==max(x))[0][0]
                 
-                end = np.average(ac[-5],weights=1/dac[-5]**2)
-                dend = 1/np.sum(1/dac[-5]**2)**0.5
+                end = np.average(ac[-5:],weights=1/dac[-5:]**2)
+                dend = 1/np.sum(1/dac[-5:]**2)**0.5
                 
                 ac -= end
                 dac = ((dend)**2+(dac)**2)**0.5
@@ -910,10 +922,9 @@ class bfit(object):
                 
                 # divide by last value
                 x = x[tag]
-                # ~ loc = np.where(x==max(x))[0][0]
                 
-                end = np.average(ac[-5],weights=1/dac[-5]**2)
-                dend = 1/np.sum(1/dac[-5]**2)**0.5
+                end = np.average(ac[-5:],weights=1/dac[-5:]**2)
+                dend = 1/np.sum(1/dac[-5:]**2)**0.5
                 
                 dac = ac/end * ((dend/end)**2 + (dac/ac)**2)**0.5
                 ac /= end
