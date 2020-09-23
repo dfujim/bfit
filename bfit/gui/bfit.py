@@ -129,7 +129,8 @@ class bfit(object):
                             "Matched Helicity","Histograms"),
                       '1f':("Combined Helicity","Split Helicity","Raw Scans",
                             "Positive Helicity","Negative Helicity",
-                            "Shifted Split","Shifted Combined","Histograms"),
+                            "Shifted Split","Shifted Combined","Normalized Combined",
+                            "Histograms"),
                       '1n':("Combined Helicity","Split Helicity","Raw Scans",
                             "Positive Helicity","Negative Helicity",
                             "Matched Peak Finding","Histograms"),
@@ -138,7 +139,7 @@ class bfit(object):
                             "Histograms"),
                       '1w':("Combined Helicity","Split Helicity","Raw Scans",
                             "Positive Helicity","Negative Helicity",
-                            "Shifted Split","Shifted Combined","Histograms"),
+                            "Shifted Split","Shifted Combined","Normalized Combined","Histograms"),
                       '2e':("Combined Hel Slopes","Combined Hel Diff","Combined Hel Raw",
                             "Split Hel Slopes","Split Hel Diff","Split Hel Raw",
                             "Split Slopes Shifted","Split Diff Shifted","Split Raw Shifted"),
@@ -158,6 +159,7 @@ class bfit(object):
                  "Matched Helicity"         :'hm',
                  "Shifted Split"            :'hs',
                  "Shifted Combined"         :'cs',
+                 "Normalized Combined"      :'cn',
                  "Matched Peak Finding"     :'hp',
                  "Raw Scans"                :'r',
                  "Histograms"               :'rhist',
@@ -470,9 +472,9 @@ class bfit(object):
         noteframe.rowconfigure(0,weight=1)
         
         # Notetabs
-        self.fileviewer = fileviewer(file_viewer_tab,wref.proxy(self))
-        self.fetch_files = fetch_files(fetch_files_tab,wref.proxy(self))
-        self.fit_files = fit_files(fit_files_tab,wref.proxy(self))
+        self.fileviewer = fileviewer(file_viewer_tab, wref.proxy(self))
+        self.fetch_files = fetch_files(fetch_files_tab, wref.proxy(self))
+        self.fit_files = fit_files(fit_files_tab, wref.proxy(self))
         
         # set instance variables ---------------------------------------------
         self.mainframe = mainframe
@@ -879,15 +881,44 @@ class bfit(object):
                 
                 # remove zero asym
                 ac = a.c[0]
+                dac = a.c[1]
                 tag = ac!=0
                 ac = ac[tag]
+                dac = dac[tag]
                 
-                # subtract first value
+                # subtract last 5 values
                 x = x[tag]
-                loc = np.where(x==min(x))[0][0]
-                ac -= ac[loc]
+                # ~ loc = np.where(x==max(x))[0][0]
                 
-                self.plt.errorbar(figstyle,data.id,x,ac,a.c[1][tag],label=label,**drawargs)
+                end = np.average(ac[-5],weights=1/dac[-5]**2)
+                dend = 1/np.sum(1/dac[-5]**2)**0.5
+                
+                ac -= end
+                dac = ((dend)**2+(dac)**2)**0.5
+                
+                self.plt.errorbar(figstyle,data.id,x,ac,dac,label=label,**drawargs)
+                
+            # plot combined helicities, normalized by baseline
+            elif asym_type == 'cn':
+                
+                # remove zero asym
+                ac = a.c[0]
+                dac = a.c[1]
+                tag = ac!=0
+                ac = ac[tag]
+                dac = dac[tag]
+                
+                # divide by last value
+                x = x[tag]
+                # ~ loc = np.where(x==max(x))[0][0]
+                
+                end = np.average(ac[-5],weights=1/dac[-5]**2)
+                dend = 1/np.sum(1/dac[-5]**2)**0.5
+                
+                dac = ac/end * ((dend/end)**2 + (dac/ac)**2)**0.5
+                ac /= end
+                
+                self.plt.errorbar(figstyle,data.id,x,ac,dac,label=label,**drawargs)
                 
             # attempting to draw raw scans unlawfully
             elif asym_type == 'r':
