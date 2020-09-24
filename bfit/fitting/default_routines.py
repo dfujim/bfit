@@ -18,11 +18,10 @@ class fitter(object):
     # Define possible fit functions for given run modes
     function_names = {  '20':('Exp','Bi Exp','Str Exp'),
                         '2h':('Exp','Bi Exp','Str Exp'),
-                        '1f':('Lorentzian','Gaussian','BiLorentzian',),
+                        '1f':('Lorentzian','Gaussian','BiLorentzian','QuadLorentz'),
                         '1w':('Lorentzian','Gaussian','BiLorentzian',),
                         '1n':('Lorentzian','Gaussian','BiLorentzian',),
-                        '1e':('Lorentzian','Gaussian','BiLorentzian',),
-                        '2e':('Lorentzian','Gaussian','BiLorentzian',)}
+                        '2e':('Lorentzian','Gaussian','BiLorentzian','QuadLorentz')}
      
     # Define names of fit parameters:
     param_names = {     'Exp'       :('1_T1','amp'),
@@ -31,6 +30,10 @@ class fitter(object):
                         'Lorentzian':('peak','width','height','baseline'),
                         'BiLorentzian':('peak','widthA','heightA',
                                                'widthB','heightB','baseline'),
+                        'QuadLorentz':('nu_0', 'nu_q', 'eta', 'theta', 'phi', 
+	                                   'amp0', 'amp1', 'amp2', 'amp3', 
+                                       'fwhm0', 'fwhm1', 'fwhm2', 'fwhm3',
+                                       'baseline')
                         'Gaussian'  :('mean','sigma','height','baseline'),}
 
     # dictionary of initial parameters
@@ -40,6 +43,10 @@ class fitter(object):
 
     # define list of ok run modes 
     valid_asym_modes = ('c','p','n','sl_c','dif_c',)
+    
+    # probe species spin numbers
+    spin = {'Li8':2,
+            'Mg31':0.5}
 
     # ======================================================================= #
     def __init__(self,keyfn, probe_species='Li8'):
@@ -75,7 +82,7 @@ class fitter(object):
                                  
             hist_select: string for selection of histograms
             asym_mode:  input for asymmetry calculation type 
-                            c: combined helicity
+                                               c: combined helicity
                             h: split helicity
                             p: positive helicity
                             n: negative helicity
@@ -289,7 +296,7 @@ class fitter(object):
                           'beta':(0.5,0,1)}
                          
         # set time integrated fit initial parameters
-        elif fn_name in ('Lorentzian','Gaussian','BiLorentzian'):
+        elif fn_name in ('Lorentzian','Gaussian','BiLorentzian','QuadLorentz'):
             
             # get peak asym value
             amin = min(a[a!=0])
@@ -318,7 +325,7 @@ class fitter(object):
                               'height':(height,*height_bounds),
                               'baseline':(base,-np.inf,np.inf)
                               }
-            if fn_name == 'BiLorentzian':
+            elif fn_name == 'BiLorentzian':
                 par_values = {'peak':(peak,min(x),max(x)),
                               'widthA':(width,0,np.inf),
                               'heightA':(height,*height_bounds),
@@ -326,6 +333,25 @@ class fitter(object):
                               'heightB':(height,*height_bounds),
                               'baseline':(base,-np.inf,np.inf)
                              }
+            elif fn_name == 'QuadLorentz':
+                
+                dx = max(x)-min(x)
+                par_values = {'nu_0':(peak,min(x),max(x)),
+                              'nu_q':(dx/4,0,dx)
+                              'eta':(0.5,0,1),
+                              'theta':(0,-np.inf,np.inf),
+                              'phi':(0,-np.inf,np.inf),
+                              'amp0':(height,*height_bounds), 
+                              'amp1':(height,*height_bounds), 
+                              'amp2':(height,*height_bounds), 
+                              'amp3':(height,*height_bounds), 
+                              'fwhm0':(width,0,np.inf),
+                              'fwhm1':(width,0,np.inf),
+                              'fwhm2':(width,0,np.inf),
+                              'fwhm3':(width,0,np.inf),
+                              'baseline':(base,-np.inf,np.inf)
+                             }
+         
         else:
             raise RuntimeError('Bad function name.')
         
@@ -362,6 +388,9 @@ class fitter(object):
             self.mode=1
         elif fn_name == 'BiLorentzian':
             fn =  fns.bilorentzian
+            self.mode=1
+        elif fn_name == 'QuadLorentz':
+            fn =  partial(fns.quadlorentzian, I=self.spin[self.probe_species])
             self.mode=1
         elif fn_name == 'Gaussian':
             fn =  fns.gaussian
