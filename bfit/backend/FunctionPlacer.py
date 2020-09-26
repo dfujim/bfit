@@ -9,15 +9,19 @@ import numpy as np
 from bfit.fitting.functions import lorentzian # freq, peak, width, amp
 from bfit.fitting.functions import gaussian # freq, peak, width, amp
 from bfit.fitting.functions import bilorentzian # freq, peak, width, amp
+from bfit.fitting.functions import quadlorentzian # freq, nu_0, nu_q, eta, theta, 
+                                                  # phi, amp0, amp1, amp2, amp3, 
+                                                  #  fwhm0, fwhm1, fwhm2, fwhm3, I
 from bfit.fitting.functions import pulsed_exp # time, lambda_s, amp
 from bfit.fitting.functions import pulsed_strexp # time, lambda_s, beta, amp
+from bfit.fitting.functions import qp_nu # nu_0, nu_q, eta, theta, phi, I, m
 
 class FunctionPlacer(object):
     
     npts = 1000  # number of points used to draw line
     
     # ======================================================================= #
-    def __init__(self,fig,data,fn_single,ncomp,p0,fnname,endfn,asym_mode,base=0):
+    def __init__(self,fig,data,fn_single,ncomp,p0,fnname,endfn,asym_mode,base=0,spin=2):
         """
             fig:    pointer to matplotlib figure object to draw in
             data:   bdata object 
@@ -25,13 +29,15 @@ class FunctionPlacer(object):
             p0:     dictionary of StringVar corresponding to input parameters
             endfn:  function pointer to function to call at end of sequence. 
                         Called with no inputs
-            base:   value of the baseline when we're not altering it
             asym_mode: asymmetry calcuation type (c, sl_c, or dif_c)
+            base:   value of the baseline when we're not altering it
+            spin:   nuclear spin of probe I
         
             fn needs input parameters with keys: 
             
                 1F/2E/1W
-                    peak, width, amp, base
+                    peak, width, amp, base OR 
+                    
                 20/2H
                     amp, lam, beta (optional)
         """
@@ -44,6 +50,7 @@ class FunctionPlacer(object):
         self.endfn = endfn
         x = data.asym(asym_mode)[0]
         self.x = np.linspace(min(x),max(x),self.npts)
+        self.spin = spin
         
         # get axes for drawing
         self.ax = fig.axes
@@ -59,7 +66,7 @@ class FunctionPlacer(object):
         self.p0 = [{k:float(p[k].get()) for k in p.keys() if 'base' not in k} for p in p0]
     
         # baseline 
-        if self.fname in ('Lorentzian','Gaussian'):
+        if self.fname in ('Lorentzian','Gaussian','QuadLorentz'):
             self.base = float(p0[0]['base'].get())
             y = np.ones(len(self.x))*self.base
             self.baseline = self.ax.plot(self.x,y,zorder=20,ls='--')[0]
@@ -99,6 +106,24 @@ class FunctionPlacer(object):
                 self.list_points['width'].append(widthpt)
         
             self.list_points['base'] = self.run_1f_base(self.list_points['width'],'C0')
+            self.list_points['base'] = self.run_1f_base(self.list_points['width'],'C0')
+        
+        elif self.fname in ('QuadLorentzian'):
+            
+            # if points are not saved they are garbage collected
+            self.list_points = {'peak0':[],'peak1':[],'peak2':[],'peak3':[],'width':[],}
+            
+            # make points
+            for i,(p,line) in enumerate(zip(self.p0,self.lines)):
+                peakpt,widthpt = self.run_1f_quad_single(p,line,'C%d'%(i+1))
+                self.list_points['peak0'].append(peakpt)
+               # self.list_points['peak1'].append(peakpt)
+               # self.list_points['peak2'].append(peakpt)
+               # self.list_points['peak3'].append(peakpt)
+                self.list_points['width'].append(widthpt)
+            self.list_points['base'] = self.run_1f_quad_base(self.list_points['width'],'C0')
+            
+        
         
         # SLR measurements ----------------------------------------------------
         elif self.fname in ('Exp','Str Exp'):
@@ -196,6 +221,100 @@ class FunctionPlacer(object):
         peakpt = DraggablePoint(self,update_peak,p0['peak'],
                                 self.base-p0['amp'],color=color)
         
+        return (peakpt,widthpt)
+     
+    # ======================================================================= #
+    def run_1f_quad_base(self,widths,color):
+        """
+            widths: list of points for widths, need to update y values
+        """
+        
+        def update_base(x,y):
+            
+            # base point
+            oldbase = self.base
+            self.base = y
+            for i in range(len(self.p0)):
+                self.p0[i]['amp0'] -= oldbase-y
+                self.p0[i]['amp1'] -= oldbase-y
+                self.p0[i]['amp2'] -= oldbase-y
+                self.p0[i]['amp3'] -= oldbase-y
+            
+            # update width points
+            for p0,wpoint,line in zip(self.p0,widths,self.lines): 
+                wpoint.point.set_ydata(self.fn(p0['peak']+p0['width'],**p0))
+                
+                # update other lines
+                line.set_ydata(self.fn(self.x,**p0))
+            
+            # update sumline
+            self.sumline.set_ydata(self.sumfn(self.x))
+            
+            # update baseline line
+            self.baseline.set_ydata(np.ones(self.npts)*self.base)    
+            self.fig.canvas.draw()    
+             
+        # return so matplotlib doesn't garbage collect
+        xpt = self.ax.get_xticks()[-1]
+        return DraggablePoint(self,update_base,xpt,
+                                 self.base,
+                                 color=color,setx=False)
+        
+    # ======================================================================= #
+    def run_1f_quad_single(self,p0,line,color):
+        """
+            p0 keys: 'amp0', 'amp1', 'amp2', 'amp3', 'eta', 'phi', 'theta', 'fwhm', 'nu_0', 'nu_q'
+        """
+        
+        n=0
+        peak0 = qp_nu(p0['nu_0'], p0['nu_q'], p0['eta'], p0['theta'], p0['phi'], \
+                          self.spin, -1)
+        peak3 = qp_nu(p0['nu_0'], p0['nu_q'], p0['eta'], p0['theta'], p0['phi'], \
+                          self.spin, 2)
+        
+        ###############################################################################################################
+        x = peak0+p0['fwhm']                  
+        widthpt = DraggablePoint(self,None,x,self.fn(x,**p0),
+                                 color=color,sety=False)
+        peakpt = DraggablePoint(self,None,x,
+                                self.base-p0['amp0'],color=color)                                 
+        
+        
+        # make point for width
+        def update_width(x,y):
+                        
+            # width point
+            p0['fwhm'] = abs(peak0-x)
+            
+            # update line
+            line.set_ydata(self.fn(self.x,**p0))
+            
+            # update sum line
+            self.sumline.set_ydata(self.sumfn(self.x))
+            self.fig.canvas.draw()    
+
+        # make point for peak
+        def update_peak(x,y):
+        
+            # peak point
+            p0['amp0'] = self.base-y
+            p0['nu_0'] = (peak3+peak0)/2+x-peak0
+        
+            # width point
+            x2 = x+p0['fwhm']
+            widthpt.point.set_xdata(x2)
+            widthpt.point.set_ydata(self.fn(x2,**p0))
+            
+            # update line
+            line.set_ydata(self.fn(self.x,**p0))
+            
+            # update sum line
+            self.sumline.set_ydata(self.sumfn(self.x))
+            self.fig.canvas.draw()    
+        
+        widthpt.updatefn = update_width
+        peakpt.updatefn = update_peak
+       
         return (peakpt,widthpt)
         
     # ======================================================================= #

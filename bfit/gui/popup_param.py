@@ -50,6 +50,16 @@ class popup_param(object):
                 'heightB':'ampB',
                 'sigma':'width',
                 'mean':'peak',
+                'amp0':'amp0',
+                'amp1':'amp1',
+                'amp2':'amp2',
+                'amp3':'amp3',
+                'nu_0':'nu_0',
+                'nu_q':'nu_q',
+                'efgAsym':'eta',
+                'efgPhi':'phi',
+                'efgTheta':'theta',
+                'fwhm':'fwhm',
              }
 
     # ====================================================================== #
@@ -179,6 +189,13 @@ class popup_param(object):
             # ~ fn = fns.bilorentzian   # freq, peak,widthA,ampA,widthB,ampB
         elif self.fname == 'Gaussian':
             fn = lambda freq,peak,width,amp : fns.gaussian(freq,peak,width,amp)
+        elif self.fname == 'QuadLorentz':
+            fn = lambda freq, nu_0, nu_q, eta, theta, phi, \
+                        amp0, amp1, amp2, amp3, fwhm: \
+                        fns.quadlorentzian(freq, nu_0, nu_q, eta, theta, phi, \
+                        amp0, amp1, amp2, amp3, \
+                        fwhm, fwhm, fwhm, fwhm,
+                        I = self.fitter.spin[self.fitter.probe_species])
                 
         elif self.fname in ('Exp', 'Str Exp'):
             
@@ -217,7 +234,8 @@ class popup_param(object):
                                      p0=p0,
                                      fnname=self.fname,
                                      asym_mode=self.bfit.get_asym_mode(self.bfit.fit_files),
-                                     endfn=self.endfn)
+                                     endfn=self.endfn,
+                                     spin=self.fitter.spin[self.fitter.probe_species])
         
     # ====================================================================== #        
     def endfn(self,p0,base):

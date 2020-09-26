@@ -30,7 +30,7 @@ class fitter(object):
                         'Lorentzian':('peak','width','height','baseline'),
                         'BiLorentzian':('peak','widthA','heightA',
                                                'widthB','heightB','baseline'),
-                        'QuadLorentz':('nu_0', 'nu_q', 'eta', 'theta', 'phi', 
+                        'QuadLorentz':('nu_0', 'nu_q', 'efgAsym', 'efgTheta', 'efgPhi', 
 	                               'amp0', 'amp1', 'amp2', 'amp3', 'fwhm',
                                        'baseline'),
                         'Gaussian'  :('mean','sigma','height','baseline'),}
@@ -337,9 +337,9 @@ class fitter(object):
                 dx = max(x)-min(x)
                 par_values = {'nu_0':((max(x)+min(x))/2,min(x),max(x),False),
                               'nu_q':(dx/12,0,dx,False),
-                              'eta':(0,0,1,True),
-                              'theta':(0,0,2*np.pi,True),
-                              'phi':(0,0,2*np.pi,True),
+                              'efgAsym':(0,0,1,True),
+                              'efgTheta':(0,0,2*np.pi,True),
+                              'efgPhi':(0,0,2*np.pi,True),
                               'amp0':(height,height*0.1,np.inf,False), 
                               'amp1':(height,height*0.1,np.inf,False), 
                               'amp2':(height,height*0.1,np.inf,False), 
