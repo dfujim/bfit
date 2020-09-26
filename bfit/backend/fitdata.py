@@ -151,6 +151,7 @@ class fitdata(object):
             self.fitpar['p0'][v] = values[v][0]
             self.fitpar['blo'][v] = values[v][1]
             self.fitpar['bhi'][v] = values[v][2]
+            self.fitpar['fixed'][v] = values[v][3]
         
         self.logger.debug('Fit parameters set to %s',self.fitpar)
 

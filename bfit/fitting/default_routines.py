@@ -31,9 +31,8 @@ class fitter(object):
                         'BiLorentzian':('peak','widthA','heightA',
                                                'widthB','heightB','baseline'),
                         'QuadLorentz':('nu_0', 'nu_q', 'eta', 'theta', 'phi', 
-	                                   'amp0', 'amp1', 'amp2', 'amp3', 
-                                       'fwhm0', 'fwhm1', 'fwhm2', 'fwhm3',
-                                       'baseline')
+	                               'amp0', 'amp1', 'amp2', 'amp3', 'fwhm',
+                                       'baseline'),
                         'Gaussian'  :('mean','sigma','height','baseline'),}
 
     # dictionary of initial parameters
@@ -312,44 +311,41 @@ class fitter(object):
             else:
                 height_bounds = (0,np.inf)
             
-            # set values
-            if fn_name == 'Lorentzian':
-                par_values = {'peak':(peak,min(x),max(x)),
-                              'width':(width,0,np.inf),
-                              'height':(height,*height_bounds),
-                              'baseline':(base,-np.inf,np.inf)
+            # set values (value, low bnd, high bnd, fixed)
+            if fn_name == 'Lorentzian':	
+                par_values = {'peak':(peak,min(x),max(x),False),
+                              'width':(width,0,np.inf,False),
+                              'height':(height,*height_bounds,False),
+                              'baseline':(base,-np.inf,np.inf,False)
                              }
             elif fn_name == 'Gaussian':
-                par_values = {'mean':(peak,min(x),max(x)),
-                              'sigma':(width,0,np.inf),
-                              'height':(height,*height_bounds),
-                              'baseline':(base,-np.inf,np.inf)
+                par_values = {'mean':(peak,min(x),max(x),False),
+                              'sigma':(width,0,np.inf,False),
+                              'height':(height,*height_bounds,False),
+                              'baseline':(base,-np.inf,np.inf,False)
                               }
             elif fn_name == 'BiLorentzian':
-                par_values = {'peak':(peak,min(x),max(x)),
-                              'widthA':(width,0,np.inf),
-                              'heightA':(height,*height_bounds),
-                              'widthB':(width,0,np.inf),
-                              'heightB':(height,*height_bounds),
-                              'baseline':(base,-np.inf,np.inf)
+                par_values = {'peak':(peak,min(x),max(x),False),
+                              'widthA':(width,0,np.inf,False),
+                              'heightA':(height,*height_bounds,False),
+                              'widthB':(width,0,np.inf,False),
+                              'heightB':(height,*height_bounds,False),
+                              'baseline':(base,-np.inf,np.inf,False)
                              }
             elif fn_name == 'QuadLorentz':
                 
                 dx = max(x)-min(x)
-                par_values = {'nu_0':(peak,min(x),max(x)),
-                              'nu_q':(dx/4,0,dx)
-                              'eta':(0.5,0,1),
-                              'theta':(0,-np.inf,np.inf),
-                              'phi':(0,-np.inf,np.inf),
-                              'amp0':(height,*height_bounds), 
-                              'amp1':(height,*height_bounds), 
-                              'amp2':(height,*height_bounds), 
-                              'amp3':(height,*height_bounds), 
-                              'fwhm0':(width,0,np.inf),
-                              'fwhm1':(width,0,np.inf),
-                              'fwhm2':(width,0,np.inf),
-                              'fwhm3':(width,0,np.inf),
-                              'baseline':(base,-np.inf,np.inf)
+                par_values = {'nu_0':((max(x)+min(x))/2,min(x),max(x),False),
+                              'nu_q':(dx/12,0,dx,False),
+                              'eta':(0,0,1,True),
+                              'theta':(0,0,2*np.pi,True),
+                              'phi':(0,0,2*np.pi,True),
+                              'amp0':(height,height*0.1,np.inf,False), 
+                              'amp1':(height,height*0.1,np.inf,False), 
+                              'amp2':(height,height*0.1,np.inf,False), 
+                              'amp3':(height,height*0.1,np.inf,False), 
+                              'fwhm':(dx/10,0,dx,False),
+                              'baseline':(base,-np.inf,np.inf,False)
                              }
          
         else:
@@ -390,7 +386,12 @@ class fitter(object):
             fn =  fns.bilorentzian
             self.mode=1
         elif fn_name == 'QuadLorentz':
-            fn =  partial(fns.quadlorentzian, I=self.spin[self.probe_species])
+            fn =  lambda freq, nu_0, nu_q, eta, theta, phi, \
+            		amp0, amp1, amp2, amp3, fwhm: \
+                   	fns.quadlorentzian(freq, nu_0, nu_q, eta, theta, phi, \
+		            		amp0, amp1, amp2, amp3, \
+                		   	fwhm, fwhm, fwhm, fwhm, \
+                		   	I=self.spin[self.probe_species])
             self.mode=1
         elif fn_name == 'Gaussian':
             fn =  fns.gaussian

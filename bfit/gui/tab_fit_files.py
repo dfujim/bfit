@@ -1912,7 +1912,7 @@ class fitline(object):
                 if not entry.get():
                     entry.insert(0,str(fitdat.fitpar[col][p]))
                 entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
-                    
+            self.parentry[p]['fixed'][0].set(fitdat.fitpar['fixed'][p])
         r = min_n_par+1
                 
         # make new parameter fields
@@ -2001,6 +2001,7 @@ class fitline(object):
                                      variable=value,onvalue=True,offvalue=False)
             entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
             self.parentry[p]['fixed'] = (value,entry)
+            value.set(fitdat.fitpar['fixed'][p])
             
             # do shared box
             entry = ttk.Checkbutton(fitframe,text='',onvalue=True,offvalue=False)
@@ -2027,8 +2028,11 @@ class fitline(object):
                     pass
             
             elif col == 'fixed':
-                if self.parentry[parname][col][0].get():
-                    self.bfit.fit_files.share_var[parname].set(False)
+                try:
+                    if self.parentry[parname][col][0].get():
+                        self.bfit.fit_files.share_var[parname].set(False)
+                except KeyError:
+                    pass
         
         # set synchronization        
         for p in self.parentry.keys():
