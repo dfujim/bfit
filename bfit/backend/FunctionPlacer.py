@@ -111,17 +111,15 @@ class FunctionPlacer(object):
         elif self.fname in ('QuadLorentzian'):
             
             # if points are not saved they are garbage collected
-            self.list_points = {'peak0':[],'peak1':[],'peak2':[],'peak3':[],'width':[],}
+            self.list_points = {'peak0':[],'peak1':[],'width':[],}
             
             # make points
             for i,(p,line) in enumerate(zip(self.p0,self.lines)):
-                peakpt,widthpt = self.run_1f_quad_single(p,line,'C%d'%(i+1))
-                self.list_points['peak0'].append(peakpt)
-               # self.list_points['peak1'].append(peakpt)
-               # self.list_points['peak2'].append(peakpt)
-               # self.list_points['peak3'].append(peakpt)
+                ppt0,ppt1,widthpt = self.run_1f_quad_single(p,line,'C%d'%(i+1))
+                self.list_points['peak0'].append(ppt0)
+                self.list_points['peak1'].append(ppt1)
                 self.list_points['width'].append(widthpt)
-            self.list_points['base'] = self.run_1f_quad_base(self.list_points['width'],'C0')
+            self.list_points['base'] = self.run_1f_quad_base(self.p0[0],self.list_points['width'],'C0')
             
         
         
@@ -224,10 +222,13 @@ class FunctionPlacer(object):
         return (peakpt,widthpt)
      
     # ======================================================================= #
-    def run_1f_quad_base(self,widths,color):
+    def run_1f_quad_base(self,p0,widths,color):
         """
             widths: list of points for widths, need to update y values
         """
+        
+        peak0 = qp_nu(p0['nu_0'], p0['nu_q'], p0['eta'], p0['theta'], p0['phi'], \
+                          self.spin, -1)
         
         def update_base(x,y):
             
@@ -242,7 +243,7 @@ class FunctionPlacer(object):
             
             # update width points
             for p0,wpoint,line in zip(self.p0,widths,self.lines): 
-                wpoint.point.set_ydata(self.fn(p0['peak']+p0['width'],**p0))
+                wpoint.point.set_ydata(self.fn(peak0+p0['fwhm'],**p0))
                 
                 # update other lines
                 line.set_ydata(self.fn(self.x,**p0))
@@ -266,25 +267,36 @@ class FunctionPlacer(object):
             p0 keys: 'amp0', 'amp1', 'amp2', 'amp3', 'eta', 'phi', 'theta', 'fwhm', 'nu_0', 'nu_q'
         """
         
-        n=0
-        peak0 = qp_nu(p0['nu_0'], p0['nu_q'], p0['eta'], p0['theta'], p0['phi'], \
-                          self.spin, -1)
-        peak3 = qp_nu(p0['nu_0'], p0['nu_q'], p0['eta'], p0['theta'], p0['phi'], \
-                          self.spin, 2)
+        # lorentzian fn: lorentzian # freq, peak, width, amp
+        s = self.spin
         
-        ###############################################################################################################
-        x = peak0+p0['fwhm']                  
+        # peak locations from right to left
+        peak = [qp_nu(p0['nu_0'], p0['nu_q'], p0['eta'], p0['theta'], p0['phi'], \
+                      s, i) for i in np.arange(-s+1,s+1,1)]
+        
+        # set width
+        x = peak[0]+p0['fwhm']                  
         widthpt = DraggablePoint(self,None,x,self.fn(x,**p0),
                                  color=color,sety=False)
-        peakpt = DraggablePoint(self,None,x,
-                                self.base-p0['amp0'],color=color)                                 
+        
+        # set peak and amplitudes
+        n = 0
+        x = p0['nu_0'] + peak[n] - (peak[s+1-n]+peak[n])/2
+        y = self.base - \
+            p0['amp%d'%n] + \
+            sum([lorentzian(peak[n],
+                            peak[(n+i)%(2*s)],
+                            p0['fwhm'],
+                            p0['amp%d'%((n+i)%(2*s))]) for i in range(n+1,2*s+n)])
+                
+            peakpts.append(DraggablePoint(self, None, x, y, color=color))
         
         
         # make point for width
         def update_width(x,y):
                         
             # width point
-            p0['fwhm'] = abs(peak0-x)
+            p0['fwhm'] = abs(peak[0]-x)
             
             # update line
             line.set_ydata(self.fn(self.x,**p0))
@@ -294,11 +306,16 @@ class FunctionPlacer(object):
             self.fig.canvas.draw()    
 
         # make point for peak
-        def update_peak(x,y):
+        def update_peak(x,y,n):
         
             # peak point
-            p0['amp0'] = self.base-y
-            p0['nu_0'] = (peak3+peak0)/2+x-peak0
+            p0['amp%d'%n] = self.base - y + \
+                        sum([lorentzian(peak[n],
+                                        peak[(n+i)%(2*s)],
+                                        p0['fwhm'],
+                                        p0['amp%d'%((n+i)%(2*s))]) for i in range(n+1,2*s+n)])
+            
+            p0['nu_0'] = (peak[2*s-n]+peak[n])/2+x-peak[n]
         
             # width point
             x2 = x+p0['fwhm']
@@ -313,9 +330,10 @@ class FunctionPlacer(object):
             self.fig.canvas.draw()    
         
         widthpt.updatefn = update_width
-        peakpt.updatefn = update_peak
+        for n in range(2*s):
+            peakpts[n].updatefn = lambda x,y : update_peak(x,y,n)
        
-        return (peakpt,widthpt)
+        return (*peakpts,widthpt)
         
     # ======================================================================= #
     def run_20_initial(self,p0,line,color):
