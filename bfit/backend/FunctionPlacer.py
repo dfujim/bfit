@@ -68,7 +68,7 @@ class FunctionPlacer(object):
         self.p0 = [{k:float(p[k].get()) for k in p.keys() if 'base' not in k} for p in p0]
     
         # baseline 
-        if self.fname in ('Lorentzian','Gaussian','QuadLorentz'):
+        if self.fname in ('Lorentzian','Gaussian','BiLorentzian','QuadLorentz'):
             self.base = float(p0[0]['base'].get())
             y = np.ones(len(self.x))*self.base
             self.baseline = self.ax.plot(self.x,y,zorder=20,ls='--')[0]
@@ -108,9 +108,22 @@ class FunctionPlacer(object):
                 self.list_points['width'].append(widthpt)
         
             self.list_points['base'] = self.run_1f_base(self.list_points['width'],'C0')
-            self.list_points['base'] = self.run_1f_base(self.list_points['width'],'C0')
         
-        elif self.fname in ('QuadLorentzian'):
+        if self.fname in ('BiLorentzian',):
+            
+            # if points are not saved they are garbage collected
+            self.list_points = {'peak':[],'width':[]}
+            
+            # make points
+            for i,(p,line) in enumerate(zip(self.p0,self.lines)):
+                peakpt,widthpt = self.run_1f_bi_single(p,line,'C%d'%(i+1))
+                self.list_points['peak'].append(peakpt)
+                self.list_points['width'].append(widthpt)
+        
+            self.list_points['base'] = self.run_1f_base(self.list_points['width'],'C0')
+
+        
+        elif self.fname in ('QuadLorentzian',):
             
             # if points are not saved they are garbage collected
             self.list_points = {'peak0':[],'peak1':[],'peak2':[],'peak3':[],'width':[],}
@@ -181,6 +194,50 @@ class FunctionPlacer(object):
     
     # ======================================================================= #
     def run_1f_single(self,p0,line,color):
+        
+        # make point for width
+        def update_width(x,y):
+            
+            # width point
+            p0['width'] = abs(p0['peak']-x)
+            
+            # update line
+            line.set_ydata(self.fn(self.x,**p0))
+            
+            # update sum line
+            self.sumline.set_ydata(self.sumfn(self.x))
+            self.fig.canvas.draw()    
+             
+        x = p0['peak']+p0['width']
+        widthpt = DraggablePoint(self,update_width,x,self.fn(x,**p0),
+                                 color=color,sety=False)
+        
+        # make point for peak
+        def update_peak(x,y):
+        
+            # peak point
+            p0['amp'] = self.base-y
+            p0['peak'] = x
+        
+            # width point
+            x2 = x+p0['width']
+            widthpt.point.set_xdata(x2)
+            widthpt.point.set_ydata(self.fn(x2,**p0))
+            
+            # update line
+            line.set_ydata(self.fn(self.x,**p0))
+            
+            # update sum line
+            self.sumline.set_ydata(self.sumfn(self.x))
+            self.fig.canvas.draw()    
+        
+        peakpt = DraggablePoint(self,update_peak,p0['peak'],
+                                self.base-p0['amp'],color=color)
+        
+        return (peakpt,widthpt)
+    
+    # ======================================================================= #
+    def run_1f_bi_single(self,p0,line,color):
         
         # make point for width
         def update_width(x,y):

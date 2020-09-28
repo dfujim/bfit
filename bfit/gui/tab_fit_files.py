@@ -570,7 +570,7 @@ class fit_files(object):
         # regenerate fitlines
         for k in self.fit_lines.keys():
             self.fit_lines[k].populate(force_modify=force_modify)
-            
+        
         # reset modify all value
         self.set_as_group.set(modify_all_value)
             
@@ -1731,6 +1731,8 @@ class fitline(object):
         
             bfit            pointer to top class
             dataline        pointer to dataline object in fetch_files_tab
+            disable_entry_callback  disables copy of entry strings to 
+                                    dataline.bdfit parameter values
             parent          pointer to parent object (frame)
             parlabels       label objects, saved for later destruction
             parentry        [parname][colname] of ttk.Entry objects saved for 
@@ -1767,6 +1769,7 @@ class fitline(object):
         self.row = row
         self.parlabels = []
         self.parentry = {}
+        self.disable_entry_callback = False
              
         # get parent frame
         fitframe = ttk.Frame(self.parent,pad=(5,0))
@@ -1854,7 +1857,6 @@ class fitline(object):
             n_old_par = len(self.parlabels)
             n_new_par = len(plist)
             min_n_par = min(n_old_par,n_new_par)
-            
             parkeys = list(self.parentry.keys())    # old parameter keys
             parkeys.sort()
             
@@ -1872,7 +1874,7 @@ class fitline(object):
         # get data and frame
         fitframe = self.fitframe
         fitdat = self.dataline.bdfit
-        
+    
         # labels ------------------------------------------------------------
         c = 0
 
@@ -1897,6 +1899,7 @@ class fitline(object):
         
         # repurpose old parameter fields
         r = 1
+        self.disable_entry_callback = True  # prevent setting bad data
         for i in range(min_n_par):
             p = plist[i]
             c = 1
@@ -1908,16 +1911,19 @@ class fitline(object):
                 
                 if force_modify:
                     entry.delete(0,'end')
-                    
+                
                 if not entry.get():
                     entry.insert(0,str(fitdat.fitpar[col][p]))
+                
                 entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
             self.parentry[p]['fixed'][0].set(fitdat.fitpar['fixed'][p])
         r = min_n_par+1
-                
+        
+        self.disable_entry_callback = False
+                 
         # make new parameter fields
         for i in range(n_old_par,n_new_par):
-            p = plist[i]
+            p = plist[i]            
             self.parentry[p] = {}
             
             c = 0               # gridding column         
@@ -2013,6 +2019,9 @@ class fitline(object):
         # make callback function to set p0 values in bdfit object
         def callback(*args,parname,col,source):
             
+            if self.disable_entry_callback:
+                return 
+                
             # set parameter entry synchronization
             self.bfit.fit_files.modify_all(source=source,par=parname,column=col)
             
@@ -2068,7 +2077,7 @@ class fitline(object):
             share = parentry['shared'][0]
             share.trace_id = share.trace("w",partial(callback2,parname=p))
             share.trace_callback = partial(callback2,parname=p)
-                
+    
     # ======================================================================= #
     def get_new_parameters(self):
         """

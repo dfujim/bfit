@@ -43,11 +43,11 @@ class popup_param(object):
                 'baseline':'base',
                 'peak':'peak',
                 'width':'width',
-                'widthA':'widthA',
-                'widthB':'widthB',
+                'widthA':'width',
+                'widthB':'width',
                 'height':'amp',
-                'heightA':'ampA',
-                'heightB':'ampB',
+                'heightA':'amp',
+                'heightB':'amp',
                 'sigma':'width',
                 'mean':'peak',
                 'amp0':'amp0',
@@ -190,8 +190,8 @@ class popup_param(object):
         # get fitting function 
         if self.fname == 'Lorentzian':
             fn = fns.lorentzian     # freq,peak,width,amp
-        # ~ elif self.fname == 'BiLorentzian':
-            # ~ fn = fns.bilorentzian   # freq, peak,widthA,ampA,widthB,ampB
+        elif self.fname == 'BiLorentzian':
+            fn = lambda freq,peak,width,amp : fns.bilorentzian(freq,peak,width,amp/10,width/10,amp*9/10)
         elif self.fname == 'Gaussian':
             fn = lambda freq,peak,width,amp : fns.gaussian(freq,peak,width,amp)
         elif self.fname == 'QuadLorentz':
