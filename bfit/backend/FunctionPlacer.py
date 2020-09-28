@@ -16,6 +16,8 @@ from bfit.fitting.functions import pulsed_exp # time, lambda_s, amp
 from bfit.fitting.functions import pulsed_strexp # time, lambda_s, beta, amp
 from bfit.fitting.functions import qp_nu # nu_0, nu_q, eta, theta, phi, I, m
 
+from functools import partial
+
 class FunctionPlacer(object):
     
     npts = 1000  # number of points used to draw line
@@ -111,18 +113,18 @@ class FunctionPlacer(object):
         elif self.fname in ('QuadLorentzian'):
             
             # if points are not saved they are garbage collected
-            self.list_points = {'peak0':[],'peak1':[],'width':[],}
+            self.list_points = {'peak0':[],'peak1':[],'peak2':[],'peak3':[],'width':[],}
             
             # make points
             for i,(p,line) in enumerate(zip(self.p0,self.lines)):
-                ppt0,ppt1,widthpt = self.run_1f_quad_single(p,line,'C%d'%(i+1))
+                ppt0,ppt1,ppt2,ppt3,widthpt = self.run_1f_quad_single(p,line,'C%d'%(i+1))
                 self.list_points['peak0'].append(ppt0)
                 self.list_points['peak1'].append(ppt1)
+                self.list_points['peak2'].append(ppt2)
+                self.list_points['peak3'].append(ppt3)
                 self.list_points['width'].append(widthpt)
             self.list_points['base'] = self.run_1f_quad_base(self.p0[0],self.list_points['width'],'C0')
             
-        
-        
         # SLR measurements ----------------------------------------------------
         elif self.fname in ('Exp','Str Exp'):
             
@@ -257,6 +259,7 @@ class FunctionPlacer(object):
              
         # return so matplotlib doesn't garbage collect
         xpt = self.ax.get_xticks()[-1]
+        
         return DraggablePoint(self,update_base,xpt,
                                  self.base,
                                  color=color,setx=False)
@@ -271,32 +274,69 @@ class FunctionPlacer(object):
         s = self.spin
         
         # peak locations from right to left
-        peak = [qp_nu(p0['nu_0'], p0['nu_q'], p0['eta'], p0['theta'], p0['phi'], \
-                      s, i) for i in np.arange(-s+1,s+1,1)]
+        peak = lambda i: qp_nu(p0['nu_0'], p0['nu_q'], p0['eta'], p0['theta'], \
+                               p0['phi'], s, i-s+1)
         
         # set width
-        x = peak[0]+p0['fwhm']                  
+        x = peak(0)+p0['fwhm']                  
         widthpt = DraggablePoint(self,None,x,self.fn(x,**p0),
                                  color=color,sety=False)
         
         # set peak and amplitudes
-        n = 0
-        x = p0['nu_0'] + peak[n] - (peak[s+1-n]+peak[n])/2
-        y = self.base - \
-            p0['amp%d'%n] + \
-            sum([lorentzian(peak[n],
-                            peak[(n+i)%(2*s)],
-                            p0['fwhm'],
-                            p0['amp%d'%((n+i)%(2*s))]) for i in range(n+1,2*s+n)])
-                
-            peakpts.append(DraggablePoint(self, None, x, y, color=color))
-        
-        
+        peakpts = []
+        for n in range(2*s):
+            x = p0['nu_0'] + peak(n) - (peak(s+1-n)+peak(n))/2
+            
+            y = self.base - \
+                p0['amp%d'%n] + \
+                sum([lorentzian(peak(n),
+                                peak(i%(2*s)),
+                                p0['fwhm'],
+                                p0['amp%d'%(i%(2*s))]) for i in range(n+1,2*s+n)])                    
+            
+            if n in (0,2*s-1):
+                peakpts.append(DraggablePoint(self, None, x, y, color=color, marker='s'))
+            else:
+                peakpts.append(DraggablePoint(self, None, x, y, color=color, marker='^',setx=False))
+            
         # make point for width
         def update_width(x,y):
                         
             # width point
-            p0['fwhm'] = abs(peak[0]-x)
+            p0['fwhm'] = abs(peak(0)-x)
+            
+            # update line
+            line.set_ydata(self.fn(self.x,**p0))
+            
+            # update peak heights
+            for i in range(2*s):
+                peakpts[i].point.set_ydata(self.fn(peak(i),**p0))
+            
+            # update width y 
+            widthpt.point.set_ydata(self.fn(x,**p0))
+            
+            # update sum line
+            self.sumline.set_ydata(self.sumfn(self.x))
+            self.fig.canvas.draw()    
+
+        # make point for peak, updating nu_0
+        def update_peak_center(x,y,n):
+            
+            # peak point
+            p0['amp%d'%n] = self.base - y + \
+                        sum([lorentzian(peak(n),
+                                        peak(i%(2*s)),
+                                        p0['fwhm'],
+                                        p0['amp%d'%(i%(2*s))]) for i in range(n+1,2*s+n)])
+            
+            # width point        
+            x2 = peak(0)+p0['fwhm']
+            # ~ widthpt.point.set_xdata(x2)
+            widthpt.point.set_ydata(self.fn(x2,**p0))
+        
+            # update the other peak points
+            for i in range(n+1,2*s+n):
+                peakpts[i%(2*s)].point.set_ydata(self.fn(peak(i%(2*s)),**p0))
             
             # update line
             line.set_ydata(self.fn(self.x,**p0))
@@ -304,23 +344,43 @@ class FunctionPlacer(object):
             # update sum line
             self.sumline.set_ydata(self.sumfn(self.x))
             self.fig.canvas.draw()    
-
-        # make point for peak
-        def update_peak(x,y,n):
         
-            # peak point
-            p0['amp%d'%n] = self.base - y + \
-                        sum([lorentzian(peak[n],
-                                        peak[(n+i)%(2*s)],
-                                        p0['fwhm'],
-                                        p0['amp%d'%((n+i)%(2*s))]) for i in range(n+1,2*s+n)])
+        # make point for peak, updating nu_q 
+        def update_peak_edge(x,y,n):
             
-            p0['nu_0'] = (peak[2*s-n]+peak[n])/2+x-peak[n]
-        
-            # width point
-            x2 = x+p0['fwhm']
+            # amplitude
+            p0['amp%d'%n] = self.base - y + \
+                        sum([lorentzian(peak(n),
+                                        peak(i%(2*s)),
+                                        p0['fwhm'],
+                                        p0['amp%d'%(i%(2*s))]) for i in range(n+1,2*s+n)])
+            
+            # get x and n of the other edge peak position
+            other_n = 2*s-n-1
+            other_x = float(peakpts[other_n].point.get_xdata())
+            
+            # set nu_0
+            p0['nu_0'] = (other_x+x)/2
+            
+            # set nu_q
+            # Equation (28)
+            V_0 = np.sqrt(1.5) * 0.5 * (3 * np.square(np.cos(p0['theta'])) \
+                        - 1 + p0['eta'] * np.square(np.sin(p0['theta'])) * \
+                        np.cos(2 * p0['phi']))
+                        
+            # Equation (23)
+            p0['nu_q'] = (x-p0['nu_0']) / ((np.sqrt(6) / 3) * (1 - 2 * (n-s+1)) * V_0)  
+            
+            # width point        
+            x2 = peak(0)+p0['fwhm']
             widthpt.point.set_xdata(x2)
             widthpt.point.set_ydata(self.fn(x2,**p0))
+        
+            # update the other peak points
+            for i in range(1,2*s-1):
+                peakpts[i].point.set_xdata(peak(i))
+                peakpts[i].point.set_ydata(self.fn(peak(i),**p0))
+            peakpts[other_n].point.set_ydata(self.fn(other_x,**p0))
             
             # update line
             line.set_ydata(self.fn(self.x,**p0))
@@ -330,9 +390,11 @@ class FunctionPlacer(object):
             self.fig.canvas.draw()    
         
         widthpt.updatefn = update_width
-        for n in range(2*s):
-            peakpts[n].updatefn = lambda x,y : update_peak(x,y,n)
-       
+        peakpts[0].updatefn = partial(update_peak_edge,n=0)
+        peakpts[2*s-1].updatefn = partial(update_peak_edge,n=2*s-1)
+        for i in range(1,2*s-1):
+            peakpts[i].updatefn = partial(update_peak_center,n=i)
+        
         return (*peakpts,widthpt)
         
     # ======================================================================= #
@@ -424,7 +486,7 @@ class DraggablePoint:
     size=0.01
 
     # ======================================================================= #
-    def __init__(self,parent,updatefn,x,y,setx=True,sety=True,color=None):
+    def __init__(self,parent,updatefn,x,y,setx=True,sety=True,color=None, marker='s'):
         """
             parent: parent object
             updatefn: funtion which updates the line in the correct way
@@ -435,7 +497,7 @@ class DraggablePoint:
         """
         self.parent = parent
         self.point = parent.ax.plot(x,y,zorder=25,color=color,alpha=0.5,
-                                 marker='s',markersize=8)[0]
+                                 marker=marker,markersize=8)[0]
         
         self.point.set_pickradius(8)
         self.updatefn = updatefn

@@ -288,11 +288,11 @@ class fitter(object):
                 amp_bounds = (0,np.inf)
             
             # set values
-            par_values = {'amp':(amp,*amp_bounds),
-                          '1_T1':(1./T1,0,np.inf),
-                          '1_T1b':(10./T1,0,np.inf),
-                          'fraction_b':(0.5,0,1),
-                          'beta':(0.5,0,1)}
+            par_values = {'amp':(amp,*amp_bounds,False),
+                          '1_T1':(1./T1,0,np.inf,False),
+                          '1_T1b':(10./T1,0,np.inf,False),
+                          'fraction_b':(0.5,0,1,False),
+                          'beta':(0.5,0,1,False)}
                          
         # set time integrated fit initial parameters
         elif fn_name in ('Lorentzian','Gaussian','BiLorentzian','QuadLorentz'):

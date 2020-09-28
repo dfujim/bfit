@@ -177,8 +177,13 @@ class popup_param(object):
         p0 = []
         if self.n_components > 1:
             for i in range(self.n_components):
-                p0.append({self.parmap[k.split('_')[0]]:self.p0[k] \
-                            for k in self.p0.keys() if 'base' in k or str(i) in k})
+                p0_element = {}
+                for k in self.p0.keys():
+                    if 'base' in k:
+                        p0_element[self.parmap[k]] = self.p0[k] 
+                    elif str(i) in k:
+                        p0_element[self.parmap['_'.join(k.split('_')[:-1])]] = self.p0[k] 
+                p0.append(p0_element)
         else:
             p0.append({self.parmap[k]:self.p0[k] for k in self.p0.keys()})
         
