@@ -53,15 +53,13 @@ if __name__ == '__main__':
     
     # testing
     testfn = None
-    def testfn(self):
-        self.fetch_files.run.set("40501")
-        self.fetch_files.year.set(2012)
-        self.fetch_files.get_data()
-        self.fit_files.fit_function_title.set("QuadLorentz")
-        self.fit_files.populate()
-        self.notebook.select(2)
-        self.fit_files.do_gui_param()
-#        self.fit_files.do_fit()
+    #def testfn(self):
+    #    self.fetch_files.run.set("40501")
+    #    self.fetch_files.year.set(2012)
+    #    self.fetch_files.get_data()
+    #    self.fit_files.fit_function_title.set("QuadLorentz")
+    #    self.fit_files.populate()
+    #    self.notebook.select(2)
         # ~ import matplotlib.pyplot as plt
         # ~ plt.close('all')
 #    testfn = None
