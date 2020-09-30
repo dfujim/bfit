@@ -1144,10 +1144,10 @@ class bfit(object):
                 label = str(int(data.bd.camp.rf_dac.mean))
                 
             elif select == 'Platform Bias (kV)':
-                label = "%d kV" % int(np.round(data.bias))
+                label = "%.2f kV" % np.around(data.bias,2)
                     
             elif select == 'Impl. Energy (keV)':
-                label = "%.2f keV" % np.around(data.bd.beam_kev())
+                label = "%.2f keV" % np.around(data.bd.beam_kev(),2)
                 
             elif select == 'Run Duration (s)':
                 label = "%d s" % int(data.bd.duration)
