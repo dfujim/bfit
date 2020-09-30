@@ -109,7 +109,7 @@ class FunctionPlacer(object):
         
             self.list_points['base'] = self.run_1f_base(self.list_points['width'],'C0')
         
-        if self.fname in ('BiLorentzian',):
+        elif self.fname == 'BiLorentzian':
             
             # if points are not saved they are garbage collected
             self.list_points = {'peak':[],'width':[]}
@@ -121,9 +121,8 @@ class FunctionPlacer(object):
                 self.list_points['width'].append(widthpt)
         
             self.list_points['base'] = self.run_1f_base(self.list_points['width'],'C0')
-
         
-        elif self.fname in ('QuadLorentzian',):
+        elif self.fname == 'QuadLorentz':
             
             # if points are not saved they are garbage collected
             self.list_points = {'peak0':[],'peak1':[],'peak2':[],'peak3':[],'width':[],}
