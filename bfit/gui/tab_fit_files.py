@@ -1071,7 +1071,10 @@ class fit_files(object):
             xerrs = None
             ax.tick_params(axis='x', which='major', labelsize='x-small')
         else:
-            ax.get_xaxis().get_major_formatter().set_useOffset(False)
+            try:
+                ax.get_xaxis().get_major_formatter().set_useOffset(False)
+            except AttributeError:
+                pass
         
         if ydraw in ('Start Time',):    
             ax.yaxis.set_major_formatter(mdates.DateFormatter('%y/%m/%d (%H:%M)'))
@@ -1079,7 +1082,10 @@ class fit_files(object):
             yerrs = None
             ax.tick_params(axis='y', which='major', labelsize='x-small')
         else:
-            ax.get_yaxis().get_major_formatter().set_useOffset(False)
+            try:
+                ax.get_yaxis().get_major_formatter().set_useOffset(False)
+            except AttributeError:
+                pass
             
         # draw
         f = self.plt.errorbar(figstyle,draw_id,xvals,yvals,xerr=xerrs,yerr=yerrs,
