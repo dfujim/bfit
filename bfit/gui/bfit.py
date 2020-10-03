@@ -578,11 +578,14 @@ class bfit(object):
         if style == 'new' or not self.plt.active[figstyle]:
             self.plt.figure(figstyle)
         elif style == 'redraw':
-            self.plt.figure(figstyle)
             self.plt.clf(figstyle)
             
         ax = self.plt.gca(figstyle)
-        ax.get_xaxis().get_major_formatter().set_useOffset(False)
+        
+        try:
+            ax.get_xaxis().get_major_formatter().set_useOffset(False)
+        except AttributeError:
+            pass
         
         # get asymmetry: raw scans
         if asym_type == 'r' and data.mode in ['1f','1n','1w']:
