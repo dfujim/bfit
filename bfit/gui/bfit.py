@@ -98,17 +98,18 @@ class bfit(object):
             label_default:  StringVar() name of label defaults for fetch
             logger:         logging object 
             logger_name:    string of unique logger name
-            ppm_reference:  reference freq in Hz for ppm calulations
-            probe_species:  StringVar() name of probe species, bdata.life key.
             mainframe:      main frame for the object
             notebook:       contains all tabs for operations:
                 fileviewer
                 fetch_files
                 fit_files
             plt:            PltTracker for tracking figures
+            ppm_reference:  reference freq in Hz for ppm calulations
+            probe_species:  StringVar() name of probe species, bdata.life key.
             root:           tkinter root instance
             rounding:       number of decimal places to round results to in display
             routine_mod:    module with fitting routines
+            thermo_channel: StringVar for tracking how temperature is calculated
             units:          dict:(float,str). conversion rate from original to display units
             update_period:  int, update spacing in s. 
             use_nbm:        BooleanVar, use NBM in asym calculations
@@ -124,7 +125,7 @@ class bfit(object):
                                 # normalizing alpha diffusion runs
     
     # csymmetry calculation options
-    asym_dict_keys = {'20':("Combined Helicity","Split Helicity",
+    asym_dict_keys = {'20':("Combined Helicity","Split Helicity","Combined Normalized",
                             "Positive Helicity","Negative Helicity",
                             "Matched Helicity","Histograms"),
                       '1f':("Combined Helicity","Split Helicity","Raw Scans",
@@ -143,7 +144,7 @@ class bfit(object):
                       '2e':("Combined Hel Slopes","Combined Hel Diff","Combined Hel Raw",
                             "Split Hel Slopes","Split Hel Diff","Split Hel Raw",
                             "Split Slopes Shifted","Split Diff Shifted","Split Raw Shifted"),
-                      '2h':("Combined Helicity","Split Helicity",
+                      '2h':("Combined Helicity","Split Helicity", "Normalized Combined",
                             "Positive Helicity","Negative Helicity",
                             "Matched Helicity",
                             "Alpha Diffusion", "Alpha Diff Normalized",
@@ -159,7 +160,8 @@ class bfit(object):
                  "Matched Helicity"         :'hm',
                  "Shifted Split"            :'hs',
                  "Shifted Combined"         :'cs',
-                 "Normalized Combined"      :'cn',
+                 "Normalized Combined"      :'cn1',
+                 "Combined Normalized"      :'cn2',
                  "Matched Peak Finding"     :'hp',
                  "Raw Scans"                :'r',
                  "Histograms"               :'rhist',
@@ -180,6 +182,9 @@ class bfit(object):
                  "Split Hel (!Alpha Tag)"   :"nat_h",
                  }
     
+    # valid thermometer channels to read from
+    thermo_keys = ('A','B','(A+B)/2')
+    
     # draw axis labels
     xlabel_dict={'20':"Time (s)",
                  '2h':"Time (s)",
@@ -193,7 +198,8 @@ class bfit(object):
                  'adn':r'$N_\alpha/N_\beta$', 
                  'hs':r'Asym-Asym($\nu_\mathrm{max}$)',
                  'cs':r'Asym-Asym($\nu_\mathrm{max}$)',
-                 'cn':r'Asym/Asym($\nu_\mathrm{max}$)',
+                 'cn1':r'Asym/Asym($\nu_\mathrm{max}$)',
+                 'cn2':r'Asym/Asym($t=0$)',
                  'rhist':'Counts'}
     
     # histogram names for x axis
@@ -369,6 +375,7 @@ class bfit(object):
         menu_settings_dir = Menu(menu_settings)
         menu_settings_lab = Menu(menu_settings)
         menu_settings_probe = Menu(menu_settings,selectcolor=colors.selected)
+        menu_settings_thermo = Menu(menu_settings,selectcolor=colors.selected)
         
         # Settings cascade commands
         menu_settings.add_cascade(menu=menu_settings_dir,label='Data directory')
@@ -386,6 +393,7 @@ class bfit(object):
                 command=self.set_redraw_period)
         menu_settings.add_command(label="System matplotlibrc",
                 command=self.set_matplotlib)
+        menu_settings.add_cascade(menu=menu_settings_thermo,label='Thermometer Channel')
         menu_settings.add_command(label="Units",
                 command=self.set_units)
         
@@ -412,6 +420,15 @@ class bfit(object):
                         variable=self.probe_species,
                         value=k,
                         command=self.set_probe_species)
+        
+        # Settings: set thermometer channel
+        self.thermo_channel = StringVar()
+        self.thermo_channel.set(self.thermo_keys[0])
+        for k in self.thermo_keys:
+            menu_settings_thermo.add_radiobutton(label=k,
+                    variable=self.thermo_channel,
+                    value=k,
+                    command=self.set_thermo_channel)
         
         # Draw style
         self.draw_style = StringVar()
@@ -913,8 +930,8 @@ class bfit(object):
                 
                 self.plt.errorbar(figstyle,data.id,x,ac,dac,label=label,**drawargs)
                 
-            # plot combined helicities, normalized by baseline
-            elif asym_type == 'cn':
+            # plot combined helicities, normalized by baseline 
+            elif asym_type == 'cn1':
                 
                 # remove zero asym
                 ac = a.c[0]
@@ -922,16 +939,33 @@ class bfit(object):
                 tag = ac!=0
                 ac = ac[tag]
                 dac = dac[tag]
-                
-                # divide by last value
                 x = x[tag]
                 
-                end = np.average(ac[-5:],weights=1/dac[-5:]**2)
-                dend = 1/np.sum(1/dac[-5:]**2)**0.5
+                # divide by last value
+                norm = np.average(ac[-5:],weights=1/dac[-5:]**2)
+                dnorm = 1/np.sum(1/dac[-5:]**2)**0.5
+                    
+                dac = ac/norm * ((dnorm/norm)**2 + (dac/ac)**2)**0.5
+                ac /= norm
+                self.plt.errorbar(figstyle,data.id,x,ac,dac,label=label,**drawargs)
+
+            # plot combined helicities, normalized by initial asym
+            elif asym_type == 'cn2':
                 
-                dac = ac/end * ((dend/end)**2 + (dac/ac)**2)**0.5
-                ac /= end
-                
+                # remove zero asym
+                ac = a.c[0]
+                dac = a.c[1]
+                tag = ac!=0
+                ac = ac[tag]
+                dac = dac[tag]
+                x = x[tag]
+
+                # divide by intial 
+                norm = ac[0]
+                dnorm = dac[0]
+
+                dac = ac/norm * ((dnorm/norm)**2 + (dac/ac)**2)**0.5
+                ac /= norm
                 self.plt.errorbar(figstyle,data.id,x,ac,dac,label=label,**drawargs)
                 
             # attempting to draw raw scans unlawfully
@@ -1477,6 +1511,8 @@ class bfit(object):
         # fit files
         elif tab_id == 2:
             self.fit_files.populate()
+    def set_thermo_channel(self,):
+        pass 
      
     # ======================================================================= #
     def set_asym_calc_mode_box(self,mode,parent,*args):
