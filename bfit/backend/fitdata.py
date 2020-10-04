@@ -93,6 +93,31 @@ class fitdata(object):
     def asym(self,*args,**kwargs):  return self.bd.asym(*args,**kwargs)
 
     # ======================================================================= #
+    def get_temperature(self,channel='A'):
+        """
+            Get the temperature of the run.
+            Return (T, std T)
+        """
+        if channel == 'A':
+            T = self.bd.camp['smpl_read_A'].mean
+            dT = self.bd.camp['smpl_read_A'].std
+        elif channel == 'B':
+            T = self.bd.camp['smpl_read_B'].mean
+            dT = self.bd.camp['smpl_read_B'].std
+        elif channel == '(A+B)/2':
+            Ta = self.bd.camp['smpl_read_A'].mean
+            Tb = self.bd.camp['smpl_read_B'].mean
+            dTa = self.bd.camp['smpl_read_A'].std
+            dTb = self.bd.camp['smpl_read_B'].std
+            
+            T = (Ta+Tb)/2
+            dT = ((dTa**2+dTb**2)**0.5)/2
+        else:
+            raise AttributeError("Missing required temperature channel.")
+        
+        return (T,dT)
+        
+    # ======================================================================= #
     def read(self):
         """Read data file"""
         
@@ -106,9 +131,9 @@ class fitdata(object):
                 
         # set temperature 
         try:
-            self.temperature = self.bd.camp.smpl_read_A
-        except AttributeError:
-            self.logger.exception('Thermometer smpl_read_A not found')
+            self.temperature = temperature_class(*self.get_temperature(self.bfit.thermo_channel.get()))
+        except AttributeError as err:
+            self.logger.exception(err)
             try:
                 self.temperature = self.bd.camp.oven_readC
             except AttributeError:
@@ -173,4 +198,15 @@ class fitdata(object):
         self.fitfn = values[4]
         
         self.logger.debug('Setting fit results to %s',self.fitpar)
+    
+
+# ========================================================================== #
+class temperature_class(object):
+    """
+        Emulate storage container for camp variable smpl_read_%
+    """
+    
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std = std
     

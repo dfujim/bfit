@@ -308,8 +308,8 @@ class fileviewer(object):
                         
         # get data: temperature and fields
         try:
-            temp = data.camp.smpl_read_A.mean
-            temp_stdv = data.camp.smpl_read_A.std
+            temp = data.temperature.mean
+            temp_stdv = data.temperature.std
             data_sw["Temperature"] = "%.2f +/- %.2f K" % (temp,temp_stdv)
             key_order_sw.append('Temperature')
         except AttributeError:

@@ -1511,8 +1511,9 @@ class bfit(object):
         # fit files
         elif tab_id == 2:
             self.fit_files.populate()
-    def set_thermo_channel(self,):
-        pass 
+    def set_thermo_channel(self,):  
+        self.fetch_files.update_data()
+        self.fileviewer.get_data()
      
     # ======================================================================= #
     def set_asym_calc_mode_box(self,mode,parent,*args):

@@ -470,7 +470,7 @@ class fetch_files(object):
             
             # update data
             if runkey in self.bfit.data.keys():
-                self.bfit.data[runkey].bd = new_dat
+                self.bfit.data[runkey].read()
                 
             # new data
             else:
@@ -776,6 +776,22 @@ class fetch_files(object):
             state = not self.data_lines[k].check_state.get()
             self.data_lines[k].check_state.set(state)
 
+    # ======================================================================= #
+    def update_data(self):
+        """
+            Re-fetch all fetched runs.
+            Update labels
+        """
+        
+        # fetch
+        for dat in self.bfit.data.values():
+            dat.read()
+            
+        # update text
+        for line in self.data_lines.values():
+            line.set_check_text()
+            line.update_label()
+        
 # =========================================================================== #
 # =========================================================================== #
 class dataline(object):
@@ -1095,3 +1111,10 @@ class dataline(object):
     def on_line_leave(self,*args):
         """Make the dataline black on stop mouseover"""
         self.line_frame.config(bg=colors.background)
+
+    # ======================================================================= #
+    def update_label(self):
+        """Set label unless values are user-defined"""
+        
+        if str(self.label_entry.config()['foreground'][4]) == colors.entry_grey:
+            self.set_label()
