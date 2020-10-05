@@ -194,12 +194,15 @@ class bfit(object):
                  '1e':'Field (G)',
                  '1n':'Voltage (%s)'}
                  
-    ylabel_dict={'ad':r'$N_\alpha/N_\beta$', # otherwise, label as Asymmetry
-                 'adn':r'$N_\alpha/N_\beta$', 
-                 'hs':r'Asym-Asym($\nu_\mathrm{max}$)',
-                 'cs':r'Asym-Asym($\nu_\mathrm{max}$)',
-                 'cn1':r'Asym/Asym($\nu_\mathrm{max}$)',
-                 'cn2':r'Asym/Asym($t=0$)',
+    ylabel_dict={'ad':r'$N_\alpha~/~N_\beta$', # otherwise, label as Asymmetry
+                 'adn':r'$N_\alpha~~N_\beta$', 
+                 'hs':r'$\mathcal{A}~-~\mathcal{A}(\nu_\mathrm{max}$)',
+                 'cs':r'$\mathcal{A}~-~\mathcal{A}(\nu_\mathrm{max}$)',
+                 'csf':r'$\mathcal{A}~-$ Baseline',
+                 'cn1':r'$\mathcal{A}~/~\mathcal{A}(\nu_\mathrm{max}$)',
+                 'cn1f':r'$\mathcal{A}$ / Baseline',
+                 'cn2':r'$\mathcal{A}~/~\mathcal{A}(t_\mathrm{min}$)',
+                 'cn2f':r'$\mathcal{A}$ / amp',
                  'rhist':'Counts'}
     
     # histogram names for x axis
@@ -923,11 +926,16 @@ class bfit(object):
                 # subtract last 5 values
                 x = x[tag]
                 
-                end = np.average(ac[-5:],weights=1/dac[-5:]**2)
-                dend = 1/np.sum(1/dac[-5:]**2)**0.5
-                
-                ac -= end
-                dac = ((dend)**2+(dac)**2)**0.5
+                if 'baseline' in data.fitpar['res'].keys():
+                    shift = data.fitpar['res']['baseline']
+                    dshift = data.fitpar['dres']['baseline']
+                    asym_type += 'f'
+                else:                
+                    shift = np.average(ac[-5:],weights=1/dac[-5:]**2)
+                    dshift = 1/np.sum(1/dac[-5:]**2)**0.5
+                        
+                ac -= shift
+                dac = ((dshift)**2+(dac)**2)**0.5
                 
                 self.plt.errorbar(figstyle,data.id,x,ac,dac,label=label,**drawargs)
                 
@@ -946,6 +954,7 @@ class bfit(object):
                 if 'baseline' in data.fitpar['res'].keys():
                     norm = data.fitpar['res']['baseline']
                     dnorm = data.fitpar['dres']['baseline']
+                    asym_type += 'f'
                 else:                
                     norm = np.average(ac[-5:],weights=1/dac[-5:]**2)
                     dnorm = 1/np.sum(1/dac[-5:]**2)**0.5
@@ -969,6 +978,7 @@ class bfit(object):
                 if 'amp' in data.fitpar['res'].keys():
                     norm = data.fitpar['res']['amp']
                     dnorm = data.fitpar['dres']['amp']
+                    asym_type += 'f'
                 else:
                     norm = ac[0]
                     dnorm = dac[0]
@@ -1072,8 +1082,7 @@ class bfit(object):
         if data.mode != '2e' and asym_type != 'rhist':
             self.plt.xlabel(figstyle,xlabel)
             
-            if asym_type in self.ylabel_dict.keys(): label = self.ylabel_dict[asym_type]
-            else:                               label = "Asymmetry"
+            label = self.ylabel_dict.get(asym_type,"Asymmetry")
             if self.use_nbm.get():              label = 'NBM ' + label    
             self.plt.ylabel(figstyle,label)    
             

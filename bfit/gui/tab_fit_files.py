@@ -976,18 +976,25 @@ class fit_files(object):
         # account for normalized draw modes
         draw_mode = self.bfit.asym_dict[self.bfit.fetch_files.asym_type.get()]
         if draw_mode == 'cn1':
-            fity = fity/data.fitpar['res']['baseline']
+            draw_mode += 'f'
+            fity /= data.fitpar['res']['baseline']
+        
         elif draw_mode == 'cn2':
+            draw_mode += 'f'
             if 'amp' in data.fitpar['res'].keys():
                 fity /= data.fitpar['res']['amp']
             else:
-                fity /= fity[0]
+                fity /= fn(t[0],*par)
+        
+        elif draw_mode == 'cs':
+            draw_mode += 'f'
+            fity -= data.fitpar['res']['baseline']
                 
         self.plt.plot(figstyle,draw_id,fitxx,fity,zorder=10,
                       unique=unique,**drawargs)
         
         # plot elements
-        self.plt.ylabel(figstyle,'Asymmetry')
+        self.plt.ylabel(figstyle,self.bfit.ylabel_dict.get(draw_mode,'Asymmetry'))
         self.plt.xlabel(figstyle,xlabel)
         
         # show
