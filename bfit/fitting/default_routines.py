@@ -44,8 +44,17 @@ class fitter(object):
     valid_asym_modes = ('c','p','n','sl_c','dif_c',)
     
     # probe species spin numbers
-    spin = {'Li8':2,
-            'Mg31':0.5}
+    spin = {'Li8':2,    # radioactive daughters: none
+            'Li9':1.5,  # radioactive daughters: Be8
+            'Li11':0.5, # radioactive daughters: Be11, He6, Be10 
+            'Be11':0.5, # radioactive daughters: none 
+            'F20':2,    # radioactive daughters: none
+            'Mg31':0.5, # radioactive daughters: Al31, Si31 
+            'Mg29':1.5, # radioactive daughters: Al29
+            'Ac230':1,  # radioactive daughters: none
+            'Ac232':1,  # radioactive daughters: unknown
+            'Ac234':1,  # radioactive daughters: unkonwn
+            }
 
     # ======================================================================= #
     def __init__(self,keyfn, probe_species='Li8'):
