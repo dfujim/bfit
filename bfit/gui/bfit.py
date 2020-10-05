@@ -94,6 +94,7 @@ class bfit(object):
             draw_components:list of titles for labels, options to export, draw.
             draw_ppm:       BoolVar for drawing as ppm shift
             draw_standardized_res: BoolVar for drawing residuals as standardized
+            norm_with_param:BoolVar, if true estimate normalization from data only
             hist_select:    histogram selection for asym calcs (blank for defaults)
             label_default:  StringVar() name of label defaults for fetch
             logger:         logging object 
@@ -443,6 +444,8 @@ class bfit(object):
         self.draw_standardized_res.set(False)
         self.use_nbm = BooleanVar()
         self.use_nbm.set(False)
+        self.norm_with_param = BooleanVar()
+        self.norm_with_param.set(True)
         
         menu_draw = Menu(menubar)
         menubar.add_cascade(menu=menu_draw,label='Draw Mode')
@@ -457,6 +460,8 @@ class bfit(object):
                 selectcolor=colors.selected)
         
         menu_draw.add_separator()
+        menu_draw.add_checkbutton(label="Try normalizing using fit",\
+                variable=self.norm_with_param,selectcolor=colors.selected)
         menu_draw.add_checkbutton(label="Draw 1f as PPM shift",\
                 variable=self.draw_ppm,selectcolor=colors.selected)
         menu_draw.add_checkbutton(label="Draw residuals as standardized",\
@@ -927,7 +932,7 @@ class bfit(object):
                 # subtract last 5 values
                 x = x[tag]
                 
-                if 'baseline' in data.fitpar['res'].keys():
+                if 'baseline' in data.fitpar['res'].keys() and self.norm_with_param.get():
                     shift = data.fitpar['res']['baseline']
                     dshift = data.fitpar['dres']['baseline']
                     asym_type += 'f'
@@ -952,7 +957,7 @@ class bfit(object):
                 x = x[tag]
                 
                 # divide by last value or by baseline
-                if 'baseline' in data.fitpar['res'].keys():
+                if 'baseline' in data.fitpar['res'].keys() and self.norm_with_param.get():
                     norm = data.fitpar['res']['baseline']
                     dnorm = data.fitpar['dres']['baseline']
                     asym_type += 'f'
@@ -976,7 +981,7 @@ class bfit(object):
                 x = x[tag]
 
                 # divide by intial 
-                if 'amp' in data.fitpar['res'].keys():
+                if 'amp' in data.fitpar['res'].keys() and self.norm_with_param.get():
                     norm = data.fitpar['res']['amp']
                     dnorm = data.fitpar['dres']['amp']
                     asym_type += 'f'
