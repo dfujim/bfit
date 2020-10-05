@@ -117,6 +117,8 @@ Error message and password prompt
 
 <p>This <a class="tc-tiddlylink-external" href="http://tiddlywiki.com" target="_blank">TiddlyWiki</a> contains the following tiddlers:</p><p><ul>
 
+<li>&quot;How To&quot; List</li>
+
 <li>$:/config/DefaultSidebarTab</li>
 
 <li>$:/config/PageControlButtons/Visibility/$:/core/ui/Buttons/control-panel</li>
@@ -339,8 +341,6 @@ Error message and password prompt
 
 <li>Hotkeys</li>
 
-<li>How To List</li>
-
 <li>Inspect</li>
 
 <li>Installation and First Startup</li>
@@ -403,6 +403,10 @@ Error message and password prompt
 <!--~~ Ordinary tiddlers ~~-->
 
 <div id="storeArea" style="display:none;">
+<div created="20181118232632065" modified="20201005002847819" tags="HowTo" title="&quot;How To&quot; List">
+<pre>&lt;$list filter=&quot;[tag[HowTo]sort[title]] -[title[How To List]]&quot;/&gt;
+</pre>
+</div>
 <div modified="20161124220041577" title="$:/config/DefaultSidebarTab">
 <pre>$:/core/ui/SideBar/Recent</pre>
 </div>
@@ -6321,7 +6325,7 @@ Error message and password prompt
 <div modified="20200316064659992" title="$:/state/showeditpreview">
 <pre>yes</pre>
 </div>
-<div modified="20191112073325272" title="$:/state/sidebar">
+<div modified="20201005010523482" title="$:/state/sidebar">
 <pre>yes</pre>
 </div>
 <div modified="20171215083831246" title="$:/state/tab--1498284803">
@@ -6348,7 +6352,7 @@ Error message and password prompt
 <div modified="20171215084937325" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/EditToolbar</pre>
 </div>
-<div list="[[Fetching Sequences and Merging Runs]] [[Help Index]] [[The Basics]] [[How To List]]" title="$:/StoryList">
+<div list="[[Help Index]] [[Asymmetry Calculation Details]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div modified="20171215083831245" title="$:/temp/advancedsearch">
@@ -6601,8 +6605,8 @@ At this point it is largely for experimentation by @zooko.
 <div author="JeremyRuston" core-version="&gt;=5.0.0" created="20160103221746029" dependents="" description="Basic theme" modified="20160103221746029" name="Vanilla" original-plugin-type="theme" original-tags="" original-title="$:/themes/tiddlywiki/vanilla" original-type="application/json" server-url="http://tiddlywiki.com/library/v5.1.9/index.html" tags="$:/tags/RemoteAssetInfo" title="$:/temp/RemoteAssetInfo/http://tiddlywiki.com/library/v5.1.9/index.html/$:/themes/tiddlywiki/vanilla" type="text/vnd.tiddlywiki" version="5.1.9">
 <pre></pre>
 </div>
-<div created="20171215083935558" modified="20200316064439365" title="$:/temp/search">
-<pre>fetch </pre>
+<div created="20171215083935558" modified="20201005002820341" title="$:/temp/search">
+<pre></pre>
 </div>
 <div created="20160103222314931" modified="20160103222314931" tags="$:/tags/ServerConnection" title="$:/temp/ServerConnection/http://tiddlywiki.com/library/v5.1.9/index.html" url="http://tiddlywiki.com/library/v5.1.9/index.html">
 <pre>loaded</pre>
@@ -6727,7 +6731,7 @@ At this point it is largely for experimentation by @zooko.
 <div modified="20171215084105748" title="$:/view">
 <pre>pop</pre>
 </div>
-<div created="20171215084952848" modified="20191111035445878" title="Asymmetry Calculation Details">
+<div created="20171215084952848" modified="20201005010521010" title="Asymmetry Calculation Details">
 <pre>! Variable Assignment
 
 In the following we shall treat only the BNMR case. For BNQR, simply associate ''F'' with ''R'' and ''B'' with ''L''. For the case of 1n runs (Rb cell scans), the neutral beam monitors are used, therefore associate ''F'' with ''NBMF'' and ''B'' with ''NBMB''
@@ -6766,11 +6770,28 @@ Normal split helicity, with the (-) helicity mirrored across the mean. Use to ch
 
 !! Shifted Split (1f, 1n, 1w only)
 
-Draw the difference between the split helicity and the helicity in the first bin. Crudely sets the baseline to zero. Use to compare spectra in different helicities. 
+Draw the difference between the split helicity and the helicity in the first bin. Crudely sets the baseline to zero by subtracting the weighted average of the 5 largest frequency bins. Use to compare spectra in different helicities. 
 
 !! Shifted Combined (1f, 1n, 1w only)
 
-Same as shifted split, but with combined asymmetry. Useful for comparing different runs with very different baselines. 
+Useful for comparing different runs with very different baselines. 
+
+* If a fit exists, subtract the baseline from the fit in the normalization, 
+* Otherwise estimate the baseline from the weighted average of the 5 largest frequency bins, and subtract that
+
+!! Normalized Combined (1f, 1w only)
+
+Normalize by the baseline value (divide by). 
+
+* If a fit exists, use the baseline from the fit in the normalization, 
+* Otherwise estimate the baseline from the weighted average of the 5 largest frequency bins.
+
+!! Combined Normalized (20, 2h only)
+
+Normalize by the amplitude (divide by). 
+
+* If a fit exists and has the parameter &quot;amp&quot;: divide by the amp
+* Otherwise divide by the first value as an approximation of t=0. Note that the first value is affected by the rebinning to account for error in the first few bins, as they are often unreliable.
 
 !! Matched Peak Finding (1n only)
 
@@ -7324,7 +7345,7 @@ Available functions and their boxes:
 ** Peak location + amplitude
 ** Width (positioned at 2x FWHM, for implementation reasons)</pre>
 </div>
-<div created="20171215083659362" modified="20191111044207928" title="Help Index">
+<div created="20171215083659362" modified="20201005002856909" title="Help Index">
 <pre>&quot;&quot;&quot;
 [[Installation and First Startup]]
 [[The Basics]]
@@ -7334,7 +7355,7 @@ Available functions and their boxes:
 [[Asymmetry Calculation Details]]
 [[Default Fitting Algorithms]]
 [[Plugging in Fitting Routines|Fitting routines]]
-[[How To List]]
+[[&quot;How To&quot; List]]
 &quot;&quot;&quot;
 </pre>
 </div>
@@ -7375,10 +7396,6 @@ Available functions and their boxes:
 | return | fit data |
 | ctrl+return | draw fit parameters |
 | ctrl+u | update all drawn fit parameter windows |</pre>
-</div>
-<div created="20181118232632065" modified="20181118234722198" tags="HowTo" title="How To List">
-<pre>&lt;$list filter=&quot;[tag[HowTo]sort[title]] -[title[How To List]]&quot;/&gt;
-</pre>
 </div>
 <div created="20191111030557249" modified="20191111032019181" tags="tab" title="Inspect">
 <pre>The main purpose of the Inspect tab is to provide a space where all of the details of a single run can be reviewed. 
