@@ -160,8 +160,8 @@ class bfit(object):
                  "Matched Helicity"         :'hm',
                  "Shifted Split"            :'hs',
                  "Shifted Combined"         :'cs',
-                 "Normalized Combined"      :'cn1',
-                 "Combined Normalized"      :'cn2',
+                 "Normalized Combined"      :'cn1', # mode 1
+                 "Combined Normalized"      :'cn2', # mode 2
                  "Matched Peak Finding"     :'hp',
                  "Raw Scans"                :'r',
                  "Histograms"               :'rhist',
@@ -599,6 +599,7 @@ class bfit(object):
             
         ax = self.plt.gca(figstyle)
         
+        # set axis offset
         try:
             ax.get_xaxis().get_major_formatter().set_useOffset(False)
         except AttributeError:
@@ -941,10 +942,14 @@ class bfit(object):
                 dac = dac[tag]
                 x = x[tag]
                 
-                # divide by last value
-                norm = np.average(ac[-5:],weights=1/dac[-5:]**2)
-                dnorm = 1/np.sum(1/dac[-5:]**2)**0.5
-                    
+                # divide by last value or by baseline
+                if 'baseline' in data.fitpar['res'].keys():
+                    norm = data.fitpar['res']['baseline']
+                    dnorm = data.fitpar['dres']['baseline']
+                else:                
+                    norm = np.average(ac[-5:],weights=1/dac[-5:]**2)
+                    dnorm = 1/np.sum(1/dac[-5:]**2)**0.5
+                        
                 dac = ac/norm * ((dnorm/norm)**2 + (dac/ac)**2)**0.5
                 ac /= norm
                 self.plt.errorbar(figstyle,data.id,x,ac,dac,label=label,**drawargs)
@@ -961,8 +966,12 @@ class bfit(object):
                 x = x[tag]
 
                 # divide by intial 
-                norm = ac[0]
-                dnorm = dac[0]
+                if 'amp' in data.fitpar['res'].keys():
+                    norm = data.fitpar['res']['amp']
+                    dnorm = data.fitpar['dres']['amp']
+                else:
+                    norm = ac[0]
+                    dnorm = dac[0]
 
                 dac = ac/norm * ((dnorm/norm)**2 + (dac/ac)**2)**0.5
                 ac /= norm

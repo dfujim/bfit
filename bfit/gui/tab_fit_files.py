@@ -970,7 +970,20 @@ class fit_files(object):
             fitxx = fitx
             xlabel = self.bfit.xlabel_dict[self.mode]
     
-        self.plt.plot(figstyle,draw_id,fitxx,fn(fitx,*fit_par),zorder=10,
+        # get fity
+        fity = fn(fitx,*fit_par)
+    
+        # account for normalized draw modes
+        draw_mode = self.bfit.asym_dict[self.bfit.fetch_files.asym_type.get()]
+        if draw_mode == 'cn1':
+            fity = fity/data.fitpar['res']['baseline']
+        elif draw_mode == 'cn2':
+            if 'amp' in data.fitpar['res'].keys():
+                fity /= data.fitpar['res']['amp']
+            else:
+                fity /= fity[0]
+                
+        self.plt.plot(figstyle,draw_id,fitxx,fity,zorder=10,
                       unique=unique,**drawargs)
         
         # plot elements
