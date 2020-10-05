@@ -1066,14 +1066,11 @@ class fit_files(object):
         if label:   
             draw_id = label
         else:
-            
-            draw_id = 'Set 0'
+            draw_id = ''
             
             if self.bfit.draw_style.get() == 'stack':
                 ax = self.plt.gca(figstyle)
-                if hasattr(ax,'draw_objs'):
-                    draw_id = 'Set %d' % len(ax.draw_objs.keys())    
-            
+                
         # make new window
         style = self.bfit.draw_style.get()
         if style == 'new' or not self.plt.active[figstyle]:
@@ -1119,7 +1116,9 @@ class fit_files(object):
         self.plt.xlabel(figstyle,xdraw)
         self.plt.ylabel(figstyle,ydraw)
         self.plt.tight_layout(figstyle)
-        self.plt.legend(figstyle,fontsize='x-small')
+        
+        if draw_id:
+            self.plt.legend(figstyle,fontsize='x-small')
         
         # bring window to front
         raise_window()
