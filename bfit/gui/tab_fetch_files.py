@@ -967,12 +967,17 @@ class dataline(object):
         
         self.logger.info('Degridding run %s',self.id)
         
+        # degrid
         self.line_frame.grid_forget()
         self.line_frame.update_idletasks()
         
         self.lines_list_old[self.id] = self.lines_list[self.id]
         del self.lines_list[self.id]
         del self.bfit.data[self.id]
+        
+        # uncheck the fit
+        self.check_fit.set(False)
+        self.draw_fit_checkbox.config(state='disabled')
         
         # repopulate fit files tab
         self.bfit.fit_files.populate()
