@@ -123,6 +123,7 @@ class bfit(object):
     hist_select = ''    # histogram selection for asym calculations
     norm_alph_diff_time = 0.1   # number of seconds to take average over when 
                                 # normalizing alpha diffusion runs
+    legend_max_draw = 8 # max number of items to draw before removing the legend
     
     # csymmetry calculation options
     asym_dict_keys = {'20':("Combined Helicity","Split Helicity","Combined Normalized",

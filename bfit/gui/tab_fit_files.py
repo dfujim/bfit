@@ -733,7 +733,7 @@ class fit_files(object):
             warnings.simplefilter("ignore")
             self.bfit.fetch_files.draw_all(figstyle='fit',ignore_check=False)
         
-        if len(self.fit_lines.keys())>8:
+        if len(self.fit_lines.keys())>self.bfit.legend_max_draw:
             self.plt.gca('fit').get_legend().remove()
             self.plt.tight_layout('fit')
         

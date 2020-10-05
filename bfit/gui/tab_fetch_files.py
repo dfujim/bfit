@@ -25,6 +25,7 @@ class fetch_files(object):
         Data fields:
             
             asym_type: drawing style
+            bfit: pointer to parent class
             canvas_frame_id: id number of frame in canvas
             check_rebin: IntVar for handling rebin aspect of checkall
             check_bin_remove: StringVar for handing omission of 1F data
@@ -32,23 +33,20 @@ class fetch_files(object):
             check_state_data: BooleanVar for handling check_all_data
             check_state_fit: BooleanVar for handling check_all_fit
             check_state_res: BooleanVar for handling check_all_res
-            
             data_canvas: canvas object allowing for scrolling 
             dataline_frame: frame holding all the data lines. Exists as a window
                 in the data_canvas
-            
-            entry_asym_type: combobox for asym calc and draw type
-            entry_run: entry to put in run number string
-            listbox_history: listbox for run input history
-            year: IntVar of year to fetch runs from 
-            run: StringVar input to fetch runs.
-            bfit: pointer to parent class
             data_lines: dictionary of dataline obj, keyed by run number
             data_lines_old: dictionary of removed dataline obj, keyed by run number
+            entry_asym_type: combobox for asym calc and draw type
+            entry_run: entry to put in run number string
             fet_entry_frame: frame of fetch tab
+            listbox_history: listbox for run input history
+            max_number_fetched: max number of files you can fetch
+            run: StringVar input to fetch runs.
             runmode_label: display run mode
             runmode: display run mode string
-            max_number_fetched: max number of files you can fetch
+            year: IntVar of year to fetch runs from 
     """
     
     runmode_relabel = {'20':'SLR (20)',
@@ -388,6 +386,12 @@ class fetch_files(object):
             self.logger.error(s)
             raise ValueError(s)
     
+        # remove legned if too many drawn values
+        if len(self.data_lines.keys())>self.bfit.legend_max_draw:
+            self.bfit.plt.gca('data').get_legend().remove()
+            self.bfit.plt.tight_layout('data')
+        
+        
     # ======================================================================= #
     def export(self):
         """Export all data files as csv"""
