@@ -1936,12 +1936,13 @@ class fitline(object):
                 
                 if force_modify:
                     entry.delete(0,'end')
-                
+                    self.parentry[p]['fixed'][0].set(fitdat.fitpar['fixed'][p])
+                    
                 if not entry.get():
                     entry.insert(0,str(fitdat.fitpar[col][p]))
                 
                 entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
-            self.parentry[p]['fixed'][0].set(fitdat.fitpar['fixed'][p])
+            
         r = min_n_par+1
         
         self.disable_entry_callback = False
@@ -1956,7 +1957,6 @@ class fitline(object):
             
             for col in ('p0','blo','bhi'):
                 c += 1
-                
                 value = StringVar()
                 entry = ttk.Entry(fitframe,textvariable=value,width=13)
                 entry.insert(0,str(fitdat.fitpar[col][p]))
@@ -2127,7 +2127,6 @@ class fitline(object):
         values = None
         res = self.bfit.data[run].fitpar['res']
         isfitted = any([res[k] for k in res]) # is this run fitted?
-        fixed = None
         
         if fit_files.set_prior_p0.get() and not isfitted:
             r = 0
@@ -2140,9 +2139,9 @@ class fitline(object):
                     r = data.run
                     values = {k:(res[k],
                                  data.fitpar['blo'][k],
-                                 data.fitpar['bhi'][k]) for k in res}
+                                 data.fitpar['bhi'][k],
+                                 data.fitpar['fixed'][k]) for k in res}
                     parentry = self.bfit.fit_files.fit_lines[rkey].parentry
-                    fixed = {k:parentry[k]['fixed'][0].get() for k in res}
                     
         # get calcuated initial values
         if values is None:
@@ -2151,9 +2150,6 @@ class fitline(object):
             
         # set to data
         self.bfit.data[run].set_fitpar(values)
-        if fixed is not None and self.parentry:
-            for k in fixed.keys():
-                self.parentry[k]['fixed'][0].set(fixed[k])
             
         return tuple(plist)
         

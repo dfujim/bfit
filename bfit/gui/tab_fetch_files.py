@@ -391,7 +391,6 @@ class fetch_files(object):
             self.bfit.plt.gca('data').get_legend().remove()
             self.bfit.plt.tight_layout('data')
         
-        
     # ======================================================================= #
     def export(self):
         """Export all data files as csv"""
