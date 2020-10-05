@@ -105,13 +105,13 @@ def fit_bdata(data,fn,omit=None,rebin=None,shared=None,hist_select='',
         
     # fit globally -----------------------------------------------------------
     if any(shared) and ndata>1:
-        print('Running shared parameter fitting... ',end='')
+        print('Running shared parameter fitting... ',end='',flush=True)
         g = global_bdata_fitter(data,fn,shared,xlims,
                                 asym_mode=asym_mode,rebin=rebin,fixed=fixed)
         g.fit(**kwargs)
         gchi,chis = g.get_chi() # returns global chi, individual chi
         pars,covs,stds = g.get_par()
-        print('done.')
+        print('done.',flush=True)
         
     # fit runs individually --------------------------------------------------
     else:
