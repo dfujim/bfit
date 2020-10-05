@@ -98,22 +98,29 @@ class fitdata(object):
             Get the temperature of the run.
             Return (T, std T)
         """
-        if channel == 'A':
-            T = self.bd.camp['smpl_read_A'].mean
-            dT = self.bd.camp['smpl_read_A'].std
-        elif channel == 'B':
-            T = self.bd.camp['smpl_read_B'].mean
-            dT = self.bd.camp['smpl_read_B'].std
-        elif channel == '(A+B)/2':
-            Ta = self.bd.camp['smpl_read_A'].mean
-            Tb = self.bd.camp['smpl_read_B'].mean
-            dTa = self.bd.camp['smpl_read_A'].std
-            dTb = self.bd.camp['smpl_read_B'].std
-            
-            T = (Ta+Tb)/2
-            dT = ((dTa**2+dTb**2)**0.5)/2
-        else:
-            raise AttributeError("Missing required temperature channel.")
+        
+        try:
+            if channel == 'A':
+                T = self.bd.camp['smpl_read_A'].mean
+                dT = self.bd.camp['smpl_read_A'].std
+            elif channel == 'B':
+                T = self.bd.camp['smpl_read_B'].mean
+                dT = self.bd.camp['smpl_read_B'].std
+            elif channel == '(A+B)/2':
+                Ta = self.bd.camp['smpl_read_A'].mean
+                Tb = self.bd.camp['smpl_read_B'].mean
+                dTa = self.bd.camp['smpl_read_A'].std
+                dTb = self.bd.camp['smpl_read_B'].std
+                
+                T = (Ta+Tb)/2
+                dT = ((dTa**2+dTb**2)**0.5)/2
+            else:
+                raise AttributeError("Missing required temperature channel.")
+        
+        except KeyError:
+            T = np.nan
+            dT = np.nan
+        
         
         return (T,dT)
         
