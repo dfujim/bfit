@@ -1822,13 +1822,15 @@ class fitline(object):
         gui_param_button = ttk.Button(fitframe,text='Initial Value',
                         command=lambda : self.bfit.fit_files.do_gui_param(id=self.dataline.id),
                         pad=0)
+        result_comp_button = ttk.Button(fitframe,text='Result',
+                        command=self.show_fn_composition,pad=0)
+        
         c = 0
         ttk.Label(fitframe,text='Parameter').grid(    column=c,row=1,padx=5); c+=1
         gui_param_button.grid(column=c,row=1,padx=5,pady=2); c+=1
-        # ~ ttk.Label(fitframe,text='Initial Value').grid(column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Low Bound').grid(    column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='High Bound').grid(   column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='Result').grid(       column=c,row=1,padx=5); c+=1
+        result_comp_button.grid(column=c,row=1,padx=5,pady=2,sticky=(E,W)); c+=1
         ttk.Label(fitframe,text='Error').grid(        column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='ChiSq').grid(        column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Fixed').grid(        column=c,row=1,padx=5); c+=1
@@ -2238,3 +2240,97 @@ class fitline(object):
                 else:
                     disp['chi'][1]['readonlybackground']=colors.readonly
     
+    # ======================================================================= #
+    def show_fn_composition(self):
+        """
+            Draw window with function components and total
+        """
+        
+        # get top objects
+        fit_files = self.bfit.fit_files
+        bfit = self.bfit
+        
+        # get fit object
+        bdfit = self.dataline.bdfit
+        
+        # get base function 
+        fn_name = fit_files.fit_function_title.get()
+        
+        # get number of components and parameter names
+        ncomp = fit_files.n_component.get()
+        pnames_single = fit_files.fitter.gen_param_names(fn_name, 1)
+        pnames_combined = fit_files.fitter.gen_param_names(fn_name, ncomp)
+        
+        if '2' in bdfit.mode:
+            fn_single = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=1, 
+                            pulse_len=bdfit.get_pulse_s(), 
+                            lifetime=bd.life[bfit.probe_species.get()])
+            fn_combined = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=ncomp, 
+                            pulse_len=bdfit.get_pulse_s(), 
+                            lifetime=bd.life[bfit.probe_species.get()])
+        else:
+            fn_single = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=1)
+            fn_combined = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=ncomp)
+        
+        # draw in redraw mode
+        draw_mode = bfit.draw_style.get()
+        bfit.draw_style.set('redraw')
+        
+        # draw the data
+        omit = bdfit.omit.get()
+        if omit == bfit.fetch_files.bin_remove_starter_line:
+            omit = ''
+            
+        bfit.draw(bdfit, bfit.get_asym_mode(fit_files), rebin=bdfit.rebin.get(), 
+                    option=omit, figstyle='fit', color='k')
+        
+        # get the fit results 
+        results = {par:bdfit.fitpar['res'][par] for par in pnames_combined}
+        
+        # draw if ncomp is 1
+        if ncomp == 1:
+            bfit.draw_style.set('stack')
+            fit_files.draw_fit(bdfit.id, 'fit', unique=False, label=fn_name)
+            self.bfit.draw_style.set(draw_mode)
+            return
+        
+        # draw baseline
+        if 'baseline' in pnames_single:
+            bfit.plt.axhline('fit', bdfit.id+'_base', results['baseline'], ls='--',zorder=6)
+        
+        # get x pts
+        t,a,da = bdfit.asym(bfit.get_asym_mode(fit_files))
+        fitx = np.linspace(min(t),max(t),fit_files.n_fitx_pts)
+                
+        # get x axis scaling
+        if bdfit.mode in bfit.units: 
+            unit = bfit.units[bdfit.mode]
+            fitxx = fitx*unit[0]
+        else:                   
+            fitxx = fitx
+        
+        # draw the combined
+        params = [results[name] for name in pnames_combined]
+        
+        bfit.plt.plot('fit', bdfit.id+'_comb', fitxx, fn_combined(fitx,*params), 
+                            unique=False, label='Combined',zorder=5)
+        
+        # draw each component
+        for i in range(ncomp):
+            
+            # get parameters
+            params = [results[single+'_%d'%i] \
+                        for single in pnames_single if single != 'baseline']
+            
+            if 'baseline' in pnames_single:
+                params.append(results['baseline'])
+            
+            # draw     
+            bfit.plt.plot('fit', bdfit.id+'_%d'%i, fitxx, fn_single(fitx,*params), 
+                            unique=False, ls='--', label='%s %d'%(fn_name,i),zorder=6)
+            
+        # plot legend
+        bfit.plt.legend('fit',fontsize='xx-small')
+        
+        # reset to old draw mode
+        bfit.draw_style.set(draw_mode)
