@@ -1055,6 +1055,19 @@ class fit_files(object):
         # get mouseover annotation labels
         mouse_label, _ = self.get_values('Unique Id')
         
+        # sort by x values 
+        idx = np.argsort(xvals)
+        xvals = np.asarray(xvals)[idx]
+        yvals = np.asarray(yvals)[idx]
+        
+        xerrs = np.asarray(xerrs)[idx]
+        yerrs = np.asarray(yerrs)[idx]
+        
+        if ann is not None:
+            ann = np.asarray(ann)[idx]
+            
+        mouse_label = np.asarray(mouse_label)[idx]
+        
         # fix annotation values (round floats)
         if ann is not None: 
             number_string = '%.'+'%df' % self.bfit.rounding
