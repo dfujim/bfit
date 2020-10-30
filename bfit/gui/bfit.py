@@ -665,7 +665,6 @@ class bfit(object):
                     z = np.hstack(z)
                     fig = ax.plot(x,y,z,label=label,**drawargs)
                     
-                    
                 elif asym_type == "raw_h":
                 
                     z = a.raw_p[0].transpose()
@@ -677,23 +676,19 @@ class bfit(object):
                     z = np.hstack(z)
                     fig = ax.plot(x,y,z,label=label+' ($-$)',**drawargs)
                     
-                    
-                
                 elif asym_type == "raw_hs":
                 
                     z = (a.raw_p[0]-a.raw_p[0][0]).transpose()
                     z = np.hstack(z)
                     fig = ax.plot(x,y,z,label=label+' ($+$)',**drawargs)
                     
-                    
                     z = (a.raw_n[0]-a.raw_n[0][0]).transpose()
                     z = np.hstack(z)
                     fig = ax.plot(x,y,z,label=label+' ($-$)',**drawargs)
                     
-                    
                 # plot elements
-                ax.set_xlabel('Time (s)')
-                ax.set_ylabel('Frequency (%s)' % self.freq_units)
+                ax.set_xlabel('Time (ms)')
+                ax.set_ylabel('Frequency (%s)' % self.units['2e'][1])
                 
                 if asym_type != "raw_hs":
                     ax.set_zlabel('Asymmetry')
@@ -703,7 +698,7 @@ class bfit(object):
                 ax.get_xaxis().set_ticks(a.time)
             
             else:
-                f = a.freq*self.freq_unit_conv
+                f = a.freq*self.units['2e'][0]
                 if asym_type == 'sl_c':
                     self.plt.errorbar(figstyle,data.id,f,a.sl_c[0],a.sl_c[1],label=label,
                                  **drawargs)
@@ -745,7 +740,7 @@ class bfit(object):
                                  label=label+' ($-$)',**drawargs)
                     
                     
-                self.plt.xlabel(figstyle,self.xlabel_dict[data.mode] % self.freq_units)
+                self.plt.xlabel(figstyle,self.xlabel_dict[data.mode] % self.units['2e'][1])
                 
                 if '_hs' in asym_type:
                     self.plt.ylabel(figstyle,r"Asym-Asym($\nu_{min}$)")
