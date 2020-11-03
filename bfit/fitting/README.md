@@ -1,15 +1,15 @@
 # Module Map
 
-Submodules and function signatures: 
+Submodules and function signatures (also available from the top-level bfit module): 
 
-* **`bfit.fitting.functions`** (base functions module)
+* [**`bfit.fitting.functions`**](https://github.com/dfujim/bfit/blob/master/bfit/fitting/functions.py) (base functions module)
     * [`lorentzian(freq, peak, width, amp)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L24-L25)
     * [`bilorentzian(freq, peak, widthA, ampA, widthB, ampB)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L27-L29)
     * [`quadlorentzian(freq, nu_0, nu_q, eta, theta, phi, amp0, amp1, amp2, amp3, fwhm0, fwhm1, fwhm2, fwhm3, I)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L34-L46)
     * [`gaussian(freq, mean, sigma, amp)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L31-L32)
     * `pulsed_exp`
         * constructor: [`pulsed_exp(lifetime, pulse_len)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L65-L69)
-        * call: [`pulsed_exp(time,lambda_s, amp)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L84-L85)
+        * call: [`pulsed_exp(time, lambda_s, amp)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L84-L85)
     * `pulsed_biexp`
         * constructor: [`pulsed_biexp(lifetime, pulse_len)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L65-L69)
         * call: [`pulsed_biexp(time, lambda_s, lambdab_s, fracb, amp)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L88-L90)
@@ -17,7 +17,7 @@ Submodules and function signatures:
         * constructor: [`pulsed_strexp(lifetime, pulse_len)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L65-L69)
         * call: [`pulsed_strexp(time, lambda_s, beta, amp)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L93-L94)
         
-* **`bfit.fitting.fit_bdata`** (fitting bdata files module)
+* [**`bfit.fitting.fit_bdata`** ](https://github.com/dfujim/bfit/blob/master/bfit/fitting/fit_bdata.py) (fitting bdata files module)
     * [`fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='', xlims=None, asym_mode='c', fixed=None, **kwargs)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/fit_bdata.py#L13-L65)
 
 * [**`bfit.fitting.global_fitter`**](https://github.com/dfujim/bfit/blob/master/bfit/fitting/global_fitter.py) (general global fitting)
