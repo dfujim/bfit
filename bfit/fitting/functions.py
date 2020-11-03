@@ -188,7 +188,6 @@ def qp_2nd_order(nu_0, nu_q, eta, theta, phi, I, m):
          (1.0 * V_m1V_1 * (24.0 * m * (m - 1.0) - 4.0 * I * (I + 1.0) + 9.0) + \
           0.5 * V_m2V_2 * (12.0 * m * (m - 1.0) - 4.0 * I * (I + 1.0) + 6.0))
 
-
 def qp_nu(nu_0, nu_q, eta, theta, phi, I, m): 
     """
         Helper function for returning the 0th-, 1st-, and 2nd-order frequencies 

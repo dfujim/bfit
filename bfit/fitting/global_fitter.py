@@ -174,7 +174,7 @@ class global_fitter(object):
         
         fixed_flat = np.concatenate(fixed)
         
-                # check that no shared parameters are fixed
+        # check that no shared parameters are fixed
         shared_as_int = self.shared.astype(int)
         for fix in fixed: 
             if any(fix+shared_as_int>1):
