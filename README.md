@@ -3,7 +3,24 @@ Beta-NMR GUI for reading, drawing, fitting data.
 
 ## Run Instructions
 
-To run, call `python3 -m bfit`
+To run the gui, call `python3 -m bfit`
+
+bfit also provides the following classes and functions at the top level:
+
+* `bfit.pulsed_exp`
+* `bfit.pulsed_strexp`
+* `bfit.pulsed_biexp`
+* `bfit.lorentzian` 
+* `bfit.bilorentzian`
+* `bfit.gaussian`
+* `bfit.quadlorentzian`
+* `bfit.global_fitter`
+* `bfit.global_bdata_fitter`
+* `bfit.fit_bdata`
+
+
+A description of these functions can be found [here](https://github.com/dfujim/bfit/blob/master/bfit/fitting/README.md). 
+
 
 ## Setup
 
@@ -33,7 +50,3 @@ You may want to tell bfit where the data is stored. This is done by defining env
 In this example, you would set `BNQR_ARCHIVE=/path/bnqr/` to the directory containing the year directories.
 
 If bfit cannot find the data, it will attempt to download the files from [musr.ca](http://musr.ca/mud/runSel.html) according to the defaults set in the [bdata](https://pypi.org/project/bdata/) package. 
-
-## Module Details
-
-See [here](https://github.com/dfujim/bfit/blob/master/bfit/fitting/README.md) for the bfit fitting submodule documentation. 
