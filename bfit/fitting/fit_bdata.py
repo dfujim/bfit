@@ -14,7 +14,7 @@ import inspect
 
 # ========================================================================== #
 def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
-              xlims=None, asym_mode='c', fixed=None, minimizer='migrad', **kwargs):
+              xlims=None, asym_mode='c', fixed=None, minimizer='migrad+minos', **kwargs):
     """
         Fit combined asymetry from bdata.
     
@@ -247,7 +247,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
 
 # =========================================================================== #
 def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
-               fixed=None, minimizer='migrad', **kwargs):
+               fixed=None, minimizer='migrad+minos', **kwargs):
     """
         Fit combined asymetry from bdata.
     
@@ -314,16 +314,19 @@ def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
         kwargs['p0'] = np.ones(nargs)
     
     # Fit the function
-    if minimizer == 'migrad':
-        par, cov, stdl, stdh, chi, m = _fit_single_minuit(fn, x, y, dy, fixed, **kwargs)
+    if "migrad" in minimizer:
+        par, cov, stdl, stdh, chi, m = _fit_single_minuit(fn, x, y, dy, fixed, 
+                                                          'minos' in minimizer, 
+                                                          **kwargs)
     elif minimizer in ('trf', 'dogbox'):
-        par, cov, stdl, stdh, chi = _fit_single_curve_fit(fn, x, y, dy, fixed,  minimizer, **kwargs)
+        par, cov, stdl, stdh, chi = _fit_single_curve_fit(fn, x, y, dy, fixed,  
+                                                          minimizer, **kwargs)
         m = None
     
     return (par, cov, stdl, stdh, chi, m)
     
 # =========================================================================== #
-def _fit_single_minuit(fn, x, y, dy, fixed, **kwargs):
+def _fit_single_minuit(fn, x, y, dy, fixed, do_minos=True, **kwargs):
     """
         Fit data with minuit minimizer
     """
@@ -351,11 +354,16 @@ def _fit_single_minuit(fn, x, y, dy, fixed, **kwargs):
 
     m = Minuit.from_array_func(ls, **kwargs_minuit)
     m.migrad()
-    m.hesse()
-    m.minos()
     
-    # get errors and parameters
-    lower, upper = m.np_merrors()
+    if do_minos:
+        m.minos()
+        lower, upper = m.np_merrors()
+    else:
+        m.hesse()
+        err = m.np_errors()
+        lower, upper = (err, err)
+    
+    # get parameters
     par = m.np_values()
     cov = m.np_covariance()
     

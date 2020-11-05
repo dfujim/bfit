@@ -224,8 +224,9 @@ class bfit(object):
              '1n':(1e-3,'V')}
     
     # minimizers
-    minimizers = {'migrad':'bfit.fitting.fitter_migrad',
-                  'curve_fit':'bfit.fitting.fitter_curve_fit', 
+    minimizers = {'curve_fit (trf)':'bfit.fitting.fitter_curve_fit', 
+                  'migrad (hesse)':'bfit.fitting.fitter_migrad_hesse',
+                  'migrad (minos)':'bfit.fitting.fitter_migrad_minos',
                   }
     
     data = {}   # for fitdata objects
@@ -476,7 +477,7 @@ class bfit(object):
         menubar.add_cascade(menu=menu_mini, label='Minimizer')
         
         self.minimizer = StringVar()
-        self.minimizer.set(self.minimizers['migrad'])
+        self.minimizer.set(list(self.minimizers.values())[0])
         for k,m in self.minimizers.items():
             menu_mini.add_radiobutton(label=k,\
                     variable=self.minimizer,
