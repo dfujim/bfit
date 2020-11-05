@@ -50,7 +50,7 @@ cdef class PulsedFns:
 
     # ======================================================================= #
     @cython.boundscheck(False)  # some speed up in exchange for instability
-    cpdef exp(self,double[:] time, double Lambda):
+    cpdef exp(self, double[:] time, double Lambda):
         """
             Pulsed exponential for an array of times. Efficient c-speed looping 
             and indexing. 
@@ -97,7 +97,7 @@ cdef class PulsedFns:
 
     # ======================================================================= #
     @cython.boundscheck(False)  # some speed up in exchange for instability
-    cpdef str_exp(self,double[:] time, double Lambda, double Beta):
+    cpdef str_exp(self, double[:] time, double Lambda, double Beta):
         """
             Pulsed stretched exponential for an array of times. Efficient 
             c-speed looping and indexing. 

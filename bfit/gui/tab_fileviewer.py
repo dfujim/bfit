@@ -91,10 +91,10 @@ class fileviewer(object):
         # viewer frame -------------------------------------------------------
         view_frame = ttk.Frame(file_tab,borderwidth=2)
         
-        self.text_nw = Text(view_frame,width=81,height=20,state='normal')
-        self.text_ne = Text(view_frame,width=81,height=20,state='normal')
-        self.text_sw = Text(view_frame,width=81,height=20,state='normal')
-        self.text_se = Text(view_frame,width=81,height=20,state='normal')
+        self.text_nw = Text(view_frame,width=88,height=20,state='normal')
+        self.text_ne = Text(view_frame,width=88,height=20,state='normal')
+        self.text_sw = Text(view_frame,width=88,height=20,state='normal')
+        self.text_se = Text(view_frame,width=88,height=20,state='normal')
         
         ttk.Label(view_frame,text="Run Info").grid(column=0,row=0,sticky=N,pady=5)
         ttk.Label(view_frame,text="PPG Parameters").grid(column=1,row=0,sticky=N,pady=5)

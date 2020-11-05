@@ -8,10 +8,13 @@ from bdata import bdata
 from scipy.optimize import curve_fit
 from tqdm import tqdm
 from bfit.fitting.global_bdata_fitter import global_bdata_fitter
+from bfit.fitting.leastsquares import LeastSquares
+from iminuit import Minuit
+import inspect
 
 # ========================================================================== #
-def fit_bdata(data,fn,omit=None,rebin=None,shared=None,hist_select='',
-              xlims=None,asym_mode='c',fixed=None,**kwargs):
+def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
+              xlims=None, asym_mode='c', fixed=None, minimizer='migrad', **kwargs):
     """
         Fit combined asymetry from bdata.
     
@@ -53,6 +56,8 @@ def fit_bdata(data,fn,omit=None,rebin=None,shared=None,hist_select='',
                         parameters in order presented, with the fixed 
                         parameters omitted. Can be a list of lists with one list 
                         for each run.
+                        
+        minimizer       string. One of "migrad", "trf", "dogbox"
         
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
@@ -153,12 +158,12 @@ def fit_bdata(data,fn,omit=None,rebin=None,shared=None,hist_select='',
         gchi = 0.
         dof = 0.
         
-        iter_obj = tqdm(zip(data,fn,omit,rebin,p0,bounds,xlims,fixed),
+        iter_obj = tqdm(zip(data, fn, omit, rebin, p0, bounds, xlims, fixed),
                         total=ndata,desc='Independent Fitting')
-        for d,f,om,re,p,b,xl,fix in iter_obj:
+        for d, f, om, re, p, b, xl, fix in iter_obj:
             
             # get data for chisq calculations
-            x,y,dy = _get_asym(d,asym_mode,rebin=re,omit=om)
+            x,y,dy = _get_asym(d, asym_mode, rebin=re, omit=om)
             
             # get x limits
             if xl is None:  
@@ -176,20 +181,22 @@ def fit_bdata(data,fn,omit=None,rebin=None,shared=None,hist_select='',
             # trivial case: all parameters fixed
             if all(fix):
                 lenp = len(p)
-                s = np.full((lenp,lenp),np.nan)
-                c = np.sum(np.square((y-f(x,*p))/dy))/len(y)
+                c = np.full((lenp,lenp),np.nan)
+                s = np.diag(c)
+                ch = np.sum(np.square((y-f(x,*p))/dy))/len(y)
                 
             # fit with free parameters
             else:            
                 kwargs['p0'] = p
                 kwargs['bounds'] = b
-                p,s,c = _fit_single(d,f,om,re,hist_select,xlim=xl,
-                                    asym_mode=asym_mode,fixed=fix,**kwargs)
+                p,c,s,ch = _fit_single(d, f, om, re, hist_select, xlim=xl,
+                                    asym_mode=asym_mode, fixed=fix, 
+                                    minimizer=minimizer, **kwargs)
             # outputs
             pars.append(p)
-            covs.append(s)
-            chis.append(c)
-            stds.append(np.diag(s)**0.5)
+            covs.append(c)
+            stds.append(s)
+            chis.append(ch)
             
             # get global chi             
             gchi += np.sum(np.square((y-f(x,*p))/dy))
@@ -212,7 +219,7 @@ def fit_bdata(data,fn,omit=None,rebin=None,shared=None,hist_select='',
 
 # =========================================================================== #
 def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
-               fixed=None,**kwargs):
+               fixed=None, minimizer='migrad', **kwargs):
     """
         Fit combined asymetry from bdata.
     
@@ -243,6 +250,8 @@ def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
                         fixed to p0 value (same length as p0). Returns best 
                         parameters in order presented, with the fixed 
                         parameters omitted.
+                        
+        minimizer       string. One of "migrad", "trf", "dogbox"
         
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
@@ -276,6 +285,76 @@ def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
                                'Define p0 to resolve.')
         kwargs['p0'] = np.ones(nargs)
     
+    # Fit the function
+    if minimizer == 'migrad':
+        par,cov,std,chi = _fit_single_minuit(fn, x, y, dy, fixed, **kwargs)
+    elif minimizer in ('trf', 'dogbox'):
+        par,cov,std,chi = _fit_single_curve_fit(fn, x, y, dy, fixed,  minimizer, **kwargs)
+    
+    return (par,cov,std,chi)
+    
+# =========================================================================== #
+def _fit_single_minuit(fn, x, y, dy, fixed, **kwargs):
+    """
+        Fit data with minuit minimizer
+    """
+    
+    # make least squares function 
+    ls = LeastSquares(fn, x, y, dy)
+    
+    # set up minuit inputs
+    bounds = np.array(kwargs['bounds']).T
+    
+    kwargs_minuit = {'start':kwargs['p0'],
+                     'limit':bounds,
+                     'fix':fixed,
+                     'print_level':kwargs.get('print_level',0),
+                     'errordef':1,
+                     }
+    
+    names = inspect.getfullargspec(fn).args
+    if 'self' in names:                 names.remove('self')
+    if len(names) == len(kwargs['p0']): kwargs_minuit['name'] = names
+
+    m = Minuit.from_array_func(ls, **kwargs_minuit)
+    m.migrad()
+    m.hesse()
+    m.minos()
+    
+    # get errors
+    is_valid = []
+    lower = []
+    upper = []
+    for me,he in zip(m.merrors.values(), m.errors.values()):
+        
+        if me.is_valid:
+            lower.append(abs(me.lower))
+            upper.append(me.upper)
+        elif m.accurate:
+            lower.append(he)
+            upper.append(he)
+        else:                       # if hessian errors are approximate, is this ok?
+            lower.append(np.nan)
+            upper.append(np.nan)
+    
+    lower = np.array(lower)
+    upper = np.array(upper)
+    
+    par = m.values.values()
+    std = (lower,upper)
+    cov = np.array(list(m.covariance.values())).reshape(len(par),len(par))
+    
+    dof = len(y) - len(kwargs['p0'])
+    chi = m.fval/dof
+    
+    return (par,cov,std,chi)
+
+# =========================================================================== #
+def _fit_single_curve_fit(fn, x, y, dy, fixed, minimizer, **kwargs):
+    """
+        Fit data with curve_fit minimizers
+    """
+    
     # fixed parameters
     did_fixed = False
     if fixed is not None and any(fixed):
@@ -285,29 +364,24 @@ def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
         p0 = np.copy(kwargs['p0'])
         npar = len(p0)
         
-        # dumb case: all values fixed: 
-        if all(fixed):
-            cov = np.full((npar,npar),np.nan)
-            chi = np.sum(np.square((y-fn(x,*p0))/dy))/len(y)
-            return (p0,cov,chi)
-        
         # prep inputs
         fixed = np.asarray(fixed)
         if 'bounds' in kwargs:  bounds = kwargs['bounds']
         else:                   bounds = None
         
         # get fixed version
-        fn,kwargs['p0'],bounds = _get_fixed_values(fixed,fn,kwargs['p0'],bounds)
+        fn,kwargs['p0'], bounds = _get_fixed_values(fixed, fn, kwargs['p0'], bounds)
         
         # modify fiting inputs
         if bounds is not None:  kwargs['bounds'] = bounds
         
-    # Fit the function 
-    par,cov = curve_fit(fn,x,y,sigma=dy,absolute_sigma=True,**kwargs)
-    dof = len(y)-len(kwargs['p0'])
+    # do the fit
+    par,cov = curve_fit(fn, x, y, sigma=dy, absolute_sigma=True, 
+                        method=minimizer, **kwargs)
+    dof = len(y) - len(kwargs['p0'])
     
     # get chisquared
-    chi = np.sum(np.square((y-fn(x,*par))/dy))/dof
+    chi = np.sum(np.square((y-fn(x, *par)) / dy)) / dof
     
     # inflate parameters with fixed values 
     if did_fixed:
@@ -324,8 +398,12 @@ def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
         c_inflated[nfixed_flat] = np.concatenate(cov)
         cov = c_inflated.reshape(npar,-1)
     
-    return (par,cov,chi)
+    # get errors
+    std = np.diag(cov)**0.5
     
+    return (par, cov, (std,std), chi)
+
+
 # =========================================================================== #
 def _get_asym(data,asym_mode,**asym_kwargs):
     """

@@ -87,7 +87,7 @@ class fetch_files(object):
         
         entry_year = Spinbox(fet_entry_frame,textvariable=self.year,width=5,
                              from_=2000,to=datetime.datetime.today().year)
-        entry_run = ttk.Entry(fet_entry_frame,textvariable=self.run,width=85)
+        entry_run = ttk.Entry(fet_entry_frame,textvariable=self.run,width=100)
         entry_run.insert(0,self.run_number_starter_line)
         entry_run.config(foreground=colors.entry_grey)
         
@@ -187,9 +187,6 @@ class fetch_files(object):
         check_toggle_button = ttk.Button(right_frame,\
                 text='Toggle All Check States',command=self.toggle_all,pad=5)
         
-        # ~ merge_button = ttk.Button(right_frame,\
-                # ~ text='Merge Checked Runs',command=self.merge_all,pad=5)
-        
         # add grey to check_bin_remove_entry
         check_bin_remove_entry.insert(0,self.bin_remove_starter_line)
         
@@ -225,7 +222,6 @@ class fetch_files(object):
         check_toggle_button.grid(   column=0,row=r,sticky=(N,E,W),columnspan=2,pady=1,padx=5); r+= 1
         check_draw.grid(            column=0,row=r,sticky=(N,W,E),pady=5,padx=5);
         check_remove.grid(          column=1,row=r,sticky=(N,E,W),pady=5,padx=5); r+= 1
-        # ~ merge_button.grid(          column=0,row=r,sticky=(N,E,W),columnspan=2,pady=1,padx=5); r+= 1
         check_rebin_label.grid(     column=0,row=r)
         check_rebin_box.grid(       column=1,row=r); r+= 1
         check_bin_remove_entry.grid(column=0,row=r,sticky=(N),columnspan=2); r+= 1

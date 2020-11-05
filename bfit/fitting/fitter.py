@@ -2,7 +2,6 @@
 # Derek Fujimoto
 # Aug 2018
 
-from bfit.fitting.fit_bdata import fit_bdata
 import bfit.fitting.functions as fns
 from bfit.fitting.decay_31mg import fa_31Mg
 from functools import partial
@@ -11,9 +10,12 @@ import numpy as np
 import bdata as bd
 
 class fitter(object):
+    """
+        Fitter base class for default minimizers
+    """
 
     # needed to tell users what routine this is
-    __name__ = 'default'
+    __name__ = 'base'
     
     # Define possible fit functions for given run modes
     function_names = {  '20':('Exp','Bi Exp','Str Exp'),
@@ -195,7 +197,7 @@ class fitter(object):
             
         # fit data
         kwargs = {'p0':p0,'bounds':bounds}
-        pars,stds,covs,chis,gchi = fit_bdata(bdata_list,fn,omit,rebin,sharelist,
+        pars,stds,covs,chis,gchi = self._do_fit(bdata_list,fn,omit,rebin,sharelist,
                                        hist_select=hist_select,
                                        asym_mode=asym_mode,fixed=fixedlist,
                                        xlims=xlims,**kwargs)

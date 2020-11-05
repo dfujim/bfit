@@ -38,8 +38,8 @@ setuptools.setup(
     ],
     install_requires=['cython>=0.28','numpy>=1.14','tqdm>=4.25.0',
                       'bdata>=6.0.5','matplotlib>=2.2.4','pandas>=0.23.0',
-                      'pyyaml>=5.1','scipy>=1.2.0'],
+                      'pyyaml>=5.1','scipy>=1.2.0','iminuit>=1.5.2'],
     package_data={'': ['./images']},
     include_package_data=True,
-    ext_modules = cythonize([ext],include_path = [numpy.get_include()]),
+    ext_modules = cythonize([ext], include_path=[numpy.get_include()]),
 )

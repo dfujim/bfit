@@ -5,5 +5,7 @@ __all__=['functions',
          'pulsed',
          'continuous',
          'fitter',
+         'fitter_curve_fit',
          'fit_bdata',
-         'decay_31mg']
+         'decay_31mg',
+         'leastsquares']

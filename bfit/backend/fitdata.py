@@ -76,7 +76,7 @@ class fitdata(object):
         self.id = self.bfit.get_run_key(data=bd)
         
         # initialize fitpar with fitinputtab.collist
-        for k in ['p0','blo','bhi','res','dres','chi','fixed','shared']:
+        for k in ['p0','blo','bhi','res','dres+','dres-','chi','fixed','shared']:
             self.fitpar[k] = {}
         
         self.read()
@@ -120,7 +120,6 @@ class fitdata(object):
         except KeyError:
             T = np.nan
             dT = np.nan
-        
         
         return (T,dT)
         
@@ -192,14 +191,15 @@ class fitdata(object):
         """
             Set fit results. Values is output of fitting routine. It is a list 
             of tuples
-            [(parname),(par),(err),chi,fnpointer]
+            [(parname),(par),(err-,err+),chi,fnpointer]
         """
         self.parnames = values[0]
         
         for i in range(len(self.parnames)):
             key = values[0][i]
             self.fitpar['res'][key] = values[1][i]
-            self.fitpar['dres'][key] = values[2][i]
+            self.fitpar['dres-'][key] = values[2][0][i]
+            self.fitpar['dres+'][key] = values[2][1][i]
             self.fitpar['chi'][key] = values[3]
         self.chi = values[3]
         self.fitfn = values[4]

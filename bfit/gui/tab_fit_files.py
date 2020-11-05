@@ -50,6 +50,7 @@ class fit_files(object):
             fit_input:      fitting input values = (fn_name,ncomp,data_list)
             fit_lines:      Dict storing fitline objects
             fit_lines_old: dictionary of previously used fitline objects, keyed by run
+            fit_routine_label: label for fit routine
             fitter:         fitting object from self.bfit.routine_mod
             gchi_label:     Label for global chisquared    
             mode:           what type of run is this. 
@@ -135,15 +136,15 @@ class fit_files(object):
                 command=lambda:self.populate_param(force_modify=True))
         
         # fit and other buttons
-        fit_button = ttk.Button(fn_select_frame,text='Fit',command=self.do_fit,\
+        fit_button = ttk.Button(fn_select_frame,text='    Fit    ',command=self.do_fit,\
                                 pad=1)
         constraint_button = ttk.Button(fn_select_frame,text='Constrained Fit',
                                        command=self.do_fit_constraints,pad=1)
-        set_param_button = ttk.Button(fn_select_frame,text='Set Result as P0',
+        set_param_button = ttk.Button(fn_select_frame,text='  Set Result as P0  ',
                         command=self.do_set_result_as_initial,pad=1)                        
-        reset_param_button = ttk.Button(fn_select_frame,text='Reset P0',
+        reset_param_button = ttk.Button(fn_select_frame,text='  Reset P0  ',
                         command=self.do_reset_initial,pad=1)
-        gui_param_button = ttk.Button(fn_select_frame,text='P0 Finder',
+        gui_param_button = ttk.Button(fn_select_frame,text='  P0 Finder  ',
                         command=self.do_gui_param,pad=1)
             
         # GRIDDING
@@ -198,7 +199,7 @@ class fit_files(object):
         
         # fitting routine
         fit_routine_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
-                text='Fitting Routine',)
+                text='Minimizer',)
         self.fit_routine_label = ttk.Label(fit_routine_label_frame,text="",
                                            justify=CENTER)
         
@@ -1844,7 +1845,8 @@ class fitline(object):
         ttk.Label(fitframe,text='Low Bound').grid(    column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='High Bound').grid(   column=c,row=1,padx=5); c+=1
         result_comp_button.grid(column=c,row=1,padx=5,pady=2,sticky=(E,W)); c+=1
-        ttk.Label(fitframe,text='Error').grid(        column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Error (-)').grid(        column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe,text='Error (+)').grid(        column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='ChiSq').grid(        column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Fixed').grid(        column=c,row=1,padx=5); c+=1
         ttk.Label(fitframe,text='Shared').grid(       column=c,row=1,padx=5); c+=1
@@ -1988,7 +1990,7 @@ class fitline(object):
             p = plist[i]
             
             # clear text in parentry fields
-            for col in ('res','dres','chi'):
+            for col in ('res','dres-','dres+','chi'):
                 if col in self.parentry[p].keys():  # exception needed for chi
                     par = self.parentry[p][col][1]
                     par.delete(0,'end')
@@ -2018,14 +2020,19 @@ class fitline(object):
             par['state'] = 'readonly'
             par['foreground'] = colors.foreground
             
-            dpar_val = StringVar()
-            dpar = ttk.Entry(fitframe,textvariable=dpar_val,width=15)
-            dpar['state'] = 'readonly'
-            dpar['foreground'] = colors.foreground
+            dpar_val_l = StringVar()
+            dpar_val_u = StringVar()
+            dpar_l = ttk.Entry(fitframe, textvariable=dpar_val_l, width=15)
+            dpar_u = ttk.Entry(fitframe, textvariable=dpar_val_u, width=15)
+            dpar_l['state'] = 'readonly'
+            dpar_l['foreground'] = colors.foreground
+            dpar_u['state'] = 'readonly'
+            dpar_u['foreground'] = colors.foreground
                                      
             par. grid(column=c,row=r,padx=5,sticky=E); c += 1
-            dpar.grid(column=c,row=r,padx=5,sticky=E); c += 1
-
+            dpar_l.grid(column=c,row=r,padx=5,sticky=E); c += 1
+            dpar_u.grid(column=c,row=r,padx=5,sticky=E); c += 1
+            
             # do chi only once
             if i==0:
                 chi_val = StringVar()
@@ -2039,20 +2046,21 @@ class fitline(object):
             
             # save ttk.Entry objects in dictionary [parname][colname]
             self.parentry[p]['res'] = (par_val,par)
-            self.parentry[p]['dres'] = (dpar_val,dpar)
+            self.parentry[p]['dres-'] = (dpar_val_l,dpar_l)
+            self.parentry[p]['dres+'] = (dpar_val_u,dpar_u)
             
             # do fixed box
             value = BooleanVar()
-            entry = ttk.Checkbutton(fitframe,text='',\
-                                     variable=value,onvalue=True,offvalue=False)
-            entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
-            self.parentry[p]['fixed'] = (value,entry)
+            entry = ttk.Checkbutton(fitframe, text='',\
+                                     variable=value, onvalue=True, offvalue=False)
+            entry.grid(column=c, row=r, padx=5, sticky=E); c += 1
+            self.parentry[p]['fixed'] = (value, entry)
             value.set(fitdat.fitpar['fixed'][p])
             
             # do shared box
-            entry = ttk.Checkbutton(fitframe,text='',onvalue=True,offvalue=False)
-            entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
-            self.parentry[p]['shared'] = [value,entry]
+            entry = ttk.Checkbutton(fitframe, text='', onvalue=True, offvalue=False)
+            entry.grid(column=c, row=r, padx=5, sticky=E); c += 1
+            self.parentry[p]['shared'] = [value, entry]
             
         # set p0 synchronization ----------------------------------------------
         
@@ -2244,7 +2252,8 @@ class fitline(object):
             disp = displays[parname]
             showstr = "%"+".%df" % self.bfit.rounding
             disp['res'][0].set(showstr % data.fitpar['res'][parname])
-            disp['dres'][0].set(showstr % data.fitpar['dres'][parname])
+            disp['dres-'][0].set(showstr % data.fitpar['dres-'][parname])
+            disp['dres+'][0].set(showstr % data.fitpar['dres+'][parname])
             
             if 'chi' in disp.keys():
                 disp['chi'][0].set('%.2f' % chi)
