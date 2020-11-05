@@ -1029,7 +1029,22 @@ class fit_files(object):
             messagebox.showerror("Error",
                     'Drawing parameter "%s" or "%s" not found' % (xdraw,ydraw))
             raise err from None
-            
+        
+        # get asymmetric errors
+        if type(xerrs) is tuple:
+            xerrs_l = xerrs[0]
+            xerrs_h = xerrs[1]
+        else:
+            xerrs_l = xerrs
+            xerrs_h = xerrs
+        
+        if type(yerrs) is tuple:
+            yerrs_l = yerrs[0]
+            yerrs_h = yerrs[1]
+        else:
+            yerrs_l = yerrs
+            yerrs_h = yerrs
+        
         # get annotation
         if ann != '':
             try:
@@ -1054,8 +1069,10 @@ class fit_files(object):
         xvals = np.asarray(xvals)[idx]
         yvals = np.asarray(yvals)[idx]
         
-        xerrs = np.asarray(xerrs)[idx]
-        yerrs = np.asarray(yerrs)[idx]
+        xerrs_l = np.asarray(xerrs_l)[idx]
+        yerrs_l = np.asarray(yerrs_l)[idx]
+        xerrs_h = np.asarray(xerrs_h)[idx]
+        yerrs_h = np.asarray(yerrs_h)[idx]
         
         if ann is not None:
             ann = np.asarray(ann)[idx]
@@ -1112,9 +1129,16 @@ class fit_files(object):
                 pass
             
         # draw
-        f = self.plt.errorbar(figstyle,draw_id,xvals,yvals,xerr=xerrs,yerr=yerrs,
-                              label=draw_id,annot_label=mouse_label,**self.bfit.style)
-        self._annotate(draw_id,xvals,yvals,ann,color=f[0].get_color(),unique=False)
+        f = self.plt.errorbar(  figstyle,
+                                draw_id,
+                                xvals,
+                                yvals,
+                                xerr=(xerrs_l, xerrs_h),
+                                yerr=(yerrs_l, yerrs_h),
+                                label=draw_id,
+                                annot_label=mouse_label,
+                                **self.bfit.style)
+        self._annotate(draw_id, xvals, yvals, ann, color=f[0].get_color(), unique=False)
         
         # format date x axis
         if xerrs is None:   self.plt.gcf(figstyle).autofmt_xdate()
