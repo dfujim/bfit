@@ -154,7 +154,8 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
         pars = []
         covs = []
         chis = []
-        stds = []
+        stds_l = []
+        stds_h = []
         gchi = 0.
         dof = 0.
         
@@ -189,13 +190,14 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
             else:            
                 kwargs['p0'] = p
                 kwargs['bounds'] = b
-                p,c,s,ch = _fit_single(d, f, om, re, hist_select, xlim=xl,
+                p, c, sl, sh, ch = _fit_single(d, f, om, re, hist_select, xlim=xl,
                                     asym_mode=asym_mode, fixed=fix, 
                                     minimizer=minimizer, **kwargs)
             # outputs
             pars.append(p)
             covs.append(c)
-            stds.append(s)
+            stds_l.append(sl)
+            stds_h.append(sh)
             chis.append(ch)
             
             # get global chi             
@@ -205,17 +207,19 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
         
     pars = np.asarray(pars)
     covs = np.asarray(covs)
-    stds = np.asarray(stds)
+    stds_l = np.asarray(stds_l)
+    stds_h = np.asarray(stds_h)
     chis = np.asarray(chis)
     
     # single data set fitting
     if ndata == 1:
         pars = pars[0]
-        stds = stds[0]
+        stds_l = stds_l[0]
+        stds_h = stds_h[0]
         covs = covs[0]
         chis = chis[0]
     
-    return(pars,stds,covs,chis,gchi)
+    return(pars, stds_l, stds_h, covs, chis, gchi)
 
 # =========================================================================== #
 def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
@@ -287,11 +291,11 @@ def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
     
     # Fit the function
     if minimizer == 'migrad':
-        par,cov,std,chi = _fit_single_minuit(fn, x, y, dy, fixed, **kwargs)
+        par,cov,stdl,stdh,chi = _fit_single_minuit(fn, x, y, dy, fixed, **kwargs)
     elif minimizer in ('trf', 'dogbox'):
-        par,cov,std,chi = _fit_single_curve_fit(fn, x, y, dy, fixed,  minimizer, **kwargs)
+        par,cov,stdl,stdh,chi = _fit_single_curve_fit(fn, x, y, dy, fixed,  minimizer, **kwargs)
     
-    return (par,cov,std,chi)
+    return (par, cov, stdl, stdh, chi)
     
 # =========================================================================== #
 def _fit_single_minuit(fn, x, y, dy, fixed, **kwargs):
@@ -341,13 +345,12 @@ def _fit_single_minuit(fn, x, y, dy, fixed, **kwargs):
     upper = np.array(upper)
     
     par = m.values.values()
-    std = (lower,upper)
     cov = np.array(list(m.covariance.values())).reshape(len(par),len(par))
     
     dof = len(y) - len(kwargs['p0'])
     chi = m.fval/dof
     
-    return (par,cov,std,chi)
+    return (par, cov, lower, upper, chi)
 
 # =========================================================================== #
 def _fit_single_curve_fit(fn, x, y, dy, fixed, minimizer, **kwargs):
@@ -401,7 +404,7 @@ def _fit_single_curve_fit(fn, x, y, dy, fixed, minimizer, **kwargs):
     # get errors
     std = np.diag(cov)**0.5
     
-    return (par, cov, (std,std), chi)
+    return (par, cov, std, std, chi)
 
 
 # =========================================================================== #

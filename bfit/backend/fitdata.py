@@ -191,18 +191,18 @@ class fitdata(object):
         """
             Set fit results. Values is output of fitting routine. It is a list 
             of tuples
-            [(parname),(par),(err-,err+),chi,fnpointer]
+            [(parname),(par),(err-),(err+),chi,fnpointer]
         """
         self.parnames = values[0]
         
         for i in range(len(self.parnames)):
             key = values[0][i]
             self.fitpar['res'][key] = values[1][i]
-            self.fitpar['dres-'][key] = values[2][0][i]
-            self.fitpar['dres+'][key] = values[2][1][i]
-            self.fitpar['chi'][key] = values[3]
-        self.chi = values[3]
-        self.fitfn = values[4]
+            self.fitpar['dres-'][key] = values[2][i]
+            self.fitpar['dres+'][key] = values[3][i]
+            self.fitpar['chi'][key] = values[4]
+        self.chi = values[4]
+        self.fitfn = values[5]
         
         self.logger.debug('Setting fit results to %s',self.fitpar)
     

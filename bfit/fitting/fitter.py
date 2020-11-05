@@ -196,19 +196,25 @@ class fitter(object):
                 omit.append('')                
             
         # fit data
-        kwargs = {'p0':p0,'bounds':bounds}
-        pars,stds,covs,chis,gchi = self._do_fit(bdata_list,fn,omit,rebin,sharelist,
-                                       hist_select=hist_select,
-                                       asym_mode=asym_mode,fixed=fixedlist,
-                                       xlims=xlims,**kwargs)
+        kwargs = {'p0':p0, 'bounds':bounds}
+        pars, stds_l, stds_h, covs, chis, gchi = self._do_fit(
+                                        bdata_list,
+                                        fn,
+                                        omit,
+                                        rebin,
+                                        sharelist,
+                                        hist_select=hist_select,
+                                        asym_mode=asym_mode,fixed=fixedlist,
+                                        xlims=xlims,
+                                        **kwargs)
         
         # collect results
         if not isinstance(chis,collections.Iterable):   # single run
             d = bdata_list[0]
-            return ({self.keyfn(d):[keylist,pars,stds,chis,fn[0]]},gchi)
+            return ({self.keyfn(d):[keylist, pars, stds_l, stds_h, chis, fn[0]]}, gchi)
         else:                                           # multiple runs    
-            return ({self.keyfn(d):[keylist,p,s,c,f] \
-                    for d,p,s,c,f in zip(bdata_list,pars,stds,chis,fn)},gchi)
+            return ({self.keyfn(d):[keylist, p, sl, sh, c, f] 
+                for d, p, s, c, f in zip(bdata_list, pars, stds_l, stds_h, chis, fn)}, gchi)
 
     # ======================================================================= #
     def gen_param_names(self,fn_name,ncomp):

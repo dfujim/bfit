@@ -100,6 +100,7 @@ class bfit(object):
             logger:         logging object 
             logger_name:    string of unique logger name
             mainframe:      main frame for the object
+            minimizer:      StringVar: path to python module with fitter object
             notebook:       contains all tabs for operations:
                 fileviewer
                 fetch_files
@@ -220,6 +221,11 @@ class bfit(object):
              '2e':(1e-6,'MHz'),
              '1w':(1,'Hz'),
              '1n':(1e-3,'V')}
+    
+    # minimizers
+    minimizers = {'migrad':'bfit.fitting.fitter_migrad',
+                  'curve_fit':'bfit.fitting.fitter_curve_fit', 
+                  }
     
     data = {}   # for fitdata objects
     
@@ -345,10 +351,7 @@ class bfit(object):
                       'elinewidth':mpl.rcParams['lines.linewidth'],
                       'alpha':1.,
                       'fillstyle':'full'}
-        
-        # load default fitting routines
-        self.routine_mod = importlib.import_module(
-                                                'bfit.fitting.default_routines')
+                                                
         # main frame
         mainframe = ttk.Frame(root,pad=5)
         mainframe.grid(column=0,row=0,sticky=(N,W,E,S))
@@ -386,8 +389,6 @@ class bfit(object):
         menu_settings.add_cascade(menu=menu_settings_dir,label='Data directory')
         menu_settings.add_command(label='Drawing style',
                 command=self.set_draw_style)
-        menu_settings.add_command(label='Fitting routines',
-                command=self.set_fit_routines)
         menu_settings.add_command(label='Histograms',
                 command=self.set_histograms)
         menu_settings.add_cascade(menu=menu_settings_lab,label='Labels default')                
@@ -469,6 +470,22 @@ class bfit(object):
         menu_draw.add_checkbutton(label="Use NBM",\
                 variable=self.use_nbm,selectcolor=colors.selected)
         
+        # Fitting minimizers
+        menu_mini = Menu(menubar)
+        menubar.add_cascade(menu=menu_mini, label='Minimizer')
+        
+        self.minimizer = StringVar()
+        self.minimizer.set(self.minimizers['migrad'])
+        for k,m in self.minimizers.items():
+            menu_mini.add_radiobutton(label=k,\
+                    variable=self.minimizer,
+                    value=m,
+                    selectcolor=colors.selected,
+                    command=self.set_fit_routine)
+        menu_mini.add_checkbutton(label='Other',\
+                variable=self.minimizer,
+                selectcolor=colors.selected,
+                command=self.set_fit_routine_with_popup)
         # Help
         menu_help = Menu(menubar)
         menubar.add_cascade(menu=menu_help, label='Help')
@@ -476,6 +493,9 @@ class bfit(object):
         menu_help.add_command(label="What's new?",command=self.whatsnew)
         menu_help.add_command(label='Update bfit',command=self.update_bfit)
         menu_help.add_command(label='Report an issue',command=self.report_issue)
+
+        # load default fitting routines
+        self.routine_mod = importlib.import_module(self.minimizer.get())
         
         # Top Notebook: File Viewer, Fit, Fit Viewer -------------------------
         noteframe = ttk.Frame(mainframe,relief='sunken',pad=5)
@@ -1413,7 +1433,23 @@ class bfit(object):
             self.logger.error('Input was not of type string')
     
     # ======================================================================= #
-    def set_fit_routines(self):
+    def set_fit_routine(self):
+        """Set python module for fitting routines"""
+        
+        self.logger.info('Loading module...')
+        self.routine_mod = importlib.import_module(self.minimizer.get())
+        
+        # repopuate fitter
+        self.logger.info('Repopulating fitter...')
+        self.fit_files.fitter = self.routine_mod.fitter(
+                                    keyfn = self.get_run_key,
+                                    probe_species = self.probe_species.get())
+        self.fit_files.fit_routine_label['text'] = self.fit_files.fitter.__name__
+        self.fit_files.populate()
+        self.logger.info('Success.')
+        
+    # ======================================================================= #
+    def set_fit_routine_with_popup(self):
         """Set python module for fitting routines"""
         self.logger.info('Setting fitting backend routine')
         d = filedialog.askopenfilename(initialdir = "./",
@@ -1434,21 +1470,12 @@ class bfit(object):
             pwd = os.getcwd()
             
             # load the module
-            self.logger.info('Loading module...')
             os.chdir(os.path.dirname(path))
-            self.routine_mod = importlib.import_module(os.path.splitext(
-                                                        os.path.basename(d))[0])
+            self.minimizer.set(os.path.splitext(os.path.basename(d))[0])
             os.chdir(pwd)
             
-            # repopuate fitter
-            self.logger.info('Repopulating fitter...')
-            self.fit_files.fitter = self.routine_mod.fitter(
-                                        keyfn = self.get_run_key,
-                                        probe_species = self.probe_species.get())
-            self.fit_files.populate()
         else:
             self.logger.error('Input was not of type string.')    
-        self.logger.info('Success.')
         
     # ======================================================================= #
     def set_icon(self,window):
