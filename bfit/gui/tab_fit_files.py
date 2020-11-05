@@ -1131,7 +1131,7 @@ class fit_files(object):
         raise_window()
         
     # ======================================================================= #
-    def export(self,savetofile=True):
+    def export(self, savetofile=True):
         """Export the fit parameter and file headers"""
         # get values and errors
         val = {}
@@ -1147,7 +1147,12 @@ class fit_files(object):
                 traceback.print_exc()
             else:
                 val[v] = v2[0]
-                val['Error '+v] = v2[1]
+                
+                if type(v2[1]) is tuple:                     
+                    val['Error- '+v] = v2[1][0]
+                    val['Error+ '+v] = v2[1][1]
+                else:
+                    val['Error '+v] = v2[1]
         
         # make data frame for output
         df = pd.DataFrame(val)
@@ -1189,7 +1194,7 @@ class fit_files(object):
             return df
         
     # ======================================================================= #
-    def export_fit(self,savetofile=True):
+    def export_fit(self, savetofile=True):
         """Export the fit lines as csv files"""
         
         # filename
@@ -1257,7 +1262,7 @@ class fit_files(object):
             self.logger.info('Exporting fit to %s',fname)
     
     # ======================================================================= #
-    def get_values(self,select):
+    def get_values(self, select):
         """ Get plottable values"""
         
         data = self.bfit.data
@@ -1422,18 +1427,22 @@ class fit_files(object):
         # fitted parameter options
         elif select in parnames:
             val = []
-            err = []
+            err_l = []
+            err_u = []
             
             for r in runs:
                 try:
                     val.append(data[r].fitpar['res'][select])
-                    err.append(data[r].fitpar['dres'][select])
+                    err_l.append(data[r].fitpar['dres-'][select])
+                    err_u.append(data[r].fitpar['dres+'][select])
                 except KeyError:
                     val.append(np.nan)
-                    err.append(np.nan)
-    
+                    err_l.append(np.nan)
+                    err_u.append(np.nan)
+            err = (err_l, err_u)
+            
         try:
-            return (val,err)
+            return (val, err)
         except UnboundLocalError:
             self.logger.warning('Parameter selection "%s" not found' % select)
             raise AttributeError('Selection "%s" not found' % select) from None

@@ -56,8 +56,16 @@ class popup_show_param(object):
         for c in df.columns:
             if 'Error' in c:    continue
             
-            if 'Error '+c in df.columns:
+            if 'Error+ '+c in df.columns and 'Error- '+c in df.columns:
+                df[c] = df[c].map(str) + ' [+' + df['Error+ '+c].map(str) + \
+                                          ' -' + df['Error- '+c].map(str)+']'
+            elif 'Error+ '+c in df.columns:
+                df[c] = df[c].map(str) + ' +' + df['Error+ '+c].map(str)
+            elif 'Error- '+c in df.columns:
+                df[c] = df[c].map(str) + ' -' + df['Error- '+c].map(str)
+            elif 'Error '+c in df.columns:
                 df[c] = df[c].map(str) + ' +/- ' + df['Error '+c].map(str)
+                                
         df.drop(labels=df.columns[['Error' in c for c in df.columns]],
                 axis='columns',inplace=True)
         
