@@ -216,7 +216,7 @@ class fitter(object):
             return ({self.keyfn(d):[keylist, pars, stds_l, stds_h, chis, fn[0]]}, gchi)
         else:                                           # multiple runs    
             return ({self.keyfn(d):[keylist, p, sl, sh, c, f] 
-                for d, p, s, c, f in zip(bdata_list, pars, stds_l, stds_h, chis, fn)}, gchi)
+                for d, p, sl, sh, c, f in zip(bdata_list, pars, stds_l, stds_h, chis, fn)}, gchi)
 
     # ======================================================================= #
     def gen_param_names(self, fn_name, ncomp):
