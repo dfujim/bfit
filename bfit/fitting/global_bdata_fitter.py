@@ -11,7 +11,8 @@ import collections
 class global_bdata_fitter(global_fitter):
     
     # ======================================================================= #
-    def __init__(self,data,fn,shared,xlims=None,rebin=1,asym_mode='c',fixed=None):
+    def __init__(self, data, fn, shared, xlims=None, rebin=1, asym_mode='c', fixed=None,
+                 minimizezr='migrad'):
         """
             data:       list of bdata objects
             
@@ -35,19 +36,22 @@ class global_bdata_fitter(global_fitter):
                         parameters omitted.
             
             asym_mode:  asymmetry type to calculate and fit
+            
+            minimizer:  string. One of "curve_fit" or "migrad" indicating which 
+                        code to use to minimize the function
         """
         
         # check input type
-        if type(data) in (bd.bdata,bd.bjoined):
+        if type(data) in (bd.bdata, bd.bjoined, bd.bmerged):
             data = [data]
         ndata = len(data)
         
         # Set rebin
-        if not isinstance(rebin,collections.Iterable):
+        if not isinstance(rebin, collections.Iterable):
             rebin = [rebin]*ndata
         
         # Get asymmetry
-        asym = np.asarray([d.asym(asym_mode,rebin=re) for d,re in zip(data,rebin)])
+        asym = np.asarray([d.asym(asym_mode, rebin=re) for d, re in zip(data, rebin)])
         
         # split into x,y,dy data sets
         x = asym[:,0]
@@ -79,4 +83,4 @@ class global_bdata_fitter(global_fitter):
             dy = np.array(dynew)
             
         # intialize
-        super(global_bdata_fitter,self).__init__(x,y,dy,fn,shared,fixed)
+        super(global_bdata_fitter,self).__init__(fn, x, y, dy, shared, fixed, minimizer)
