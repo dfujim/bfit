@@ -7,11 +7,12 @@ from tkinter import ttk, messagebox
 from functools import partial
 import logging
 import numpy as np
-from scipy.optimize import curve_fit
+from iminuit import Minuit
 
 from bfit import logger_name
 from bfit.gui.template_fit_popup import template_fit_popup
 from bfit.backend.raise_window import raise_window
+from bfit.fitting.leastsquares import LeastSquares
 
 # ========================================================================== #
 class popup_fit_results(template_fit_popup):
@@ -37,7 +38,7 @@ class popup_fit_results(template_fit_popup):
     def __init__(self,bfit,input_fn_text='',output_par_text='',output_text='',
                  chi=np.nan,x='',y=''):
         
-        super().__init__(bfit,input_fn_text,output_par_text,output_text)
+        super().__init__(bfit, input_fn_text, output_par_text, output_text)
         self.fittab = self.bfit.fit_files
         self.chi = chi
         
@@ -142,34 +143,82 @@ class popup_fit_results(template_fit_popup):
             messagebox.showerror("Error",
                     'Parameter "%s" or "%s" not found' % (xstr,ystr))
             raise err
-            
+        
+        # split errors    
+        if type(xerrs) is tuple: 
+            xerrs_l = xerrs[0]
+            xerrs_h = xerrs[1]
+        else:
+            xerrs_l = xerrs
+            xerrs_h = xerrs
+        
+        if type(yerrs) is tuple: 
+            yerrs_l = yerrs[0]
+            yerrs_h = yerrs[1]
+        else:
+            yerrs_l = yerrs
+            yerrs_h = yerrs
+        
+        
         xvals = np.asarray(xvals)
         yvals = np.asarray(yvals)
-        yerrs = np.asarray(yerrs)
+        xerrs_l = np.asarray(xerrs_l)
+        yerrs_l = np.asarray(yerrs_l)
+        xerrs_h = np.asarray(xerrs_h)
+        yerrs_h = np.asarray(yerrs_h)
                         
-        # fit model 
-        if all(np.isnan(yerrs)): yerrs = None
+        # check errors 
+        if all(np.isnan(xerrs_l)): xerrs_l = None
+        if all(np.isnan(yerrs_l)): yerrs_l = None
+        if all(np.isnan(xerrs_h)): xerrs_h = None
+        if all(np.isnan(yerrs_h)): yerrs_h = None
         
-        par,cov = curve_fit(model,xvals,yvals,sigma=yerrs,absolute_sigma=True,p0=p0)
-        std = np.diag(cov)**0.5
+        # set up least squares
+        ls = LeastSquares(model, xvals, yvals, 
+                          dy = yerrs_h, 
+                          dx = xerrs_h, 
+                          dy_low = yerrs_l, 
+                          dx_low = xerrs_l)
         
-        if yerrs is None:
-            chi = np.sum((model(xvals,*par)-yvals)**2)/(len(xvals)-npar)
+        # minimize
+        m = Minuit.from_array_func(ls, p0, name=parnames, errordef=1)
+        m.migrad()
+        m.hesse()
+        m.minos()
+        
+        # print fitting quality
+        print(m.fmin)
+        print(m.params)
+        print(m.merrors)
+        
+        # get results
+        par = m.np_values()
+        
+        if npar == 1:
+            std_l, std_h = m.np_merrors().T[0]
+            std_l = np.array([std_l])
+            std_h = np.array([std_h])
         else:
-            chi = np.sum(((model(xvals,*par)-yvals)/yerrs)**2)/(len(xvals)-npar)
+            std_l, std_h = m.np_merrors()
             
+        # chisquared
+        dof = len(xvals)-npar
+        if dof == 0:        chi = np.nan
+        else:               chi = ls(par)/dof
+        
         # display results 
         self.chi_label['text'] = 'ChiSq: %.2f' % np.around(chi,2)
         self.chi = chi
         
-        self.logger.info('Fit model results: %s, Errors: %s',str(par),str(std))
+        self.logger.info('Fit model results: %s, Errors-: %s, Errors+: %s',
+                        str(par), str(std_l), str(std_h))
         
-        self.draw_model(xvals,yvals,yerrs,par)    
+        self.draw_model(xvals, yvals, (xerrs_l, xerrs_h), (yerrs_l, yerrs_h), par)    
         
-        return (par,cov)
+        return (par, std_l, std_h)
         
     # ======================================================================= #
-    def draw_model(self,xvals,yvals,yerrs,par):
+    def draw_model(self, xvals, yvals, xerrs, yerrs, par):
         figstyle = 'param'
         
         # get draw components
@@ -183,16 +232,16 @@ class popup_fit_results(template_fit_popup):
         id = self.fittab.par_label.get()
 
         # draw data
-        self.fittab.plt.errorbar('param',id,xvals,yvals,yerrs,fmt='.')
+        self.fittab.plt.errorbar('param', id, xvals, yvals, yerr=yerrs, 
+                                 xerr=xerrs, fmt='.')
 
         # draw fit
-        fitx = np.linspace(min(xvals),max(xvals),self.fittab.n_fitx_pts)
-        f = self.fittab.plt.plot(figstyle,id+'fit',fitx,fn(fitx,*par),color='k')
+        fitx = np.linspace(min(xvals), max(xvals), self.fittab.n_fitx_pts)
+        f = self.fittab.plt.plot(figstyle, id+'fit', fitx, fn(fitx, *par), color='k')
         
         # plot elements
-        self.fittab.plt.xlabel(figstyle,xstr)
-        self.fittab.plt.ylabel(figstyle,ystr)
+        self.fittab.plt.xlabel(figstyle, xstr)
+        self.fittab.plt.ylabel(figstyle, ystr)
         self.fittab.plt.tight_layout(figstyle)
         
         raise_window()
-    

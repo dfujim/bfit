@@ -51,7 +51,7 @@ class template_fit_popup(object):
     window_title = 'Base class popup window'
 
     # ====================================================================== #
-    def __init__(self,bfit,input_fn_text='',output_par_text='',output_text=''):
+    def __init__(self, bfit, input_fn_text='', output_par_text='', output_text=''):
         
         self.bfit = bfit
         self.fittab = bfit.fit_files
@@ -71,7 +71,7 @@ class template_fit_popup(object):
         # make a new window
         self.win = Toplevel(bfit.mainframe)
         self.win.title(self.window_title)
-        frame = ttk.Frame(self.win,relief='sunken',pad=5)
+        frame = ttk.Frame(self.win, relief='sunken',pad=5)
         left_frame = ttk.Frame(frame)
         right_frame = ttk.Frame(frame)
 
@@ -104,10 +104,11 @@ class template_fit_popup(object):
         output_head2_label = ttk.Label(output_frame,text='p0')
         output_head3_label = ttk.Label(output_frame,text='Bounds')
         output_head4_label = ttk.Label(output_frame,text='Result')
-        output_head5_label = ttk.Label(output_frame,text='Error')
+        output_head5_label = ttk.Label(output_frame,text='Error (-)')
+        output_head6_label = ttk.Label(output_frame,text='Error (+)')
         self.output_par_text = Text(output_frame,width=8,height=8)
         self.output_text = {k:Text(output_frame,width=8,height=8,wrap='none')\
-                            for k in ('p0','blo','bhi','res','err')}
+                            for k in ('p0','blo','bhi','res','err-','err+')}
         
         # default starter strings
         if self.output_par_text_val: 
@@ -119,7 +120,7 @@ class template_fit_popup(object):
                 self.output_text[k].insert('1.0',self.output_text_val[k])
 
         # disable results
-        for k in ('res','err'):
+        for k in ('res','err-','err+'):
             self.output_text[k].config(state='disabled',width=12)
 
         # key bindings and scrollbar
@@ -136,10 +137,11 @@ class template_fit_popup(object):
                                 columnspan=2);          c+=2;
         output_head4_label.grid(column=c,row=r);        c+=1;
         output_head5_label.grid(column=c,row=r);        c+=1;
+        output_head6_label.grid(column=c,row=r);        c+=1;
         
         c = 0; r += 1;
         self.output_par_text.grid(column=c,row=r,sticky=N); c+=1;
-        for k in ('p0','blo','bhi','res','err'):
+        for k in ('p0','blo','bhi','res','err-','err+'):
             self.output_text[k].grid(column=c,row=r,sticky=N); c+=1;
         scrollb_out.grid(row=r, column=c, sticky='nsew')
         
@@ -161,7 +163,7 @@ class template_fit_popup(object):
         fit_button.grid(column=0,row=2,sticky=(N,E,W),padx=1,pady=1)
         
         # initialize 
-        self.new_par = pd.DataFrame(columns=['name','p0','blo','bhi','res','err']) 
+        self.new_par = pd.DataFrame(columns=['name','p0','blo','bhi','res','err-','err+']) 
         self.left_frame = left_frame
         
         self.logger.debug('Initialization success. Starting mainloop.')
@@ -200,18 +202,18 @@ class template_fit_popup(object):
         fit_status_window = self.bfit.fit_files.make_fit_status_window()
         try:
             # do the fit
-            par,cov = self._do_fit(text)
+            par, std_l, std_h = self._do_fit(text)
         except Exception as errmsg:
             raise errmsg from None
         finally:
             fit_status_window.destroy()
             del fit_status_window
-        std = np.diag(cov)**0.5
-
+        
         # display output for global parameters
         for i in self.new_par.index:
             self.new_par.loc[i,'res'] = par[i]
-            self.new_par.loc[i,'err'] = std[i]
+            self.new_par.loc[i,'err-'] = std_l[i]
+            self.new_par.loc[i,'err+'] = std_h[i]
         self.set_par_text()
         
     # ====================================================================== #
@@ -311,7 +313,7 @@ class template_fit_popup(object):
     
         # get text
         try:
-            text = {k:list(map(float,self.output_text[k].get('1.0',END).split('\n')[:-1])) \
+            text = {k : list(map(float, self.output_text[k].get('1.0', END).split('\n')[:-1])) \
                 for k in self.output_text}
         # no update if blank
         except ValueError:
@@ -325,7 +327,7 @@ class template_fit_popup(object):
             return
         
         # get names of the parameters
-        parnames = self.output_par_text.get('1.0',END).split('\n')[:-1]
+        parnames = self.output_par_text.get('1.0', END).split('\n')[:-1]
         
         # update
         par = self.new_par.set_index('name')
@@ -346,26 +348,26 @@ class template_fit_popup(object):
         
         # round
         numstr = '%'+('.%df' % self.bfit.rounding)
-        for k in ('res','err'):
-            set_par[k] = set_par.loc[:,k].apply(\
-                    lambda x: numstr % np.around(float(x),self.bfit.rounding))
+        for k in ('res', 'err-', 'err+'):
+            set_par[k] = set_par.loc[:, k].apply(\
+                    lambda x : numstr % np.around(float(x), self.bfit.rounding))
         
         # enable setting
-        for k in ('res','err'):
+        for k in ('res','err-','err+'):
             self.output_text[k].config(state='normal')
         self.output_par_text.config(state='normal')
         
-        self.output_par_text.delete('1.0',END)
-        self.output_par_text.insert(1.0,'\n'.join(set_par['name']))
+        self.output_par_text.delete('1.0', END)
+        self.output_par_text.insert(1.0, '\n'.join(set_par['name']))
         self.output_par_text_val = '\n'.join(set_par['name'])
         
         for k in self.output_text:
-            self.output_text[k].delete('1.0',END)
+            self.output_text[k].delete('1.0', END)
             self.output_text[k].insert(1.0,'\n'.join(set_par[k]))
             self.output_text_val[k] = '\n'.join(set_par[k])
                 
         # disable setting
-        for k in ('res','err'):
+        for k in ('res', 'err-', 'err+'):
             self.output_text[k].config(state='disabled')
         self.output_par_text.config(state='disabled')
         
