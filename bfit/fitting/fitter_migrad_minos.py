@@ -7,7 +7,7 @@ from bfit.fitting.fitter import fitter as fit_base
 
 class fitter(fit_base):
     
-    __name__ = 'migrad'
+    __name__ = 'migrad (minos)'
     
     def _do_fit(self, data, fn, omit=None, rebin=None, shared=None, hist_select='',
                 xlims=None, asym_mode='c', fixed=None, parnames=None, **kwargs):
@@ -22,7 +22,7 @@ class fitter(fit_base):
                          xlims=xlims,
                          asym_mode=asym_mode,
                          fixed=fixed,
-                         minimizer='migrad',
+                         minimizer='migradminos',
                          name=parnames,
                          **kwargs)
             
