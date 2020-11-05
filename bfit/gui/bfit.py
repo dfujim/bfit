@@ -43,6 +43,7 @@ from bfit.gui.popup_set_ppm_reference import popup_set_ppm_reference
 from bfit.gui.popup_set_histograms import popup_set_histograms
 from bfit.backend.PltTracker import PltTracker
 from bfit.backend.raise_window import raise_window
+from bfit.backend.fitdata import fitdata
 import bfit.backend.colors as colors
 
 # interactive plotting
@@ -1330,7 +1331,7 @@ class bfit(object):
     def get_run_key(self,data=None,r=-1,y=-1):
         """For indexing data dictionary"""
         
-        if type(data) is bdata:
+        if type(data) in (bdata, fitdata):
             return '.'.join(map(str,(data.year,data.run)))
         elif type(data) is bmerged:
             runs = textwrap.wrap(str(data.run),5)
@@ -1472,6 +1473,7 @@ class bfit(object):
             # load the module
             os.chdir(os.path.dirname(path))
             self.minimizer.set(os.path.splitext(os.path.basename(d))[0])
+            self.set_fit_routine()
             os.chdir(pwd)
             
         else:

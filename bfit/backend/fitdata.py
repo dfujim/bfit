@@ -178,6 +178,8 @@ class fitdata(object):
                 {par_name:(par,lobnd,hibnd)}
         """
     
+        self.parnames = list(values.keys())
+    
         for v in values.keys():
             self.fitpar['p0'][v] = values[v][0]
             self.fitpar['blo'][v] = values[v][1]

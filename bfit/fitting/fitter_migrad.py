@@ -10,8 +10,9 @@ class fitter(fit_base):
     __name__ = 'migrad'
     
     def _do_fit(self, data, fn, omit=None, rebin=None, shared=None, hist_select='',
-                xlims=None, asym_mode='c', fixed=None, **kwargs):
+                xlims=None, asym_mode='c', fixed=None, parnames=None, **kwargs):
         """Inputs match fit_bdata"""
+        
         return fit_bdata(data,
                          fn,
                          omit=omit,
@@ -22,5 +23,6 @@ class fitter(fit_base):
                          asym_mode=asym_mode,
                          fixed=fixed,
                          minimizer='migrad',
+                         name=parnames,
                          **kwargs)
             

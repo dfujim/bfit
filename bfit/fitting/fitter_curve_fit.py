@@ -10,7 +10,7 @@ class fitter(fit_base):
     __name__ = 'curve_fit'
     
     def _do_fit(self, data, fn, omit=None, rebin=None, shared=None, hist_select='',
-                xlims=None, asym_mode='c', fixed=None, **kwargs):
+                xlims=None, asym_mode='c', fixed=None, parnames=None, **kwargs):
         """Inputs match fit_bdata"""
         return fit_bdata(data,
                          fn,

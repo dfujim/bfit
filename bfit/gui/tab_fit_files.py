@@ -611,7 +611,6 @@ class fit_files(object):
             
             # bdata object
             bdfit = fitline.dataline.bdfit
-            bdataobj = bdfit.bd
             
             # pdict
             pdict = {}
@@ -652,25 +651,18 @@ class fit_files(object):
                 doptions['omit'] = dline.bin_remove.get()
                 if doptions['omit'] == dline.bin_remove_starter_line: 
                     doptions['omit'] = ''
-                
-            elif self.mode == '20':
+            elif self.mode in ('20','2h','2e'):
                 pass
-                
-            elif self.mode == '2h':
-                pass
-                
-            elif self.mode == '2e':
-                pass
-            
             else:
-                self.logger.error('Fitting mode not recognized')
-                raise RuntimeError('Fitting mode not recognized')
+                msg = 'Fitting mode %s not recognized' % self.mode
+                self.logger.error(msg)
+                raise RuntimeError(msg)
             
             # make data list
-            data_list.append([bdataobj,pdict,doptions])
+            data_list.append([bdfit, pdict, doptions])
         
         # call fitter with error message, potentially
-        self.fit_input = (fn_name,ncomp,data_list)
+        self.fit_input = (fn_name, ncomp, data_list)
         fit_status_window = self.make_fit_status_window()
         
         # do fit then kill window
@@ -678,7 +670,8 @@ class fit_files(object):
             self.logger.info('Fitting run %s: %s',self.bfit.get_run_key(d[0]),d[1:])    
         try:
             # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
-            fit_output,gchi = fitter(fn_name=fn_name,ncomp=ncomp,
+            fit_output,gchi = fitter(fn_name=fn_name,
+                                     ncomp=ncomp,
                                      data_list=data_list,
                                      hist_select=self.bfit.hist_select,
                                      asym_mode=self.bfit.get_asym_mode(self),

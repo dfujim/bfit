@@ -160,7 +160,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
         dof = 0.
         
         iter_obj = tqdm(zip(data, fn, omit, rebin, p0, bounds, xlims, fixed),
-                        total=ndata,desc='Independent Fitting')
+                        total=ndata, desc='Independent Fitting')
         for d, f, om, re, p, b, xl, fix in iter_obj:
             
             # get data for chisq calculations
@@ -190,9 +190,33 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
             else:            
                 kwargs['p0'] = p
                 kwargs['bounds'] = b
-                p, c, sl, sh, ch = _fit_single(d, f, om, re, hist_select, xlim=xl,
+                p, c, sl, sh, ch, m = _fit_single(d, f, om, re, hist_select, xlim=xl,
                                     asym_mode=asym_mode, fixed=fix, 
                                     minimizer=minimizer, **kwargs)
+                                    
+                # check minuit validity
+                if m is not None: 
+                    
+                    
+                    if not all((m.fmin.is_valid, 
+                                m.fmin.has_valid_parameters,
+                                not m.fmin.hesse_failed,
+                                m.fmin.has_accurate_covar,
+                                m.fmin.has_covariance,
+                                m.fmin.has_posdef_covar,
+                                not m.fmin.has_made_posdef_covar,
+                                not m.fmin.has_reached_call_limit,
+                                not m.fmin.is_above_max_edm,                                
+                                )):
+                                    
+                        msg = ('====== %d.%d ======\n' % (d.year, d.run),
+                               str(m.fmin), '\n',
+                               str(m.params), '\n',
+                               )
+                               
+                        iter_obj.write(''.join(msg))
+                    
+                    
             # outputs
             pars.append(p)
             covs.append(c)
@@ -291,11 +315,12 @@ def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
     
     # Fit the function
     if minimizer == 'migrad':
-        par,cov,stdl,stdh,chi = _fit_single_minuit(fn, x, y, dy, fixed, **kwargs)
+        par, cov, stdl, stdh, chi, m = _fit_single_minuit(fn, x, y, dy, fixed, **kwargs)
     elif minimizer in ('trf', 'dogbox'):
-        par,cov,stdl,stdh,chi = _fit_single_curve_fit(fn, x, y, dy, fixed,  minimizer, **kwargs)
+        par, cov, stdl, stdh, chi = _fit_single_curve_fit(fn, x, y, dy, fixed,  minimizer, **kwargs)
+        m = None
     
-    return (par, cov, stdl, stdh, chi)
+    return (par, cov, stdl, stdh, chi, m)
     
 # =========================================================================== #
 def _fit_single_minuit(fn, x, y, dy, fixed, **kwargs):
@@ -316,41 +341,28 @@ def _fit_single_minuit(fn, x, y, dy, fixed, **kwargs):
                      'errordef':1,
                      }
     
-    names = inspect.getfullargspec(fn).args
-    if 'self' in names:                 names.remove('self')
-    if len(names) == len(kwargs['p0']): kwargs_minuit['name'] = names
+    name = kwargs.get('name',None)
+    if name is None:    
+        name = inspect.getfullargspec(fn).args
+        if 'self' in name:                  name.remove('self')
+        if len(name) == len(kwargs['p0']):  kwargs_minuit['name'] = name
+    else:
+        kwargs_minuit['name'] = name
 
     m = Minuit.from_array_func(ls, **kwargs_minuit)
     m.migrad()
     m.hesse()
     m.minos()
     
-    # get errors
-    is_valid = []
-    lower = []
-    upper = []
-    for me,he in zip(m.merrors.values(), m.errors.values()):
-        
-        if me.is_valid:
-            lower.append(abs(me.lower))
-            upper.append(me.upper)
-        elif m.accurate:
-            lower.append(he)
-            upper.append(he)
-        else:                       # if hessian errors are approximate, is this ok?
-            lower.append(np.nan)
-            upper.append(np.nan)
-    
-    lower = np.array(lower)
-    upper = np.array(upper)
-    
-    par = m.values.values()
-    cov = np.array(list(m.covariance.values())).reshape(len(par),len(par))
+    # get errors and parameters
+    lower, upper = m.np_merrors()
+    par = m.np_values()
+    cov = m.np_covariance()
     
     dof = len(y) - len(kwargs['p0'])
     chi = m.fval/dof
     
-    return (par, cov, lower, upper, chi)
+    return (par, cov, lower, upper, chi, m)
 
 # =========================================================================== #
 def _fit_single_curve_fit(fn, x, y, dy, fixed, minimizer, **kwargs):
@@ -405,7 +417,6 @@ def _fit_single_curve_fit(fn, x, y, dy, fixed, minimizer, **kwargs):
     std = np.diag(cov)**0.5
     
     return (par, cov, std, std, chi)
-
 
 # =========================================================================== #
 def _get_asym(data,asym_mode,**asym_kwargs):

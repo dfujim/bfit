@@ -59,7 +59,7 @@ class fitter(object):
             }
 
     # ======================================================================= #
-    def __init__(self,keyfn, probe_species='Li8'):
+    def __init__(self, keyfn, probe_species='Li8'):
         """
             keyfn:          function takes as input bdata or bjoined object, 
                             returns string corresponding to unique id of that 
@@ -70,13 +70,13 @@ class fitter(object):
         self.probe_species = probe_species
         
     # ======================================================================= #
-    def __call__(self,fn_name,ncomp,data_list,hist_select,asym_mode,xlims):
+    def __call__(self, fn_name, ncomp, data_list, hist_select, asym_mode, xlims):
         """
             Fitting controller. 
             
             fn_name: name of function to fit
             ncomp : number of components to incude (2 = biexp, for example)
-            data_list: list of [[bdata object,pdict,doptions],]
+            data_list: list of [[bdata object, pdict, doptions],]
             
                 where pdict = {par:(init val,   # initial guess
                                     bound_lo,   # lower fitting bound
@@ -204,8 +204,10 @@ class fitter(object):
                                         rebin,
                                         sharelist,
                                         hist_select=hist_select,
-                                        asym_mode=asym_mode,fixed=fixedlist,
+                                        asym_mode=asym_mode,
+                                        fixed=fixedlist,
                                         xlims=xlims,
+                                        parnames=keylist,
                                         **kwargs)
         
         # collect results
@@ -217,7 +219,7 @@ class fitter(object):
                 for d, p, s, c, f in zip(bdata_list, pars, stds_l, stds_h, chis, fn)}, gchi)
 
     # ======================================================================= #
-    def gen_param_names(self,fn_name,ncomp):
+    def gen_param_names(self, fn_name, ncomp):
         """
             Make a list of the parameter names based on the number of components.
             
@@ -247,7 +249,7 @@ class fitter(object):
         return tuple(names)
         
     # ======================================================================= #
-    def gen_init_par(self,fn_name,ncomp,bdataobj,asym_mode='combined'):
+    def gen_init_par(self, fn_name, ncomp, bdataobj, asym_mode='combined'):
         """Generate initial parameters for a given function.
         
             fname: name of function. Should be the same as the param_names keys
@@ -383,7 +385,7 @@ class fitter(object):
         return par_values2
         
     # ======================================================================= #
-    def get_fn(self,fn_name,ncomp=1,pulse_len=-1,lifetime=-1):
+    def get_fn(self, fn_name, ncomp=1, pulse_len=-1, lifetime=-1):
         """
             Get the fitting function used.
             
