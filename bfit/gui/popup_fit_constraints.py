@@ -210,19 +210,26 @@ class popup_fit_constraints(template_fit_popup):
         npar = len(sharelist)
         bounds = [[l,h] for l,h in zip(blo,bhi)]
         data = [self.bfit.data[k] for k in keylist]
-        kwargs = {'p0':p0,'bounds':bounds}
+        kwargs = {'p0':p0, 'bounds':bounds}
+        
+        # get minimizer
+        if 'trf' in self.bfit.fit_files.fitter.__name__:  minimizer = 'trf'
+        if 'minos' in self.bfit.fit_files.fitter.__name__:  minimizer = 'migradminos'
+        if 'hesse' in self.bfit.fit_files.fitter.__name__:  minimizer = 'migradhesse'
+            
         
         # do the fit and kill fitting window
-        par,std,cov,chi,gchi = fit_bdata(
-                                    data=data,
-                                    fn=fitfns,
-                                    shared=sharelist,
-                                    asym_mode='c',
-                                    rebin=rebin,
-                                    omit=omit,
-                                    xlims=None,
-                                    hist_select=self.bfit.hist_select,
-                                    **kwargs)
+        par, std_l, std_u, cov, chi, gchi = fit_bdata(
+                                                data=data,
+                                                fn=fitfns,
+                                                shared=sharelist,
+                                                asym_mode='c',
+                                                rebin=rebin,
+                                                omit=omit,
+                                                xlims=None,
+                                                hist_select=self.bfit.hist_select,
+                                                minimizer=minimizer,
+                                                **kwargs)
         
         # calculate original parameter equivalents
         for i,k in enumerate(keylist):
@@ -230,25 +237,30 @@ class popup_fit_constraints(template_fit_popup):
             
             # calculate
             old_par = [cfn(*par[i]) for cfn in constr_fns[i]]
-            old_std = [st if adef not in defined else np.nan for st,adef in zip(std[i],alldef)]
-            old_std += [np.nan]*(len(alldef)-len(old_std))
+            old_std_l = [st if adef not in defined else np.nan for st, adef in zip(std_l[i], alldef)] 
+            old_std_l += [np.nan]*(len(alldef)-len(old_std_l))
+            
+            old_std_u = [st if adef not in defined else np.nan for st, adef in zip(std_u[i], alldef)]
+            old_std_u += [np.nan]*(len(alldef)-len(old_std_u))
+            
             old_chi = chi[i]
             
             # sort by original parameter name order
-            old_std = [old_std[alldef.index(n)] for n in cgen.oldpar]
+            old_std_l = [old_std_l[alldef.index(n)] for n in cgen.oldpar]
+            old_std_u = [old_std_u[alldef.index(n)] for n in cgen.oldpar]
             
             # set to fitdata containers
             # [(parname),(par),(err),chi,fnpointer]
-            data.set_fitresult([cgen.oldpar,old_par,old_std,old_chi,fnptrs[i]])
+            data.set_fitresult([cgen.oldpar, old_par, old_std_l, old_std_u, old_chi, fnptrs[i]])
             
         # display in fit_files tab
         for key in fit_files.fit_lines:
             fit_files.fit_lines[key].show_fit_result()
         
         # show global chi
-        fit_files.gchi_label['text'] = str(np.around(gchi,2))
+        fit_files.gchi_label['text'] = str(np.around(gchi, 2))
 
         # do end-of-fit stuff
         fit_files.do_end_of_fit()
     
-        return (par[0,:],cov[0,:])
+        return (par[0,:], std_l[0,:], std_u[0,:])
