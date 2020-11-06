@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import os, collections
 import time
+from iminuit import Minuit
+from bfit.fitting.leastsquares import LeastSquares
+import warnings
 
 __doc__=\
 """
@@ -60,10 +63,12 @@ class global_fitter(object):
             
             fn                      list of fitting function handles
             fixed                   list of fixed variables (corresponds to input)
+            fprime_dx               x spacing in calculating centered differences derivative
             
             metadata                array of additional inputs, fixed for each data set
                                     (if len(shared) < len(actual inputs))
             
+            minuit                  Minuit object for minimizing with migrad algorithm
             minimizer               string: one of "curve_fit" or "migrad"
             
             npar                    number of parameters in input function
@@ -98,7 +103,7 @@ class global_fitter(object):
     
     # ======================================================================= #
     def __init__(self, fn, x, y, dy=None, dx=None, dy_low=None, dx_low=None, 
-                shared=None, fixed=None, metadata=None, minimizer='migrad'):
+                shared=None, fixed=None, metadata=None, fprime_dx=1e-6):
         """
             fn:         function handle OR list of function handles. 
                         MUST specify inputs explicitly if list must have that 
@@ -130,35 +135,46 @@ class global_fitter(object):
                         number of parameters is set by len(shared), all 
                         remaining inputs are expected to be metadata inputs
                         function call: fn[i](x[i],*par[i],*metadata[i])
-                        
-            minimizer:  string. One of "curve_fit" or "migrad" indicating which 
-                        code to use to minimize the function
+            
+            fprime_dx:  x spacing in calculating centered differences derivative
+            
         """
         # ---------------------------------------------------------------------
         # Check and assign inputs
-        
-        # check error input
+        self.fprime_dx = fprime_dx
+    
         if (dy is None and dy_low is not None) or (dx is None and dx_low is not None): 
             raise RuntimeError("If specifying lower errors, must also specify dy or dx")
             
-        # data types
+        # data types: check and assign
+        msg = 'Lengths of input data arrays do not match.\nnsets: %s, %s =  %d, %d\n'
         x = list(x)
         y = list(y)
         
+        if not len(x) == len(y):
+            raise RuntimeError(msg % ('x', 'y', len(x), len(y)))
+        
         self.nsets = len(x)
-        if dy is not None:      dy = list(dy)
-        else:                   dy = np.full(self.nsets, None)
         
-        if dx is not None:      dx = list(dx)
-        else:                   dx = np.full(self.nsets, None)
+        if dy is not None:          
+            dy = list(dy)
+            if not self.nsets == len(dy):
+                raise RuntimeError(msg % ('n', 'dy', self.nsets, len(dy)))
         
-        if dy_low is not None:      dy_low = list(dy_low)
-        else:                       dy_low = np.full(self.nsets, None)
+        if dx is not None:          
+            dx = list(dx)
+            if not self.nsets == len(dx):
+                raise RuntimeError(msg % ('n', 'dx', self.nsets, len(dx)))
+            
+        if dy_low is not None:      
+            dy_low = list(dy_low)
+            if not self.nsets == len(dy_low):
+                raise RuntimeError(msg % ('n', 'dy_low', self.nsets, len(dy_low)))
         
-        if dx_low is not None:      dx_low = list(dx_low)
-        else:                       dx_low = np.full(self.nsets, None)
-        
-        self.minimizer = minimizer
+        if dx_low is not None:      
+            dx_low = list(dx_low)
+            if not self.nsets == len(dx_low):
+                raise RuntimeError(msg % ('n', 'dx_low', self.nsets, len(dx_low)))
         
         # shared parameters
         self.shared = np.asarray(shared)
@@ -167,40 +183,27 @@ class global_fitter(object):
         if shared is None:
             raise RuntimeError("Must specified shared parameter as boolean iterable")
         self.npar = len(shared)
-        
-        # test number of data sets
-        msg = 'Lengths of input data arrays do not match.\nnsets: %s, %s =  %d, %d\n'
-        if not len(x) == len(y):
-            raise RuntimeError(msg % ('x', 'y', len(x), len(y)))
-        
-        if not self.nsets == len(dy):
-            raise RuntimeError(msg % ('n', 'dy', self.nsets, len(dy)))
-        if not self.nsets == len(dx):
-            raise RuntimeError(msg % ('n', 'dx', self.nsets, len(dx)))
-        if not self.nsets == len(dy_low):
-            raise RuntimeError(msg % ('n', 'dy_low', self.nsets, len(dy_low)))
-        if not self.nsets == len(dx_low):
-            raise RuntimeError(msg % ('n', 'dx_low', self.nsets, len(dx_low)))
-        
+
         # if errors, remove points with zero error from data
-        for i in range(self.nsets):
-            
-            # get indexing
-            idx = np.full(len(x[i]), False)
-            if dy[i] is not None:      idx += dy[i] != 0
-            if dx[i] is not None:      idx += dx[i] != 0
-            if dy_low[i] is not None:  idx += dy_low[i] != 0
-            if dx_low[i] is not None:  idx += dx_low[i] != 0
-            
-            # crop
-            x[i] = x[i][idx]
-            y[i] = y[i][idx]
-            
-            if dy[i] is not None:      dy[i] = dy[i][idx]
-            if dx[i] is not None:      dx[i] = dx[i][idx]
-            if dy_low[i] is not None:  dy_low[i] = dy_low[i][idx]
-            if dx_low[i] is not None:  dx_low[i] = dx_low[i][idx]
-        
+        if dy is not None or dx is not None:
+            for i in range(self.nsets):
+                
+                # get indexing
+                idx = np.full(len(x[i]), False)
+                if dy is not None:      idx += dy[i] != 0
+                if dx is not None:      idx += dx[i] != 0
+                if dy_low is not None:  idx += dy_low[i] != 0
+                if dx_low is not None:  idx += dx_low[i] != 0
+                
+                # crop
+                x[i] = x[i][idx]
+                y[i] = y[i][idx]
+                
+                if dy is not None:      dy[i] = dy[i][idx]
+                if dx is not None:      dx[i] = dx[i][idx]
+                if dy_low is not None:  dy_low[i] = dy_low[i][idx]
+                if dx_low is not None:  dx_low[i] = dx_low[i][idx]
+
         # check if list of functions given 
         if not isinstance(fn,collections.Iterable):
             fn = [fn]*self.nsets
@@ -282,31 +285,91 @@ class global_fitter(object):
         self.xcat = np.concatenate(x)
         self.ycat = np.concatenate(y)
         
-        if dy[0] is not None:       self.dycat = np.concatenate(dy)
-        else:                       self.dycat = dy
+        if dy is not None:          self.dycat = np.concatenate(dy)
+        else:                       self.dycat = None
         
-        if dx[0] is not None:       self.dxcat = np.concatenate(dx)
-        else:                       self.dxcat = dx
+        if dx is not None:          self.dxcat = np.concatenate(dx)
+        else:                       self.dxcat = None
         
-        if dy_low[0] is not None:   self.dycat_low = np.concatenate(dy)
-        else:                       self.dycat_low = dy
+        if dy_low is not None:      self.dycat_low = np.concatenate(dy_low)
+        else:                       self.dycat_low = None
         
-        if dx_low[0] is not None:   self.dxcat_low = np.concatenate(dx)
-        else:                       self.dxcat_low = dx
+        if dx_low is not None:      self.dxcat_low = np.concatenate(dx_low)
+        else:                       self.dxcat_low = None
         
     # ======================================================================= #
     def _do_curve_fit(self, master_fn, p0_first, **fitargs):
+        """
+            Run curve_fit minimmizer
+        """
+        
+        dycat = self.dycat
+        absolute_sigma = self.dycat is not None
+            
+        if self.dxcat is not None:
+            warnings.warn("curve_fit minimizer does not account for x errors")
         
         par,cov = curve_fit(master_fn,
                             self.xcat,
                             self.ycat,
-                            sigma=self.dycat,
-                            absolute_sigma=True,
+                            sigma=dycat,
+                            absolute_sigma=absolute_sigma,
                             p0 = p0_first,
                             **fitargs)
                             
         std = np.diag(cov)**0.5
         return (par, std, std, cov)
+    
+    # ======================================================================= #
+    def _do_migrad(self, master_fn, master_fnprime, p0_first, **fitargs):
+        
+        # get least squares
+        ls = LeastSquares(master_fn, self.xcat, self.ycat, 
+                            dy = self.dycat, 
+                            dx = self.dxcat, 
+                            dy_low = self.dycat_low, 
+                            dx_low = self.dxcat_low,
+                            fn_prime = master_fnprime)
+        
+        # set args
+        limit = fitargs.get('bounds',None)
+        if limit is not None:
+            limit = np.array(limit).T
+        
+        kwargs_minuit = {'start':p0_first,
+                         'limit':limit,
+                         'print_level':fitargs.get('print_level',0),
+                         'errordef':1,
+                        }
+        
+        # get minuit obj
+        m = Minuit.from_array_func(ls, **kwargs_minuit)
+        self.ls = ls
+        self.minuit = m
+        
+        # minimize
+        m.migrad()
+        
+        # check minimum
+        if not m.fmin.is_valid:
+            print(m.fmin)
+            raise RuntimeError('Minuit failed to converge to a valid minimum')
+        
+        # get errors
+        m.hesse()
+        m.minos()
+        
+        # print results
+        print(m.fmin)
+        print(m.params)
+        print(m.merrors)
+        
+        # get output
+        par = m.np_values()
+        lower, upper = m.np_merrors()
+        cov = m.np_covariance()
+        
+        return (par, lower, upper, cov)
         
     # ======================================================================= #
     def draw(self,mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,
@@ -347,14 +410,22 @@ class global_fitter(object):
             
             # get data
             x, y, = self.x[i], self.y[i]
-            dy, dx = self.dy[i], self.dx[i]
-            dy_low, dx_low = self.dy_low[i], self.dx_low[i]
+            
+            if self.dy is not None:         dy = self.dy[i]
+            else:                           dy = None
+            
+            if self.dx is not None:         dx = self.dx[i]
+            else:                           dx = None
+            
+            if self.dy_low is not None:     dy_low = self.dy_low[i]
+            else:                           dy_low = dy
+            
+            if self.dx_low is not None:     dx_low = self.dx_low[i]
+            else:                           dx_low = dx
+            
             f = self.fn[i]
             md = self.metadata[i]
-            
-            if dy_low is None: dy_low = dy
-            if dx_low is None: dx_low = dx
-            
+                        
             # make new figure
             if mode in ['new','n']:            
                 fig_list.append(plt.figure())
@@ -371,8 +442,10 @@ class global_fitter(object):
             # draw data
             if dy is None:      dy_draw = None
             else:               dy_draw = (dy_low, dy)    
+            
             if dx is None:      dx_draw = None
             else:               dx_draw = (dx_low, dx)    
+            
             datplt = plt.errorbar(x_draw, y, yerr=dy_draw, xerr=dx_draw, 
                                   label=labels[i], **errorbar_args)
             
@@ -399,7 +472,7 @@ class global_fitter(object):
         return fig_list
         
     # ======================================================================= #
-    def fit(self,**fitargs):
+    def fit(self, minimizer='migrad', **fitargs):
         """
             fitargs: parameters to pass to fitter (scipy.optimize.curve_fit) 
             
@@ -426,8 +499,10 @@ class global_fitter(object):
                             
                             bounds.shape = (2,npars)
                             
-                            
-            returns (parameters,covariance matrix)
+            minimizer:      string. One of "curve_fit" or "migrad" indicating 
+                            which code to use to minimize the function
+            
+            returns (parameters, lower errors, upper errors, covariance matrix)
         """
         
         # get values from self
@@ -435,6 +510,7 @@ class global_fitter(object):
         shared = self.shared
         sharing_links = self.sharing_links
         fn = self.fn
+        self.minimizer = minimizer
         
         # set default p0
         if 'p0' in fitargs:
@@ -485,17 +561,34 @@ class global_fitter(object):
         x = self.x
         rng = range(self.nsets)
         metadata = self.metadata
-        def master_fn(x_unused,*par):            
+          
+        def master_fn(x_unused,*par):
             inputs = np.take(np.hstack((par, p0_flat_inv)), sharing_links)
             return np.concatenate([fn[i](x[i], *inputs[i], *metadata[i]) for i in rng])
         
         self.master_fn = master_fn
+            
           
-        # do fit
-        if self.minimizer == 'curve_fit':
+        # do curve_fit
+        if minimizer == 'curve_fit':            
             par, std_l, std_u, cov = self._do_curve_fit(master_fn, p0_first, **fitargs)
-        elif self.minimizer == 'migrad':
-            par, std_l, std_u, cov = self._do_migrad(master_fn, p0_first, **fitargs)
+        
+        # do migrad
+        elif minimizer == 'migrad':
+            
+            fprime_dx = self.fprime_dx
+            
+            # make derivative of master function
+            def master_fnprime(x_unused, *par):
+                
+                inputs = np.take(np.hstack((par, p0_flat_inv)), sharing_links)
+                xhi = np.concatenate([fn[i](x[i]+fprime_dx/2, *inputs[i], *metadata[i]) for i in rng])
+                xlo = np.concatenate([fn[i](x[i]-fprime_dx/2, *inputs[i], *metadata[i]) for i in rng])
+                return (xhi-xlo)/fprime_dx
+            
+            self.master_fn = master_fn
+                    
+            par, std_l, std_u, cov = self._do_migrad(master_fn, master_fnprime, p0_first, **fitargs)
         else:
             raise RuntimeError("Bad minimizer input")
         
@@ -504,7 +597,6 @@ class global_fitter(object):
         std_l = np.asarray(std_l)
         std_u = np.asarray(std_u)
         cov = np.asarray(cov)
-        
         
         # inflate parameters
         par_out = np.hstack((par,p0_flat_inv))[sharing_links]
@@ -553,6 +645,10 @@ class global_fitter(object):
 
         # global
         dof = len(self.xcat)-len(self.par)
+        
+        ls = LeastSquares(self.master_fn, )
+        
+        
         self.chi_glbl = np.sum(np.square((self.ycat-\
                       self.master_fn(self.xcat,*self.par))/self.dycat))/dof
             
