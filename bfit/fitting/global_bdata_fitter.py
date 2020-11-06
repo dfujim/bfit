@@ -83,4 +83,5 @@ class global_bdata_fitter(global_fitter):
             dy = np.array(dynew)
             
         # intialize
-        super(global_bdata_fitter,self).__init__(fn, x, y, dy, shared, fixed, minimizer)
+        super(global_bdata_fitter,self).__init__(fn, x, y, dy, shared=shared, 
+                                                fixed=fixed, minimizer=minimizer)

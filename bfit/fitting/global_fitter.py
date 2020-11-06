@@ -64,6 +64,8 @@ class global_fitter(object):
             metadata                array of additional inputs, fixed for each data set
                                     (if len(shared) < len(actual inputs))
             
+            minimizer               string: one of "curve_fit" or "migrad"
+            
             npar                    number of parameters in input function
             nsets                   number of data sets
             
@@ -78,10 +80,16 @@ class global_fitter(object):
             xcat                    concatenated xdata for global fitting
             ycat                    concatenated ydata for global fitting
             dycat                   concatenated dydata for global fitting
+            dxcat                   concatenated dydata for global fitting
+            dycat_low               concatenated dydata for global fitting
+            dxcat_low               concatenated dydata for global fitting
             
             x                       input array of x data sets [array1,array2,...]
             y                       input array of y data sets [array1,array2,...]
             dy                      input array of y error sets [array1,array2,...]
+            dx                      input array of x error sets [array1,array2,...]
+            dy_low                  input array of y error sets [array1,array2,...]
+            dx_low                  input array of x error sets [array1,array2,...]
     """
     
     # class variables
@@ -89,17 +97,23 @@ class global_fitter(object):
     ndraw_pts = 500             # number of points to draw fits with
     
     # ======================================================================= #
-    def __init__(self,x,y,dy,fn,shared,fixed=None,metadata=None):
+    def __init__(self, fn, x, y, dy=None, dx=None, dy_low=None, dx_low=None, 
+                shared=None, fixed=None, metadata=None, minimizer='migrad'):
         """
-            x,y:        2-list of data sets of equal length. 
-                        fmt: [[a1,a2,...],[b1,b2,...],...]
-            
-            dy:         list of errors in y with same format as y
-            
             fn:         function handle OR list of function handles. 
                         MUST specify inputs explicitly if list must have that 
                         len(fn) = len(x) and all function must have the same 
                         inputs in the same order
+        
+            x, y:       2-list of data sets of equal length. 
+                        fmt: [[a1,a2,...],[b1,b2,...],...]
+            
+            dx, dy:     list of errors in x or y with same format as x and y
+            dx_low, dy_low: list of low bound errors in x or y with same format 
+                        as x and y. 
+                            
+                        If not None, then assume dy and dx are the upper errors
+                        If None, assume symmetric errors
             
             shared:     tuple of booleans indicating which values to share. 
                         len = number of parameters 
@@ -116,33 +130,76 @@ class global_fitter(object):
                         number of parameters is set by len(shared), all 
                         remaining inputs are expected to be metadata inputs
                         function call: fn[i](x[i],*par[i],*metadata[i])
+                        
+            minimizer:  string. One of "curve_fit" or "migrad" indicating which 
+                        code to use to minimize the function
         """
         # ---------------------------------------------------------------------
         # Check and assign inputs
         
+        # check error input
+        if (dy is None and dy_low is not None) or (dx is None and dx_low is not None): 
+            raise RuntimeError("If specifying lower errors, must also specify dy or dx")
+            
         # data types
         x = list(x)
         y = list(y)
-        dy = list(dy)
+        
+        self.nsets = len(x)
+        if dy is not None:      dy = list(dy)
+        else:                   dy = np.full(self.nsets, None)
+        
+        if dx is not None:      dx = list(dx)
+        else:                   dx = np.full(self.nsets, None)
+        
+        if dy_low is not None:      dy_low = list(dy_low)
+        else:                       dy_low = np.full(self.nsets, None)
+        
+        if dx_low is not None:      dx_low = list(dx_low)
+        else:                       dx_low = np.full(self.nsets, None)
+        
+        self.minimizer = minimizer
         
         # shared parameters
         self.shared = np.asarray(shared)
         
         # get number of input parameters
+        if shared is None:
+            raise RuntimeError("Must specified shared parameter as boolean iterable")
         self.npar = len(shared)
         
         # test number of data sets
-        if not len(x) == len(y) == len(dy):
-            raise RuntimeError('Lengths of input data arrays do not match.\n'+\
-                'nsets: x, y, dy =  %d, %d, %d\n' % (len(x),len(y),len(dy)))            
-        self.nsets = len(x)
+        msg = 'Lengths of input data arrays do not match.\nnsets: %s, %s =  %d, %d\n'
+        if not len(x) == len(y):
+            raise RuntimeError(msg % ('x', 'y', len(x), len(y)))
         
-        # remove points with zero error from data 
-        for i,(xdat,ydat,dydat) in enumerate(zip(x,y,dy)):
-            idx = dydat != 0
-            x[i] = xdat[idx]
-            y[i] = ydat[idx]
-            dy[i] = dydat[idx]
+        if not self.nsets == len(dy):
+            raise RuntimeError(msg % ('n', 'dy', self.nsets, len(dy)))
+        if not self.nsets == len(dx):
+            raise RuntimeError(msg % ('n', 'dx', self.nsets, len(dx)))
+        if not self.nsets == len(dy_low):
+            raise RuntimeError(msg % ('n', 'dy_low', self.nsets, len(dy_low)))
+        if not self.nsets == len(dx_low):
+            raise RuntimeError(msg % ('n', 'dx_low', self.nsets, len(dx_low)))
+        
+        # if errors, remove points with zero error from data
+        for i in range(self.nsets):
+            
+            # get indexing
+            idx = np.full(len(x[i]), False)
+            if dy[i] is not None:      idx += dy[i] != 0
+            if dx[i] is not None:      idx += dx[i] != 0
+            if dy_low[i] is not None:  idx += dy_low[i] != 0
+            if dx_low[i] is not None:  idx += dx_low[i] != 0
+            
+            # crop
+            x[i] = x[i][idx]
+            y[i] = y[i][idx]
+            
+            if dy[i] is not None:      dy[i] = dy[i][idx]
+            if dx[i] is not None:      dx[i] = dx[i][idx]
+            if dy_low[i] is not None:  dy_low[i] = dy_low[i][idx]
+            if dx_low[i] is not None:  dx_low[i] = dx_low[i][idx]
         
         # check if list of functions given 
         if not isinstance(fn,collections.Iterable):
@@ -215,14 +272,42 @@ class global_fitter(object):
         self.x = x
         self.y = y
         self.dy = dy
+        self.dx = dx
+        self.dy_low = dy_low
+        self.dx_low = dx_low
         self.fixed = fixed
         self.sharing_links = sharing_links
         
         # get concatenated data
         self.xcat = np.concatenate(x)
         self.ycat = np.concatenate(y)
-        self.dycat = np.concatenate(dy)
-            
+        
+        if dy[0] is not None:       self.dycat = np.concatenate(dy)
+        else:                       self.dycat = dy
+        
+        if dx[0] is not None:       self.dxcat = np.concatenate(dx)
+        else:                       self.dxcat = dx
+        
+        if dy_low[0] is not None:   self.dycat_low = np.concatenate(dy)
+        else:                       self.dycat_low = dy
+        
+        if dx_low[0] is not None:   self.dxcat_low = np.concatenate(dx)
+        else:                       self.dxcat_low = dx
+        
+    # ======================================================================= #
+    def _do_curve_fit(self, master_fn, p0_first, **fitargs):
+        
+        par,cov = curve_fit(master_fn,
+                            self.xcat,
+                            self.ycat,
+                            sigma=self.dycat,
+                            absolute_sigma=True,
+                            p0 = p0_first,
+                            **fitargs)
+                            
+        std = np.diag(cov)**0.5
+        return (par, std, std, cov)
+        
     # ======================================================================= #
     def draw(self,mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,
              savefig='',**errorbar_args):
@@ -261,9 +346,14 @@ class global_fitter(object):
         for i in range(self.nsets):
             
             # get data
-            x,y,dy = self.x[i], self.y[i], self.dy[i]
+            x, y, = self.x[i], self.y[i]
+            dy, dx = self.dy[i], self.dx[i]
+            dy_low, dx_low = self.dy_low[i], self.dx_low[i]
             f = self.fn[i]
             md = self.metadata[i]
+            
+            if dy_low is None: dy_low = dy
+            if dx_low is None: dx_low = dx
             
             # make new figure
             if mode in ['new','n']:            
@@ -279,7 +369,12 @@ class global_fitter(object):
                 x_draw = x
                 
             # draw data
-            datplt = plt.errorbar(x_draw,y,dy,label=labels[i],**errorbar_args)
+            if dy is None:      dy_draw = None
+            else:               dy_draw = (dy_low, dy)    
+            if dx is None:      dx_draw = None
+            else:               dx_draw = (dx_low, dx)    
+            datplt = plt.errorbar(x_draw, y, yerr=dy_draw, xerr=dx_draw, 
+                                  label=labels[i], **errorbar_args)
             
             # get color for fit curve
             if mode in ['stack','s']:
@@ -288,9 +383,9 @@ class global_fitter(object):
                 color = 'k'
             
             # draw fit
-            xfit = np.linspace(min(x),max(x),self.ndraw_pts)
-            xdraw = np.linspace(min(x_draw),max(x_draw),self.ndraw_pts)
-            plt.plot(xdraw,f(xfit,*self.par_runwise[i],*md),color=color,zorder=10)
+            xfit = np.linspace(min(x), max(x), self.ndraw_pts)
+            xdraw = np.linspace(min(x_draw), max(x_draw), self.ndraw_pts)
+            plt.plot(xdraw,f(xfit, *self.par_runwise[i], *md), color=color, zorder=10)
         
             # plot elements
             plt.ylabel(ylabel)
@@ -348,10 +443,10 @@ class global_fitter(object):
             
             # expand p0
             if len(p0.shape) == 1:
-                p0 = np.full((self.nsets,self.npar),p0)
+                p0 = np.full((self.nsets, self.npar), p0)
                 
         else:
-            p0 = np.ones((self.nsets,self.npar))
+            p0 = np.ones((self.nsets, self.npar))
         
         # for fixed parameters
         p0_flat_inv = np.concatenate(p0)[::-1]
@@ -391,33 +486,39 @@ class global_fitter(object):
         rng = range(self.nsets)
         metadata = self.metadata
         def master_fn(x_unused,*par):            
-            inputs = np.take(np.hstack((par,p0_flat_inv)),sharing_links)
-            return np.concatenate([fn[i](x[i],*inputs[i],*metadata[i]) for i in rng])
+            inputs = np.take(np.hstack((par, p0_flat_inv)), sharing_links)
+            return np.concatenate([fn[i](x[i], *inputs[i], *metadata[i]) for i in rng])
         
         self.master_fn = master_fn
           
         # do fit
-        par,cov = curve_fit(master_fn,
-                            self.xcat,
-                            self.ycat,
-                            sigma=self.dycat,
-                            absolute_sigma=True,
-                            p0 = p0_first,
-                            **fitargs)                    
+        if self.minimizer == 'curve_fit':
+            par, std_l, std_u, cov = self._do_curve_fit(master_fn, p0_first, **fitargs)
+        elif self.minimizer == 'migrad':
+            par, std_l, std_u, cov = self._do_migrad(master_fn, p0_first, **fitargs)
+        else:
+            raise RuntimeError("Bad minimizer input")
         
         # to array
         par = np.asarray(par)
+        std_l = np.asarray(std_l)
+        std_u = np.asarray(std_u)
         cov = np.asarray(cov)
+        
         
         # inflate parameters
         par_out = np.hstack((par,p0_flat_inv))[sharing_links]
+        
+        zero = np.zeros(len(p0_flat_inv))
+        std_l_out = np.hstack((std_l, zero))[sharing_links]
+        std_u_out = np.hstack((std_u, zero))[sharing_links]
         
         # inflate covariance matrix
         cov_out = []
         for lnk in sharing_links:
             
             # init
-            cov_run = np.zeros((self.npar,self.npar))
+            cov_run = np.zeros((self.npar, self.npar))
             
             # assign
             for i in range(self.npar):
@@ -438,7 +539,7 @@ class global_fitter(object):
         self.par_runwise = par_out
         self.cov_runwise = cov_out
         
-        return (par_out,cov_out)
+        return (par_out, cov_out)
     
     # ======================================================================= #
     def get_chi(self):
@@ -457,11 +558,13 @@ class global_fitter(object):
             
         # single fn chisq
         self.chi = []
-        for x,y,dy,p,f,fx,m in zip(self.x,self.y,self.dy,self.par_runwise,self.fn,self.fixed,self.metadata):
+        for x, y, dy, p, f, fx, m in zip(self.x, self.y, self.dy, 
+                                        self.par_runwise, self.fn, self.fixed, 
+                                        self.metadata):
             dof = len(x)-self.npar+sum(fx)
-            self.chi.append(np.sum(np.square((y-f(x,*p,*m))/dy))/dof)
+            self.chi.append(np.sum(np.square((y-f(x, *p, *m))/dy))/dof)
         
-        return (self.chi_glbl,self.chi)
+        return (self.chi_glbl, self.chi)
 
     # ======================================================================= #
     def get_par(self):
