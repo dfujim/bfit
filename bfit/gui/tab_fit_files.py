@@ -1144,8 +1144,8 @@ class fit_files(object):
         if xerrs is None:   self.plt.gcf(figstyle).autofmt_xdate()
         
         # plot elements
-        self.plt.xlabel(figstyle,xdraw)
-        self.plt.ylabel(figstyle,ydraw)
+        self.plt.xlabel(figstyle, xdraw)
+        self.plt.ylabel(figstyle, ydraw)
         self.plt.tight_layout(figstyle)
         
         if draw_id:

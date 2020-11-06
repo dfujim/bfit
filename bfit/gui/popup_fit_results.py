@@ -102,7 +102,7 @@ class popup_fit_results(template_fit_popup):
         chi_frame.grid(column=0,row=2,sticky=(E,W),padx=1,pady=1,rowspan=2)
         
     # ====================================================================== #
-    def _do_fit(self,text):
+    def _do_fit(self, text):
         
         # get fit data
         xstr = self.xaxis.get()
@@ -213,12 +213,12 @@ class popup_fit_results(template_fit_popup):
         self.logger.info('Fit model results: %s, Errors-: %s, Errors+: %s',
                         str(par), str(std_l), str(std_h))
         
-        self.draw_model(xvals, yvals, (xerrs_l, xerrs_h), (yerrs_l, yerrs_h), par)    
+        self.draw_model(xvals, yvals, (xerrs_l, xerrs_h), (yerrs_l, yerrs_h), par, text)    
         
         return (par, std_l, std_h)
         
     # ======================================================================= #
-    def draw_model(self, xvals, yvals, xerrs, yerrs, par):
+    def draw_model(self, xvals, yvals, xerrs, yerrs, par, text):
         figstyle = 'param'
         
         # get draw components
@@ -231,13 +231,35 @@ class popup_fit_results(template_fit_popup):
         fn = self.model_fn
         id = self.fittab.par_label.get()
 
+        # get mouseover annotation labels
+        mouse_label, _ = self.fittab.get_values('Unique Id')
+
+        # sort by x values 
+        idx = np.argsort(xvals)
+        xvals = np.asarray(xvals)[idx]
+        yvals = np.asarray(yvals)[idx]
+        
+        xerrs_l, xerrs_h = xerrs
+        yerrs_l, yerrs_h = yerrs
+        
+        xerrs_l = np.asarray(xerrs_l)[idx]
+        yerrs_l = np.asarray(yerrs_l)[idx]
+        xerrs_h = np.asarray(xerrs_h)[idx]
+        yerrs_h = np.asarray(yerrs_h)[idx]
+            
+        mouse_label = np.asarray(mouse_label)[idx]
+
         # draw data
-        self.fittab.plt.errorbar('param', id, xvals, yvals, yerr=yerrs, 
-                                 xerr=xerrs, fmt='.')
+        self.fittab.plt.errorbar('param', id, xvals, yvals, 
+                                 yerr=(yerrs_l, yerrs_h),
+                                 xerr=(xerrs_l, xerrs_h), 
+                                 fmt='.', 
+                                 annot_label=mouse_label)
 
         # draw fit
         fitx = np.linspace(min(xvals), max(xvals), self.fittab.n_fitx_pts)
-        f = self.fittab.plt.plot(figstyle, id+'fit', fitx, fn(fitx, *par), color='k')
+        f = self.fittab.plt.plot(figstyle, id+text[0], fitx, fn(fitx, *par), 
+                                 color='k', label=text[0])
         
         # plot elements
         self.fittab.plt.xlabel(figstyle, xstr)
