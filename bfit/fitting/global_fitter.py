@@ -76,6 +76,9 @@ class global_fitter(object):
             
             par                     fit results with unnecessary variables stripped 
             par_runwise             fit results run-by-run with all needed inputs
+            std_l, std_u            lower/upper errors with unnecessary variables stripped 
+            std_l_runwise           lower errors run-by-run with all needed inputs
+            std_u_runwise           upper errors run-by-run with all needed inputs
             cov                     fit covarince matrix with unnecessary variables stripped
             cov_runwise             fit covarince matrix run-by-run with all needed inputs
             
@@ -321,7 +324,7 @@ class global_fitter(object):
         return (par, std, std, cov)
     
     # ======================================================================= #
-    def _do_migrad(self, master_fn, master_fnprime, p0_first, **fitargs):
+    def _do_migrad(self, master_fn, master_fnprime, do_minos, p0_first, **fitargs):
         
         # get least squares
         ls = LeastSquares(master_fn, self.xcat, self.ycat, 
@@ -355,12 +358,16 @@ class global_fitter(object):
             raise RuntimeError('Minuit failed to converge to a valid minimum')
         
         # get errors
-        m.hesse()
-        m.minos()
+        if do_minos:
+            m.minos()
+            lower, upper = m.np_merrors()
+        else:
+            m.hesse()
+            lower = m.np_errors()
+            upper = lower
         
         # get output
         par = m.np_values()
-        lower, upper = m.np_merrors()
         cov = m.np_covariance()
         
         return (par, lower, upper, cov)
@@ -466,7 +473,7 @@ class global_fitter(object):
         return fig_list
         
     # ======================================================================= #
-    def fit(self, minimizer='migrad', **fitargs):
+    def fit(self, minimizer='migrad', do_minos=True, **fitargs):
         """
             fitargs: parameters to pass to fitter (scipy.optimize.curve_fit) 
             
@@ -493,8 +500,10 @@ class global_fitter(object):
                             
                             bounds.shape = (2,npars)
                             
-            minimizer:      string. One of "curve_fit" or "migrad" indicating 
+            minimizer:      string. One of "trf", "dogbox", or "migrad" indicating 
                             which code to use to minimize the function
+            
+            do_minos:       if true, and if minimizer==migrad, then run minos errors
             
             returns (parameters, lower errors, upper errors, covariance matrix)
         """
@@ -572,18 +581,19 @@ class global_fitter(object):
         self.master_fnprime = master_fnprime
       
         # do curve_fit
-        if minimizer == 'curve_fit':            
+        if minimizer in ('trf','dogbox'):
+            fitargs['method'] = minimizer
             par, std_l, std_u, cov = self._do_curve_fit(master_fn, p0_first, **fitargs)
         
         # do migrad
         elif minimizer == 'migrad':
-            
             fprime_dx = self.fprime_dx
             self.master_fn = master_fn
                     
-            par, std_l, std_u, cov = self._do_migrad(master_fn, master_fnprime, p0_first, **fitargs)
+            par, std_l, std_u, cov = self._do_migrad(master_fn, master_fnprime,
+                                                    do_minos, p0_first, **fitargs)
         else:
-            raise RuntimeError("Bad minimizer input")
+            raise RuntimeError("Unrecognized minimizer input '%s'" % minimizer)
         
         # to array
         par = np.asarray(par)
@@ -620,11 +630,15 @@ class global_fitter(object):
                     
         # return
         self.par = par
+        self.std_l = std_l
+        self.std_u = std_u
         self.cov = cov
         self.par_runwise = par_out
+        self.std_l_runwise = std_l_out
+        self.std_u_runwise = std_u_out
         self.cov_runwise = cov_out
         
-        return (par_out, cov_out)
+        return (par_out, std_l_out, std_u_out, cov_out)
     
     # ======================================================================= #
     def get_chi(self):
@@ -641,7 +655,7 @@ class global_fitter(object):
         
         if self.minimizer == 'migrad':
             self.chi_glbl = self.minuit.fval/dof
-        elif self.minimizer == 'curve_fit':
+        else:
             
             ls = LeastSquares(self.master_fn, self.xcat, self.ycat, 
                             dy = self.dycat, 
@@ -650,7 +664,7 @@ class global_fitter(object):
                             dx_low = self.dxcat_low,
                             fn_prime = self.master_fnprime)
             
-            self.chi_glbl = ls(*self.par) / dof
+            self.chi_glbl = ls(self.par) / dof
             
         # single fn chisq
         self.chi = []
@@ -684,15 +698,17 @@ class global_fitter(object):
         """
             Fetch fit parameters
             
-            return 2-tuple of (par,cov) with format
+            return 4-tuple of (par, std_l, std_u, cov) with format
             
-            ([data1:[par1,par2,...],data2:[],...],
-             [data1:[cov1,cov2,...],data2:[],...])
+            ([data1:[par1, par2, ...], data2:[], ...],
+             [data1:[std_l1, std_l2, ...], data2:[], ...],
+             [data1:[std_u1, std_u2, ...], data2:[], ...],
+             [data1:[cov1, cov2, ...], data2:[], ...])
         """
-        cov = self.cov_runwise
-        std = np.array(list(map(np.diag,cov)))**0.5
-        
-        return (self.par_runwise,cov,std)
+        return (self.par_runwise, 
+                self.std_l_runwise, 
+                self.std_u_runwise, 
+                self.cov_runwise)
     
     # ======================================================================= #
     def _expand_bound_lim(self,lim):

@@ -11,18 +11,13 @@ import collections
 class global_bdata_fitter(global_fitter):
     
     # ======================================================================= #
-    def __init__(self, data, fn, shared, xlims=None, rebin=1, asym_mode='c', fixed=None,
-                 minimizezr='migrad'):
+    def __init__(self, data, fn, xlims=None, rebin=1, asym_mode='c', **kwargs):
         """
             data:       list of bdata objects
             
             fn:         list of function handles to fit (or single which applies to all)
                         must specify inputs explicitly (do not do def fn(*par)!)
                         must have len(fn) = len(runs) if list
-                        
-            shared:     list of bool to indicate which parameters are shared. 
-                        True if shared
-                        len = number of parameters.
                         
             xlims:      list of 2-tuples for (low,high) bounds on fitting range 
                             based on x values. If list is not depth 2, use this 
@@ -37,8 +32,7 @@ class global_bdata_fitter(global_fitter):
             
             asym_mode:  asymmetry type to calculate and fit
             
-            minimizer:  string. One of "curve_fit" or "migrad" indicating which 
-                        code to use to minimize the function
+            kwargs:     passed to global_fitter
         """
         
         # check input type
@@ -83,5 +77,4 @@ class global_bdata_fitter(global_fitter):
             dy = np.array(dynew)
             
         # intialize
-        super(global_bdata_fitter,self).__init__(fn, x, y, dy, shared=shared, 
-                                                fixed=fixed, minimizer=minimizer)
+        super(global_bdata_fitter,self).__init__(fn, x, y, dy=dy, **kwargs)

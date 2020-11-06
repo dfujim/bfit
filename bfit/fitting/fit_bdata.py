@@ -59,15 +59,18 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
                         
         minimizer       string. One of "migrad", "trf", "dogbox"
         
-        kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
+        kwargs:         keyword arguments for curve_fit/minuit. 
+                        See curve_fit/iminuit docs. 
         
-        Returns: (par,std,cov,chi,gchi)
-            par: array of best fit parameters
-            std: array of best fit errors
-            cov: 2D array, covariance matrix
-            chi: array of chisquare of each fit
-            gchi:global chisquared of fits
+        Returns: (par, std_l, std_h, cov, chi, gchi)
+            par:    array of best fit parameters
+            std_l:  array of lower best fit errors
+            std_h:  array of upper best fit errors
+            cov:    2D array, covariance matrix
+            chi:    array of chisquare of each fit
+            gchi:   global chisquared of fits
     """
+    
     try:
         ndata = len(data)
     except TypeError:
@@ -91,13 +94,13 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
                                
     # get shared
     if shared is None:
-        shared = np.zeros(npar,dtype=bool)
+        shared = np.zeros(npar, dtype=bool)
 
     # get omit
     if omit is None:
         omit = ['']*ndata
     elif len(omit) < ndata:
-        omit = np.concatenate((omit,['']*(ndata-len(omit))))
+        omit = np.concatenate((omit, ['']*(ndata-len(omit))))
         
     # get rebin
     if rebin is None:
@@ -105,18 +108,29 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
     elif type(rebin) is int:
         rebin = np.ones(ndata)*rebin
     elif len(rebin) < ndata:
-        rebin = np.concatenate((rebin,np.ones(ndata-len(rebin))))
+        rebin = np.concatenate((rebin, np.ones(ndata-len(rebin))))
     rebin = np.asarray(rebin).astype(int)
         
     # fit globally -----------------------------------------------------------
     if any(shared) and ndata>1:
-        print('Running shared parameter fitting... ',end='',flush=True)
-        g = global_bdata_fitter(data,fn,shared,xlims,
-                                asym_mode=asym_mode,rebin=rebin,fixed=fixed)
-        g.fit(**kwargs)
-        gchi,chis = g.get_chi() # returns global chi, individual chi
-        pars,covs,stds = g.get_par()
-        print('done.',flush=True)
+        print('Running shared parameter fitting... ', flush=True)
+        do_minos = 'minos' in minimizer
+        minimizer = 'migrad' if 'migrad' in minimizer else minimizer
+            
+        g = global_bdata_fitter(data = data, 
+                                fn = fn, 
+                                xlims = xlims,
+                                shared = shared, 
+                                asym_mode = asym_mode, 
+                                rebin = rebin, 
+                                fixed = fixed,
+                                )
+                                
+        g.fit(minimizer=minimizer, do_minos=do_minos, **kwargs)
+        gchi, chis = g.get_chi() # returns global chi, individual chi squared
+        pars, stds_l, stds_h, covs = g.get_par()
+        
+        print('done.', flush=True)
         
     # fit runs individually --------------------------------------------------
     else:

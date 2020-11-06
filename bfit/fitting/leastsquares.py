@@ -9,17 +9,17 @@ import numpy as np
 class LeastSquares:
 
     def __init__(self, fn, x, y, dy=None, dx=None, dy_low=None, dx_low=None, 
-                 fn_prime=None, h=1e-6):
+                 fn_prime=None, fn_prime_dx=1e-6):
         """
             fn: function handle. f(x, a, b, c, ...)
-            x:      x data
-            y:      y data
-            dy:     error in y
-            dx:     error in x
-            dy_low: used only if error in y is asymmetric. If not none, dy is upper error
-            dx_low: used only if error in y is asymmetric. If not none, dx is upper error
-            fn_prime: function handle for the first derivative of fn. f'(x, a, b, c, ...)
-            h:      spacing in x to calculate the derivative in the case of the default calculation
+            x:              x data
+            y:              y data
+            dy:             error in y
+            dx:             error in x
+            dy_low:         used only if error in y is asymmetric. If not none, dy is upper error
+            dx_low:         used only if error in y is asymmetric. If not none, dx is upper error
+            fn_prime:       function handle for the first derivative of fn. f'(x, a, b, c, ...)
+            fn_prime_dx:    spacing in x to calculate the derivative in the case of the default calculation
         """
         self.fn = fn
         self.x = x
@@ -29,7 +29,7 @@ class LeastSquares:
         # set derivative
         if fn_prime is None:
             self.fn_prime = lambda x, *pars : derivative(func=self.fn, x0=x, 
-                                                         dx=h, n=1, order=3, 
+                                                         dx=fn_prime_dx, n=1, order=3, 
                                                          args=pars)
         else:
             self.fn_prime = fn_prime
