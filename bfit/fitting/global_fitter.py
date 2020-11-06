@@ -338,7 +338,7 @@ class global_fitter(object):
         
         kwargs_minuit = {'start':p0_first,
                          'limit':limit,
-                         'print_level':fitargs.get('print_level',0),
+                         'print_level':fitargs.get('print_level',1),
                          'errordef':1,
                         }
         
@@ -352,17 +352,11 @@ class global_fitter(object):
         
         # check minimum
         if not m.fmin.is_valid:
-            print(m.fmin)
             raise RuntimeError('Minuit failed to converge to a valid minimum')
         
         # get errors
         m.hesse()
         m.minos()
-        
-        # print results
-        print(m.fmin)
-        print(m.params)
-        print(m.merrors)
         
         # get output
         par = m.np_values()
@@ -568,7 +562,15 @@ class global_fitter(object):
         
         self.master_fn = master_fn
             
-          
+        # make derivative of master function
+        def master_fnprime(x_unused, *par):
+            
+            inputs = np.take(np.hstack((par, p0_flat_inv)), sharing_links)
+            xhi = np.concatenate([fn[i](x[i]+fprime_dx/2, *inputs[i], *metadata[i]) for i in rng])
+            xlo = np.concatenate([fn[i](x[i]-fprime_dx/2, *inputs[i], *metadata[i]) for i in rng])
+            return (xhi-xlo)/fprime_dx
+        self.master_fnprime = master_fnprime
+      
         # do curve_fit
         if minimizer == 'curve_fit':            
             par, std_l, std_u, cov = self._do_curve_fit(master_fn, p0_first, **fitargs)
@@ -577,15 +579,6 @@ class global_fitter(object):
         elif minimizer == 'migrad':
             
             fprime_dx = self.fprime_dx
-            
-            # make derivative of master function
-            def master_fnprime(x_unused, *par):
-                
-                inputs = np.take(np.hstack((par, p0_flat_inv)), sharing_links)
-                xhi = np.concatenate([fn[i](x[i]+fprime_dx/2, *inputs[i], *metadata[i]) for i in rng])
-                xlo = np.concatenate([fn[i](x[i]-fprime_dx/2, *inputs[i], *metadata[i]) for i in rng])
-                return (xhi-xlo)/fprime_dx
-            
             self.master_fn = master_fn
                     
             par, std_l, std_u, cov = self._do_migrad(master_fn, master_fnprime, p0_first, **fitargs)
@@ -646,19 +639,43 @@ class global_fitter(object):
         # global
         dof = len(self.xcat)-len(self.par)
         
-        ls = LeastSquares(self.master_fn, )
-        
-        
-        self.chi_glbl = np.sum(np.square((self.ycat-\
-                      self.master_fn(self.xcat,*self.par))/self.dycat))/dof
+        if self.minimizer == 'migrad':
+            self.chi_glbl = self.minuit.fval/dof
+        elif self.minimizer == 'curve_fit':
+            
+            ls = LeastSquares(self.master_fn, self.xcat, self.ycat, 
+                            dy = self.dycat, 
+                            dx = self.dxcat, 
+                            dy_low = self.dycat_low, 
+                            dx_low = self.dxcat_low,
+                            fn_prime = self.master_fnprime)
+            
+            self.chi_glbl = ls(*self.par) / dof
             
         # single fn chisq
         self.chi = []
-        for x, y, dy, p, f, fx, m in zip(self.x, self.y, self.dy, 
-                                        self.par_runwise, self.fn, self.fixed, 
-                                        self.metadata):
+        for i in range(self.nsets):
+            
+            x = self.x[i]
+            y = self.y[i]
+            p = self.par_runwise[i]
+            f = self.fn[i]
+            fx = self.fixed[i]
+            m = self.metadata[i]
+            
+            dy = None if self.dy is None else self.dy[i]
+            dx = None if self.dx is None else self.dx[i]
+            dy_low = None if self.dy_low is None else self.dy_low[i]
+            dx_low = None if self.dx_low is None else self.dx_low[i]
+        
+            ls = LeastSquares(  f, x, y, 
+                                dy = dy, 
+                                dx = dx,
+                                dx_low = dx_low,
+                                dy_low = dy_low,
+                            )
             dof = len(x)-self.npar+sum(fx)
-            self.chi.append(np.sum(np.square((y-f(x, *p, *m))/dy))/dof)
+            self.chi.append(ls(np.concatenate((p, m))) / dof)
         
         return (self.chi_glbl, self.chi)
 

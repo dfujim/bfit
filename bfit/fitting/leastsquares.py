@@ -100,7 +100,7 @@ class LeastSquares:
         return self.__call__(*pars)
         
     def ls_no_errors(self, *pars):
-        return np.sum(np.square(self.y - self.fn(self.x, *pars)))/self.n
+        return np.sum(np.square(self.y - self.fn(self.x, *pars)))
             
     def ls_dy(self, *pars):
         return np.sum(np.square((self.y -self.fn(self.x,*pars)) / self.dy))
