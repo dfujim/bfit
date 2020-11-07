@@ -334,7 +334,7 @@ class fetch_files(object):
         self.data_canvas.itemconfig(self.canvas_frame_id,width=event.width)
         
     # ======================================================================= #
-    def draw_all(self,figstyle,ignore_check=False):
+    def draw_all(self, figstyle, ignore_check=False):
         """
             Draw all data in data lines
             
@@ -354,7 +354,7 @@ class fetch_files(object):
                 
         # get draw style
         style = self.bfit.draw_style.get()
-        self.logger.debug('Draw style: "%s"',style)
+        self.logger.debug('Draw style: "%s"',  style)
         
         # make new figure, draw stacked
         if style == 'stack':
@@ -383,9 +383,9 @@ class fetch_files(object):
             raise ValueError(s)
     
         # remove legned if too many drawn values
-        if len(self.data_lines.keys())>self.bfit.legend_max_draw:
-            self.bfit.plt.gca('data').get_legend().remove()
-            self.bfit.plt.tight_layout('data')
+        if len(self.data_lines.keys()) > self.bfit.legend_max_draw:
+            self.bfit.plt.gca(figstyle).get_legend().remove()
+            self.bfit.plt.tight_layout(figstyle)
         
     # ======================================================================= #
     def export(self):
