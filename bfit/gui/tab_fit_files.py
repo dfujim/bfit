@@ -1553,7 +1553,8 @@ class fit_files(object):
             # set fit inputs
             d_fitdata[id].set_fitpar({p:[parentry[p]['p0'],
                                          parentry[p]['blo'],
-                                         parentry[p]['bhi']] for p in parentry})
+                                         parentry[p]['bhi'],
+                                         parentry[p]['fixed']] for p in parentry})
             
             # get chisq
             keylist = self.fitter.gen_param_names(from_file['fitfn'],
@@ -1586,7 +1587,8 @@ class fit_files(object):
             # set fit results
             d_fitdata[id].set_fitresult([keylist,
                               [float(parentry[p]['res']) for p in keylist],
-                              [float(parentry[p]['dres']) for p in keylist],
+                              [float(parentry[p]['dres-']) for p in keylist],
+                              [float(parentry[p]['dres+']) for p in keylist],
                               chi,
                               fitfn1]
                             )
@@ -1594,6 +1596,21 @@ class fit_files(object):
         # xlims
         self.xlo.set(from_file['xlo'])
         self.xhi.set(from_file['xhi'])
+        
+        # set minimizer
+        self.bfit.minimizer.set(from_file['minimizer'])
+        self.bfit.set_fit_routine()
+        
+        # set menu options
+        self.bfit.norm_with_param.set(from_file['norm_with_param'])
+        self.bfit.draw_standardized_res.set(from_file['draw_standardized_res'])
+        self.bfit.use_nbm.set(from_file['use_nbm'])
+        self.bfit.draw_ppm.set(from_file['draw_ppm'])
+        self.bfit.thermo_channel.set(from_file['thermo_channel'])
+        self.bfit.units = from_file['units']
+        self.bfit.label_default.set(from_file['label_default'])
+        self.bfit.ppm_reference = from_file['ppm_reference']
+        self.bfit.update_period = from_file['update_period']
         
     # ======================================================================= #
     def make_fit_status_window(self):
@@ -1708,6 +1725,16 @@ class fit_files(object):
         to_file['ncomponents'] = self.n_component.get()
         to_file['gchi'] = self.gchi_label['text']
         to_file['probe_species'] = self.bfit.probe_species.get()
+        to_file['minimizer'] = self.bfit.minimizer.get()
+        to_file['norm_with_param'] = self.bfit.norm_with_param.get()
+        to_file['draw_standardized_res'] = self.bfit.draw_standardized_res.get()
+        to_file['use_nbm'] = self.bfit.use_nbm.get()
+        to_file['draw_ppm'] = self.bfit.draw_ppm.get()
+        to_file['thermo_channel'] = self.bfit.thermo_channel.get()
+        to_file['units'] = self.bfit.units
+        to_file['label_default'] = self.bfit.label_default.get()
+        to_file['ppm_reference'] = self.bfit.ppm_reference
+        to_file['update_period'] = self.bfit.update_period
         
         # get parameter values from fitlines
         fitlines = self.fit_lines

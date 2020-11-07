@@ -218,10 +218,10 @@ class bfit(object):
            '1n':'mV'}
     
     # units: mode:[conversion rate from original to display units,unit]
-    units = {'1f':(1e-6,'MHz'),
-             '2e':(1e-6,'MHz'),
-             '1w':(1,'Hz'),
-             '1n':(1e-3,'V')}
+    units = {'1f':[1e-6,'MHz'],
+             '2e':[1e-6,'MHz'],
+             '1w':[1,'Hz'],
+             '1n':[1e-3,'V']}
     
     # minimizers
     minimizers = {'curve_fit (trf)':'bfit.fitting.fitter_curve_fit', 
