@@ -102,6 +102,6 @@ class ConstrainedFunction(object):
             return np.sum([data.hist[h].data for h in hist])/data.duration
         elif name =='RF'    :   return data.bd.camp.rf_dac.mean
         elif name =='RUN'   :   return data.run
-        elif name =='TEMP'  :   return data.temperature
+        elif name =='TEMP'  :   return data.temperature.mean
         elif name =='TIME'  :   return data.bd.start_time
         elif name =='YEAR'  :   return data.year
