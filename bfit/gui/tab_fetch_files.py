@@ -384,8 +384,13 @@ class fetch_files(object):
     
         # remove legned if too many drawn values
         if len(self.data_lines.keys()) > self.bfit.legend_max_draw:
-            self.bfit.plt.gca(figstyle).get_legend().remove()
-            self.bfit.plt.tight_layout(figstyle)
+            
+            try:
+                self.bfit.plt.gca(figstyle).get_legend().remove()
+            except AttributeError:
+                pass
+            else:
+                self.bfit.plt.tight_layout(figstyle)
         
     # ======================================================================= #
     def export(self):

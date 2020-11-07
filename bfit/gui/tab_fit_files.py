@@ -727,9 +727,14 @@ class fit_files(object):
             warnings.simplefilter("ignore")
             self.bfit.fetch_files.draw_all(figstyle='fit',ignore_check=False)
         
-        if len(self.fit_lines.keys())>self.bfit.legend_max_draw:
-            self.plt.gca('fit').get_legend().remove()
-            self.plt.tight_layout('fit')
+        if len(self.fit_lines.keys()) > self.bfit.legend_max_draw:
+            
+            try:
+                self.plt.gca('fit').get_legend().remove()
+            except AttributeError:
+                pass
+            else:
+                self.plt.tight_layout('fit')
         
         # reset style and asym mode 
         self.bfit.draw_style.set(style)
