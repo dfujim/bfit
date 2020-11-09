@@ -473,7 +473,7 @@ class FunctionPlacer(object):
     def run_20_lambda(self,p0,line,color):
         def update(x,y):
             # 1/T1
-            p0['lam'] = max(0,1/x)
+            p0['lam'] = max(0, 1/x)
             line.set_ydata(self.fn(self.x,**p0))
             
             # update sumline
@@ -484,18 +484,18 @@ class FunctionPlacer(object):
         x = np.ones(1)/p0['lam']
         ylim = self.ax.get_ylim()[0]
         y = min([i for i in self.ax.get_yticks() if i>ylim])
-        return DraggablePoint(self,update,x,y,
-                              color=color,sety=False)
+        return DraggablePoint(self, update, x, y,
+                              color=color, sety=False)
     
     # ======================================================================= #
     def run_20_beta(self,p0,line,color):
         def update(x,y):
     
             # beta - put y axis on a range of 0 to 1
-            ylo,yhi = self.ax.get_ylim()
+            ylo, yhi = self.ax.get_ylim()
             y = (y-ylo)/(yhi-ylo)
             p0['beta'] = y
-            line.set_ydata(self.fn(self.x,**p0))
+            line.set_ydata(self.fn(self.x, **p0))
             
             # update sumline
             self.sumline.set_ydata(self.sumfn(self.x))
@@ -505,8 +505,8 @@ class FunctionPlacer(object):
         ylo,yhi = self.ax.get_ylim()
         xlo,xhi = self.ax.get_xlim()
         x = max([i for i in self.ax.get_xticks() if i < xhi])
-        return DraggablePoint(self,update,x,p0['beta']*(yhi-ylo)+ylo,
-                              color=color,setx=False)
+        return DraggablePoint(self, update, x, p0['beta']*(yhi-ylo)+ylo,
+                              color=color, setx=False)
     
     # ======================================================================= #
     def shift_20_pts_resize(self,event):
