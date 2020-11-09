@@ -45,7 +45,7 @@ class fit_files(object):
             par_label_entry:draw parameter label entry box
             pop_fitconstr:  object for fitting with constrained functions
             fit_data_tab:   containing frame (for destruction)
-            fit_function_title: title of fit function to use
+            fit_function_title: StringVar, title of fit function to use
             fit_function_title_box: combobox for fit function names
             fit_input:      fitting input values = (fn_name,ncomp,data_list)
             fit_lines:      Dict storing fitline objects
@@ -554,7 +554,7 @@ class fit_files(object):
             
             if ncomp > 1: 
                 for i in range(ncomp):
-                    parlst.append('Beta-Avg 1/<T1_%d>' % i)
+                    parlst.append('Beta-Avg 1/<T1>_%d' % i)
             else:
                 parlst.append('Beta-Avg 1/<T1>')
             
@@ -1133,9 +1133,32 @@ class fit_files(object):
             except AttributeError:
                 pass
             
+        # remove component label
+        ncomp = self.n_component.get()
+        xsuffix = ''
+        ysuffix = ''
+        if ncomp > 1:
+        
+            fn_params = self.fitter.gen_param_names(self.fit_function_title.get(), ncomp)
+            
+            if xdraw in fn_params or 'Beta-Avg 1/<T1>' in xdraw:
+                spl = xdraw.split('_')
+                xdraw = '_'.join(spl[:-1])
+                xsuffix = ' [%s]' % spl[-1]
+            
+            if ydraw in fn_params or 'Beta-Avg 1/<T1>' in ydraw:
+                spl = ydraw.split('_')
+                ydraw = '_'.join(spl[:-1])
+                ysuffix = ' [%s]' % spl[-1]
+                
+            
         # pretty labels
         xdraw = self.fitter.pretty_param.get(xdraw, xdraw)
         ydraw = self.fitter.pretty_param.get(ydraw, ydraw)
+        
+        # add suffix for multiple labels
+        xdraw = xdraw + xsuffix
+        ydraw = ydraw + ysuffix
         
         # attempt to insert units and scale
         unit_scale, unit = self.bfit.units.get(self.mode, [1,''])
