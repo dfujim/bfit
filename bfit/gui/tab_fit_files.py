@@ -136,16 +136,14 @@ class fit_files(object):
                 command=lambda:self.populate_param(force_modify=True))
         
         # fit and other buttons
-        fit_button = ttk.Button(fn_select_frame,text='    Fit    ',command=self.do_fit,\
+        fit_button = ttk.Button(fn_select_frame,text='        Fit        ',command=self.do_fit,\
                                 pad=1)
         constraint_button = ttk.Button(fn_select_frame,text='Constrained Fit',
                                        command=self.do_fit_constraints,pad=1)
-        set_param_button = ttk.Button(fn_select_frame,text='  Set Result as P0  ',
+        set_param_button = ttk.Button(fn_select_frame,text='   Set Result as P0   ',
                         command=self.do_set_result_as_initial,pad=1)                        
-        reset_param_button = ttk.Button(fn_select_frame,text='  Reset P0  ',
+        reset_param_button = ttk.Button(fn_select_frame,text='     Reset P0     ',
                         command=self.do_reset_initial,pad=1)
-        gui_param_button = ttk.Button(fn_select_frame,text='  P0 Finder  ',
-                        command=self.do_gui_param,pad=1)
             
         # GRIDDING
             
@@ -161,7 +159,6 @@ class fit_files(object):
         constraint_button.grid(column=c,row=0,padx=5,pady=1,sticky=(W,E)); c+=1
         set_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
         reset_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
-        gui_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
         
         # MID FRAME -----------------------------------------------------------
         
