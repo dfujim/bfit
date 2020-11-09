@@ -255,7 +255,9 @@ class popup_param(object):
         else:
             for k in self.p0.keys():
                 if 'base' not in k:
-                    key,i = k.split('_')
+                    s = k.split('_')
+                    key = '_'.join(s[:-1])
+                    i = s[-1]
                     self.p0[k].set(p0[int(i)][self.parmap[key]])
         
         # baseline
