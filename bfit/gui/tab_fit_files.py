@@ -1133,6 +1133,24 @@ class fit_files(object):
             except AttributeError:
                 pass
             
+        # pretty labels
+        xdraw = self.fitter.pretty_param.get(xdraw, xdraw)
+        ydraw = self.fitter.pretty_param.get(ydraw, ydraw)
+        
+        # attempt to insert units and scale
+        unit_scale, unit = self.bfit.units.get(self.mode, [1,''])
+        
+        if '%s' in xdraw:        
+            xdraw = xdraw % unit
+            xvals *= unit_scale
+            xerrs_h *= unit_scale
+            xerrs_l *= unit_scale
+        if '%s' in ydraw:
+            ydraw = ydraw % unit
+            yvals *= unit_scale
+            yerrs_h *= unit_scale
+            yerrs_l *= unit_scale
+        
         # draw
         f = self.plt.errorbar(  figstyle,
                                 draw_id,
@@ -1147,6 +1165,7 @@ class fit_files(object):
         
         # format date x axis
         if xerrs is None:   self.plt.gcf(figstyle).autofmt_xdate()
+        
         
         # plot elements
         self.plt.xlabel(figstyle, xdraw)
@@ -1392,9 +1411,16 @@ class fit_files(object):
             for r in runs:
                 T1i = data[r].fitpar['res']['1_T1'+comp_num]
                 T1 = 1/T1i
-                dT1 = data[r].fitpar['dres']['1_T1'+comp_num]/(T1i**2)
+                dT1_l = data[r].fitpar['dres-']['1_T1'+comp_num]/(T1i**2)
+                dT1_u = data[r].fitpar['dres+']['1_T1'+comp_num]/(T1i**2)
+                
+                dT1 = np.sqrt(np.square(dT1_l) + np.square(dT1_u))
+                
                 beta = data[r].fitpar['res']['beta'+comp_num]
-                dbeta = data[r].fitpar['dres']['beta'+comp_num]
+                dbeta_l = data[r].fitpar['dres-']['beta'+comp_num]
+                dbeta_u = data[r].fitpar['dres+']['beta'+comp_num]
+                
+                dbeta = np.sqrt(np.square(dbeta_l) + np.square(dbeta_u))
                 
                 # take average
                 betai = 1./beta

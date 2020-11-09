@@ -250,7 +250,7 @@ class popup_fit_constraints(template_fit_popup):
             old_std_u = [old_std_u[alldef.index(n)] for n in cgen.oldpar]
             
             # set to fitdata containers
-            # [(parname),(par),(err),chi,fnpointer]
+            # [(parname),(par),(err-),(err+),chi,fnpointer]
             data.set_fitresult([cgen.oldpar, old_par, old_std_l, old_std_u, old_chi, fnptrs[i]])
             
         # display in fit_files tab

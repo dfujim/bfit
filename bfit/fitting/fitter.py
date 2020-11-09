@@ -29,13 +29,43 @@ class fitter(object):
     param_names = {     'Exp'       :('1_T1','amp'),
                         'Bi Exp'    :('1_T1','1_T1b','fraction_b','amp'),
                         'Str Exp'   :('1_T1','beta','amp'),
-                        'Lorentzian':('peak','width','height','baseline'),
-                        'BiLorentzian':('peak','widthA','heightA',
-                                               'widthB','heightB','baseline'),
+                        'Lorentzian':('peak','fwhm','height','baseline'),
+                        'BiLorentzian':('peak','fwhmA','heightA',
+                                               'fwhmB','heightB','baseline'),
                         'QuadLorentz':('nu_0', 'nu_q', 'efgAsym', 'efgTheta', 'efgPhi', 
 	                               'amp0', 'amp1', 'amp2', 'amp3', 'fwhm',
                                        'baseline'),
                         'Gaussian'  :('mean','sigma','height','baseline'),}
+
+    # nice parameter names for labels
+    pretty_param = {'1_T1':             r'$1 / T_1$ (s$^{-1}$)',
+                    'amp':              'Amplitude',
+                    'fraction_b':       r'$f_{T_1^{(b)}}$',
+                    '1_T1b':            r'$1/T_1^{(b)}$ (s$^{-1}$)',
+                    'beta':             r'$\beta$',
+                    'fwhm':             'FWHM (%s)',
+                    'height':           'Height',
+                    'baseline':         'Baseline',
+                    'peak':             'Peak (%s)',
+                    'fwhmA':            'FWHM$_A$ (%s)',
+                    'fwhmB':            'FWHM$_B$ (%s)',
+                    'heightA':          'Height$_A$',
+                    'heightB':          'Height$_B$',
+                    'nu_0':             r'$\nu_0$ (%s)',
+                    'nu_q':             r'$\nu_q$ (%s)',
+                    'efgAsym':          r'$\eta$',
+                    'efgTheta':         r'Principle Axes $\theta$ (rad)',
+                    'efgPhi':           r'Principle Axes $\phi$ (rad)',
+                    'amp0':             'Amplitude$_0$',
+                    'amp1':             'Amplitude$_1$',
+                    'amp2':             'Amplitude$_2$',
+                    'amp3':             'Amplitude$_3$',
+                    'fmwh':             'FWHM (%s)',
+                    'mean':             r'$\langle\nu\rangle$ (%s)',
+                    'sigma':            r'$\sigma$ (%s)',
+                    'Beta-Avg 1/<T1>':  r'$1/\langle T_1\rangle_\beta$ (s$^{-1}$)',
+                    'B0 Field (T)':     r'$B_0$ Field (T)',
+                    }
 
     # dictionary of initial parameters
     par_values = {}
@@ -333,7 +363,7 @@ class fitter(object):
             # set values (value, low bnd, high bnd, fixed)
             if fn_name == 'Lorentzian':	
                 par_values = {'peak':(peak,min(x),max(x),False),
-                              'width':(width,0,np.inf,False),
+                              'fwhm':(width,0,np.inf,False),
                               'height':(height,*height_bounds,False),
                               'baseline':(base,-np.inf,np.inf,False)
                              }
@@ -345,9 +375,9 @@ class fitter(object):
                               }
             elif fn_name == 'BiLorentzian':
                 par_values = {'peak':(peak,min(x),max(x),False),
-                              'widthA':(width,0,np.inf,False),
+                              'fwhmA':(width,0,np.inf,False),
                               'heightA':(height,*height_bounds,False),
-                              'widthB':(width,0,np.inf,False),
+                              'fwhmB':(width,0,np.inf,False),
                               'heightB':(height,*height_bounds,False),
                               'baseline':(base,-np.inf,np.inf,False)
                              }

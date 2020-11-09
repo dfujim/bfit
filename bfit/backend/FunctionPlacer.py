@@ -6,9 +6,9 @@ import bdata as bd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
-from bfit.fitting.functions import lorentzian # freq, peak, width, amp
-from bfit.fitting.functions import gaussian # freq, peak, width, amp
-from bfit.fitting.functions import bilorentzian # freq, peak, width, amp
+from bfit.fitting.functions import lorentzian # freq, peak, fwhm, amp
+from bfit.fitting.functions import gaussian # freq, peak, fwhm, amp
+from bfit.fitting.functions import bilorentzian # freq, peak, fwhm, amp
 from bfit.fitting.functions import quadlorentzian # freq, nu_0, nu_q, eta, theta, 
                                                   # phi, amp0, amp1, amp2, amp3, 
                                                   #  fwhm0, fwhm1, fwhm2, fwhm3, I
@@ -23,7 +23,8 @@ class FunctionPlacer(object):
     npts = 1000  # number of points used to draw line
     
     # ======================================================================= #
-    def __init__(self,fig,data,fn_single,ncomp,p0,fnname,endfn,asym_mode,base=0,spin=2):
+    def __init__(self, fig, data, fn_single, ncomp, p0, fnname, endfn, asym_mode, 
+                base=0, spin=2):
         """
             fig:    pointer to matplotlib figure object to draw in
             data:   bdata object 
@@ -38,7 +39,7 @@ class FunctionPlacer(object):
             fn needs input parameters with keys: 
             
                 1F/2E/1W
-                    peak, width, amp, base OR 
+                    peak, fwhm, amp, base OR 
                     
                 20/2H
                     amp, lam, beta (optional)
@@ -99,33 +100,33 @@ class FunctionPlacer(object):
         if self.fname in ('Lorentzian','Gaussian'):
             
             # if points are not saved they are garbage collected
-            self.list_points = {'peak':[],'width':[]}
+            self.list_points = {'peak':[],'fwhm':[]}
             
             # make points
             for i,(p,line) in enumerate(zip(self.p0,self.lines)):
                 peakpt,widthpt = self.run_1f_single(p,line,'C%d'%(i+1))
                 self.list_points['peak'].append(peakpt)
-                self.list_points['width'].append(widthpt)
+                self.list_points['fwhm'].append(widthpt)
         
-            self.list_points['base'] = self.run_1f_base(self.list_points['width'],'C0')
+            self.list_points['base'] = self.run_1f_base(self.list_points['fwhm'],'C0')
         
         elif self.fname == 'BiLorentzian':
             
             # if points are not saved they are garbage collected
-            self.list_points = {'peak':[],'width':[]}
+            self.list_points = {'peak':[],'fwhm':[]}
             
             # make points
             for i,(p,line) in enumerate(zip(self.p0,self.lines)):
                 peakpt,widthpt = self.run_1f_bi_single(p,line,'C%d'%(i+1))
                 self.list_points['peak'].append(peakpt)
-                self.list_points['width'].append(widthpt)
+                self.list_points['fwhm'].append(widthpt)
         
-            self.list_points['base'] = self.run_1f_base(self.list_points['width'],'C0')
+            self.list_points['base'] = self.run_1f_base(self.list_points['fwhm'],'C0')
         
         elif self.fname == 'QuadLorentz':
             
             # if points are not saved they are garbage collected
-            self.list_points = {'peak0':[],'peak1':[],'peak2':[],'peak3':[],'width':[],}
+            self.list_points = {'peak0':[],'peak1':[],'peak2':[],'peak3':[],'fwhm':[],}
             
             # make points
             for i,(p,line) in enumerate(zip(self.p0,self.lines)):
@@ -134,8 +135,8 @@ class FunctionPlacer(object):
                 self.list_points['peak1'].append(ppt1)
                 self.list_points['peak2'].append(ppt2)
                 self.list_points['peak3'].append(ppt3)
-                self.list_points['width'].append(widthpt)
-            self.list_points['base'] = self.run_1f_quad_base(self.p0[0],self.list_points['width'],'C0')
+                self.list_points['fwhm'].append(widthpt)
+            self.list_points['base'] = self.run_1f_quad_base(self.p0[0],self.list_points['fwhm'],'C0')
             
         # SLR measurements ----------------------------------------------------
         elif self.fname in ('Exp','Str Exp'):
@@ -173,7 +174,7 @@ class FunctionPlacer(object):
             
             # update width points
             for p0,wpoint,line in zip(self.p0,widths,self.lines): 
-                wpoint.point.set_ydata(self.fn(p0['peak']+p0['width'],**p0))
+                wpoint.point.set_ydata(self.fn(p0['peak']+p0['fwhm'],**p0))
                 
                 # update other lines
                 line.set_ydata(self.fn(self.x,**p0))
@@ -198,7 +199,7 @@ class FunctionPlacer(object):
         def update_width(x,y):
             
             # width point
-            p0['width'] = abs(p0['peak']-x)
+            p0['fwhm'] = abs(p0['peak']-x)
             
             # update line
             line.set_ydata(self.fn(self.x,**p0))
@@ -207,7 +208,7 @@ class FunctionPlacer(object):
             self.sumline.set_ydata(self.sumfn(self.x))
             self.fig.canvas.draw()    
              
-        x = p0['peak']+p0['width']
+        x = p0['peak']+p0['fwhm']
         widthpt = DraggablePoint(self,update_width,x,self.fn(x,**p0),
                                  color=color,sety=False)
         
@@ -219,7 +220,7 @@ class FunctionPlacer(object):
             p0['peak'] = x
         
             # width point
-            x2 = x+p0['width']
+            x2 = x+p0['fwhm']
             widthpt.point.set_xdata(x2)
             widthpt.point.set_ydata(self.fn(x2,**p0))
             
@@ -242,7 +243,7 @@ class FunctionPlacer(object):
         def update_width(x,y):
             
             # width point
-            p0['width'] = abs(p0['peak']-x)
+            p0['fwhm'] = abs(p0['peak']-x)
             
             # update line
             line.set_ydata(self.fn(self.x,**p0))
@@ -251,7 +252,7 @@ class FunctionPlacer(object):
             self.sumline.set_ydata(self.sumfn(self.x))
             self.fig.canvas.draw()    
              
-        x = p0['peak']+p0['width']
+        x = p0['peak']+p0['fwhm']
         widthpt = DraggablePoint(self,update_width,x,self.fn(x,**p0),
                                  color=color,sety=False)
         
@@ -263,7 +264,7 @@ class FunctionPlacer(object):
             p0['peak'] = x
         
             # width point
-            x2 = x+p0['width']
+            x2 = x+p0['fwhm']
             widthpt.point.set_xdata(x2)
             widthpt.point.set_ydata(self.fn(x2,**p0))
             
