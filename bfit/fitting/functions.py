@@ -21,14 +21,14 @@ class code_wrapper(object):
 # =========================================================================== #
 # TYPE 1 FUNCTIONS
 # =========================================================================== #
-def lorentzian(freq,peak,width,amp):
-    return -amp*0.25*np.square(width)/(np.square(freq-peak)+np.square(0.5*width))
+def lorentzian(freq, peak, fwhm, amp):
+    return -amp*np.square(fwhm)/(np.square(freq-peak)+np.square(fwhm))
 
-def bilorentzian(freq,peak,widthA,ampA,widthB,ampB):
-    return -ampA*0.25*np.square(widthA)/(np.square(freq-peak)+np.square(0.5*widthA))\
-           -ampB*0.25*np.square(widthB)/(np.square(freq-peak)+np.square(0.5*widthB))
+def bilorentzian(freq, peak, fwhmA, ampA, fwhmB, ampB):
+    return -ampA*0.25*np.square(fwhmA)/(np.square(freq-peak)+np.square(0.5*fwhmA))\
+           -ampB*0.25*np.square(fwhmB)/(np.square(freq-peak)+np.square(0.5*fwhmB))
 
-def gaussian(freq,mean,sigma,amp):
+def gaussian(freq, mean, sigma, amp):
     return -amp*np.exp(-np.square((freq-mean)/(sigma))/2)
 
 def quadlorentzian(freq, nu_0, nu_q, eta, theta, phi, 
@@ -85,13 +85,13 @@ class pulsed_exp(pulsed):
         return amp*self.pulser.exp(time,lambda_s)
 
 class pulsed_biexp(pulsed):
-    def __call__(self,time,lambda_s,lambdab_s,fracb,amp):
-        return amp*((1-fracb)*  self.pulser.exp(time,lambda_s) + \
-                    fracb*      self.pulser.exp(time,lambdab_s))
+    def __call__(self, time, lambda_s, lambdab_s, fracb, amp):
+        return amp*((1-fracb)*  self.pulser.exp(time, lambda_s) + \
+                    fracb*      self.pulser.exp(time, lambdab_s))
         
 class pulsed_strexp(pulsed):
-    def __call__(self,time,lambda_s,beta,amp):
-        return amp*self.pulser.str_exp(time,lambda_s,beta)
+    def __call__(self, time, lambda_s, beta, amp):
+        return amp*self.pulser.str_exp(time, lambda_s, beta)
 
 # =========================================================================== #
 # HELPER FUNCTIONS
