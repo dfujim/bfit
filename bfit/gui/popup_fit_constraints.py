@@ -138,7 +138,7 @@ class popup_fit_constraints(template_fit_popup):
                 eqn[i] = eqn[i].replace('1_T1','lambda1')
                 
         # make constrained functions
-        cgen= CstrFnGenerator(alldef,eqn,allpar,self.parnames)
+        cgen= CstrFnGenerator(alldef, eqn, allpar, self.parnames)
         
         # get the functions and initial parameters
         fit_files = self.bfit.fit_files
@@ -168,7 +168,7 @@ class popup_fit_constraints(template_fit_popup):
                                          pulse_len=pulse_len,
                                          lifetime=bd.life[fit_files.probe_label['text']])
             
-            genf,genc = cgen(data=data,fn=fn)
+            genf, genc = cgen(data=data, fn=fn)
             fitfns.append(genf)
             fnptrs.append(fn)
             constr_fns.append(genc)

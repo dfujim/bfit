@@ -234,7 +234,7 @@ class popup_fit_results(template_fit_popup):
         # get mouseover annotation labels
         mouse_label, _ = self.fittab.get_values('Unique Id')
 
-        # sort by x values 
+        # sort by x values, check for empty arrays
         idx = np.argsort(xvals)
         xvals = np.asarray(xvals)[idx]
         yvals = np.asarray(yvals)[idx]
@@ -242,17 +242,22 @@ class popup_fit_results(template_fit_popup):
         xerrs_l, xerrs_h = xerrs
         yerrs_l, yerrs_h = yerrs
         
-        xerrs_l = np.asarray(xerrs_l)[idx]
-        yerrs_l = np.asarray(yerrs_l)[idx]
-        xerrs_h = np.asarray(xerrs_h)[idx]
-        yerrs_h = np.asarray(yerrs_h)[idx]
-            
+        if xerrs_h is not None:     xerrs_h = np.asarray(xerrs_h)[idx]
+        if xerrs_l is not None:     xerrs_l = np.asarray(xerrs_l)[idx]
+        if yerrs_h is not None:     yerrs_h = np.asarray(yerrs_h)[idx]
+        if yerrs_l is not None:     yerrs_l = np.asarray(yerrs_l)[idx]
+        
+        if xerrs_h is None and xerrs_l is None:     xerrs = None
+        else:                                       xerrs = (xerrs_l, xerrs_h)
+        if yerrs_h is None and yerrs_l is None:     yerrs = None
+        else:                                       yerrs = (yerrs_l, yerrs_h)
+        
         mouse_label = np.asarray(mouse_label)[idx]
 
         # draw data
         self.fittab.plt.errorbar('param', id, xvals, yvals, 
-                                 yerr=(yerrs_l, yerrs_h),
-                                 xerr=(xerrs_l, xerrs_h), 
+                                 yerr=yerrs,
+                                 xerr=xerrs, 
                                  fmt='.', 
                                  annot_label=mouse_label)
 

@@ -232,14 +232,14 @@ class bfit(object):
     data = {}   # for fitdata objects
     
     # define draw componeents in draw_param and labels
-    draw_components = ['Temperature (K)','1000/T (1/K)','Impl. Energy (keV)',
+    draw_components = ('Temperature (K)','1000/T (1/K)','Impl. Energy (keV)',
                        'Platform Bias (kV)','Run Number','B0 Field (T)', 
                        'Unique Id', 'Sample','RF Level DAC','Chi-Squared',
                        'Run Duration (s)', 'Start Time','Title','Year',
                        'Cryo Lift Set (mm)', 'Cryo Lift Read (mm)',
                        'He Mass Flow','CryoEx Mass Flow', 'Needle Set (turns)',
                        'Needle Read (turns)','Laser Power', 'Target Bias (kV)',
-                       'NBM Rate (count/s)', 'Sample Rate (count/s)']
+                       'NBM Rate (count/s)', 'Sample Rate (count/s)')
     try: 
         bnmr_data_dir = os.environ[bnmr_archive_label]
         bnqr_data_dir = os.environ[bnqr_archive_label]

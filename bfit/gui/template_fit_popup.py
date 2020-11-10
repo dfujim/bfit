@@ -6,7 +6,7 @@
 from tkinter import *
 from tkinter import ttk, messagebox
 
-import logging,re,os,warnings
+import logging, re, os, warnings
 import weakref as wref
 import numpy as np
 import pandas as pd

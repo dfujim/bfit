@@ -6,7 +6,7 @@ from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from functools import partial
 from bdata import bdata, bmerged
-from bfit import logger_name,__version__
+from bfit import logger_name, __version__
 from scipy.special import gamma, polygamma
 from pandas.plotting import register_matplotlib_converters
 
@@ -15,8 +15,9 @@ from bfit.gui.popup_show_param import popup_show_param
 from bfit.gui.popup_param import popup_param
 from bfit.gui.popup_fit_results import popup_fit_results
 from bfit.gui.popup_fit_constraints import popup_fit_constraints
+from bfit.gui.popup_add_param import popup_add_param
 from bfit.fitting.decay_31mg import fa_31Mg
-from bfit.backend.entry_color_set import on_focusout,on_entry_click
+from bfit.backend.entry_color_set import on_focusout, on_entry_click
 from bfit.backend.raise_window import raise_window
 
 import numpy as np
@@ -59,7 +60,11 @@ class fit_files(object):
             n_component_box:Spinbox for number of fitting components
             par_label       StringVar, label for plotting parameter set
             plt:            self.bfit.plt
+            
+            pop_addpar:     popup for ading parameters which are combinations of others
             pop_fitres:     modelling popup, for continuity between button presses
+            pop_fitcontr:   popup for fitting constrained values
+            
             probe_label:    Label for probe species
             runframe:       frame for displaying fit results and inputs
             runmode_label:  display run mode 
@@ -99,7 +104,7 @@ class fit_files(object):
         self.share_var = {}
         self.fitter = self.bfit.routine_mod.fitter(keyfn = bfit.get_run_key,
                                                    probe_species = bfit.probe_species.get())
-        self.draw_components = bfit.draw_components
+        self.draw_components = list(bfit.draw_components)
         self.fit_data_tab = fit_data_tab
         self.plt = self.bfit.plt
         
@@ -266,18 +271,19 @@ class fit_files(object):
         
         # draw and export buttons
         button_frame = Frame(results_frame)
-        draw_button = ttk.Button(button_frame,text='Draw',command=self.draw_param)
-        update_button = ttk.Button(button_frame,text='Update',command=self.update_param)
-        export_button = ttk.Button(button_frame,text='Export',command=self.export)
-        show_button = ttk.Button(button_frame,text='Compare',command=self.show_all_results)
+        draw_button = ttk.Button(button_frame,text='Draw', command=self.draw_param)
+        update_button = ttk.Button(button_frame,text='Update', command=self.update_param)
+        export_button = ttk.Button(button_frame,text='Export', command=self.export)
+        show_button = ttk.Button(button_frame,text='Compare', command=self.show_all_results)
         model_fit_button = ttk.Button(button_frame,text='Fit a\nModel',
                                       command=self.do_fit_model)
         
+        
         # menus for x and y values
-        ttk.Label(results_frame,text="x axis:").grid(column=0,row=1)
-        ttk.Label(results_frame,text="y axis:").grid(column=0,row=2)
-        ttk.Label(results_frame,text="Annotation:").grid(column=0,row=3)
-        ttk.Label(results_frame,text="Label:").grid(column=0,row=4)
+        x_button = ttk.Button(results_frame,text="x axis:", command=self.do_add_param, pad=0)
+        y_button = ttk.Button(results_frame,text="y axis:", command=self.do_add_param, pad=0)
+        ann_button = ttk.Button(results_frame,text=" Annotation:", command=self.do_add_param, pad=0)
+        label_label = ttk.Label(results_frame,text="Label:")
         
         self.xaxis = StringVar()
         self.yaxis = StringVar()
@@ -300,22 +306,27 @@ class fit_files(object):
                                     textvariable=self.par_label,width=21)
         
         # gridding
-        button_frame.grid(column=0,row=0,columnspan=2)
-        draw_button.grid(column=0,row=0,padx=5,pady=5)
-        update_button.grid(column=0,row=1,padx=5,pady=5)
-        show_button.grid(column=1,row=0,padx=5,pady=5)
-        export_button.grid(column=1,row=1,padx=5,pady=5)
-        model_fit_button.grid(column=2,row=0,rowspan=2,pady=5,sticky=(N,S))
+        button_frame.grid(column=0, row=0, columnspan=2)
+        draw_button.grid(column=0, row=0, padx=5, pady=5)
+        update_button.grid(column=0, row=1, padx=5, pady=5)
+        show_button.grid(column=1, row=0, padx=5, pady=5)
+        export_button.grid(column=1, row=1, padx=5, pady=5)
+        model_fit_button.grid(column=2, row=0, rowspan=2, pady=5, sticky=(N, S))
         
-        self.xaxis_combobox.grid(column=1,row=1,pady=5)
-        self.yaxis_combobox.grid(column=1,row=2,pady=5)
-        self.annotation_combobox.grid(column=1,row=3,pady=5)
-        self.par_label_entry.grid(column=1,row=4,pady=5)
+        x_button.grid(column=0, row=1, sticky=(E,W), padx=5)
+        y_button.grid(column=0, row=2, sticky=(E,W), padx=5)
+        ann_button.grid(column=0, row=3, sticky=(E,W), padx=5)
+        label_label.grid(column=0, row=4, sticky=(E,W), padx=10)
+        
+        self.xaxis_combobox.grid(column=1, row=1, pady=5)
+        self.yaxis_combobox.grid(column=1, row=2, pady=5)
+        self.annotation_combobox.grid(column=1, row=3, pady=5)
+        self.par_label_entry.grid(column=1,row=4, pady=5)
         
         # save/load state -----------------------
-        state_frame = ttk.Labelframe(fit_data_tab,text='Program State',pad=5)
-        state_save_button = ttk.Button(state_frame,text='Save',command=self.save_state)
-        state_load_button = ttk.Button(state_frame,text='Load',command=self.load_state)
+        state_frame = ttk.Labelframe(fit_data_tab, text='Program State', pad=5)
+        state_save_button = ttk.Button(state_frame, text='Save', command=self.save_state)
+        state_load_button = ttk.Button(state_frame, text='Load', command=self.load_state)
        
         state_save_button.grid(column=0,row=0,padx=5,pady=5)
         state_load_button.grid(column=1,row=0,padx=5,pady=5)
@@ -555,9 +566,9 @@ class fit_files(object):
             else:
                 parlst.append('Beta-Avg 1/<T1>')
             
-        self.xaxis_combobox['values'] = ['']+parlst+lst
-        self.yaxis_combobox['values'] = ['']+parlst+lst
-        self.annotation_combobox['values'] = ['']+parlst+lst
+        self.xaxis_combobox['values'] = [''] + parlst + lst
+        self.yaxis_combobox['values'] = [''] + parlst + lst
+        self.annotation_combobox['values'] = [''] + parlst + lst
 
         self._make_shared_var_dict()
             
@@ -572,6 +583,25 @@ class fit_files(object):
         # reset modify all value
         self.set_as_group.set(modify_all_value)
             
+    # ======================================================================= #
+    def do_add_param(self, *args):
+        """Launch popup for adding user-defined parameters to draw"""
+        if hasattr(self,'pop_addpar'):
+            p = self.pop_addpar
+            
+            # don't make more than one window
+            if Toplevel.winfo_exists(p.win): 
+                p.win.lift()
+                return
+            
+            # make a new window, using old inputs and outputs
+            self.pop_addpar = popup_add_param(self.bfit,
+                                    input_fn_text=p.input_fn_text)
+        
+        # make entirely new window
+        else:
+            self.pop_addpar = popup_add_param(self.bfit)
+        
     # ======================================================================= #
     def do_fit(self,*args):
         # fitter
@@ -1171,13 +1201,24 @@ class fit_files(object):
             yerrs_h *= unit_scale
             yerrs_l *= unit_scale
         
+        # check for nan errors
+        if all(np.isnan(xerrs_h)): xerrs_h = None
+        if all(np.isnan(xerrs_l)): xerrs_l = None
+        if all(np.isnan(yerrs_h)): yerrs_h = None
+        if all(np.isnan(yerrs_l)): yerrs_l = None
+        
+        if xerrs_h is None and xerrs_l is None:     xerr = None
+        else:                                       xerr = (xerrs_l, xerrs_h)
+        if yerrs_h is None and yerrs_l is None:     yerr = None
+        else:                                       yerr = (yerrs_l, yerrs_h)
+        
         # draw
         f = self.plt.errorbar(  figstyle,
                                 draw_id,
                                 xvals,
                                 yvals,
-                                xerr=(xerrs_l, xerrs_h),
-                                yerr=(yerrs_l, yerrs_h),
+                                xerr = xerr,
+                                yerr = yerr,
                                 label=draw_id,
                                 annot_label=mouse_label,
                                 **self.bfit.style)
@@ -1489,7 +1530,7 @@ class fit_files(object):
             rate = lambda b : np.sum([b.hist['NBM'+h].data \
                                     for h in ('F+','F-','B-','B+')])/b.duration
             val = [rate(data[r].bd) for r in runs]
-            err = [np.nan for r in runs]        
+            err = np.full(len(val), np.nan)
             
         elif 'Sample Rate (count/s)' in select:
             hist = ('F+','F-','B-','B+') if data[runs[0]].area == 'BNMR' \
@@ -1497,7 +1538,7 @@ class fit_files(object):
                 
             rate = lambda b : np.sum([b.hist[h].data for h in hist])/b.duration
             val = [rate(data[r].bd) for r in runs]
-            err = [np.nan for r in runs]        
+            err = np.full(len(val), np.nan)     
             
         # fitted parameter options
         elif select in parnames:
@@ -1516,6 +1557,11 @@ class fit_files(object):
                     err_u.append(np.nan)
             err = (err_l, err_u)
             
+        # check user-defined parameters
+        elif select in self.pop_addpar.set_par.keys():
+            val = self.pop_addpar.set_par[select]()
+            err = np.full(len(val), np.nan)
+        
         try:
             return (val, err)
         except UnboundLocalError:

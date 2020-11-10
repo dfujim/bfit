@@ -31,7 +31,7 @@ class ConstrainedFunction(object):
               }    
                        
     # ======================================================================= # 
-    def __init__(self,defined,equation,newpar,oldpar):
+    def __init__(self, defined, equation, newpar, oldpar):
         """
             defined:        parameters which the equations define (equation LHS)
                             in old parameter order
@@ -49,8 +49,8 @@ class ConstrainedFunction(object):
         self.equation = [equation[defined.index(p)] for p in oldpar]
         
     # ======================================================================= # 
-    def __call__(self,data,fn):
-        """
+    def __call__(self, data, fn):
+        """ 
             Identify variable names, make constraining function
             
             data: bfitdata object to generate the constrained function 
@@ -67,8 +67,8 @@ class ConstrainedFunction(object):
             # find constant names in the string, replace with constant
             for var in varlist:
                 if var in c:
-                    value = self._get_value(data,var)
-                    c = c.replace(var,str(value))
+                    value = self._get_value(data, var)
+                    c = c.replace(var, str(value))
             eqn.append(c)
         
         # get constraint functions, sorted 
@@ -77,12 +77,12 @@ class ConstrainedFunction(object):
         # define the new fitting function
         def new_fn(x,*newparam):
             oldparam = [c(*newparam) for c in constr_fns]
-            return fn(x,*oldparam)
+            return fn(x, *oldparam)
             
-        return (new_fn,constr_fns)
+        return (new_fn, constr_fns)
             
     # ======================================================================= # 
-    def _get_value(self,data,name):
+    def _get_value(self, data, name):
         """
             Tranlate typed constant to numerical value
         """
