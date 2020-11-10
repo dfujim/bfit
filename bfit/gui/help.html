@@ -303,9 +303,9 @@ Error message and password prompt
 
 <li>Constrained Fitting</li>
 
-<li>Data directory</li>
+<li>curve_fit (trf)</li>
 
-<li>Default Fitting Algorithms</li>
+<li>Data directory</li>
 
 <li>Draw 1f as PPM shift</li>
 
@@ -351,6 +351,8 @@ Error message and password prompt
 
 <li>Loading Your Fitting Routine</li>
 
+<li>migrad</li>
+
 <li>Navigation Map</li>
 
 <li>NMR B1 Calculator</li>
@@ -387,11 +389,17 @@ Error message and password prompt
 
 <li>The Basics</li>
 
+<li>Themometer Channel</li>
+
+<li>Try normalizing using fit</li>
+
 <li>Units</li>
 
 <li>Update bfit</li>
 
 <li>Use NBM</li>
+
+<li>What's new?</li>
 
 </ul>
 </p>
@@ -6352,7 +6360,7 @@ Error message and password prompt
 <div modified="20171215084937325" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/EditToolbar</pre>
 </div>
-<div list="[[Help Index]] [[Asymmetry Calculation Details]]" title="$:/StoryList">
+<div list="[[Help Index]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div modified="20171215083831245" title="$:/temp/advancedsearch">
@@ -6372,7 +6380,7 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20181118232722361" modified="20191112104243922" title="$:/temp/NewTagName">
+<div created="20181118232722361" modified="20201110052452197" title="$:/temp/NewTagName">
 <pre></pre>
 </div>
 <div author="Paco Rivière" core-version="&gt;=5.0.0" created="20160103221746029" dependents="" description="Catalan (Spain)" icon="data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22810%22%20height%3D%22540%22%3E%0A%3Crect%20width%3D%22810%22%20height%3D%22540%22%20fill%3D%22%23FCDD09%22%2F%3E%0A%3Cpath%20stroke%3D%22%23DA121A%22%20stroke-width%3D%2260%22%20d%3D%22M0%2C90H810m0%2C120H0m0%2C120H810m0%2C120H0%22%2F%3E%0A%3C%2Fsvg%3E" modified="20160103221746029" name="ca-ES" original-plugin-type="language" original-tags="" original-title="$:/languages/ca-ES" original-type="application/json" server-url="http://tiddlywiki.com/library/v5.1.9/index.html" tags="$:/tags/RemoteAssetInfo" title="$:/temp/RemoteAssetInfo/http://tiddlywiki.com/library/v5.1.9/index.html/$:/languages/ca-ES" type="text/vnd.tiddlywiki" version="5.1.9">
@@ -6864,19 +6872,12 @@ Press fit at the bottom to run the fit. The global parameters defined in the con
 
 </pre>
 </div>
-<div created="20191108174833143" modified="20191108174937810" tags="[[menu option]]" title="Data directory">
-<pre>By default, bfit uses the [[bdata|https://github.com/dfujim/bdata]] directory defaults to fetch data. If a different directory is desired, select it here. Set directly is not persistent across instances. </pre>
-</div>
-<div created="20191111035557844" modified="20191111041603311" title="Default Fitting Algorithms">
-<pre>bfit uses [[scipy.optimize.curve_fit|https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html]] to do the minimization in all fitting operations (both global and individual). 
+<div created="20201110052453378" modified="20201110052707569" tags="[[menu option]] algorithm" title="curve_fit (trf)">
+<pre>With this option selected, bfit uses [[scipy.optimize.curve_fit|https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html]] to do the minimization in fitting operations (both global and individual, as well as constrained). 
 
-! Unbounded problems
+The fit a model calculation, however always uses the migrad algorithm. 
 
-If all the fitting bounds are $$\pm \infty$$ (that is, there are no bounds), then curve_fit uses the [[Levenberg-Marquardt|https://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm]] algorithm through [[scipy.optimize.leastsq|https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.leastsq.html#scipy.optimize.leastsq]], which is a wrapper about MINPACK's lmdif and lmder algorithms. This algorithm cannot handle bounded problems. 
-
-J. J. More, “The Levenberg-Marquardt Algorithm: Implementation and Theory,” Numerical Analysis, ed. G. A. Watson, Lecture Notes in Mathematics 630, Springer Verlag, pp. 105-116, 1977 ([[link|https://link.springer.com/chapter/10.1007%2FBFb0067700]]).
-
-! Bounded problems
+The curve_fit function has a number of available agorithms, bfit uses the trf algorithm for bounded problems.
 
 From the scipy documentation: 
 
@@ -6889,7 +6890,11 @@ M. A. Branch, T. F. Coleman, and Y. Li, “A Subspace, Interior, and Conjugate G
 R. H. Byrd, R. B. Schnabel and G. A. Shultz, “Approximate solution of the trust region problem by minimization over two-dimensional subspaces”, Math. Programming, 40, pp. 247-263, 1988 ([[lnk|https://link.springer.com/article/10.1007/BF01580735]]).
 
 J. J. More, “The Levenberg-Marquardt Algorithm: Implementation and Theory,” Numerical Analysis, ed. G. A. Watson, Lecture Notes in Mathematics 630, Springer Verlag, pp. 105-116, 1977 ([[link|https://link.springer.com/chapter/10.1007%2FBFb0067700]]).
+
 </pre>
+</div>
+<div created="20191108174833143" modified="20191108174937810" tags="[[menu option]]" title="Data directory">
+<pre>By default, bfit uses the [[bdata|https://github.com/dfujim/bdata]] directory defaults to fetch data. If a different directory is desired, select it here. Set directly is not persistent across instances. </pre>
 </div>
 <div created="20191108181424365" modified="20191108181638853" tags="[[menu option]]" title="Draw 1f as PPM shift">
 <pre>Draw 1f runs as a PPM shift which is calculated as: 
@@ -7044,7 +7049,7 @@ From top to bottom, left to right, here is a list of the interactive GUI objects
 ** Options vary depending on the run mode. 
 </pre>
 </div>
-<div created="20200316064400247" modified="20200316065615093" tags="HowTo" title="Fetching Sequences and Merging Runs">
+<div created="20200316064400247" modified="20201110054010314" tags="HowTo" title="Fetching Sequences and Merging Runs">
 <pre>The run number text entry bar in the [[Fetch]] tab takes a number of patterns which control how runs are fetched. 
 
 ''Individual Run Selection''
@@ -7066,9 +7071,9 @@ From top to bottom, left to right, here is a list of the interactive GUI objects
 * Blocking can be used to automatically merge runs using a range: &quot;[1-5]&quot;
 * Adding can also be used to merge a run with a range, but the syntax isn't quite as clear: &quot;1+4-5&quot;
 * One can use either brackets (&quot;()&quot;), braces (&quot;{}&quot;), or square brackets (&quot;[]&quot;) to indicate blocks. 
-* Runs are merged according to the [[bjoined|https://github.com/dfujim/bdata#bjoined]] ruleset. </pre>
+* Runs are merged according to the [[bmerged|https://github.com/dfujim/bdata#bmerged]] ruleset. </pre>
 </div>
-<div created="20191112072417657" modified="20191112104330035" tags="tab" title="Fit">
+<div created="20191112072417657" modified="20201110054540591" tags="tab" title="Fit">
 <pre>The main purpose of the Fit tab is to fit the fetched data, and to display the results. Also provides options for exporting and doing some basic processing of the fit results. 
 
 From top to bottom, left to right, here is a list of the interactive GUI objects in the tab:
@@ -7096,15 +7101,12 @@ From top to bottom, left to right, here is a list of the interactive GUI objects
 * ''Reset P0 button'':
 ** Reset the initial values to the default guesses provided by the fitting routine. 
 
-* ''P0 Finder button'':
-** Launches a menu to select which run to start the [[P0 finder|Graphical P0 Finding]]
-
 !!! Set Initial Parameters
 
 For each fetched run, the following options are available: 
 
 * ''Initial Value button'':
-** Same as the &quot;P0 Finder&quot; button, but skips the select menu and launches the [[P0 finder|Graphical P0 Finding]] for the corresponding run.
+** Launches a [[graphical interface for setting P0|Graphical P0 Finding]] for the corresponding run.
 
 * ''Initial Value entry'':
 ** Initial guess for the function optimization
@@ -7181,6 +7183,12 @@ For each fetched run, the following options are available:
 * ''Annotation listbox'':
 ** Select the variable to draw as an annotation: a text box accompanying each point. 
 ** Useful for identifying which run has that strange behaviour.  
+
+* ''x axis, y axis, and Annotation buttons'':
+** Create a popup which will allow the user to define their own variables to plot and fit. These variables may be a function of many possible meta-data values (temperature, field, etc) or the fit parameters. 
+
+* ''Label entry''
+** Allow for the setting of a label for the drawn parameters, which will prevent over-drawing from other data sets. 
 
 !!! Program State
 
@@ -7345,7 +7353,7 @@ Available functions and their boxes:
 ** Peak location + amplitude
 ** Width (positioned at 2x FWHM, for implementation reasons)</pre>
 </div>
-<div created="20171215083659362" modified="20201005002856909" title="Help Index">
+<div created="20171215083659362" modified="20201110054102676" title="Help Index">
 <pre>&quot;&quot;&quot;
 [[Installation and First Startup]]
 [[The Basics]]
@@ -7353,8 +7361,6 @@ Available functions and their boxes:
 [[Hotkeys]]
 [[Navigation Map]]
 [[Asymmetry Calculation Details]]
-[[Default Fitting Algorithms]]
-[[Plugging in Fitting Routines|Fitting routines]]
 [[&quot;How To&quot; List]]
 &quot;&quot;&quot;
 </pre>
@@ -7524,7 +7530,25 @@ Options are the same as in the fit tab parameter draw listbox:
 
 The fitter is dynamically loaded and is ready to use. bfit reverts to the default on restart. </pre>
 </div>
-<div created="20180706200413929" modified="20191108172635689" title="Navigation Map">
+<div created="20201110052722962" modified="20201110053830411" tags="algorithm [[menu option]]" title="migrad">
+<pre>Migrad is the main minimization algorithm provide in the Minuit2 code provided with root. bfit accesses the algoritm through [[iminuit|https://iminuit.readthedocs.io/en/stable/index.html]]. 
+
+bfit provides a custom least squares object to account for errors in both x and y, of which either or both may be asymmetric. This is done in the following way, as is outlined on the [[ROOT website|https://root.cern.ch/doc/master/classTGraph.html#aa978c8ee0162e661eae795f6f3a35589]]:
+
+$$\chi^2 = \frac{(y-f(x))^2}{\sigma_y^2 + \left[\frac{1}{2}(\sigma_x^{low} + \sigma_x^{high})f'(x)\right]^2}$$
+
+where $$\sigma_y$$ is the error in y, $$\sigma_x$$ is the error in x, and $$f'(x) = df/dx$$ is the first derivative of the fit function $$f$$.
+
+Asymmetric errors in $$y$$ are accounted for by using the error on the side of the functions. Thus
+
+* $$\sigma_y = \sigma_y^{low}$$ if $$f(x)&lt;y$$
+* $$\sigma_y = \sigma_y^{high}$$ if $$f(x)&gt;y$$
+
+If the `migrad (hesse)` option is used, then report hesse errors. 
+If the `migrad (minos)` option is used, then report minos errors. In the case where minos errors fail, hesse errors are reported for those values.  
+</pre>
+</div>
+<div created="20180706200413929" modified="20201110051307739" title="Navigation Map">
 <pre>! Menu bar: 
 
 * ''File''
@@ -7542,25 +7566,33 @@ The fitter is dynamically loaded and is ready to use. bfit reverts to the defaul
 * ''Settings''
 ** [[Data directory]]
 ** [[Drawing style]]
-** [[Fitting routines]]
 ** [[Histograms]]
 ** [[Labels default]]
 ** [[PPM reference frequency]]
 ** [[Probe species]]
 ** [[Redraw period]]
 ** [[System matplotlibrc]]
+** [[Themometer Channel]]
 ** [[Units]]
 
 * ''Draw Mode''
 ** [[Draw in new window]]
 ** [[Stack in existing window]]
 ** [[Redraw in existing window]]
+** [[Try normalizing using fit]]
 ** [[Draw 1f as PPM shift]]
 ** [[Draw residuals as standardized]]
 ** [[Use NBM]]
 
+* ''Minimizer''
+** [[curve_fit (trf)]]
+** [[migrad (hesse)|migrad]]
+** [[migrad (minos)|migrad]]
+** [[Other|Fitting routines]]
+
 * ''Help''
 ** [[Show help wiki.]]
+** [[What's new?]]
 ** [[Report an issue]]
 ** [[Update bfit]]
 
@@ -7728,6 +7760,29 @@ Fit the data.
 
 </pre>
 </div>
+<div created="20201110051328225" modified="20201110052148240" tags="[[menu option]]" title="Themometer Channel">
+<pre>Both NMR and NQR have two main thermometer channels: A and B. Both should have the same readback, but they can differ, especially at low temperature. Typically, channel A is used, however this is not always the case. 
+
+There are three options offered by this thermometer channel switch: 
+
+* A
+* B 
+* (A+B)/2
+
+to use either channel A, channel B or the average of the two as the temperature reading. 
+
+The average is taken without regard to the error, however the error is propagated properly, adding in quadrature. 
+
+When the cyro-oven is in place, the default is set to `oven_readC`.</pre>
+</div>
+<div created="20201110052215031" modified="20201110052339037" tags="[[menu option]]" title="Try normalizing using fit">
+<pre>Some asymmetry modes involve normalizing the data. This can be done in one of two ways: 
+
+# Take the average of the first or last x points
+# Use a fit parameter
+
+If this switch is set to true, this calculation is done via the use of a fit parameter if it is available. </pre>
+</div>
 <div created="20191108180205617" modified="20191108180245134" tags="[[menu option]] popup" title="Units">
 <pre>Set the scaling and units for the x-axis of several run modes. Useful for comparing 1w/1f modes or NMR/NQR runs. </pre>
 </div>
@@ -7736,6 +7791,9 @@ Fit the data.
 </div>
 <div created="20191108181830726" modified="20191111030534849" tags="popup" title="Use NBM">
 <pre>If selected, use neutral beam monitors in all asymmetry calculations by setting the `NBM` flag in the bdata asymmetry calculation to True. </pre>
+</div>
+<div created="20201110052351065" modified="20201110052413462" tags="[[menu option]]" title="What's new?">
+<pre>Displays the git page for releases, which will show the new features or fixes.</pre>
 </div>
 
 </div>
