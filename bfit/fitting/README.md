@@ -3,10 +3,10 @@
 Submodules and function signatures (also available from the top-level bfit module): 
 
 * [**`bfit.fitting.functions`**](https://github.com/dfujim/bfit/blob/master/bfit/fitting/functions.py) (base functions module)
-    * [`lorentzian(freq, peak, width, amp)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L24-L25)
-    * [`bilorentzian(freq, peak, widthA, ampA, widthB, ampB)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L27-L29)
-    * [`quadlorentzian(freq, nu_0, nu_q, eta, theta, phi, amp0, amp1, amp2, amp3, fwhm0, fwhm1, fwhm2, fwhm3, I)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L34-L46)
-    * [`gaussian(freq, mean, sigma, amp)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L31-L32)
+    * [`lorentzian(freq, peak, fwhm, amp)`](https://github.com/dfujim/bfit/blob/54ae5717abb7e651780d3bff9c5aae45b4429ee6/bfit/fitting/functions.py#L24-L25)
+    * [`bilorentzian(freq, peak, fwhmA, ampA, fwhmB, ampB)`](https://github.com/dfujim/bfit/blob/54ae5717abb7e651780d3bff9c5aae45b4429ee6/bfit/fitting/functions.py#L27-L29)
+    * [`quadlorentzian(freq, nu_0, nu_q, eta, theta, phi, amp0, amp1, amp2, amp3, fwhm0, fwhm1, fwhm2, fwhm3, I)`](https://github.com/dfujim/bfit/blob/54ae5717abb7e651780d3bff9c5aae45b4429ee6/bfit/fitting/functions.py#L34-L46)
+    * [`gaussian(freq, mean, sigma, amp)`](https://github.com/dfujim/bfit/blob/54ae5717abb7e651780d3bff9c5aae45b4429ee6/bfit/fitting/functions.py#L31-L32)
     * `pulsed_exp`
         * constructor: [`pulsed_exp(lifetime, pulse_len)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L65-L69)
         * call: [`pulsed_exp(time, lambda_s, amp)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L84-L85)
