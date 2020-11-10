@@ -1750,7 +1750,7 @@ class fit_files(object):
         
         setall = self.set_as_group.get()
         for k in self.fit_lines.keys():
-            self.fit_lines[k].set_input(source,par,column,setall)        
+            self.fit_lines[k].set_input(source, par, column, setall)        
     
     # ======================================================================= #
     def return_binder(self):
@@ -1932,11 +1932,11 @@ class fitline(object):
     """
     
     n_runs_max = 5      # number of runs before scrollbar appears
-    collist = ['p0','blo','bhi','res','dres','chi','fixed','shared']
+    collist = ['p0', 'blo', 'bhi', 'res', 'dres-', 'dres+', 'chi', 'fixed', 'shared']
     selected = 0        # index of selected run 
     
     # ======================================================================= #
-    def __init__(self,bfit,parent,dataline,row):
+    def __init__(self,bfit, parent, dataline, row):
         """
             Inputs:
                 bfit:       top level pointer
@@ -2342,7 +2342,7 @@ class fitline(object):
         self.fitframe.update_idletasks()
     
     # ======================================================================= #
-    def set_input(self,source_line,parameter,column,set_all):
+    def set_input(self, source_line, parameter, column, set_all):
         """
             Set the input value for a given parameter to match the value in 
             another fitline
@@ -2360,11 +2360,7 @@ class fitline(object):
             source_entry = source_line.parentry[parameter]
         except KeyError:
             return
-        
-        # special case: fixed checkbox
-        if not set_all and column == 'fixed':
-            return
-        
+              
         # set value
         if set_all or shared:
             
