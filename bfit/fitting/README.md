@@ -18,17 +18,17 @@ Submodules and function signatures (also available from the top-level bfit modul
         * call: [`pulsed_strexp(time, lambda_s, beta, amp)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/functions.py#L93-L94)
         
 * [**`bfit.fitting.fit_bdata`** ](https://github.com/dfujim/bfit/blob/master/bfit/fitting/fit_bdata.py) (fitting bdata files module)
-    * [`fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='', xlims=None, asym_mode='c', fixed=None, **kwargs)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/fit_bdata.py#L13-L65)
+    * [`fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='', xlims=None, asym_mode='c', fixed=None, minimizer='migrad+minos', **kwargs)`](https://github.com/dfujim/bfit/blob/7ef409124b1790b9df04f68407ecf9f26b20a434/bfit/fitting/fit_bdata.py#L16-L72)
 
 * [**`bfit.fitting.global_fitter`**](https://github.com/dfujim/bfit/blob/master/bfit/fitting/global_fitter.py) (general global fitting)
-    * constructor: [`global_fitter(x, y, dy, fn, shared, fixed=None, metadata=None)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/global_fitter.py#L92-L119)
-    * [`draw(mode='stack', xlabel='', ylabel='', do_legend=False, labels=None, savefig='', **errorbar_args`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/global_fitter.py#L227-L247)
-    * [`fit(**fitargs)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/global_fitter.py#L307-L336)
-    * [`get_chi()`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/global_fitter.py#L444-L451)
-    * [`get_par()`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/global_fitter.py#L467-L475)
+    * constructor: [`global_fitter(fn, x, y, dy=None, dx=None, dy_low=None, dx_low=None, shared=None, fixed=None, metadata=None, fprime_dx=1e-6)`](https://github.com/dfujim/bfit/blob/7ef409124b1790b9df04f68407ecf9f26b20a434/bfit/fitting/global_fitter.py#L108-L142)
+    * [`draw(mode='stack', xlabel='', ylabel='', do_legend=False, labels=None, savefig='', **errorbar_args`](https://github.com/dfujim/bfit/blob/7ef409124b1790b9df04f68407ecf9f26b20a434/bfit/fitting/global_fitter.py#L376-L396)
+    * [`fit(minimizer='migrad', do_minos=True, **fitargs)`](https://github.com/dfujim/bfit/blob/7ef409124b1790b9df04f68407ecf9f26b20a434/bfit/fitting/global_fitter.py#L476-L509)
+    * [`get_chi()`](https://github.com/dfujim/bfit/blob/7ef409124b1790b9df04f68407ecf9f26b20a434/bfit/fitting/global_fitter.py#L644-L651)
+    * [`get_par()`](https://github.com/dfujim/bfit/blob/7ef409124b1790b9df04f68407ecf9f26b20a434/bfit/fitting/global_fitter.py#L697-L711)
 
 * [**`bfit.fitting.global_bdata_fitter`**](https://github.com/dfujim/bfit/blob/master/bfit/fitting/global_bdata_fitter.py) (global fitting of bdata objects, inherits from `global_fitter`)
-    * constructor: [`global_bdata_fitter(data, fn, shared, xlims=None, rebin=1, asym_mode='c', fixed=None)`](https://github.com/dfujim/bfit/blob/82dc3488872e55521e0dd7363e287a0ffb387f8c/bfit/fitting/global_bdata_fitter.py#L14-L38)
+    * constructor: [`global_bdata_fitter(data, fn, xlims=None, rebin=1, asym_mode='c', **kwargs)`](https://github.com/dfujim/bfit/blob/7ef409124b1790b9df04f68407ecf9f26b20a434/bfit/fitting/global_bdata_fitter.py#L14-L36)
 
 # Module Details
 
