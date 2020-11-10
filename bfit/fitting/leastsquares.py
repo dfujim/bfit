@@ -121,7 +121,7 @@ class LeastSquares:
     def ls_dya(self, *pars):
         
         # get errors on appropriate side of the function
-        idx = self.y < self.fn(self.x, *pars)
+        idx = self.y > self.fn(self.x, *pars)
         dy = np.array(self.dy)
         dy[idx] = self.dy_low[idx]
         
@@ -141,7 +141,7 @@ class LeastSquares:
         fprime = self.fn_prime(self.x, *pars)
         
         # get errors on appropriate side of the function
-        idx = self.y < self.fn(self.x, *pars)
+        idx = self.y > self.fn(self.x, *pars)
         dy = np.array(self.dy)
         dy[idx] = self.dy_low[idx]
         
@@ -163,7 +163,7 @@ class LeastSquares:
         dx = 0.5*(self.dx+self.dx_low)
         
         # get errors on appropriate side of the function
-        idx = self.y < self.fn(self.x, *pars)
+        idx = self.y > self.fn(self.x, *pars)
         dy = np.array(self.dy)
         dy[idx] = self.dy_low[idx]
         

@@ -189,7 +189,7 @@ class bfit(object):
                  }
     
     # valid thermometer channels to read from
-    thermo_keys = ('A','B','(A+B)/2')
+    thermo_keys = ('A', 'B', '(A+B)/2')
     
     # draw axis labels
     xlabel_dict={'20':"Time (s)",
