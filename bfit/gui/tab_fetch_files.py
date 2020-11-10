@@ -281,24 +281,32 @@ class fetch_files(object):
             pass
         
     # ======================================================================= #
-    def _do_check_all(self,state,var,box):
+    def _do_check_all(self, state, var, box):
         """
             Force all tickboxes of a given type to be in a given state, assuming 
             the tickbox is active
         """
         
         self.logger.info('Changing state of all %s tickboxes to %s',var,state)
-        for k in self.data_lines.keys():
+        for dline in self.data_lines.values():
+            
+            # check if line is selected
+            if not dline.check_state.get() and var != 'check_state':
+                continue
             
             # check if tickbox is object variable
-            if hasattr(self.data_lines[k],box):
+            if hasattr(dline, box):
                 
                 # check if tickbox is disabled
-                if str(getattr(self.data_lines[k],box)['state']) == 'disabled':
+                if str(getattr(dline, box)['state']) == 'disabled':
                     continue
                     
             # set value
-            getattr(self.data_lines[k],var).set(state)
+            getattr(dline, var).set(state)
+            
+            # run check for other items
+            if hasattr(dline, 'do_'+var):
+                getattr(dline, 'do_'+var)()
 
     # ======================================================================= #
     def canvas_scroll(self,event):
@@ -310,16 +318,16 @@ class fetch_files(object):
     
     # ======================================================================= #
     def check_all(self):  
-        self._do_check_all(self.check_state.get(),'check_state','None')
+        self._do_check_all(self.check_state.get(), 'check_state', 'None')
         
     def check_all_data(self):  
-        self._do_check_all(self.check_state_data.get(),'check_data','None')
+        self._do_check_all(self.check_state_data.get(), 'check_data', 'None')
         
     def check_all_fit(self):  
-        self._do_check_all(self.check_state_fit.get(),'check_fit','draw_fit_checkbox')
+        self._do_check_all(self.check_state_fit.get(), 'check_fit', 'draw_fit_checkbox')
     
     def check_all_res(self):  
-        self._do_check_all(self.check_state_res.get(),'check_res','draw_res_checkbox')    
+        self._do_check_all(self.check_state_res.get(), 'check_res', 'draw_res_checkbox')    
         
     # ======================================================================= #
     def config_canvas(self,event):
@@ -877,29 +885,30 @@ class dataline(object):
         
         self.check_data = BooleanVar()
         self.check_data.set(True)
-        draw_data_checkbox = ttk.Checkbutton(line_frame,text='Data',
-                variable=self.check_data,onvalue=True,offvalue=False,pad=5)
+        draw_data_checkbox = ttk.Checkbutton(line_frame, text='Data',
+                variable=self.check_data, onvalue=True, offvalue=False, pad=5,
+                command=self.do_check_data)
         
         self.check_fit = BooleanVar()
         self.check_fit.set(False)
-        self.draw_fit_checkbox = ttk.Checkbutton(line_frame,text='Fit',
-                variable=self.check_fit,onvalue=True,offvalue=False,pad=5,
-                state=DISABLED)
+        self.draw_fit_checkbox = ttk.Checkbutton(line_frame, text='Fit',
+                variable=self.check_fit, onvalue=True, offvalue=False, pad=5,
+                state=DISABLED, command=self.do_check_fit)
         
         self.check_res = BooleanVar()
         self.check_res.set(False)
-        self.draw_res_checkbox = ttk.Checkbutton(line_frame,text='Res',
-                variable=self.check_res,onvalue=True,offvalue=False,pad=5,
-                state=DISABLED)
+        self.draw_res_checkbox = ttk.Checkbutton(line_frame, text='Res',
+                variable=self.check_res, onvalue=True, offvalue=False, pad=5,
+                state=DISABLED, command=self.do_check_res)
         
         rebin_label = ttk.Label(line_frame,text="Rebin:",pad=5)
-        rebin_box = Spinbox(line_frame,from_=1,to=100,width=3,\
-                textvariable=self.rebin)
+        rebin_box = Spinbox(line_frame, from_=1, to=100, width=3,\
+                            textvariable=self.rebin)
         self.rebin.set(self.bfit.fetch_files.check_rebin.get())
                 
         self.check_state.set(bfit.fetch_files.check_state.get())
         self.check = ttk.Checkbutton(line_frame,variable=self.check_state,\
-                onvalue=True,offvalue=False,pad=5)
+                onvalue=True, offvalue=False, pad=5)
          
         self.set_check_text()
          
@@ -921,9 +930,8 @@ class dataline(object):
         self.check.grid(column=c,row=0,sticky=E); c+=1
         if self.mode in ['1f','1n','1w']: 
             bin_remove_entry.grid(column=c,row=0,sticky=E); c+=1
-        if self.mode in ['20','2h']: 
-            rebin_label.grid(column=c,row=0,sticky=E); c+=1
-            rebin_box.grid(column=c,row=0,sticky=E); c+=1
+        rebin_label.grid(column=c,row=0,sticky=E); c+=1
+        rebin_box.grid(column=c,row=0,sticky=E); c+=1
         label_label.grid(column=c,row=0,sticky=E); c+=1
         self.label_entry.grid(column=c,row=0,sticky=E); c+=1
         draw_data_checkbox.grid(column=c,row=0,sticky=E); c+=1
@@ -988,6 +996,39 @@ class dataline(object):
             ff = self.bfit.fetch_files
             ff.runmode_label['text'] = ''
                 
+    # ======================================================================= #
+    def do_check_data(self):
+        """Prevent resdiuals and fit/data checks from being true at the same time"""
+        
+        # get residual check value
+        status = self.check_data.get()
+            
+        # set residuals
+        if str(self.draw_res_checkbox['state']) == 'normal' and status:
+            self.check_res.set(False)
+    
+    # ======================================================================= #
+    def do_check_fit(self):
+        """Prevent resdiuals and fit/data checks from being true at the same time"""
+        
+        # get residual check value
+        status = self.check_fit.get()
+            
+        # set residuals
+        if status:
+            self.check_res.set(False)
+    
+    # ======================================================================= #
+    def do_check_res(self):
+        """Prevent resdiuals and fit/data checks from being true at the same time"""
+        
+        # get residual check value
+        status = self.check_res.get()
+            
+        # set data and fit
+        self.check_data.set(not status)
+        self.check_fit.set(not status)    
+    
     # ======================================================================= #
     def draw(self,figstyle):
         """
