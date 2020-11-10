@@ -18,16 +18,14 @@ except ImportError as errmsg:
     print('No 3D axes drawing available')
     print(errmsg)
 
-import sys,os,datetime,textwrap
+import sys, os, datetime, textwrap
+import webbrowser, subprocess, importlib, logging, warnings
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import bdata as bd
 import weakref as wref
-import webbrowser
-import subprocess
-import importlib
-import logging
+
 
 from bfit import __version__,logger_name,icon_path
 from bfit.gui.tab_fileviewer import fileviewer
@@ -48,6 +46,10 @@ import bfit.backend.colors as colors
 
 # interactive plotting
 plt.ion()
+
+# filter warnings related to new dkeys on read
+warnings.simplefilter('ignore',RuntimeWarning)
+    
 
 __doc__="""
     BNMR/BNQR data visualization and curve fitting.

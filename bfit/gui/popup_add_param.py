@@ -144,10 +144,12 @@ class popup_add_param(object):
         
         # Text entry
         self.entry_label['text'] = 'Enter one parameter equation per line.'+\
-                '\nMust use only reserved words, constants, or functions from'+\
-                '\n the reserved modules in the parameter definition.'+\
+                '\nLHS must use only reserved words, constants, or functions'+\
+                '\nfrom the reserved modules in the parameter definition.'+\
                 '\nEx: "mypar = 1/(1_T1*TEMP)"'+\
-                '\nAccepts LaTeX input such as $\eta$ or $1/T_1$'
+                '\n\nAccepts LaTeX input for the new parameter.'+\
+                '\nEx: "$\eta_\mathrm{f}$ (Tesla) = B0 * np.exp(-amp**2)"' +\
+                '\n\nValues taken as shown in fit results, with no unit scaling.'
                 
         # gridding
         key_param_label.grid(column=0, row=0)
