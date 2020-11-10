@@ -208,7 +208,7 @@ class bfit(object):
                  'cn1':r'$\mathcal{A}~/~\mathcal{A}(\nu_\mathrm{max}$)',
                  'cn1f':r'$\mathcal{A}$ / Baseline',
                  'cn2':r'$\mathcal{A}~/~\mathcal{A}(t_\mathrm{min}$)',
-                 'cn2f':r'$\mathcal{A}$ / amp',
+                 'cn2f':r'$\mathcal{A}$ / Amplitude',
                  'rhist':'Counts'}
     
     # histogram names for x axis
@@ -585,16 +585,16 @@ class bfit(object):
     def do_save(self): self.fit_files.save_state()
     
     # ======================================================================= #
-    def draw(self,data,asym_type,rebin=1,option='',figstyle='',**drawargs):
+    def draw(self, data, asym_type, rebin=1, option='', figstyle='', **drawargs):
         """
             Draw the selected file
             
-            data: bdata object
-            asym_type: input for asymmetry calculation
-            rebin: rebining on asymmetry calculation
-            option: options passed to asymmetry calculation
-            figstyle: figure style. One of "data", "fit", or "param"
-            drawargs: passed to 
+            data:       bdata object
+            asym_type:  input for asymmetry calculation
+            rebin:      rebining on asymmetry calculation
+            option:     options passed to asymmetry calculation
+            figstyle:   figure style. One of "data", "fit", or "param"
+            drawargs:   passed to errorbar
         """
         
         self.logger.info('Drawing run %d (%d). mode: %s, rebin: %d, '+\
@@ -953,7 +953,8 @@ class bfit(object):
                 
                 if 'baseline' in data.fitpar['res'].keys() and self.norm_with_param.get():
                     shift = data.fitpar['res']['baseline']
-                    dshift = data.fitpar['dres']['baseline']
+                    dshift = np.sqrt(data.fitpar['dres+']['baseline']**2 + \
+                                     data.fitpar['dres-']['baseline']**2)
                     asym_type += 'f'
                 else:                
                     shift = np.average(ac[-5:],weights=1/dac[-5:]**2)
@@ -978,7 +979,8 @@ class bfit(object):
                 # divide by last value or by baseline
                 if 'baseline' in data.fitpar['res'].keys() and self.norm_with_param.get():
                     norm = data.fitpar['res']['baseline']
-                    dnorm = data.fitpar['dres']['baseline']
+                    dnorm = np.sqrt(data.fitpar['dres+']['baseline']**2 + \
+                                    data.fitpar['dres-']['baseline']**2)
                     asym_type += 'f'
                 else:                
                     norm = np.average(ac[-5:],weights=1/dac[-5:]**2)
@@ -1002,7 +1004,8 @@ class bfit(object):
                 # divide by intial 
                 if 'amp' in data.fitpar['res'].keys() and self.norm_with_param.get():
                     norm = data.fitpar['res']['amp']
-                    dnorm = data.fitpar['dres']['amp']
+                    dnorm = np.sqrt(data.fitpar['dres+']['amp']**2 + \
+                                    data.fitpar['dres-']['amp']**2)
                     asym_type += 'f'
                 else:
                     norm = ac[0]
