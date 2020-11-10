@@ -210,10 +210,10 @@ class template_fit_popup(object):
             del fit_status_window
         
         # display output for global parameters
-        for i in self.new_par.index:
-            self.new_par.loc[i,'res'] = par[i]
-            self.new_par.loc[i,'err-'] = std_l[i]
-            self.new_par.loc[i,'err+'] = std_h[i]
+        for i,j in enumerate(self.new_par.index):
+            self.new_par.loc[j,'res'] = par[i]
+            self.new_par.loc[j,'err-'] = std_l[i]
+            self.new_par.loc[j,'err+'] = std_h[i]
         self.set_par_text()
         
     # ====================================================================== #

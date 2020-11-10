@@ -45,12 +45,12 @@ class global_bdata_fitter(global_fitter):
             rebin = [rebin]*ndata
         
         # Get asymmetry
-        asym = np.asarray([d.asym(asym_mode, rebin=re) for d, re in zip(data, rebin)])
+        asym = [d.asym(asym_mode, rebin=re) for d, re in zip(data, rebin)]
         
         # split into x,y,dy data sets
-        x = asym[:,0]
-        y = asym[:,1]
-        dy = asym[:,2]
+        x = [a[0] for a in asym]
+        y = [a[1] for a in asym]
+        dy = [a[2] for a in asym]
         
         # select subrange
         if xlims is not None:
@@ -72,9 +72,9 @@ class global_bdata_fitter(global_fitter):
                 dynew.append(dy[i][tag])
             
             # new arrays
-            x = np.array(xnew)
-            y = np.array(ynew)
-            dy = np.array(dynew)
+            x = xnew
+            y = ynew
+            dy = dynew
             
         # intialize
         super(global_bdata_fitter,self).__init__(fn, x, y, dy=dy, **kwargs)

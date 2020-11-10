@@ -213,7 +213,7 @@ class popup_fit_constraints(template_fit_popup):
         kwargs = {'p0':p0, 'bounds':bounds}
         
         # get minimizer
-        if 'trf' in self.bfit.fit_files.fitter.__name__:  minimizer = 'trf'
+        if 'trf'   in self.bfit.fit_files.fitter.__name__:  minimizer = 'trf'
         if 'minos' in self.bfit.fit_files.fitter.__name__:  minimizer = 'migradminos'
         if 'hesse' in self.bfit.fit_files.fitter.__name__:  minimizer = 'migradhesse'
             
@@ -262,5 +262,5 @@ class popup_fit_constraints(template_fit_popup):
 
         # do end-of-fit stuff
         fit_files.do_end_of_fit()
-    
+        
         return (par[0,:], std_l[0,:], std_u[0,:])
