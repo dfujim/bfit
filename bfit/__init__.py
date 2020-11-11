@@ -4,6 +4,7 @@ from .fitting.functions import pulsed_exp, pulsed_strexp, pulsed_biexp
 from .fitting.global_fitter import global_fitter
 from .fitting.global_bdata_fitter import global_bdata_fitter
 from .fitting.fit_bdata import fit_bdata
+from .fitting.leastsquares import LeastSquares
 
 __all__ = ['gui','fitting','backend']
 __version__ = '4.0.2'
@@ -21,4 +22,5 @@ __all__.extend(("lorentzian",
                 "global_fitter",
                 "global_bdata_fitter",
                 "fit_bdata",
+                "LeastSquares"
                 ))
