@@ -193,10 +193,10 @@ class global_fitter(object):
                 
                 # get indexing
                 idx = np.full(len(x[i]), False)
-                if dy is not None:      idx += dy[i] != 0
-                if dx is not None:      idx += dx[i] != 0
-                if dy_low is not None:  idx += dy_low[i] != 0
-                if dx_low is not None:  idx += dx_low[i] != 0
+                if dy is not None:      idx = idx | (dy[i] != 0)
+                if dx is not None:      idx = idx | (dx[i] != 0)
+                if dy_low is not None:  idx = idx | (dy_low[i] != 0)
+                if dx_low is not None:  idx = idx | (dx_low[i] != 0)
                 
                 # crop
                 x[i] = x[i][idx]
@@ -522,8 +522,9 @@ class global_fitter(object):
             
             # expand p0
             if len(p0.shape) == 1:
-                p0 = np.full((self.nsets, self.npar), p0)
-                
+                print(p0)
+                p0 = np.asarray([p0]*self.nsets)
+                print(p0)
         else:
             p0 = np.ones((self.nsets, self.npar))
         
@@ -534,20 +535,74 @@ class global_fitter(object):
         p0_first = self._flatten(p0)
         
         # set default bounds
-        try:
-            bounds = np.asarray(fitargs['bounds'])
-        except KeyError:
-            bounds = None
-        else:
+        if 'bounds' in fitargs.keys():
             
-            # treat low and high bounds seperately 
-            if len(bounds.shape) > 2:
-                lo = bounds[:,0,:]
-                hi = bounds[:,1,:]
+            # get bounds
+            bounds = fitargs['bounds']
+            
+            # check bounds depth
+            depth0 = get_depth(bounds[0])
+            depth1 = get_depth(bounds[1])
+            
+            # error output
+            err = RuntimeError("Bad bounds format")
+            
+            # case: low bound == const, set for all
+            if depth0 == 0:
+                
+                hi = bounds[1]
+                
+                # case: upper bound == const, set for all
+                if depth1 == 0:
+                    lo = bounds[0]
+                        
+                # case: upper bound == list, set for all
+                elif depth1 == 1:
+                    lo = [bounds[0]]*len(hi)
+                    
+                else:
+                    raise err
+                    
+            # case: low bound == list 
+            elif depth0 == 1:
+                
+                # case: upper bound == const, set for all
+                if depth1 == 0:
+                    lo = bounds[0]
+                    hi = [bounds[1]]*len(lo)
+                    
+                # case: upper bound == list, set for all
+                elif depth1 == 1:
+                    lo = bounds[0]
+                    hi = bounds[1]
+            
+                # case: upper bound == list, set for each
+                elif depth1 == 2:
+                    hi = [b[1] for b in bounds]
+                    lo = [[b[0]]*len(b[1]) for b in bounds]
+
+                else:
+                    raise err    
+
+            # case: low bound == list, set for each
+            elif depth0 == 2:
+                
+                lo = [b[0] for b in bounds]
+                
+                # case: upper bound == const, set for each
+                if depth1 == 1:
+                    hi = [[b[1]]*len(b[0]) for b in bounds]
+            
+                # case: upper bound == list, set for each
+                elif depth1 == 2:
+                    hi = [b[1] for b in bounds]
+                    
+                else:
+                    raise err
+            
             else:
-                lo = np.asarray(bounds[0])
-                hi = np.asarray(bounds[1])
-            
+                raise err
+                
             # expand bounds
             lo = self._expand_bound_lim(lo)
             hi = self._expand_bound_lim(hi)
@@ -559,7 +614,7 @@ class global_fitter(object):
             # construct bounds
             bounds = (lo,hi)
             fitargs['bounds'] = bounds
-        
+    
         # make the master function 
         x = self.x
         rng = range(self.nsets)
@@ -711,7 +766,7 @@ class global_fitter(object):
                 self.cov_runwise)
     
     # ======================================================================= #
-    def _expand_bound_lim(self,lim):
+    def _expand_bound_lim(self, lim):
         """
             For various bound input formats expand such that all bounds are 
             defined explicitly. 
@@ -748,6 +803,22 @@ class global_fitter(object):
         for i in range(1,len(arr)):
             arr2.extend(arr[i][(~fixed[i])*(~shared)])
         return np.array(arr2)
+
+# =========================================================================== #
+def get_depth(lst, _n=0):
+    """
+        get depth of list of lists using first element
+        
+        lst: list
+        _n:   internal depth input (n=0 means not a list)
+    """
+    
+    try:
+        lst[0]
+    except (TypeError, IndexError):
+        return _n
+    else:
+        return get_depth(lst[0], _n+1)
     
 # Add to module docstring
 __doc__ = __doc__ % (global_fitter.__init__.__doc__,
