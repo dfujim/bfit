@@ -522,9 +522,7 @@ class global_fitter(object):
             
             # expand p0
             if len(p0.shape) == 1:
-                print(p0)
-                p0 = np.asarray([p0]*self.nsets)
-                print(p0)
+                p0 = np.full((self.nsets, self.npar), p0)
         else:
             p0 = np.ones((self.nsets, self.npar))
         
