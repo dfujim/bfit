@@ -55,7 +55,7 @@ class minuit(Minuit):
         """
         
         # construct least squares object
-        self.ls = LeastSquares(fn = fn, 
+        ls = LeastSquares(fn = fn, 
                         x = x, 
                         y = y, 
                         dy = dy, 
@@ -152,7 +152,7 @@ class minuit(Minuit):
         self.dof = len(x)-len(name)+nfixed
         
         # make minuit object
-        super().__init__(self.ls, 
+        super().__init__(ls, 
                          use_array_call=True, 
                          name = name, 
                          print_level = print_level,
@@ -160,7 +160,7 @@ class minuit(Minuit):
         
     # ====================================================================== #
     def chi2(self):
-        return self.ls(self.np_values())/self.dof
+        return self.fval/self.dof
         
 def get_depth(lst, depth=0):
     try: 
