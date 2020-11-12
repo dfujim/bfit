@@ -22,7 +22,7 @@ class code_wrapper(object):
 # TYPE 1 FUNCTIONS
 # =========================================================================== #
 def lorentzian(freq, peak, fwhm, amp):
-    return -amp*np.square(fwhm)/(np.square(freq-peak)+np.square(fwhm))
+    return -amp*np.square(0.5*fwhm)/(np.square(freq-peak)+np.square(0.5*fwhm))
 
 def bilorentzian(freq, peak, fwhmA, ampA, fwhmB, ampB):
     return -ampA*0.25*np.square(fwhmA)/(np.square(freq-peak)+np.square(0.5*fwhmA))\
