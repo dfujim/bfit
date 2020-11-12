@@ -7,17 +7,20 @@ To run the gui, call `python3 -m bfit`
 
 bfit also provides the following classes and functions at the top level:
 
-* `bfit.pulsed_exp`
-* `bfit.pulsed_strexp`
-* `bfit.pulsed_biexp`
-* `bfit.lorentzian` 
-* `bfit.bilorentzian`
-* `bfit.gaussian`
-* `bfit.quadlorentzian`
-* `bfit.global_fitter`
-* `bfit.global_bdata_fitter`
-* `bfit.fit_bdata`
-
+* Functions
+    * `bfit.pulsed_exp`
+    * `bfit.pulsed_strexp`
+    * `bfit.pulsed_biexp`
+    * `bfit.lorentzian` 
+    * `bfit.bilorentzian`
+    * `bfit.quadlorentzian`
+    * `bfit.gaussian`
+    
+* Minimization
+    * `bfit.minuit`
+    * `bfit.global_fitter`
+    * `bfit.global_bdata_fitter`
+    * `bfit.fit_bdata`
 
 A description of these functions can be found [here](https://github.com/dfujim/bfit/blob/master/bfit/fitting/README.md). 
 
