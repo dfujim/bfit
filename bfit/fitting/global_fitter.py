@@ -618,7 +618,7 @@ class global_fitter(object):
         rng = range(self.nsets)
         metadata = self.metadata
           
-        def master_fn(x_unused,*par):
+        def master_fn(x_unused, *par):
             inputs = np.take(np.hstack((par, p0_flat_inv)), sharing_links)
             return np.concatenate([fn[i](x[i], *inputs[i], *metadata[i]) for i in rng])
         
@@ -626,11 +626,11 @@ class global_fitter(object):
             
         # make derivative of master function
         def master_fnprime(x_unused, *par):
-            
             inputs = np.take(np.hstack((par, p0_flat_inv)), sharing_links)
             xhi = np.concatenate([fn[i](x[i]+fprime_dx/2, *inputs[i], *metadata[i]) for i in rng])
             xlo = np.concatenate([fn[i](x[i]-fprime_dx/2, *inputs[i], *metadata[i]) for i in rng])
             return (xhi-xlo)/fprime_dx
+            
         self.master_fnprime = master_fnprime
       
         # do curve_fit

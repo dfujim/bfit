@@ -8,4 +8,5 @@ __all__=['functions',
          'fitter_curve_fit',
          'fit_bdata',
          'decay_31mg',
-         'leastsquares']
+         'leastsquares',
+         'minuit']
