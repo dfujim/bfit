@@ -190,7 +190,7 @@ class popup_param(object):
         if self.fname == 'Lorentzian':
             fn = fns.lorentzian     # freq,peak,fwhm,amp
         elif self.fname == 'BiLorentzian':
-            fn = lambda freq,peak,fwhm,amp : fns.bilorentzian(freq,peak,fwhm,amp/10,fwhm/10,amp*9/10)
+            fn = lambda freq,peak,fwhm,amp : fns.bilorentzian(freq,peak,fwhm,amp/3,fwhm/3,amp*2/3)
         elif self.fname == 'Gaussian':
             fn = lambda freq,peak,fwhm,amp : fns.gaussian(freq,peak,fwhm,amp)
         elif self.fname == 'QuadLorentz':
