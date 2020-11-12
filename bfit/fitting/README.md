@@ -30,6 +30,17 @@ Submodules and function signatures (also available from the top-level bfit modul
 * [**`bfit.fitting.global_bdata_fitter`**](https://github.com/dfujim/bfit/blob/master/bfit/fitting/global_bdata_fitter.py) (global fitting of bdata objects, inherits from `global_fitter`)
     * constructor: [`global_bdata_fitter(data, fn, xlims=None, rebin=1, asym_mode='c', **kwargs)`](https://github.com/dfujim/bfit/blob/7ef409124b1790b9df04f68407ecf9f26b20a434/bfit/fitting/global_bdata_fitter.py#L14-L36)
 
+* [**`bfit.fitting.minuit`**](https://github.com/dfujim/bfit/blob/master/bfit/fitting/minuit.py) (use migrad minimizer for fitting, inherits from [`iminuit.Minuit`](https://iminuit.readthedocs.io/en/stable/reference.html))
+    * constructor: [`minuit(fn, x, y, dy=None, dx=None, dy_low=None, dx_low=None, fn_prime=None, fn_prime_dx=1e-6, name=None, start=None, error=None, limit=None, fix=None, print_level=1, **kwargs)`](https://github.com/dfujim/bfit/blob/c2a00b730ac64c341b6a9230429b9695ac9e97a1/bfit/fitting/minuit.py#L16-L55)
+    * [`chi2()`](https://github.com/dfujim/bfit/blob/c2a00b730ac64c341b6a9230429b9695ac9e97a1/bfit/fitting/minuit.py#L162-L163)
+    * Some useful functions (See [`iminuit`](https://iminuit.readthedocs.io/en/stable/reference.html) reference for full documenation): 
+        * [`migrad(ncall=None, resume=True, precision=None, iterate=5)`](https://iminuit.readthedocs.io/en/stable/reference.html#iminuit.Minuit.migrad)
+        * [`hesse(ncall=None)`](https://iminuit.readthedocs.io/en/stable/reference.html#iminuit.Minuit.hesse)
+        * [`minos(var=None, sigma=1., ncall=None)`](https://iminuit.readthedocs.io/en/stable/reference.html#iminuit.Minuit.minos)
+        * [`np_values()`](https://iminuit.readthedocs.io/en/stable/reference.html#iminuit.Minuit.np_values)
+        * [`np_errors()`](https://iminuit.readthedocs.io/en/stable/reference.html#iminuit.Minuit.np_errors)
+        * [`np_merrors()`](https://iminuit.readthedocs.io/en/stable/reference.html#iminuit.Minuit.np_merrors)
+
 # Module Details
 
 The lorentzian and gaussian are standard python functions. The pulsed functions are actually objects. For optimization purposes, they should be first initialized in the following manner: `fn = pulsed_exp(lifetime, pulse_len)` where *lifetime* is the probe lifetime in seconds and *pulse_len* is the duration of beam on in seconds. After which, the initialized object behaves like a normal function and can be used as such. 
