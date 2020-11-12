@@ -65,6 +65,9 @@ class minuit(Minuit):
                         fn_prime = fn_prime, 
                         fn_prime_dx = fn_prime_dx)
 
+        # get number of data points
+        self.npts = len(x)
+
         # detect function names
         if name is None:
             
@@ -147,10 +150,6 @@ class minuit(Minuit):
                 if broadcast_fix:       kwargs['fix_'+n] = fix
                 else:                   kwargs['fix_'+n] = fix[nidx]
                 
-        # degrees of freedom
-        nfixed = sum([1 if 'fix' in k else 0 for k in kwargs.keys()])
-        self.dof = len(x)-len(name)+nfixed
-        
         # make minuit object
         super().__init__(ls, 
                          use_array_call=True, 
@@ -160,7 +159,9 @@ class minuit(Minuit):
         
     # ====================================================================== #
     def chi2(self):
-        return self.fval/self.dof
+        nfixed = sum(self.fixed.values())
+        dof = self.npts - self.narg + nfixed
+        return self.fval/dof
         
 def get_depth(lst, depth=0):
     try: 
