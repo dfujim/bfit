@@ -146,7 +146,7 @@ class fitter(object):
         asym_mode = asym_mode.replace('2e_','')
             
         # parameter names
-        keylist = self.gen_param_names(fn_name,ncomp)
+        keylist = self.gen_param_names(fn_name, ncomp)
         npar = len(keylist)
         
         # gather list of data to fit 

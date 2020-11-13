@@ -697,16 +697,16 @@ class fit_files(object):
             self.logger.info('Fitting run %s: %s',self.bfit.get_run_key(d[0]),d[1:])    
         try:
             # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
-            fit_output,gchi = fitter(fn_name=fn_name,
-                                     ncomp=ncomp,
-                                     data_list=data_list,
-                                     hist_select=self.bfit.hist_select,
-                                     asym_mode=self.bfit.get_asym_mode(self),
-                                     xlims=xlims)
+            fit_output, gchi = fitter(fn_name=fn_name,
+                                      ncomp=ncomp,
+                                      data_list=data_list,
+                                      hist_select=self.bfit.hist_select,
+                                      asym_mode=self.bfit.get_asym_mode(self),
+                                      xlims=xlims)
         except Exception as errmsg:
             self.logger.exception('Fitting error')
             messagebox.showerror("Error",str(errmsg))
-            raise errmsg from None
+            raise errmsg from qNone
         finally:
             fit_status_window.destroy()
             del fit_status_window

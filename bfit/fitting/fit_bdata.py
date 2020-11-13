@@ -14,7 +14,7 @@ import inspect
 
 # ========================================================================== #
 def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
-              xlims=None, asym_mode='c', fixed=None, minimizer='migrad+minos', **kwargs):
+              xlims=None, asym_mode='c', fixed=None, minimizer='migrad', **kwargs):
     """
         Fit combined asymetry from bdata.
     
@@ -57,7 +57,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
                         parameters omitted. Can be a list of lists with one list 
                         for each run.
                         
-        minimizer       string. One of "migrad", "trf", "dogbox"
+        minimizer       string. One of "migrad", "minos", "trf", "dogbox"
         
         kwargs:         keyword arguments for curve_fit/minuit. 
                         See curve_fit/iminuit docs. 
@@ -114,9 +114,6 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
     # fit globally -----------------------------------------------------------
     if any(shared) and ndata>1:
         print('Running shared parameter fitting... ', flush=True)
-        do_minos = 'minos' in minimizer
-        minimizer = 'migrad' if 'migrad' in minimizer else minimizer
-            
         g = global_bdata_fitter(data = data, 
                                 fn = fn, 
                                 xlims = xlims,
@@ -126,7 +123,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
                                 fixed = fixed,
                                 )
                                 
-        g.fit(minimizer=minimizer, do_minos=do_minos, **kwargs)
+        g.fit(minimizer=minimizer, **kwargs)
         gchi, chis = g.get_chi() # returns global chi, individual chi squared
         pars, stds_l, stds_h, covs = g.get_par()
         
@@ -261,7 +258,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
 
 # =========================================================================== #
 def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
-               fixed=None, minimizer='migrad+minos', **kwargs):
+               fixed=None, minimizer='migrad', **kwargs):
     """
         Fit combined asymetry from bdata.
     
@@ -293,7 +290,7 @@ def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
                         parameters in order presented, with the fixed 
                         parameters omitted.
                         
-        minimizer       string. One of "migrad", "trf", "dogbox"
+        minimizer       string. One of "migrad", "minos", "trf", "dogbox"
         
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
@@ -328,7 +325,7 @@ def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
         kwargs['p0'] = np.ones(nargs)
     
     # Fit the function
-    if "migrad" in minimizer:
+    if minimizer in ("migrad", "minos"):
         par, cov, stdl, stdh, chi, m = _fit_single_minuit(fn, x, y, dy, fixed, 
                                                           'minos' in minimizer, 
                                                           **kwargs)

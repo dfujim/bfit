@@ -22,7 +22,7 @@ class fitter(fit_base):
                          xlims=xlims,
                          asym_mode=asym_mode,
                          fixed=fixed,
-                         minimizer='migradminos',
+                         minimizer='minos',
                          name=parnames,
                          **kwargs)
             
