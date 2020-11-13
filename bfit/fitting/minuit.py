@@ -42,8 +42,7 @@ class minuit(Minuit):
                             1 print out at the end of MIGRAD/HESSE/MINOS. 
                             2 prints debug messages.
                 
-            kwargs:         passed to Minuit.from_array_func. Optional keys:
-                                parameter names instead of signature detection.
+            kwargs:         passed to Minuit.from_array_func.
                 
                 To set for parameter "a" one can also assign the following 
                 keywords instead of the array inputs
@@ -119,7 +118,7 @@ class minuit(Minuit):
         for n in name:
             
             # index of name 
-            nidx = name.index(n)
+            nidx = list(name).index(n)
             
             # start
             if n not in keys:
@@ -166,7 +165,7 @@ class minuit(Minuit):
 def get_depth(lst, depth=0):
     try: 
         lst[0]
-    except TypeError:
+    except (IndexError, TypeError):
         return depth
     else:
         return get_depth(lst[0], depth+1)

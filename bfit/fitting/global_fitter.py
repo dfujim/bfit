@@ -311,7 +311,7 @@ class global_fitter(object):
             
         if self.dxcat is not None:
             warnings.warn("curve_fit minimizer does not account for x errors")
-        
+            
         par,cov = curve_fit(master_fn,
                             self.xcat,
                             self.ycat,
@@ -617,6 +617,7 @@ class global_fitter(object):
         x = self.x
         rng = range(self.nsets)
         metadata = self.metadata
+        fprime_dx = self.fprime_dx
           
         def master_fn(x_unused, *par):
             inputs = np.take(np.hstack((par, p0_flat_inv)), sharing_links)
@@ -705,6 +706,8 @@ class global_fitter(object):
 
         # global
         dof = len(self.xcat)-len(self.par)
+        if dof <= 0:
+            raise DivisionByZero("Zero degrees of freedom")
         
         if self.minimizer == 'migrad':
             self.chi_glbl = self.minuit.fval/dof
@@ -723,6 +726,7 @@ class global_fitter(object):
         self.chi = []
         for i in range(self.nsets):
             
+            # get data
             x = self.x[i]
             y = self.y[i]
             p = self.par_runwise[i]
@@ -735,13 +739,19 @@ class global_fitter(object):
             dy_low = None if self.dy_low is None else self.dy_low[i]
             dx_low = None if self.dx_low is None else self.dx_low[i]
         
+            # calc ls sum
             ls = LeastSquares(  f, x, y, 
                                 dy = dy, 
                                 dx = dx,
                                 dx_low = dx_low,
                                 dy_low = dy_low,
                             )
+            # get dof
             dof = len(x)-self.npar+sum(fx)
+            if dof == 0:
+                warnings.warn("Zero degrees of freedom for data set %d, using len(x) as dof" % i)
+                dof = len(x)
+            
             self.chi.append(ls(np.concatenate((p, m))) / dof)
         
         return (self.chi_glbl, self.chi)
