@@ -706,7 +706,7 @@ class fit_files(object):
         except Exception as errmsg:
             self.logger.exception('Fitting error')
             messagebox.showerror("Error",str(errmsg))
-            raise errmsg from qNone
+            raise errmsg from None
         finally:
             fit_status_window.destroy()
             del fit_status_window
