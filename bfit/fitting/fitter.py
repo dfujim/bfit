@@ -375,10 +375,10 @@ class fitter(object):
                               }
             elif fn_name == 'BiLorentzian':
                 par_values = {'peak':(peak,min(x),max(x),False),
-                              'fwhmA':(width,0,np.inf,False),
-                              'heightA':(height,*height_bounds,False),
+                              'fwhmA':(width*10,0,np.inf,False),
+                              'heightA':(height/10,*height_bounds,False),
                               'fwhmB':(width,0,np.inf,False),
-                              'heightB':(height,*height_bounds,False),
+                              'heightB':(height*9/10,*height_bounds,False),
                               'baseline':(base,-np.inf,np.inf,False)
                              }
             elif fn_name == 'QuadLorentz':
