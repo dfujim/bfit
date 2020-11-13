@@ -367,8 +367,13 @@ def _fit_single_minuit(fn, x, y, dy, fixed, do_minos=True, **kwargs):
     m.migrad()
     
     if do_minos:
-        m.minos()
-        lower, upper = m.np_merrors()
+        try:
+            m.minos()
+            lower, upper = m.np_merrors()
+        except RuntimeError as errmsg: # migrad did not converge
+            print(errmsg)
+            err = m.np_errors()
+            lower, upper = (err, err)
     else:
         m.hesse()
         err = m.np_errors()
@@ -376,7 +381,11 @@ def _fit_single_minuit(fn, x, y, dy, fixed, do_minos=True, **kwargs):
     
     # get parameters
     par = m.np_values()
-    cov = m.np_covariance()
+    
+    try:
+        cov = m.np_covariance()
+    except RuntimeError:
+        cov = None
     
     dof = len(y) - len(kwargs['p0'])
     chi = m.fval/dof
