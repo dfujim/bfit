@@ -207,8 +207,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
                                     
                 # check minuit validity
                 if m is not None: 
-                    
-                    
+                       
                     if not all((m.fmin.is_valid, 
                                 m.fmin.has_valid_parameters,
                                 not m.fmin.hesse_failed,
@@ -219,14 +218,20 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
                                 not m.fmin.has_reached_call_limit,
                                 not m.fmin.is_above_max_edm,                                
                                 )):
-                                    
-                        msg = ('====== %d.%d ======\n' % (d.year, d.run),
+                        
+                        try: 
+                            msg = ('====== %d.%d ======\n' % (d.year, d.run),
                                str(m.fmin), '\n',
                                str(m.params), '\n',
                                )
                                
-                        iter_obj.write(''.join(msg))
-                    
+                            iter_obj.write(''.join(msg))
+                        except UnicodeEncodeError:
+                            msg = ('====== %d.%d ======\n' % (d.year, d.run),
+                               repr(m.fmin), '\n',
+                               repr(m.params), '\n',
+                               )
+                            iter_obj.write(''.join(msg))
                     
             # outputs
             pars.append(p)
