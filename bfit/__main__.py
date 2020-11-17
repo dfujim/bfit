@@ -1,5 +1,5 @@
 from bfit.gui.bfit import bfit, logger_name
-import logging, os
+import logging, os, sys
 from logging.handlers import RotatingFileHandler
 import argparse, subprocess
 from textwrap import dedent
@@ -68,7 +68,8 @@ if __name__ == '__main__':
         
     # Check version ----------------------------------------------------------
     def check_version():
-        vstr = subprocess.check_output(['python3','-m','pip','search','bfit'])
+        
+        vstr = subprocess.check_output([sys.executable,'-m','pip','search','bfit'])
         vstr = vstr.decode('utf-8')
         vlst = [l.strip() for l in vstr.split('\n') if l]
         
