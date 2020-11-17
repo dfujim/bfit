@@ -76,14 +76,15 @@ if __name__ == '__main__':
         if 'latest' not in vlst[1]:
             print(vstr.strip())
     
-    # start processes
     process_get_version = Process(target = check_version)
+    process_get_version.start()
+    
+    # start bfit --------------------------------------------------------------
     process_bfit = Process(target = bfit,
                            args = (testfn,))
-    
     process_bfit.start()    
-    process_get_version.start()
-
+    
+    # join
     process_get_version.join()
     process_bfit.join() # this one never ends - tkinter mainloop
     
