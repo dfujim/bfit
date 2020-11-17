@@ -3,7 +3,7 @@ import logging, os
 from logging.handlers import RotatingFileHandler
 import argparse, subprocess
 from textwrap import dedent
-from multiprocessing import Process, Queue
+from multiprocessing import Process
 
 if __name__ == '__main__':
 
