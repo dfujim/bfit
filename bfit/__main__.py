@@ -68,14 +68,17 @@ if __name__ == '__main__':
         
     # Check version ----------------------------------------------------------
     def check_version():
-        
-        vstr = subprocess.check_output([sys.executable,'-m','pip','search','bfit'])
-        vstr = vstr.decode('utf-8')
-        vlst = [l.strip() for l in vstr.split('\n') if l]
-        
-        # check if latest
-        if 'latest' not in vlst[1]:
-            print(vstr.strip())
+        try:
+            vstr = subprocess.check_output([sys.executable,'-m','pip','search','bfit'])
+        except Exception as err:
+            return
+        else:            
+            vstr = vstr.decode('utf-8')
+            vlst = [l.strip() for l in vstr.split('\n') if l]
+            
+            # check if latest
+            if 'latest' not in vlst[1]:
+                print(vstr.strip())
     
     process_get_version = Process(target = check_version)
     process_get_version.start()
