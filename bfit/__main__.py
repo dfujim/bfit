@@ -1,8 +1,9 @@
-from bfit.gui.bfit import bfit,logger_name
+from bfit.gui.bfit import bfit, logger_name
 import logging, os
 from logging.handlers import RotatingFileHandler
-import argparse
+import argparse, subprocess
 from textwrap import dedent
+from multiprocessing import Process, Queue
 
 if __name__ == '__main__':
 
@@ -65,6 +66,24 @@ if __name__ == '__main__':
         # ~ plt.close('all')
         # ~ self.fit_files.do_add_param()
         
-    # Run bfit ----------------------------------------------------------------
-    bfit(testfn)
+    # Check version ----------------------------------------------------------
+    def check_version():
+        vstr = subprocess.check_output(['python3','-m','pip','search','bfit'])
+        vstr = vstr.decode('utf-8')
+        vlst = [l.strip() for l in vstr.split('\n') if l]
+        
+        # check if latest
+        if 'latest' not in vlst[1]:
+            print(vstr.strip())
+    
+    # start processes
+    process_get_version = Process(target = check_version)
+    process_bfit = Process(target = bfit,
+                           args = (testfn,))
+    
+    process_bfit.start()    
+    process_get_version.start()
 
+    process_get_version.join()
+    process_bfit.join() # this one never ends - tkinter mainloop
+    
