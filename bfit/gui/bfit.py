@@ -131,38 +131,93 @@ class bfit(object):
     legend_max_draw = 8 # max number of items to draw before removing the legend
     
     # csymmetry calculation options
-    asym_dict_keys = {'20':("Combined Helicity","Split Helicity","Combined Normalized",
-                            "Positive Helicity","Negative Helicity",
-                            "Matched Helicity","Histograms"),
-                      '1f':("Combined Helicity","Split Helicity","Raw Scans",
-                            "Positive Helicity","Negative Helicity",
-                            "Shifted Split","Shifted Combined","Normalized Combined",
-                            "Histograms"),
-                      '1n':("Combined Helicity","Split Helicity","Raw Scans",
-                            "Positive Helicity","Negative Helicity",
-                            "Matched Peak Finding","Histograms"),
-                      '1e':("Combined Helicity","Split Helicity","Raw Scans",
-                            "Positive Helicity","Negative Helicity",
-                            "Histograms"),
-                      '1w':("Combined Helicity","Split Helicity","Raw Scans",
-                            "Positive Helicity","Negative Helicity",
-                            "Shifted Split","Shifted Combined","Normalized Combined","Histograms"),
-                      '2e':("Combined Hel Slopes","Combined Hel Diff","Combined Hel Raw",
-                            "Split Hel Slopes","Split Hel Diff","Split Hel Raw",
-                            "Split Slopes Shifted","Split Diff Shifted","Split Raw Shifted"),
-                      '2h':("Combined Helicity","Split Helicity", "Normalized Combined",
-                            "Positive Helicity","Negative Helicity",
+    asym_dict_keys = {'20':("Combined Helicity",
+                            "Split Helicity",
+                            "Combined Normalized",
                             "Matched Helicity",
-                            "Alpha Diffusion", "Alpha Diff Normalized",
-                            "Combined Hel (Alpha Tag)","Split Hel (Alpha Tag)",
-                            "Combined Hel (!Alpha Tag)","Split Hel (!Alpha Tag)",
-                            "Histograms")}
+                            "Histograms",
+                            "Positive Helicity",
+                            "Negative Helicity",
+                            "Forward Counter",
+                            "Backward Counter",
+                            ),
+                      '1f':("Combined Helicity",
+                            "Split Helicity",
+                            "Raw Scans",
+                            "Shifted Split",
+                            "Shifted Combined",
+                            "Normalized Combined",
+                            "Histograms",
+                            "Positive Helicity",
+                            "Negative Helicity",
+                            "Forward Counter",
+                            "Backward Counter",
+                            ),
+                      '1n':("Combined Helicity",
+                            "Split Helicity",
+                            "Raw Scans",
+                            "Matched Peak Finding",
+                            "Histograms",
+                            "Positive Helicity",
+                            "Negative Helicity",
+                            "Forward Counter",
+                            "Backward Counter",
+                            ),
+                      '1e':("Combined Helicity",
+                            "Split Helicity",
+                            "Raw Scans",
+                            "Histograms",
+                            "Positive Helicity",
+                            "Negative Helicity",
+                            "Forward Counter",
+                            "Backward Counter",
+                            ),
+                      '1w':("Combined Helicity",
+                            "Split Helicity",
+                            "Raw Scans",
+                            "Shifted Split",
+                            "Shifted Combined",
+                            "Normalized Combined",
+                            "Histograms",
+                            "Positive Helicity",
+                            "Negative Helicity",
+                            "Forward Counter",
+                            "Backward Counter",
+                            ),
+                      '2e':("Combined Hel Slopes",
+                            "Combined Hel Diff",
+                            "Combined Hel Raw",
+                            "Split Hel Slopes",
+                            "Split Hel Diff",
+                            "Split Hel Raw",
+                            "Split Slopes Shifted",
+                            "Split Diff Shifted",
+                            "Split Raw Shifted",
+                            ),
+                      '2h':("Combined Helicity",
+                            "Split Helicity", 
+                            "Normalized Combined",
+                            "Positive Helicity",
+                            "Alpha Diffusion", 
+                            "Alpha Diff Normalized",
+                            "Combined Hel (Alpha Tag)",
+                            "Split Hel (Alpha Tag)",
+                            "Combined Hel (!Alpha Tag)",
+                            "Split Hel (!Alpha Tag)",
+                            "Histograms",
+                            "Negative Helicity",
+                            "Matched Helicity",
+                            "Forward Counter",
+                            "Backward Counter",
+                            )}
     
     # asymmetry calculation codes
     asym_dict = {"Combined Helicity"        :'c',
                  "Split Helicity"           :'h',
                  "Positive Helicity"        :'p',
                  "Negative Helicity"        :'n',
+                 "Forward Counter"          :'fc',
+                 "Backward Counter"         :'bc',
                  "Matched Helicity"         :'hm',
                  "Shifted Split"            :'hs',
                  "Shifted Combined"         :'cs',
@@ -773,7 +828,9 @@ class bfit(object):
             
         # get asymmetry: not raw scans, not 2e
         else:
-            a = data.asym(omit=option,rebin=rebin,hist_select=self.hist_select,
+            a = data.asym(omit=option, 
+                          rebin=rebin, 
+                          hist_select=self.hist_select,
                           nbm=self.use_nbm.get())
             x = a[self.x_tag[data.mode]]
             xlabel = self.xlabel_dict[data.mode]
@@ -834,8 +891,36 @@ class bfit(object):
                 tag = an!=0
                 
                 # draw
-                self.plt.errorbar(figstyle,data.id,x[tag],an[tag],a.n[1][tag],
-                                        label=label+" ($-$)",**drawargs)
+                self.plt.errorbar(figstyle, data.id, x[tag], an[tag], a.n[1][tag],
+                                        label=label+" ($-$)", **drawargs)
+                
+            # plot forward counter
+            elif asym_type == 'fc':
+                
+                # fetch new x
+                x = a[self.x_tag[data.mode]+'_cntr']
+                
+                # remove zero asym
+                afwd = a.fwd[0]
+                tag = afwd!=0
+                
+                # draw
+                self.plt.errorbar(figstyle, data.id, x[tag], afwd[tag], a.fwd[1][tag],
+                                        label=label+" (Fwd)", **drawargs)
+                
+            # plot forward counter
+            elif asym_type == 'bc':
+                
+                # fetch new x
+                x = a[self.x_tag[data.mode]+'_cntr']
+                
+                # remove zero asym
+                abck = a.bck[0]
+                tag = abck!=0
+                
+                # draw
+                self.plt.errorbar(figstyle, data.id, x[tag], abck[tag], a.bck[1][tag],
+                                        label=label+" (Bck)", **drawargs)
                 
             # plot split helicities, shifted by baseline
             elif asym_type == 'hs':

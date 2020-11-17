@@ -70,7 +70,7 @@ if __name__ == '__main__':
     def check_version():
         try:
             vstr = subprocess.check_output([sys.executable,'-m','pip','search','bfit'])
-        except Exception as err:
+        except subprocess.CalledProcessError:
             return
         else:            
             vstr = vstr.decode('utf-8')

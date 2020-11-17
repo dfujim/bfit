@@ -307,6 +307,8 @@ Error message and password prompt
 
 <li>Data directory</li>
 
+<li>Draft of 'Asymmetry Calculation Details'</li>
+
 <li>Draw 1f as PPM shift</li>
 
 <li>Draw in new window</li>
@@ -6360,7 +6362,7 @@ Error message and password prompt
 <div modified="20171215084937325" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/EditToolbar</pre>
 </div>
-<div list="[[Help Index]]" title="$:/StoryList">
+<div list="[[Help Index]] [[Draft of 'Asymmetry Calculation Details']]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div modified="20171215083831245" title="$:/temp/advancedsearch">
@@ -6895,6 +6897,123 @@ J. J. More, “The Levenberg-Marquardt Algorithm: Implementation and Theory,” 
 </div>
 <div created="20191108174833143" modified="20191108174937810" tags="[[menu option]]" title="Data directory">
 <pre>By default, bfit uses the [[bdata|https://github.com/dfujim/bdata]] directory defaults to fetch data. If a different directory is desired, select it here. Set directly is not persistent across instances. </pre>
+</div>
+<div created="20171215084952848" draft.of="Asymmetry Calculation Details" draft.title="Asymmetry Calculation Details" modified="20201117071940446" title="Draft of 'Asymmetry Calculation Details'">
+<pre>! Variable Assignment
+
+In the following we shall treat only the BNMR case. For BNQR, simply associate ''F'' with ''R'' and ''B'' with ''L''. For the case of 1n runs (Rb cell scans), the neutral beam monitors are used, therefore associate ''F'' with ''NBMF'' and ''B'' with ''NBMB''
+
+---
+
+! Asymmetry Calculations
+
+!! Split helicity
+
+$$A_{(+,-)} = \frac{F_{(+,-)}-B_{(+,-)}}{F_{(+,-)}+B_{(+,-)}}$$
+
+!! Combined helicity
+
+Let $$r = \sqrt{\frac{B_+F_-}{F_+B_-}}$$ then $$A = \frac{r-1}{r+1}$$.
+
+This corrects for inherent differences in detector rates (alpha corrections). 
+
+!! Positive/Negative helicity
+
+Same calculation as the split helicity, but draws only one of the two helicites. 
+
+!! Split Counters
+
+$$A = \frac{x_+-x_-}{x_++x_-}$$
+
+where $$x$$ is one of $$F$$, $$B$$, $$L$$, $$R$$
+
+!! Alpha Diffusion (2h only)
+
+The ratio is the number of alpha counts divided by the number of beta counts, regardless of helicity: 
+
+$$\frac{N_\alpha}{N_\beta}$$
+
+For example, this would be computed by
+
+$$\frac{(AL0_+)+(AL0_-)}{(R_+)+(R_-)+(L_+)+(L_-)}$$
+
+!! Matched Helicity (20, 2h only)
+
+Normal split helicity, with the (-) helicity mirrored across the mean. Use to check for rate distortion issues.
+
+!! Shifted Split (1f, 1n, 1w only)
+
+Draw the difference between the split helicity and the helicity in the first bin. Crudely sets the baseline to zero by subtracting the weighted average of the 5 largest frequency bins. Use to compare spectra in different helicities. 
+
+!! Shifted Combined (1f, 1n, 1w only)
+
+Useful for comparing different runs with very different baselines. 
+
+* If a fit exists, subtract the baseline from the fit in the normalization, 
+* Otherwise estimate the baseline from the weighted average of the 5 largest frequency bins, and subtract that
+
+!! Normalized Combined (1f, 1w only)
+
+Normalize by the baseline value (divide by). 
+
+* If a fit exists, use the baseline from the fit in the normalization, 
+* Otherwise estimate the baseline from the weighted average of the 5 largest frequency bins.
+
+!! Combined Normalized (20, 2h only)
+
+Normalize by the amplitude (divide by). 
+
+* If a fit exists and has the parameter &quot;amp&quot;: divide by the amp
+* Otherwise divide by the first value as an approximation of t=0. Note that the first value is affected by the rebinning to account for error in the first few bins, as they are often unreliable.
+
+!! Matched Peak Finding (1n only)
+
+Flip the (-) along the mean, find the position of the maximum and indicate it. Useful for setting the Rb cell bias voltage. 
+
+!! Histograms
+
+Draw the counts in the histograms, superimposed. Does not label with run number
+
+---
+
+! 20 Mode 
+
+Removes prebeam bins. Time bins are ID'd by their centers, not the leading edge. 
+
+---
+
+! 1F and 1N Scan Combination
+
+Multiscans are considered as a single scan with long integration time. Histogram bins are summed according to their frequency bin, errors are Poisson. Asymmetry is then calculated from the summed histograms. 
+
+---
+
+!Alpha Tagging
+
+Computations are as in the 20 mode, but counters for $$\beta$$ in coincidence with $$\alpha$$ are used separately from counters for $$\beta$$ in coincidence with $$!\alpha$$ (no $$\alpha$$ present), as well as the usual counters which do not take alpha tagging into consideration. 
+
+---
+
+! 2E Mode 
+
+2E mode measures as a function of frequency over time, so one can either plot the asymmetry as a function of time, or combine the times by some method. For the following, let's say we have times $$t_{-2},~t_{-1},~t_{0},~t_{+1},~t_{+2}$$
+
+!! Raw
+
+Asymmetries for each time bin as calculated as normal, for each of the time bins. 
+
+!! Difference Combined
+
+Working off of the raw asymmetry calculations we can combine asymmetries by taking the difference at the times $$t_{-1}$$ and $$t_{+1}$$.
+
+!! Slopes Combined
+
+Working off of the raw asymmetry calculations we can combine asymmetries in the following way: 
+
+# For each frequency bin of times $$t_{-1}$$ and $$t_{-2}$$ as well as $$t_{+1}$$ and $$t_{+2}$$, find the linear line of best fit. 
+# Project these onto $$t_{0}$$
+# Take the difference 
+</pre>
 </div>
 <div created="20191108181424365" modified="20191108181638853" tags="[[menu option]]" title="Draw 1f as PPM shift">
 <pre>Draw 1f runs as a PPM shift which is calculated as: 
