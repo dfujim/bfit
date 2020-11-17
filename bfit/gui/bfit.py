@@ -898,7 +898,8 @@ class bfit(object):
             elif asym_type == 'fc':
                 
                 # fetch new x
-                x = a[self.x_tag[data.mode]+'_cntr']
+                if data.mode in ('1f', '1n', '1w'):
+                    x = a[self.x_tag[data.mode]+'_cntr']
                 
                 # remove zero asym
                 afwd = a.fwd[0]
@@ -910,9 +911,10 @@ class bfit(object):
                 
             # plot forward counter
             elif asym_type == 'bc':
-                
+                                
                 # fetch new x
-                x = a[self.x_tag[data.mode]+'_cntr']
+                if data.mode in ('1f', '1n', '1w'):
+                    x = a[self.x_tag[data.mode]+'_cntr']
                 
                 # remove zero asym
                 abck = a.bck[0]
