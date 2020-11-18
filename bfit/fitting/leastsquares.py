@@ -103,7 +103,7 @@ class LeastSquares:
         return np.sum(np.square(self.y - self.fn(self.x, *pars)))
             
     def ls_dy(self, *pars):
-        return np.sum(np.square((self.y -self.fn(self.x,*pars)) / self.dy))
+        return np.sum(np.square((self.y -self.fn(self.x, *pars)) / self.dy))
     
     def ls_dx(self, *pars):
         fprime = self.fn_prime(self.x, *pars)

@@ -28,14 +28,14 @@ class ParameterFunction(ConstrainedFunction):
         
         # get variables in decreasing order of length (no mistakes in replace)
         varlist = np.array(list(self.keyvars.keys()))
-        varlist = varlist[np.argsort(list(map(len,varlist))[::-1])]
+        varlist = varlist[np.argsort(list(map(len, varlist))[::-1])]
     
         # replace 1_T1 with lambda
         while '1_T1' in equation:
             equation = equation.replace('1_T1', 'lambda1')
         
         self.parnames = list(parnames)
-        for i,p in enumerate(self.parnames):
+        for i, p in enumerate(self.parnames):
             while '1_T1' in p:
                 p = p.replace('1_T1', 'lambda1')
             self.parnames[i] = p
@@ -77,7 +77,7 @@ class ParameterFunction(ConstrainedFunction):
                 values = [self._get_value(self.bfit.data[r], var) for r in runs]
             elif var in self.parnames:
                 
-                var_par = var.replace('lambda1','1_T1')
+                var_par = var.replace('lambda1', '1_T1')
                 values = [self.bfit.data[r].fitpar['res'][var_par] for r in runs]
                     
             # set up inputs

@@ -23,7 +23,7 @@ __doc__=\
         
         Construct fitter:
             
-            g = global_fitter(x,y,dy,fn,sharelist,npar=-1)
+            g = global_fitter(x, y, dy, fn, sharelist, npar=-1)
             
             %s
     
@@ -44,8 +44,8 @@ __doc__=\
             
         Draw the result
         
-            g.draw(mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,
-                   savefig='',**errorbar_args)
+            g.draw(mode='stack', xlabel='', ylabel='', do_legend=False, labels=None, 
+                   savefig='', **errorbar_args)
            
             %s
 """
@@ -92,16 +92,16 @@ class global_fitter(object):
             dycat_low               concatenated dydata for global fitting
             dxcat_low               concatenated dydata for global fitting
             
-            x                       input array of x data sets [array1,array2,...]
-            y                       input array of y data sets [array1,array2,...]
-            dy                      input array of y error sets [array1,array2,...]
-            dx                      input array of x error sets [array1,array2,...]
-            dy_low                  input array of y error sets [array1,array2,...]
-            dx_low                  input array of x error sets [array1,array2,...]
+            x                       input array of x data sets [array1, array2, ...]
+            y                       input array of y data sets [array1, array2, ...]
+            dy                      input array of y error sets [array1, array2, ...]
+            dx                      input array of x error sets [array1, array2, ...]
+            dy_low                  input array of y error sets [array1, array2, ...]
+            dx_low                  input array of x error sets [array1, array2, ...]
     """
     
     # class variables
-    draw_modes = ('stack','s','new','n','append','a')   # for checking modes
+    draw_modes = ('stack', 's', 'new', 'n', 'append', 'a')   # for checking modes
     ndraw_pts = 500             # number of points to draw fits with
     
     # ======================================================================= #
@@ -114,7 +114,7 @@ class global_fitter(object):
                         inputs in the same order
         
             x, y:       2-list of data sets of equal length. 
-                        fmt: [[a1,a2,...],[b1,b2,...],...]
+                        fmt: [[a1, a2, ...], [b1, b2, ...], ...]
             
             dx, dy:     list of errors in x or y with same format as x and y
             dx_low, dy_low: list of low bound errors in x or y with same format 
@@ -137,7 +137,7 @@ class global_fitter(object):
                         
                         number of parameters is set by len(shared), all 
                         remaining inputs are expected to be metadata inputs
-                        function call: fn[i](x[i],*par[i],*metadata[i])
+                        function call: fn[i](x[i], *par[i], *metadata[i])
             
             fprime_dx:  x spacing in calculating centered differences derivative
             
@@ -208,7 +208,7 @@ class global_fitter(object):
                 if dx_low is not None:  dx_low[i] = dx_low[i][idx]
 
         # check if list of functions given 
-        if not isinstance(fn,collections.Iterable):
+        if not isinstance(fn, collections.Iterable):
             fn = [fn]*self.nsets
         
         # check metadata
@@ -229,11 +229,11 @@ class global_fitter(object):
         # expand fixed
         if fixed is not None: 
             if len(np.asarray(fixed).shape) == 1:
-                fixed = np.full((self.nsets,self.npar),fixed)
+                fixed = np.full((self.nsets, self.npar), fixed)
             else:
                 fixed = np.asarray(fixed)
         else:
-            fixed = np.zeros((self.nsets,self.npar)).astype(bool)
+            fixed = np.zeros((self.nsets, self.npar)).astype(bool)
         
         fixed_flat = np.concatenate(fixed)
         
@@ -270,7 +270,7 @@ class global_fitter(object):
         sharing_links = np.array(sharing_links)        
         unq = np.unique(sharing_links)
         unq = unq[unq>=0]
-        for i,u in enumerate(unq):
+        for i, u in enumerate(unq):
             sharing_links[sharing_links==u] = i
         
         # save results
@@ -312,12 +312,12 @@ class global_fitter(object):
         if self.dxcat is not None:
             warnings.warn("curve_fit minimizer does not account for x errors")
             
-        par,cov = curve_fit(master_fn,
-                            self.xcat,
-                            self.ycat,
-                            sigma=dycat,
-                            absolute_sigma=absolute_sigma,
-                            p0 = p0_first,
+        par, cov = curve_fit(master_fn, 
+                            self.xcat, 
+                            self.ycat, 
+                            sigma=dycat, 
+                            absolute_sigma=absolute_sigma, 
+                            p0 = p0_first, 
                             **fitargs)
                             
         std = np.diag(cov)**0.5
@@ -331,18 +331,18 @@ class global_fitter(object):
                             dy = self.dycat, 
                             dx = self.dxcat, 
                             dy_low = self.dycat_low, 
-                            dx_low = self.dxcat_low,
+                            dx_low = self.dxcat_low, 
                             fn_prime = master_fnprime)
         
         # set args
-        limit = fitargs.get('bounds',None)
+        limit = fitargs.get('bounds', None)
         if limit is not None:
             limit = np.array(limit).T
         
-        kwargs_minuit = {'start':p0_first,
-                         'limit':limit,
-                         'print_level':fitargs.get('print_level',1),
-                         'errordef':1,
+        kwargs_minuit = {'start':p0_first, 
+                         'limit':limit, 
+                         'print_level':fitargs.get('print_level', 1), 
+                         'errordef':1, 
                         }
         
         # get minuit obj
@@ -373,8 +373,8 @@ class global_fitter(object):
         return (par, lower, upper, cov)
         
     # ======================================================================= #
-    def draw(self,mode='stack',xlabel='',ylabel='',do_legend=False,labels=None,
-             savefig='',**errorbar_args):
+    def draw(self, mode='stack', xlabel='', ylabel='', do_legend=False, labels=None, 
+             savefig='', **errorbar_args):
         """
             Draw data and fit results. 
             
@@ -428,13 +428,13 @@ class global_fitter(object):
             md = self.metadata[i]
                         
             # make new figure
-            if mode in ['new','n']:            
+            if mode in ['new', 'n']:            
                 fig_list.append(plt.figure())
             elif len(fig_list) == 0:
                 fig_list.append(plt.figure())
             
             # shift x values
-            if mode in ['append','a']:
+            if mode in ['append', 'a']:
                 x_draw = x+last
                 last = x_draw[-1]
             else:
@@ -451,7 +451,7 @@ class global_fitter(object):
                                   label=labels[i], **errorbar_args)
             
             # get color for fit curve
-            if mode in ['stack','s']:
+            if mode in ['stack', 's']:
                 color = datplt[0].get_color()
             else:
                 color = 'k'
@@ -459,7 +459,7 @@ class global_fitter(object):
             # draw fit
             xfit = np.linspace(min(x), max(x), self.ndraw_pts)
             xdraw = np.linspace(min(x_draw), max(x_draw), self.ndraw_pts)
-            plt.plot(xdraw,f(xfit, *self.par_runwise[i], *md), color=color, zorder=10)
+            plt.plot(xdraw, f(xfit, *self.par_runwise[i], *md), color=color, zorder=10)
         
             # plot elements
             plt.ylabel(ylabel)
@@ -477,28 +477,28 @@ class global_fitter(object):
         """
             fitargs: parameters to pass to fitter (scipy.optimize.curve_fit) 
             
-            p0:         [(p1,p2,...),...] innermost tuple is initial parameters 
+            p0:         [(p1, p2, ...), ...] innermost tuple is initial parameters 
                             for each data set, list of tuples for all data sets
                             if not enough sets of inputs, last input is copied 
                             for remaining data sets.
                             
-                            p0.shape = (nsets,npars)
+                            p0.shape = (nsets, npars)
                     OR
-                        (p1,p2,...) single tuple to set same initial parameters 
+                        (p1, p2, ...) single tuple to set same initial parameters 
                             for all data sets
             
-                            p0.shape = (npars,)
+                            p0.shape = (npars, )
             
-            bounds:     [((l1,l2,...),(h1,h2,...)),...] similar to p0, but use 
+            bounds:     [((l1, l2, ...), (h1, h2, ...)), ...] similar to p0, but use 
                             2-tuples instead of the 1-tuples of p0
                         
-                            bounds.shape = (nsets,2,npars)
+                            bounds.shape = (nsets, 2, npars)
                         
                     OR
-                        ((l1,l2,...),(h1,h2,...)) single 2-tuple to set same 
+                        ((l1, l2, ...), (h1, h2, ...)) single 2-tuple to set same 
                             bounds for all data sets
                             
-                            bounds.shape = (2,npars)
+                            bounds.shape = (2, npars)
                             
             minimizer:      string. One of "trf", "dogbox", or "migrad" indicating 
                             which code to use to minimize the function
@@ -610,7 +610,7 @@ class global_fitter(object):
             hi = self._flatten(hi)
             
             # construct bounds
-            bounds = (lo,hi)
+            bounds = (lo, hi)
             fitargs['bounds'] = bounds
     
         # make the master function 
@@ -635,7 +635,7 @@ class global_fitter(object):
         self.master_fnprime = master_fnprime
       
         # do curve_fit
-        if minimizer in ('trf','dogbox'):
+        if minimizer in ('trf', 'dogbox'):
             fitargs['method'] = minimizer
             par, std_l, std_u, cov = self._do_curve_fit(master_fn, p0_first, **fitargs)
         
@@ -644,7 +644,7 @@ class global_fitter(object):
             fprime_dx = self.fprime_dx
             self.master_fn = master_fn
                     
-            par, std_l, std_u, cov = self._do_migrad(master_fn, master_fnprime,
+            par, std_l, std_u, cov = self._do_migrad(master_fn, master_fnprime, 
                                                     do_minos, p0_first, **fitargs)
         else:
             raise RuntimeError("Unrecognized minimizer input '%s'" % minimizer)
@@ -656,7 +656,7 @@ class global_fitter(object):
         cov = np.asarray(cov)
         
         # inflate parameters
-        par_out = np.hstack((par,p0_flat_inv))[sharing_links]
+        par_out = np.hstack((par, p0_flat_inv))[sharing_links]
         
         zero = np.zeros(len(p0_flat_inv))
         std_l_out = np.hstack((std_l, zero))[sharing_links]
@@ -675,11 +675,11 @@ class global_fitter(object):
                     
                     # fixed values
                     if lnk[j] < 0 or lnk[i] < 0: 
-                        cov_run[i,j] = np.nan
+                        cov_run[i, j] = np.nan
                     
                     # cov
                     else:
-                        cov_run[i,j] = cov[lnk[i],lnk[j]]
+                        cov_run[i, j] = cov[lnk[i], lnk[j]]
             cov_out.append(cov_run)
                     
         # return
@@ -717,7 +717,7 @@ class global_fitter(object):
                             dy = self.dycat, 
                             dx = self.dxcat, 
                             dy_low = self.dycat_low, 
-                            dx_low = self.dxcat_low,
+                            dx_low = self.dxcat_low, 
                             fn_prime = self.master_fnprime)
             
             self.chi_glbl = ls(self.par) / dof
@@ -742,9 +742,9 @@ class global_fitter(object):
             # calc ls sum
             ls = LeastSquares(  f, x, y, 
                                 dy = dy, 
-                                dx = dx,
-                                dx_low = dx_low,
-                                dy_low = dy_low,
+                                dx = dx, 
+                                dx_low = dx_low, 
+                                dy_low = dy_low, 
                             )
             # get dof
             dof = len(x)-self.npar+sum(fx)
@@ -763,9 +763,9 @@ class global_fitter(object):
             
             return 4-tuple of (par, std_l, std_u, cov) with format
             
-            ([data1:[par1, par2, ...], data2:[], ...],
-             [data1:[std_l1, std_l2, ...], data2:[], ...],
-             [data1:[std_u1, std_u2, ...], data2:[], ...],
+            ([data1:[par1, par2, ...], data2:[], ...], 
+             [data1:[std_l1, std_l2, ...], data2:[], ...], 
+             [data1:[std_u1, std_u2, ...], data2:[], ...], 
              [data1:[cov1, cov2, ...], data2:[], ...])
         """
         return (self.par_runwise, 
@@ -784,31 +784,31 @@ class global_fitter(object):
         
         # single float case
         if not lim.shape:
-            return np.full((self.nsets,self.npar),np.full(self.npar,lim))
+            return np.full((self.nsets, self.npar), np.full(self.npar, lim))
             
         # list case: probably each variable defined
         if len(lim.shape) == 1 and len(lim) == self.npar:
-            return np.full((self.nsets,self.npar),lim)
+            return np.full((self.nsets, self.npar), lim)
         
         # list case: probably each data set defined in full
-        if lim.shape == (self.nsets,self.npar):
+        if lim.shape == (self.nsets, self.npar):
             return lim
         
         # we don't know what's happening
         raise RuntimeError('Unexpected bound size input')
         
     # ======================================================================= #
-    def _flatten(self,arr):
+    def _flatten(self, arr):
         """
             Flatten input array based on sharing and fixing. 
-            Use for p0,bounds
+            Use for p0, bounds
         """
     
         fixed = self.fixed
         shared = self.shared
     
         arr2 = list(arr[0][~fixed[0]])
-        for i in range(1,len(arr)):
+        for i in range(1, len(arr)):
             arr2.extend(arr[i][(~fixed[i])*(~shared)])
         return np.array(arr2)
 
@@ -829,9 +829,9 @@ def get_depth(lst, _n=0):
         return get_depth(lst[0], _n+1)
     
 # Add to module docstring
-__doc__ = __doc__ % (global_fitter.__init__.__doc__,
-                     global_fitter.fit.__doc__,
-                     global_fitter.get_chi.__doc__,
-                     global_fitter.get_par.__doc__,
-                     global_fitter.draw.__doc__,
+__doc__ = __doc__ % (global_fitter.__init__.__doc__, 
+                     global_fitter.fit.__doc__, 
+                     global_fitter.get_chi.__doc__, 
+                     global_fitter.get_par.__doc__, 
+                     global_fitter.draw.__doc__, 
                      )

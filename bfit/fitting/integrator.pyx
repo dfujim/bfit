@@ -14,7 +14,7 @@
 cimport cython
 import numpy as np
 cimport numpy as np
-from libc.math cimport exp,pow
+from libc.math cimport exp, pow
 
 # ========================================================================== #
 # Integration functions import
@@ -22,7 +22,7 @@ cdef extern from 'integration_fns.h':
     cdef cppclass Integrator:
         double lifetime;
         Integrator(double);
-        double StrExp(double,double,double,double) except +;
+        double StrExp(double, double, double, double) except +;
 
 # =========================================================================== #
 cdef class PulsedFns:
@@ -31,7 +31,7 @@ cdef class PulsedFns:
     cdef Integrator* intr        # integrator
 
     # ======================================================================= #
-    def __init__(self,lifetime,pulse_len):
+    def __init__(self, lifetime, pulse_len):
         """
             Inputs:
                 lifetime: probe lifetime in s
@@ -134,12 +134,12 @@ cdef class PulsedFns:
             # during pulse
             if t<pulse_len:
                 prefac = life*(1.-exp(-t/life))
-                x = intr.StrExp(t,t,Lambda,Beta)
+                x = intr.StrExp(t, t, Lambda, Beta)
                 out = x/prefac
             
             # after pulse
             else:
-                x = intr.StrExp(t,pulse_len,Lambda,Beta)
+                x = intr.StrExp(t, pulse_len, Lambda, Beta)
                 out = x*exp((t-pulse_len)/life)/prefac_post
             
             # save result

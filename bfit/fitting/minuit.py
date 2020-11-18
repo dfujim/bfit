@@ -153,7 +153,7 @@ class minuit(Minuit):
         super().__init__(ls, 
                          use_array_call=True, 
                          name = name, 
-                         print_level = print_level,
+                         print_level = print_level, 
                          **kwargs)
         
     # ====================================================================== #

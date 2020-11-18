@@ -16,18 +16,18 @@ class ConstrainedFunction(object):
     
     # keywords used to identify variables
     keyvars = { 'B0'    : 'B0 Field (T)', 
-                'BIAS'  : 'Platform Bias (kV)',
-                'CLFT'  : 'Cryo Lift Read (mm)',
-                'DUR'   : 'Run Duration (s)',
-                'ENRG'  : 'Impl. Energy (keV)',
-                'LAS'   : 'Laser Power',
-                'NBMR'  : 'NBM Rate (count/s)',
-                'RATE'  : 'Sample Rate (count/s)',
-                'RF'    : 'RF Level DAC',
-                'RUN'   : 'Run Number',
-                'TEMP'  : 'Temperature (K)',
-                'TIME'  : 'Start Time',
-                'YEAR'  : 'Year',
+                'BIAS'  : 'Platform Bias (kV)', 
+                'CLFT'  : 'Cryo Lift Read (mm)', 
+                'DUR'   : 'Run Duration (s)', 
+                'ENRG'  : 'Impl. Energy (keV)', 
+                'LAS'   : 'Laser Power', 
+                'NBMR'  : 'NBM Rate (count/s)', 
+                'RATE'  : 'Sample Rate (count/s)', 
+                'RF'    : 'RF Level DAC', 
+                'RUN'   : 'Run Number', 
+                'TEMP'  : 'Temperature (K)', 
+                'TIME'  : 'Start Time', 
+                'YEAR'  : 'Year', 
               }    
                        
     # ======================================================================= # 
@@ -42,7 +42,7 @@ class ConstrainedFunction(object):
             oldpar:         list of strings corresponding to old function 
                             parameters in order
         """
-        self.header = 'lambda %s : ' % (','.join(newpar))
+        self.header = 'lambda %s : ' % (', '.join(newpar))
         self.oldpar = oldpar
         
         # sort equations and defined by old par
@@ -59,7 +59,7 @@ class ConstrainedFunction(object):
         
         # get variables in decreasing order of length (no mistakes in replace)
         varlist = np.array(list(self.keyvars.keys()))
-        varlist = varlist[np.argsort(list(map(len,varlist))[::-1])]
+        varlist = varlist[np.argsort(list(map(len, varlist))[::-1])]
     
         eqn = []
         for c in self.equation:
@@ -75,7 +75,7 @@ class ConstrainedFunction(object):
         constr_fns = [eval(self.header+e)for e in eqn]    
         
         # define the new fitting function
-        def new_fn(x,*newparam):
+        def new_fn(x, *newparam):
             oldparam = [c(*newparam) for c in constr_fns]
             return fn(x, *oldparam)
             
@@ -95,10 +95,10 @@ class ConstrainedFunction(object):
         elif name =='LAS'   :   return data.bd.epics.las_pwr.mean
         elif name =='NBMR'  :   
             return np.sum([data.hist['NBM'+h].data \
-                           for h in ('F+','F-','B-','B+')])/data.duration
+                           for h in ('F+', 'F-', 'B-', 'B+')])/data.duration
         elif name =='RATE'  :   
-            hist = ('F+','F-','B-','B+') if data.area == 'BNMR' \
-                                         else ('L+','L-','R-','R+')    
+            hist = ('F+', 'F-', 'B-', 'B+') if data.area == 'BNMR' \
+                                         else ('L+', 'L-', 'R-', 'R+')    
             return np.sum([data.hist[h].data for h in hist])/data.duration
         elif name =='RF'    :   return data.bd.camp.rf_dac.mean
         elif name =='RUN'   :   return data.run

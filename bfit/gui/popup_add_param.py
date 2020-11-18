@@ -206,7 +206,7 @@ class popup_add_param(object):
         eqn = [t.split('=')[1].strip() for t in text]
         
         # set fields
-        self.new_par = {k:e for k,e in zip(defined, eqn)}
+        self.new_par = {k:e for k, e in zip(defined, eqn)}
         
         # save input
         self.input_fn_text = '\n'.join(text)

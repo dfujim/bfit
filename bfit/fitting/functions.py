@@ -7,16 +7,16 @@ import numpy as np
 # =========================================================================== #
 class code_wrapper(object):
     """Wrap code object such that attemps to access co_varnames excludes self"""
-    def __init__(self,obj):
+    def __init__(self, obj):
         self.co_varnames = obj.co_varnames[1:]
         self.co_argcount = obj.co_argcount-1
         self.obj = obj
     
-    def __getattr__(self,name):
+    def __getattr__(self, name):
         try:
             return self.__dict__[name]
         except KeyError:
-            return getattr(self.obj,name)
+            return getattr(self.obj, name)
 
 # =========================================================================== #
 # TYPE 1 FUNCTIONS
@@ -46,7 +46,7 @@ def quadlorentzian(freq, nu_0, nu_q, eta, theta, phi,
     """
     
     # get the peak locations
-    peaks = [qp_nu(nu_0, nu_q, eta, theta, phi, I, m) for m in np.arange(-(I-1),I+1,1)]
+    peaks = [qp_nu(nu_0, nu_q, eta, theta, phi, I, m) for m in np.arange(-(I-1), I+1, 1)]
     
     # get each lorentzian
     lor0 = lorentzian(freq, peaks[0], fwhm0, amp0)
@@ -62,16 +62,16 @@ def quadlorentzian(freq, nu_0, nu_q, eta, theta, phi,
 class pulsed(object):
     """Pulsed function base class"""
     
-    def __init__(self,lifetime,pulse_len):
+    def __init__(self, lifetime, pulse_len):
         """
             lifetime: probe lifetime in s
             pulse_len: length of pulse in s
         """
-        self.pulser = PulsedFns(lifetime,pulse_len)
+        self.pulser = PulsedFns(lifetime, pulse_len)
     
     def __call__(self):pass
     
-    def __getattr__(self,name):
+    def __getattr__(self, name):
         if name == '__code__':
             return code_wrapper(self.__call__.__code__)
         else:
@@ -81,8 +81,8 @@ class pulsed(object):
                 raise AttributeError(err) from None
             
 class pulsed_exp(pulsed):
-    def __call__(self,time,lambda_s,amp):
-        return amp*self.pulser.exp(time,lambda_s)
+    def __call__(self, time, lambda_s, amp):
+        return amp*self.pulser.exp(time, lambda_s)
 
 class pulsed_biexp(pulsed):
     def __call__(self, time, lambda_s, lambdab_s, fracb, amp):
@@ -112,8 +112,8 @@ def get_fn_superpos(fn_handles):
     npars = np.cumsum([0]+[len(f.__code__.co_varnames)-1 for f in fn_handles])
 
     # make function
-    def fn(x,*pars):
-        return np.sum(f(x,*pars[l:h]) for f,l,h in zip(fn_handles,npars[:-1],npars[1:]))
+    def fn(x, *pars):
+        return np.sum(f(x, *pars[l:h]) for f, l, h in zip(fn_handles, npars[:-1], npars[1:]))
     return fn
 
 # ----------------------------------------------------------------------------
@@ -124,7 +124,7 @@ def qp_1st_order(nu_q, eta, theta, phi, m):
         
         returns frequencies for m = -1 to 2 transition
         nu_q = 3e^2Qq/4I(2I-1)
-        see e.g.,:
+        see e.g., :
         P. P. Man, "Qaudrupolar Interactions", in Encyclopedia of Magnetic
         Resonance, edited by R. K. Harris and R. E. Wasylishen.
         https://doi.org/10.1002/9780470034590.emrstm0429.pub2
@@ -152,7 +152,7 @@ def qp_2nd_order(nu_0, nu_q, eta, theta, phi, I, m):
         
         returns frequencies for m = -1 to 2 transition
         nu_q = 3e^2Qq/4I(2I-1)
-        see e.g.,:
+        see e.g., :
         P. P. Man, "Qaudrupolar Interactions", in Encyclopedia of Magnetic
         Resonance, edited by R. K. Harris and R. E. Wasylishen.
         https://doi.org/10.1002/9780470034590.emrstm0429.pub2

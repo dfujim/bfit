@@ -15,7 +15,7 @@ class popup_drawstyle(object):
     """
 
     # ====================================================================== #
-    def __init__(self,parent):
+    def __init__(self, parent):
         self.parent = parent
         
         # get logger
@@ -25,14 +25,14 @@ class popup_drawstyle(object):
          # make a new window
         self.win = Toplevel(parent.mainframe)
         self.win.title('Set Marker and Line Styles')
-        frame = ttk.Frame(self.win,relief='sunken',pad=5)
+        frame = ttk.Frame(self.win, relief='sunken', pad=5)
         
         # icon
         parent.set_icon(self.win)
         
         # Key bindings
-        self.win.bind('<Return>',self.set)             
-        self.win.bind('<KP_Enter>',self.set)
+        self.win.bind('<Return>', self.set)             
+        self.win.bind('<KP_Enter>', self.set)
         
         # initialize 
         self.entry_list = []
@@ -42,29 +42,29 @@ class popup_drawstyle(object):
         self.key_list.sort()
         
         # add entries
-        for i,key in enumerate(self.key_list):
+        for i, key in enumerate(self.key_list):
             
             # create objects
-            self.label_list.append(ttk.Label(frame,text=key,pad=5,justify=LEFT))
+            self.label_list.append(ttk.Label(frame, text=key, pad=5, justify=LEFT))
             self.text_list.append(StringVar())
-            self.entry_list.append(ttk.Entry(frame,
-                    textvariable=self.text_list[-1],width=20,justify=RIGHT))
-            self.entry_list[-1].insert(0,parent.style[key])
+            self.entry_list.append(ttk.Entry(frame, 
+                    textvariable=self.text_list[-1], width=20, justify=RIGHT))
+            self.entry_list[-1].insert(0, parent.style[key])
             
             # grid objects
-            self.label_list[-1].grid(column=0,row=i,sticky=W)
-            self.entry_list[-1].grid(column=1,row=i,columnspan=2)
+            self.label_list[-1].grid(column=0, row=i, sticky=W)
+            self.entry_list[-1].grid(column=1, row=i, columnspan=2)
           
         # add buttons
-        set_button = ttk.Button(frame,text='Set',command=self.set)
-        close_button = ttk.Button(frame,text='Cancel',command=self.cancel)
-        help_button = ttk.Button(frame,text='Help',command=self.help)
-        set_button.grid(column=0,row=i+1)
-        help_button.grid(column=1,row=i+1)
-        close_button.grid(column=2,row=i+1)
+        set_button = ttk.Button(frame, text='Set', command=self.set)
+        close_button = ttk.Button(frame, text='Cancel', command=self.cancel)
+        help_button = ttk.Button(frame, text='Help', command=self.help)
+        set_button.grid(column=0, row=i+1)
+        help_button.grid(column=1, row=i+1)
+        close_button.grid(column=2, row=i+1)
             
         # grid frame
-        frame.grid(column=0,row=0)
+        frame.grid(column=0, row=0)
         self.logger.debug('Initialization success. Starting mainloop.')
         
     # ====================================================================== #
@@ -74,9 +74,9 @@ class popup_drawstyle(object):
                         'Line2D.html#matplotlib.lines.Line2D')
 
     # ====================================================================== #
-    def set(self,*args):
+    def set(self, *args):
         """Set entered values"""
-        for k,t in zip(self.key_list,self.text_list):
+        for k, t in zip(self.key_list, self.text_list):
             
             val = t.get()
             
@@ -84,7 +84,7 @@ class popup_drawstyle(object):
                 val = float(val)
             
             self.parent.style[k] = val
-        self.logger.info('Setting values %s to %s',self.key_list,
+        self.logger.info('Setting values %s to %s', self.key_list, 
                                             [s.get() for s in self.text_list])
         self.win.destroy()
         

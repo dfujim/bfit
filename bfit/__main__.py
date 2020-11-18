@@ -16,14 +16,14 @@ if __name__ == '__main__':
 
     # command line switches ---------------------------------------------------
     parser = argparse.ArgumentParser(description=dedent("""\
-        Run BNMR data viewer and fitter for online application."""),
+        Run BNMR data viewer and fitter for online application."""), 
         formatter_class=argparse.RawTextHelpFormatter)
     
     # logging level
-    parser.add_argument("-d", "--debug",
-                        help='Run in debug mode',
-                        dest='debug',
-                        action='store_true',
+    parser.add_argument("-d", "--debug", 
+                        help='Run in debug mode', 
+                        dest='debug', 
+                        action='store_true', 
                         default=False)
 
     # parse
@@ -34,13 +34,13 @@ if __name__ == '__main__':
 
     # get log filename
     try:
-        filename = os.path.join(os.environ['HOME'],'.bfit.log')
+        filename = os.path.join(os.environ['HOME'], '.bfit.log')
     except KeyError:
         filename = 'bfit.log'
 
     # make handler
-    handler = RotatingFileHandler(filename,
-                                  mode='a',
+    handler = RotatingFileHandler(filename, 
+                                  mode='a', 
                                   maxBytes=100*1000, # 100 kB max
                                   backupCount=1)
 
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     # Check version ----------------------------------------------------------
     def check_version():
         try:
-            vstr = subprocess.check_output([sys.executable,'-m','pip','search','bfit'])
+            vstr = subprocess.check_output([sys.executable, '-m', 'pip', 'search', 'bfit'])
         except subprocess.CalledProcessError:
             return
         else:            

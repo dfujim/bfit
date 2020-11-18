@@ -35,8 +35,8 @@ class calculator_nmr_B1(object):
             print(err)
         
         # key bindings
-        root.bind('<Return>',self.calculate)             
-        root.bind('<KP_Enter>',self.calculate)
+        root.bind('<Return>', self.calculate)             
+        root.bind('<KP_Enter>', self.calculate)
         
         # variables
         self.field = StringVar()
@@ -48,8 +48,8 @@ class calculator_nmr_B1(object):
         self.nu.set('41.27') # MHz
         
         # main frame
-        mainframe = ttk.Frame(root,pad=5)
-        mainframe.grid(column=0,row=0,sticky=(N,W))
+        mainframe = ttk.Frame(root, pad=5)
+        mainframe.grid(column=0, row=0, sticky=(N, W))
         mainframe.columnconfigure(0, weight=1)
         mainframe.rowconfigure(0, weight=1)
         
@@ -58,44 +58,44 @@ class calculator_nmr_B1(object):
                 text='BNMR Magnetic Oscillating Field -- '+\
                      'Antenna Voltage (peak-peak)', 
                      justify=CENTER)
-        self.entry_field = ttk.Entry(mainframe,textvariable=self.field,width=10,
+        self.entry_field = ttk.Entry(mainframe, textvariable=self.field, width=10, 
                 justify=RIGHT)
-        gauss = ttk.Label(mainframe,text='Gauss')
-        equals = ttk.Label(mainframe,text='=')
-        self.entry_voltage = ttk.Entry(mainframe,textvariable=self.volt,
-                width=10,justify=RIGHT)
-        voltage = ttk.Label(mainframe,text='millivolts')
-        explanation = ttk.Label(mainframe,text='Press Enter to convert',
+        gauss = ttk.Label(mainframe, text='Gauss')
+        equals = ttk.Label(mainframe, text='=')
+        self.entry_voltage = ttk.Entry(mainframe, textvariable=self.volt, 
+                width=10, justify=RIGHT)
+        voltage = ttk.Label(mainframe, text='millivolts')
+        explanation = ttk.Label(mainframe, text='Press Enter to convert', 
                 justify=CENTER)
         
         # frequency input
-        freq_frame = ttk.Frame(root,pad=5)
+        freq_frame = ttk.Frame(root, pad=5)
         
-        freq1 = ttk.Label(freq_frame,text='Freq:')
-        self.entry_freq = ttk.Entry(freq_frame,textvariable=self.nu,width=10,
+        freq1 = ttk.Label(freq_frame, text='Freq:')
+        self.entry_freq = ttk.Entry(freq_frame, textvariable=self.nu, width=10, 
                                     justify=RIGHT)
-        freq2 = ttk.Label(freq_frame,text='MHz')
+        freq2 = ttk.Label(freq_frame, text='MHz')
         
-        freq1.grid(column=0,row=0,padx=5)
-        self.entry_freq.grid(column=1,row=0,padx=5)
-        freq2.grid(column=2,row=0,padx=5)
+        freq1.grid(column=0, row=0, padx=5)
+        self.entry_freq.grid(column=1, row=0, padx=5)
+        freq2.grid(column=2, row=0, padx=5)
         
         # caveat
-        warning = ttk.Label(root,
+        warning = ttk.Label(root, 
                             text='WARNING: Calculation only valid for runs \n'+\
                                  'with silver antenna (before Sept 2019)', 
                             justify=CENTER)
         
         # Gridding
-        title_line.grid(        column=0,row=0,padx=5,pady=5,columnspan=5)
-        freq_frame.grid(        column=0,row=1,padx=5,pady=5,columnspan=5)
-        self.entry_field.grid(  column=0,row=2,padx=5,pady=5,sticky=E)
-        gauss.grid(             column=1,row=2,padx=5,pady=5,sticky=E)
-        equals.grid(            column=2,row=2,padx=20,pady=5,sticky=(E,W))
-        self.entry_voltage.grid(column=3,row=2,padx=5,pady=5,sticky=W)
-        voltage.grid(           column=4,row=2,padx=5,pady=5,sticky=W)
-        explanation.grid(       column=0,row=3,padx=5,pady=5,columnspan=5)
-        warning.grid(           column=0,row=2,padx=5,pady=5,columnspan=5)
+        title_line.grid(        column=0, row=0, padx=5, pady=5, columnspan=5)
+        freq_frame.grid(        column=0, row=1, padx=5, pady=5, columnspan=5)
+        self.entry_field.grid(  column=0, row=2, padx=5, pady=5, sticky=E)
+        gauss.grid(             column=1, row=2, padx=5, pady=5, sticky=E)
+        equals.grid(            column=2, row=2, padx=20, pady=5, sticky=(E, W))
+        self.entry_voltage.grid(column=3, row=2, padx=5, pady=5, sticky=W)
+        voltage.grid(           column=4, row=2, padx=5, pady=5, sticky=W)
+        explanation.grid(       column=0, row=3, padx=5, pady=5, columnspan=5)
+        warning.grid(           column=0, row=2, padx=5, pady=5, columnspan=5)
         
         # runloop
         self.root = root
@@ -103,7 +103,7 @@ class calculator_nmr_B1(object):
         root.mainloop()
         
     # ======================================================================= #
-    def calculate(self,*args):
+    def calculate(self, *args):
         
         # check focus
         focus_id = str(self.root.focus_get())
@@ -116,10 +116,10 @@ class calculator_nmr_B1(object):
             try:
                 field = float(self.field.get())
                 value = field/0.0396*nu
-                self.volt.set("%9.6f" % np.around(value,6))
+                self.volt.set("%9.6f" % np.around(value, 6))
                 
-                self.logger.info('Field of %g G converted to voltage of %g mV',
-                                 field,value)
+                self.logger.info('Field of %g G converted to voltage of %g mV', 
+                                 field, value)
             except ValueError:
                 self.logger.exception('Bad input.')
                 self.volt.set('Error')
@@ -129,10 +129,10 @@ class calculator_nmr_B1(object):
             try:
                 voltage = float(self.volt.get())
                 value = voltage*0.0396/nu
-                self.field.set("%9.6f" % np.around(value,6))
+                self.field.set("%9.6f" % np.around(value, 6))
                 
-                self.logger.info('Voltage of %g mV converted to field of %g G',
-                                 voltage,value)
+                self.logger.info('Voltage of %g mV converted to field of %g G', 
+                                 voltage, value)
             except ValueError:
                 self.logger.exception('Bad input.')
                 self.field.set('Error')

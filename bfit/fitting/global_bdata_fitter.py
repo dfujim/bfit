@@ -19,7 +19,7 @@ class global_bdata_fitter(global_fitter):
                         must specify inputs explicitly (do not do def fn(*par)!)
                         must have len(fn) = len(runs) if list
                         
-            xlims:      list of 2-tuples for (low,high) bounds on fitting range 
+            xlims:      list of 2-tuples for (low, high) bounds on fitting range 
                             based on x values. If list is not depth 2, use this 
                             range on all runs.
             
@@ -47,7 +47,7 @@ class global_bdata_fitter(global_fitter):
         # Get asymmetry
         asym = [d.asym(asym_mode, rebin=re) for d, re in zip(data, rebin)]
         
-        # split into x,y,dy data sets
+        # split into x, y, dy data sets
         x = [a[0] for a in asym]
         y = [a[1] for a in asym]
         dy = [a[2] for a in asym]
@@ -65,7 +65,7 @@ class global_bdata_fitter(global_fitter):
             dynew = []
             
             # select subrange
-            for i,xl in enumerate(xlims):
+            for i, xl in enumerate(xlims):
                 tag = (xl[0]<x[i])*(x[i]<xl[1])
                 xnew.append(x[i][tag])
                 ynew.append(y[i][tag])
@@ -77,4 +77,4 @@ class global_bdata_fitter(global_fitter):
             dy = dynew
             
         # intialize
-        super(global_bdata_fitter,self).__init__(fn, x, y, dy=dy, **kwargs)
+        super(global_bdata_fitter, self).__init__(fn, x, y, dy=dy, **kwargs)

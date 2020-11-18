@@ -12,7 +12,7 @@ from bfit import logger_name
 
 import numpy as np
 import matplotlib.pyplot as plt
-import sys,os,time,glob,datetime
+import sys, os, time, glob, datetime
 import logging
 
 
@@ -43,7 +43,7 @@ class fileviewer(object):
     update_id = ''
     
     # ======================================================================= #
-    def __init__(self,file_tab,bfit):
+    def __init__(self, file_tab, bfit):
         """ Position tab tkinter elements"""
         
         # get logger
@@ -51,7 +51,7 @@ class fileviewer(object):
         self.logger.debug('Initializing')
         
         # year and filenumber entry ------------------------------------------
-        entry_frame = ttk.Frame(file_tab,borderwidth=1)
+        entry_frame = ttk.Frame(file_tab, borderwidth=1)
         self.year = IntVar()
         self.runn = IntVar()
         self.rebin = IntVar()
@@ -60,101 +60,101 @@ class fileviewer(object):
         self.year.set(self.bfit.get_latest_year())
         self.rebin.set(1)
         
-        entry_year = Spinbox(entry_frame,\
-                from_=2000,to=datetime.datetime.today().year,
-                textvariable=self.year,width=5)
-        self.entry_runn = Spinbox(entry_frame,\
-                from_=0,to=50000,
-                textvariable=self.runn,width=7)
+        entry_year = Spinbox(entry_frame, \
+                from_=2000, to=datetime.datetime.today().year, 
+                textvariable=self.year, width=5)
+        self.entry_runn = Spinbox(entry_frame, \
+                from_=0, to=50000, 
+                textvariable=self.runn, width=7)
         self.runn.set(40000)
         
         # fetch button
-        fetch = ttk.Button(entry_frame,text='Fetch',command=self.get_data)
+        fetch = ttk.Button(entry_frame, text='Fetch', command=self.get_data)
             
         # draw button
-        draw = ttk.Button(entry_frame,text='Draw',
+        draw = ttk.Button(entry_frame, text='Draw', 
                           command=lambda:self.draw(figstyle='inspect'))
         
         # grid and labels
-        entry_frame.grid(column=0,row=0,sticky=N)
-        ttk.Label(entry_frame,text="Year:").grid(column=0,row=0,sticky=E)
-        entry_year.grid(column=1,row=0,sticky=E)
-        ttk.Label(entry_frame,text="Run Number:").grid(column=2,row=0,sticky=E)
-        self.entry_runn.grid(column=3,row=0,sticky=E)
-        fetch.grid(column=4,row=0,sticky=E)
-        draw.grid(column=5,row=0,sticky=E)
+        entry_frame.grid(column=0, row=0, sticky=N)
+        ttk.Label(entry_frame, text="Year:").grid(column=0, row=0, sticky=E)
+        entry_year.grid(column=1, row=0, sticky=E)
+        ttk.Label(entry_frame, text="Run Number:").grid(column=2, row=0, sticky=E)
+        self.entry_runn.grid(column=3, row=0, sticky=E)
+        fetch.grid(column=4, row=0, sticky=E)
+        draw.grid(column=5, row=0, sticky=E)
         
         # padding 
         for child in entry_frame.winfo_children(): 
             child.grid_configure(padx=5, pady=5)
 
         # viewer frame -------------------------------------------------------
-        view_frame = ttk.Frame(file_tab,borderwidth=2)
+        view_frame = ttk.Frame(file_tab, borderwidth=2)
         
-        self.text_nw = Text(view_frame,width=88,height=20,state='normal')
-        self.text_ne = Text(view_frame,width=88,height=20,state='normal')
-        self.text_sw = Text(view_frame,width=88,height=20,state='normal')
-        self.text_se = Text(view_frame,width=88,height=20,state='normal')
+        self.text_nw = Text(view_frame, width=88, height=20, state='normal')
+        self.text_ne = Text(view_frame, width=88, height=20, state='normal')
+        self.text_sw = Text(view_frame, width=88, height=20, state='normal')
+        self.text_se = Text(view_frame, width=88, height=20, state='normal')
         
-        ttk.Label(view_frame,text="Run Info").grid(column=0,row=0,sticky=N,pady=5)
-        ttk.Label(view_frame,text="PPG Parameters").grid(column=1,row=0,sticky=N,pady=5)
-        ttk.Label(view_frame,text="Camp").grid(column=0,row=2,sticky=N,pady=5)
-        ttk.Label(view_frame,text="EPICS").grid(column=1,row=2,sticky=N,pady=5)
+        ttk.Label(view_frame, text="Run Info").grid(column=0, row=0, sticky=N, pady=5)
+        ttk.Label(view_frame, text="PPG Parameters").grid(column=1, row=0, sticky=N, pady=5)
+        ttk.Label(view_frame, text="Camp").grid(column=0, row=2, sticky=N, pady=5)
+        ttk.Label(view_frame, text="EPICS").grid(column=1, row=2, sticky=N, pady=5)
         
-        self.text_nw.grid(column=0,row=1,sticky=(N,W,E,S),padx=5)
-        self.text_ne.grid(column=1,row=1,sticky=(N,W,E,S),padx=5)
-        self.text_sw.grid(column=0,row=3,sticky=(N,W,E,S),padx=5)
-        self.text_se.grid(column=1,row=3,sticky=(N,W,E,S),padx=5)
+        self.text_nw.grid(column=0, row=1, sticky=(N, W, E, S), padx=5)
+        self.text_ne.grid(column=1, row=1, sticky=(N, W, E, S), padx=5)
+        self.text_sw.grid(column=0, row=3, sticky=(N, W, E, S), padx=5)
+        self.text_se.grid(column=1, row=3, sticky=(N, W, E, S), padx=5)
         
-        view_frame.grid(column=0,row=1,sticky=(N,E,W))
+        view_frame.grid(column=0, row=1, sticky=(N, E, W))
         
         # details frame: stuff at the bottom ----------------------------------
         details_frame = ttk.Frame(file_tab)
-        entry_rebin = Spinbox(details_frame,from_=1,to=100,width=3,\
+        entry_rebin = Spinbox(details_frame, from_=1, to=100, width=3, \
                 textvariable=self.rebin)
         
         # update check box
         self.is_updating = BooleanVar()
         self.is_updating.set(False)
-        update_box = ttk.Checkbutton(details_frame,text='Periodic Redraw',
-                command=self.do_update,variable=self.is_updating,onvalue=True,
+        update_box = ttk.Checkbutton(details_frame, text='Periodic Redraw', 
+                command=self.do_update, variable=self.is_updating, onvalue=True, 
                 offvalue=False)
 
         # asymmetry type combobox
         self.asym_type = StringVar()
         self.asym_type.set('')
-        self.entry_asym_type = ttk.Combobox(details_frame,\
-                textvariable=self.asym_type,state='readonly',width=25)
+        self.entry_asym_type = ttk.Combobox(details_frame, \
+                textvariable=self.asym_type, state='readonly', width=25)
         self.entry_asym_type['values'] = ()
                 
         # gridding
-        ttk.Label(details_frame,text="Rebin:").grid(column=0,row=0,sticky=E)
-        entry_rebin.grid(column=1,row=0,sticky=E)
-        self.entry_asym_type.grid(column=2,row=0,sticky=E)
-        update_box.grid(column=3,row=0,sticky=E)
-        details_frame.grid(column=0,row=2,sticky=S)
+        ttk.Label(details_frame, text="Rebin:").grid(column=0, row=0, sticky=E)
+        entry_rebin.grid(column=1, row=0, sticky=E)
+        self.entry_asym_type.grid(column=2, row=0, sticky=E)
+        update_box.grid(column=3, row=0, sticky=E)
+        details_frame.grid(column=0, row=2, sticky=S)
         
         # padding 
         for child in details_frame.winfo_children(): 
             child.grid_configure(padx=5, pady=5)
             
         # resizing
-        file_tab.grid_rowconfigure(1,weight=1)
-        file_tab.grid_columnconfigure(0,weight=1)
+        file_tab.grid_rowconfigure(1, weight=1)
+        file_tab.grid_columnconfigure(0, weight=1)
         
-        entry_frame.grid_columnconfigure(0,weight=2)
-        entry_frame.grid_columnconfigure(2,weight=1)
-        entry_frame.grid_rowconfigure(0,weight=1)
+        entry_frame.grid_columnconfigure(0, weight=2)
+        entry_frame.grid_columnconfigure(2, weight=1)
+        entry_frame.grid_rowconfigure(0, weight=1)
         
         for i in range(2):
-            view_frame.grid_columnconfigure(i,weight=1)
-        view_frame.grid_rowconfigure(1,weight=1)
-        view_frame.grid_rowconfigure(3,weight=1)
+            view_frame.grid_columnconfigure(i, weight=1)
+        view_frame.grid_rowconfigure(1, weight=1)
+        view_frame.grid_rowconfigure(3, weight=1)
         
-        for t in [self.text_nw,self.text_ne,self.text_sw,self.text_se]:
+        for t in [self.text_nw, self.text_ne, self.text_sw, self.text_se]:
             for i in range(5):
-                t.grid_columnconfigure(i,weight=1)
-                t.grid_rowconfigure(i,weight=1)
+                t.grid_columnconfigure(i, weight=1)
+                t.grid_rowconfigure(i, weight=1)
             
         self.logger.debug('Initialization success.')
             
@@ -163,12 +163,12 @@ class fileviewer(object):
         pass
         
     # ======================================================================= #
-    def draw(self,figstyle,quiet=False):
+    def draw(self, figstyle, quiet=False):
         """Get data then draw."""
         if self.get_data(quiet=quiet):
-            self.bfit.draw(self.data,
-                    self.bfit.asym_dict[self.asym_type.get()],rebin=self.rebin.get(),
-                    label=self.bfit.get_label(self.data),
+            self.bfit.draw(self.data, 
+                    self.bfit.asym_dict[self.asym_type.get()], rebin=self.rebin.get(), 
+                    label=self.bfit.get_label(self.data), 
                     figstyle=figstyle)
             
     # ======================================================================= #
@@ -184,52 +184,52 @@ class fileviewer(object):
         
         # get filename 
         filename = filedialog.asksaveasfilename(
-                initialfile=self.default_export_filename%(data.year,data.run),
-                filetypes=[('csv','*.csv'),
-                           ('allfiles','*')],
+                initialfile=self.default_export_filename%(data.year, data.run), 
+                filetypes=[('csv', '*.csv'), 
+                           ('allfiles', '*')], 
                 defaultextension='.csv')
         
         # write to file
         if filename:
-            self.bfit.export(data,filename,rebin=self.rebin.get())
+            self.bfit.export(data, filename, rebin=self.rebin.get())
     
     # ======================================================================= #
-    def get_data(self,quiet=False):
+    def get_data(self, quiet=False):
         """Display data and send bdata object to bfit draw list. 
         Return True on success, false on Failure
         """
         
         # settings
-        mode_dict = {"1f":"Frequency Scan",
-                     "1w":"Frequency Comb",
-                     "1n":"Rb Cell Scan",
-                     "1e":"Field Scan",
-                     "20":"SLR",
-                     '2h':'SLR with Alpha Tracking',
-                     '2s':'Spin Echo',
+        mode_dict = {"1f":"Frequency Scan", 
+                     "1w":"Frequency Comb", 
+                     "1n":"Rb Cell Scan", 
+                     "1e":"Field Scan", 
+                     "20":"SLR", 
+                     '2h':'SLR with Alpha Tracking', 
+                     '2s':'Spin Echo', 
                      '2e':'Randomized Frequency Scan'}
         
         # fetch year
         try:
             year = self.year.get()
         except ValueError:
-            for t in [self.text_nw,self.text_ne,self.text_sw,self.text_se]:
-                self.set_textbox_text(t,'Year input must be integer valued')  
+            for t in [self.text_nw, self.text_ne, self.text_sw, self.text_se]:
+                self.set_textbox_text(t, 'Year input must be integer valued')  
                 self.logger.exception('Year input must be integer valued')
             return False
         
         # fetch run number
         run = self.runn.get()
         
-        self.logger.debug('Parsing run input %s',run)
+        self.logger.debug('Parsing run input %s', run)
         
         if run < 40000:
             
             runlist = []
             # look for latest run by run number
-            for d in [self.bfit.bnmr_archive_label,self.bfit.bnqr_archive_label]:
+            for d in [self.bfit.bnmr_archive_label, self.bfit.bnqr_archive_label]:
                 dirloc = os.environ[d]
-                runlist.extend(glob.glob(os.path.join(dirloc,str(year),'0%d*.msr'%run)))
+                runlist.extend(glob.glob(os.path.join(dirloc, str(year), '0%d*.msr'%run)))
             runlist = [int(os.path.splitext(os.path.basename(r))[0]) for r in runlist]
             
             # get latest run by max run number
@@ -237,31 +237,31 @@ class fileviewer(object):
                 run = max(runlist)
             except ValueError:
                 self.logger.exception('Run fetch failed')
-                for t in [self.text_nw,self.text_ne,self.text_sw,self.text_se]:
-                    self.set_textbox_text(t,'Run not found.')  
+                for t in [self.text_nw, self.text_ne, self.text_sw, self.text_se]:
+                    self.set_textbox_text(t, 'Run not found.')  
                 return False
         
-        self.logger.info('Fetching run %s from %s',run,year)
+        self.logger.info('Fetching run %s from %s', run, year)
         
         # get data
         try: 
-            data = fitdata(self.bfit,bdata(run,year=year))
+            data = fitdata(self.bfit, bdata(run, year=year))
         except ValueError:
             self.logger.exception('File read failed.')
-            for t in [self.text_nw,self.text_sw,self.text_se,self.text_ne]:
-                self.set_textbox_text(t,'File read failed.')
+            for t in [self.text_nw, self.text_sw, self.text_se, self.text_ne]:
+                self.set_textbox_text(t, 'File read failed.')
             return False
         except RuntimeError:
             self.logger.exception('File does not exist.')
-            for t in [self.text_nw,self.text_sw,self.text_se,self.text_ne]:
-                self.set_textbox_text(t,'File does not exist.')
+            for t in [self.text_nw, self.text_sw, self.text_se, self.text_ne]:
+                self.set_textbox_text(t, 'File does not exist.')
             return False
         
         # set data field
         self.data = data
         
         # set draw parameters
-        self.bfit.set_asym_calc_mode_box(data.mode,self)
+        self.bfit.set_asym_calc_mode_box(data.mode, self)
         
         # quiet mode: don't update text
         if quiet: return True
@@ -277,29 +277,29 @@ class fileviewer(object):
         except AttributeError:
             pass
         
-        mins,sec = divmod(data.duration, 60)
-        duration = "%dm %ds" % (mins,sec)
+        mins, sec = divmod(data.duration, 60)
+        duration = "%dm %ds" % (mins, sec)
         
         # set dictionary
-        data_nw =  {"Run":'%d (%d)' % (data.run,data.year),
-                    "Area": data.area,
-                    "Run Mode": "%s (%s)" % (mode,data.mode),
-                    "Title": data.title,
-                    "Experimenters": data.experimenter,
-                    "Sample": data.sample,
-                    "Orientation":data.orientation,
-                    "Experiment":str(data.exp),
-                    "Run Duration": duration,
-                    "Start": data.start_date,
-                    "End": data.end_date,
-                    "":"",
+        data_nw =  {"Run":'%d (%d)' % (data.run, data.year), 
+                    "Area": data.area, 
+                    "Run Mode": "%s (%s)" % (mode, data.mode), 
+                    "Title": data.title, 
+                    "Experimenters": data.experimenter, 
+                    "Sample": data.sample, 
+                    "Orientation":data.orientation, 
+                    "Experiment":str(data.exp), 
+                    "Run Duration": duration, 
+                    "Start": data.start_date, 
+                    "End": data.end_date, 
+                    "":"", 
                     }
         
         # set key order 
-        key_order_nw = ['Run','Run Mode','Title','',
-                        'Start','End','Run Duration','',
-                        'Sample','Orientation','',
-                        'Experiment','Area','Experimenters',
+        key_order_nw = ['Run', 'Run Mode', 'Title', '', 
+                        'Start', 'End', 'Run Duration', '', 
+                        'Sample', 'Orientation', '', 
+                        'Experiment', 'Area', 'Experimenters', 
                         ]
         
         # SW -----------------------------------------------------------------
@@ -310,14 +310,14 @@ class fileviewer(object):
         try:
             temp = data.temperature.mean
             temp_stdv = data.temperature.std
-            data_sw["Temperature"] = "%.2f +/- %.2f K" % (temp,temp_stdv)
+            data_sw["Temperature"] = "%.2f +/- %.2f K" % (temp, temp_stdv)
             key_order_sw.append('Temperature')
         except AttributeError:
             pass
         
         try:
             curr = data.camp.smpl_current
-            data_sw["Heater Current"] = "%.2f +/- %.2f A" % (curr.mean,curr.std)
+            data_sw["Heater Current"] = "%.2f +/- %.2f A" % (curr.mean, curr.std)
             key_order_sw.append('Heater Current')
         except AttributeError:
             pass
@@ -325,22 +325,22 @@ class fileviewer(object):
         try:
             temp = data.camp.oven_readC.mean
             temp_stdv = data.camp.oven_readC.std
-            data_sw['Oven Temperature'] = "%.2f +/- %.2f K" % (temp,temp_stdv)
+            data_sw['Oven Temperature'] = "%.2f +/- %.2f K" % (temp, temp_stdv)
             key_order_sw.append('Oven Temperature')
         except AttributeError:
             pass
         
         try:
             curr = data.camp.oven_current
-            data_sw['Oven Current'] = "%.2f +/- %.2f A" % (curr.mean,curr.std)
+            data_sw['Oven Current'] = "%.2f +/- %.2f A" % (curr.mean, curr.std)
             key_order_sw.append('Oven Current')
         except AttributeError:
             pass
         
         try: 
-            field = np.around(data.camp.b_field.mean,3)
-            field_stdv = np.around(data.camp.b_field.std,3)
-            data_sw['Magnetic Field'] = "%.3f +/- %.3f T" % (field,field_stdv)
+            field = np.around(data.camp.b_field.mean, 3)
+            field_stdv = np.around(data.camp.b_field.std, 3)
+            data_sw['Magnetic Field'] = "%.3f +/- %.3f T" % (field, field_stdv)
             key_order_sw.append('Magnetic Field')
         except AttributeError:
             pass
@@ -357,14 +357,14 @@ class fileviewer(object):
         # cryo options
         try: 
             mass = data.camp.mass_read
-            data_sw['Mass Flow'] = "%.3f +/- %.3f" % (mass.mean,mass.std)
+            data_sw['Mass Flow'] = "%.3f +/- %.3f" % (mass.mean, mass.std)
             key_order_sw.append('Mass Flow')
         except AttributeError:
             pass
     
         try: 
             cryo = data.camp.cryo_read
-            data_sw['CryoEx Mass Flow'] = "%.3f +/- %.3f" % (cryo.mean,cryo.std)
+            data_sw['CryoEx Mass Flow'] = "%.3f +/- %.3f" % (cryo.mean, cryo.std)
             key_order_sw.append('CryoEx Mass Flow')
         except AttributeError:
             pass    
@@ -382,14 +382,14 @@ class fileviewer(object):
             pass    
             
         try:
-            lift_set = np.around(data.camp.clift_set.mean,3)
+            lift_set = np.around(data.camp.clift_set.mean, 3)
             data_sw['Cryo Lift Setpoint'] = "%.3f mm" % lift_set
             key_order_sw.append('Cryo Lift Setpoint')
         except AttributeError:
             pass
         
         try:
-            lift_read = np.around(data.camp.clift_read.mean,3)
+            lift_read = np.around(data.camp.clift_read.mean, 3)
             data_sw['Cryo Lift Readback'] = "%.3f mm" % lift_read
             key_order_sw.append('Cryo Lift Readback')
         except AttributeError:
@@ -398,35 +398,35 @@ class fileviewer(object):
         key_order_sw.append('')
         
         # rates and counts
-        hist = ('F+','F-','B-','B+') if data.area == 'BNMR' \
-                                     else ('L+','L-','R-','R+')
+        hist = ('F+', 'F-', 'B-', 'B+') if data.area == 'BNMR' \
+                                     else ('L+', 'L-', 'R-', 'R+')
         try:     
             val = int(np.sum([data.hist[h].data for h in hist]))
-            data_sw['Total Counts Sample'] = f'{val:,}'.replace(',',' ')
+            data_sw['Total Counts Sample'] = f'{val:, }'.replace(', ', ' ')
             key_order_sw.append('Total Counts Sample')
-        except (AttributeError,KeyError):
+        except (AttributeError, KeyError):
             pass
         
         try: 
             val = int(np.sum([data.hist[h].data for h in hist])/data.duration)
-            data_sw['Rate Sample'] =  f'{val:,} (1/s)'.replace(',',' ')
+            data_sw['Rate Sample'] =  f'{val:, } (1/s)'.replace(', ', ' ')
             key_order_sw.append('Rate Sample')
-        except (AttributeError,KeyError):
+        except (AttributeError, KeyError):
             pass
         
-        hist = ('F+','F-','B-','B+')    
+        hist = ('F+', 'F-', 'B-', 'B+')    
         try: 
             val = int(np.sum([data.hist['NBM'+h].data for h in hist]))
-            data_sw['Total Counts NBM'] = f'{val:,}'.replace(',',' ')
+            data_sw['Total Counts NBM'] = f'{val:, }'.replace(', ', ' ')
             key_order_sw.append('Total Counts NBM')
-        except (AttributeError,KeyError):
+        except (AttributeError, KeyError):
             pass
         
         try: 
             val = int(np.sum([data.hist['NBM'+h].data for h in hist])/data.duration)
-            data_sw['Rate NBM'] = f'{val:,} (1/s)'.replace(',',' ')
+            data_sw['Rate NBM'] = f'{val:, } (1/s)'.replace(', ', ' ')
             key_order_sw.append('Rate NBM')
-        except (AttributeError,KeyError):
+        except (AttributeError, KeyError):
             pass
             
         # rf dac
@@ -458,7 +458,7 @@ class fileviewer(object):
                 bias_std =  data.epics.nmr_bias.std
             
             data_se["Platform Bias"] = "%.3f +/- %.3f kV" % \
-                    (np.around(bias,3),np.around(bias_std,3))
+                    (np.around(bias, 3), np.around(bias_std, 3))
             key_order_se.append("Platform Bias")
             
         except UnboundLocalError:
@@ -466,8 +466,8 @@ class fileviewer(object):
         
         try:
             data_se["BIAS15"] = "%.3f +/- %.3f V" % \
-                    (np.around(data.epics.bias15.mean,3),
-                     np.around(data.epics.bias15.std,3))
+                    (np.around(data.epics.bias15.mean, 3), 
+                     np.around(data.epics.bias15.std, 3))
             key_order_se.append('BIAS15')
         except AttributeError:
             pass
@@ -484,18 +484,18 @@ class fileviewer(object):
                 pass
             
         try:
-            val = np.around(init_bias/1000.,3)
-            std = np.around(init_bias_std/1000.,3)
-            data_se["Initial Beam Energy"] = "%.3f +/- %.3f keV" % (val,std)
+            val = np.around(init_bias/1000., 3)
+            std = np.around(init_bias_std/1000., 3)
+            data_se["Initial Beam Energy"] = "%.3f +/- %.3f keV" % (val, std)
             key_order_se.append('Initial Beam Energy')
         except UnboundLocalError:
             pass
         
         # Get final beam energy
         try: 
-            val = np.around(data.beam_kev(),3)
-            std = np.around(data.beam_kev(get_error=True),3)
-            data_se['Implantation Energy'] = "%.3f +/- %.3f keV" % (val,std)
+            val = np.around(data.beam_kev(), 3)
+            std = np.around(data.beam_kev(get_error=True), 3)
+            data_se['Implantation Energy'] = "%.3f +/- %.3f keV" % (val, std)
             key_order_se.append('Implantation Energy')
         except AttributeError:
             pass
@@ -505,7 +505,7 @@ class fileviewer(object):
         # laser stuff
         try: 
             val = data.epics.las_pwr
-            data_se['Laser Power'] = "%.3f +/- %.3f A" % (val.mean,val.std)
+            data_se['Laser Power'] = "%.3f +/- %.3f A" % (val.mean, val.std)
             key_order_se.append('Laser Power')
         except AttributeError:
             pass
@@ -514,7 +514,7 @@ class fileviewer(object):
         try: 
             val = data.epics.hh_current.mean
             std = data.epics.hh_current.std
-            data_se['Magnet Current'] = "%.3f +/- %.3f A" % (val,std)
+            data_se['Magnet Current'] = "%.3f +/- %.3f A" % (val, std)
             key_order_se.append('Magnet Current')            
         except AttributeError:
             pass
@@ -524,7 +524,7 @@ class fileviewer(object):
         key_order_ne = []
         
         # get data: SLR data
-        if data.mode in ['20','2h']:
+        if data.mode in ['20', '2h']:
             try:
                 dwell = int(data.ppg.dwelltime.mean)
                 data_ne['Dwell Time'] = "%d ms" % dwell
@@ -1020,27 +1020,27 @@ class fileviewer(object):
             key_order_ne.append('')
             
         # set viewer string
-        def set_str(data_dict,key_order,txtbox):
+        def set_str(data_dict, key_order, txtbox):
         
-            m = max(max(map(len, list(data_dict.keys()))) + 1,5)
+            m = max(max(map(len, list(data_dict.keys()))) + 1, 5)
             s = '\n'.join([k.rjust(m)+': ' + data_dict[k] for k in key_order])
-            self.set_textbox_text(txtbox,s)
+            self.set_textbox_text(txtbox, s)
         
-        set_str(data_nw,key_order_nw,self.text_nw)
-        set_str(data_ne,key_order_ne,self.text_ne)
-        set_str(data_sw,key_order_sw,self.text_sw)
-        set_str(data_se,key_order_se,self.text_se)
+        set_str(data_nw, key_order_nw, self.text_nw)
+        set_str(data_ne, key_order_ne, self.text_ne)
+        set_str(data_sw, key_order_sw, self.text_sw)
+        set_str(data_se, key_order_se, self.text_se)
         
         return True
    
     # ======================================================================= #
-    def set_textbox_text(self,textbox,text):
+    def set_textbox_text(self, textbox, text):
         """Set the text in a tkinter Text widget"""
-        textbox.delete('1.0',END)
-        textbox.insert('1.0',text)
+        textbox.delete('1.0', END)
+        textbox.insert('1.0', text)
         
     # ======================================================================= #
-    def do_update(self,first=True,runid=''):
+    def do_update(self, first=True, runid=''):
         self.logger.debug('Draw via periodic update')
         
         # update stop condition
@@ -1054,7 +1054,7 @@ class fileviewer(object):
             
             # check that there is a canvas, if not, draw
             if self.bfit.plt.active['inspect'] == 0:
-                self.draw('inspect',quiet=False)
+                self.draw('inspect', quiet=False)
                 first = True
             
             # set up updating canvas
@@ -1068,8 +1068,8 @@ class fileviewer(object):
             
             # repeat
             if not first:
-                self.bfit.root.after(self.bfit.update_period*1000,
-                                     lambda:self.do_update(first=False,
+                self.bfit.root.after(self.bfit.update_period*1000, 
+                                     lambda:self.do_update(first=False, 
                                                            runid=runid))
                 return
         
@@ -1095,7 +1095,7 @@ class fileviewer(object):
                 return
             
             # update run
-            year,run = tuple(map(int,runid.split('.')[:2]))
+            year, run = tuple(map(int, runid.split('.')[:2]))
             current_year = self.year.get()
             curent_run = self.runn.get()
             
@@ -1105,7 +1105,7 @@ class fileviewer(object):
             # update only in stack mode
             draw_style = self.bfit.draw_style.get()
             self.bfit.draw_style.set('stack')
-            self.draw(figstyle='periodic',quiet=True)
+            self.draw(figstyle='periodic', quiet=True)
             draw_style = self.bfit.draw_style.set(draw_style)
             
             # reset year and run 
@@ -1114,12 +1114,12 @@ class fileviewer(object):
             self.get_data(quiet=True)
             
             # Print update message
-            print('Updated figure at:',str(datetime.datetime.now()).split('.')[0],
+            print('Updated figure at:', str(datetime.datetime.now()).split('.')[0], 
                   flush=True)
             
             # repeat
-            self.bfit.root.after(self.bfit.update_period*1000,
-                                 lambda:self.do_update(first=False,runid=runid))
+            self.bfit.root.after(self.bfit.update_period*1000, 
+                                 lambda:self.do_update(first=False, runid=runid))
             
         # remove window from updating list
         else:

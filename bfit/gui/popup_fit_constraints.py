@@ -7,7 +7,7 @@ from tkinter import *
 from tkinter import ttk
 from functools import partial
 
-import logging,re,os,warnings
+import logging, re, os, warnings
 import numpy as np
 import pandas as pd
 import bdata as bd
@@ -26,7 +26,7 @@ class popup_fit_constraints(template_fit_popup):
         logger
         
         output_par_text     text, detected parameter names
-        output_text         dict, keys: p0,blo,bhi,res,err, value: tkk.Text objects
+        output_text         dict, keys: p0, blo, bhi, res, err, value: tkk.Text objects
        
         output_par_text_val string, contents of output_par_text
         output_text_val     dict of strings, contents of output_text
@@ -42,45 +42,45 @@ class popup_fit_constraints(template_fit_popup):
     window_title = 'Fit data with contrained parameters'
     
     # ====================================================================== #
-    def __init__(self,bfit,constr_text='',output_par_text='',output_text=''):
+    def __init__(self, bfit, constr_text='', output_par_text='', output_text=''):
         
-        super().__init__(bfit,constr_text,output_par_text,output_text)
+        super().__init__(bfit, constr_text, output_par_text, output_text)
         
         # Keyword parameters
-        key_param_frame = ttk.Frame(self.left_frame,relief='sunken',pad=5)
+        key_param_frame = ttk.Frame(self.left_frame, relief='sunken', pad=5)
         s = 'Reserved variable names:\n\n'
         self.reserved_pars = CstrFnGenerator.keyvars
         
         keys = list(self.reserved_pars.keys())
         descr = [self.reserved_pars[k] for k in self.reserved_pars]
-        maxk = max(list(map(len,keys)))
+        maxk = max(list(map(len, keys)))
         
-        s += '\n'.join(['%s:   %s' % (k.rjust(maxk),d) for k,d in zip(keys,descr)])
+        s += '\n'.join(['%s:   %s' % (k.rjust(maxk), d) for k, d in zip(keys, descr)])
         s += '\n'
-        key_param_label = ttk.Label(key_param_frame,text=s,justify=LEFT)
+        key_param_label = ttk.Label(key_param_frame, text=s, justify=LEFT)
         
         # fit parameter names 
-        fit_param_frame = ttk.Frame(self.left_frame,relief='sunken',pad=5)
+        fit_param_frame = ttk.Frame(self.left_frame, relief='sunken', pad=5)
         s = 'Reserved function parameter names:\n\n'
         self.parnames = self.fittab.fitter.gen_param_names(
-                                        self.fittab.fit_function_title.get(),
+                                        self.fittab.fit_function_title.get(), 
                                         self.fittab.n_component.get())
         
         s += '\n'.join([k for k in sorted(self.parnames)]) 
         s += '\n'
-        fit_param_label = ttk.Label(fit_param_frame,text=s,justify=LEFT)
+        fit_param_label = ttk.Label(fit_param_frame, text=s, justify=LEFT)
 
         # module names 
-        module_frame = ttk.Frame(self.left_frame,relief='sunken',pad=5)
+        module_frame = ttk.Frame(self.left_frame, relief='sunken', pad=5)
         s = 'Reserved module names:\n\n'
         
         keys = list(self.modules.keys())
         descr = [self.modules[k] for k in self.modules]
-        maxk = max(list(map(len,keys)))
+        maxk = max(list(map(len, keys)))
         
-        s += '\n'.join(['%s:   %s' % (k.rjust(maxk),d) for k,d in zip(keys,descr)])
+        s += '\n'.join(['%s:   %s' % (k.rjust(maxk), d) for k, d in zip(keys, descr)])
         s += '\n'
-        modules_label = ttk.Label(module_frame,text=s,justify=LEFT)
+        modules_label = ttk.Label(module_frame, text=s, justify=LEFT)
         
         # Text entry
         self.entry_label['text'] = 'Enter one constraint equation per line.'+\
@@ -89,16 +89,16 @@ class popup_fit_constraints(template_fit_popup):
                                  '\nNote: Shared and fixed flags from main window ignored.'
                 
         # gridding
-        key_param_label.grid(column=0,row=0)
-        fit_param_label.grid(column=0,row=0)
-        modules_label.grid(column=0,row=0)
+        key_param_label.grid(column=0, row=0)
+        fit_param_label.grid(column=0, row=0)
+        modules_label.grid(column=0, row=0)
         
-        key_param_frame.grid(column=0,row=0,rowspan=1,sticky=(E,W),padx=1,pady=1)
-        module_frame.grid(column=0,row=1,sticky=(E,W),padx=1,pady=1,rowspan=2)
-        fit_param_frame.grid(column=0,row=3,sticky=(E,W,N,S),padx=1,pady=1)
+        key_param_frame.grid(column=0, row=0, rowspan=1, sticky=(E, W), padx=1, pady=1)
+        module_frame.grid(column=0, row=1, sticky=(E, W), padx=1, pady=1, rowspan=2)
+        fit_param_frame.grid(column=0, row=3, sticky=(E, W, N, S), padx=1, pady=1)
         
     # ====================================================================== #
-    def _do_fit(self,text):
+    def _do_fit(self, text):
         """
             Set up the fit functions and do the fit. Then map the outputs to the
             proper displays. 
@@ -113,7 +113,7 @@ class popup_fit_constraints(template_fit_popup):
             if d not in self.parnames:
                 errmsg = 'Definition for "%s" invalid. ' % d+\
                          'Must only define function inputs. '
-                messagebox.showerror("Error",errmsg)
+                messagebox.showerror("Error", errmsg)
                 raise RuntimeError(errmsg)
         
         # make shared parameters for the rest of the parameters
@@ -129,13 +129,13 @@ class popup_fit_constraints(template_fit_popup):
                 sharelist.append(False)
                         
         # replace 1_T1 with lambda1
-        for i,_ in enumerate(allpar):
+        for i, _ in enumerate(allpar):
             if '1_T1' in allpar[i]:
-                allpar[i] = allpar[i].replace('1_T1','lambda1')
+                allpar[i] = allpar[i].replace('1_T1', 'lambda1')
         
-        for i,_ in enumerate(eqn):
+        for i, _ in enumerate(eqn):
             while '1_T1' in eqn[i]:
-                eqn[i] = eqn[i].replace('1_T1','lambda1')
+                eqn[i] = eqn[i].replace('1_T1', 'lambda1')
                 
         # make constrained functions
         cgen= CstrFnGenerator(alldef, eqn, allpar, self.parnames)
@@ -163,9 +163,9 @@ class popup_fit_constraints(template_fit_popup):
                 pass
             
             # get function
-            fn = fit_files.fitter.get_fn(fn_name=fit_files.fit_function_title.get(),
-                                         ncomp=fit_files.n_component.get(),
-                                         pulse_len=pulse_len,
+            fn = fit_files.fitter.get_fn(fn_name=fit_files.fit_function_title.get(), 
+                                         ncomp=fit_files.n_component.get(), 
+                                         pulse_len=pulse_len, 
                                          lifetime=bd.life[fit_files.probe_label['text']])
             
             genf, genc = cgen(data=data, fn=fn)
@@ -183,7 +183,7 @@ class popup_fit_constraints(template_fit_popup):
             omit.append(data.omit.get())
         
         # clean up omit strings
-        for i,om in enumerate(omit):
+        for i, om in enumerate(omit):
             if om == fetch_files.bin_remove_starter_line:
                 omit[i] = ''
         
@@ -208,7 +208,7 @@ class popup_fit_constraints(template_fit_popup):
         
         # set up fitter inputs
         npar = len(sharelist)
-        bounds = [[l,h] for l,h in zip(blo,bhi)]
+        bounds = [[l, h] for l, h in zip(blo, bhi)]
         data = [self.bfit.data[k] for k in keylist]
         kwargs = {'p0':p0, 'bounds':bounds}
         
@@ -220,19 +220,19 @@ class popup_fit_constraints(template_fit_popup):
         
         # do the fit and kill fitting window
         par, std_l, std_u, cov, chi, gchi = fit_bdata(
-                                                data=data,
-                                                fn=fitfns,
-                                                shared=sharelist,
-                                                asym_mode='c',
-                                                rebin=rebin,
-                                                omit=omit,
-                                                xlims=None,
-                                                hist_select=self.bfit.hist_select,
-                                                minimizer=minimizer,
+                                                data=data, 
+                                                fn=fitfns, 
+                                                shared=sharelist, 
+                                                asym_mode='c', 
+                                                rebin=rebin, 
+                                                omit=omit, 
+                                                xlims=None, 
+                                                hist_select=self.bfit.hist_select, 
+                                                minimizer=minimizer, 
                                                 **kwargs)
         
         # calculate original parameter equivalents
-        for i,k in enumerate(keylist):
+        for i, k in enumerate(keylist):
             data = fetch_files.data_lines[k].bdfit
             
             # calculate
@@ -250,7 +250,7 @@ class popup_fit_constraints(template_fit_popup):
             old_std_u = [old_std_u[alldef.index(n)] for n in cgen.oldpar]
             
             # set to fitdata containers
-            # [(parname),(par),(err-),(err+),chi,fnpointer]
+            # [(parname), (par), (err-), (err+), chi, fnpointer]
             data.set_fitresult([cgen.oldpar, old_par, old_std_l, old_std_u, old_chi, fnptrs[i]])
             
         # display in fit_files tab
@@ -263,4 +263,4 @@ class popup_fit_constraints(template_fit_popup):
         # do end-of-fit stuff
         fit_files.do_end_of_fit()
         
-        return (par[0,:], std_l[0,:], std_u[0,:])
+        return (par[0, :], std_l[0, :], std_u[0, :])

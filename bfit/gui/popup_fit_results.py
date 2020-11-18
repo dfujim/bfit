@@ -21,7 +21,7 @@ class popup_fit_results(template_fit_popup):
         
         chi_label:      Label, chisquared output
         fittab:         notebook tab
-        reserved_pars:  dict, keys: x,y vals: strings of parameter names
+        reserved_pars:  dict, keys: x, y vals: strings of parameter names
         
         xaxis:          StringVar, x axis drawing/fitting parameter
         yaxis:          StringVar, y axis drawing/fitting parameter
@@ -32,25 +32,25 @@ class popup_fit_results(template_fit_popup):
     modules = {'np':'numpy'}
 
     window_title = 'Fit the results with a model'
-    reserved_pars = ['x','y']
+    reserved_pars = ['x', 'y']
 
     # ====================================================================== #
-    def __init__(self,bfit,input_fn_text='',output_par_text='',output_text='',
-                 chi=np.nan,x='',y=''):
+    def __init__(self, bfit, input_fn_text='', output_par_text='', output_text='', 
+                 chi=np.nan, x='', y=''):
         
         super().__init__(bfit, input_fn_text, output_par_text, output_text)
         self.fittab = self.bfit.fit_files
         self.chi = chi
         
         # menus for x and y values
-        axis_frame = ttk.Frame(self.left_frame,relief='sunken',pad=5)
+        axis_frame = ttk.Frame(self.left_frame, relief='sunken', pad=5)
         
-        ttk.Label(  axis_frame,
-                    text='Variable definitions:\n',
-                    justify=LEFT).grid(column=0,row=0,columnspan=2,sticky=W)
-        ttk.Label(axis_frame,text="x axis:").grid(column=0,row=1)
-        ttk.Label(axis_frame,text="y axis:").grid(column=0,row=2)
-        ttk.Label(axis_frame,text=' ').grid(column=0,row=3)
+        ttk.Label(  axis_frame, 
+                    text='Variable definitions:\n', 
+                    justify=LEFT).grid(column=0, row=0, columnspan=2, sticky=W)
+        ttk.Label(axis_frame, text="x axis:").grid(column=0, row=1)
+        ttk.Label(axis_frame, text="y axis:").grid(column=0, row=2)
+        ttk.Label(axis_frame, text=' ').grid(column=0, row=3)
         
         self.xaxis = StringVar()
         self.yaxis = StringVar()
@@ -61,28 +61,28 @@ class popup_fit_results(template_fit_popup):
         if y:   self.yaxis.set(y)
         else:   self.yaxis.set(self.fittab.yaxis.get())
         
-        self.xaxis_combobox = ttk.Combobox(axis_frame,textvariable=self.xaxis,
-                                      state='readonly',width=19)
-        self.yaxis_combobox = ttk.Combobox(axis_frame,textvariable=self.yaxis,
-                                      state='readonly',width=19)
+        self.xaxis_combobox = ttk.Combobox(axis_frame, textvariable=self.xaxis, 
+                                      state='readonly', width=19)
+        self.yaxis_combobox = ttk.Combobox(axis_frame, textvariable=self.yaxis, 
+                                      state='readonly', width=19)
         
         self.xaxis_combobox['values'] = self.fittab.xaxis_combobox['values']
         self.yaxis_combobox['values'] = self.fittab.yaxis_combobox['values']
         
         # module names 
-        module_frame = ttk.Frame(self.left_frame,relief='sunken',pad=5)
+        module_frame = ttk.Frame(self.left_frame, relief='sunken', pad=5)
         s = 'Reserved module names:\n\n'
         
-        maxk = max(list(map(len,list(self.modules.keys()))))
+        maxk = max(list(map(len, list(self.modules.keys()))))
         
-        s += '\n'.join(['%s:   %s' % (k.rjust(maxk),d) for k,d in self.modules.items()])
+        s += '\n'.join(['%s:   %s' % (k.rjust(maxk), d) for k, d in self.modules.items()])
         s += '\n'
-        modules_label = ttk.Label(module_frame,text=s,justify=LEFT)
+        modules_label = ttk.Label(module_frame, text=s, justify=LEFT)
         
         # chisquared output
-        chi_frame = ttk.Frame(self.left_frame,relief='sunken',pad=5)
-        self.chi_label = ttk.Label(chi_frame,
-                                    text='ChiSq: %.2f' % np.around(chi,2),
+        chi_frame = ttk.Frame(self.left_frame, relief='sunken', pad=5)
+        self.chi_label = ttk.Label(chi_frame, 
+                                    text='ChiSq: %.2f' % np.around(chi, 2), 
                                     justify=LEFT)
         
         # Text entry
@@ -91,15 +91,15 @@ class popup_fit_results(template_fit_popup):
                                  '\nEx: "y = a*x+b"'
                 
         # gridding
-        modules_label.grid(column=0,row=0)
-        self.chi_label.grid(column=0,row=0)
-        self.xaxis_combobox.grid(column=1,row=1)
-        self.yaxis_combobox.grid(column=1,row=2)
+        modules_label.grid(column=0, row=0)
+        self.chi_label.grid(column=0, row=0)
+        self.xaxis_combobox.grid(column=1, row=1)
+        self.yaxis_combobox.grid(column=1, row=2)
         
         
-        axis_frame.grid(column=0,row=0,rowspan=1,sticky=(E,W),padx=1,pady=1)
-        module_frame.grid(column=0,row=1,sticky=(E,W),padx=1,pady=1)
-        chi_frame.grid(column=0,row=2,sticky=(E,W),padx=1,pady=1,rowspan=2)
+        axis_frame.grid(column=0, row=0, rowspan=1, sticky=(E, W), padx=1, pady=1)
+        module_frame.grid(column=0, row=1, sticky=(E, W), padx=1, pady=1)
+        chi_frame.grid(column=0, row=2, sticky=(E, W), padx=1, pady=1, rowspan=2)
         
     # ====================================================================== #
     def _do_fit(self, text):
@@ -109,12 +109,12 @@ class popup_fit_results(template_fit_popup):
         ystr = self.yaxis.get()
         
         # Make model
-        parnames = self.output_par_text.get('1.0',END).split('\n')[:-1]
-        parstr = ','.join(parnames)
+        parnames = self.output_par_text.get('1.0', END).split('\n')[:-1]
+        parstr = ', '.join(parnames)
         eqn = text[-1].split('=')[-1]
-        model = 'lambda x,%s : %s' % (parstr,eqn)
+        model = 'lambda x, %s : %s' % (parstr, eqn)
         
-        self.logger.info('Fitting model %s for x="%s", y="%s"',model,xstr,ystr)
+        self.logger.info('Fitting model %s for x="%s", y="%s"', model, xstr, ystr)
         
         model = eval(model)
         self.model_fn = model
@@ -125,9 +125,9 @@ class popup_fit_results(template_fit_popup):
         blo = self.new_par['blo'].values
         bhi = self.new_par['bhi'].values
         
-        p0 = list(map(float,p0))
-        blo = list(map(float,blo))
-        bhi = list(map(float,bhi))
+        p0 = list(map(float, p0))
+        blo = list(map(float, blo))
+        bhi = list(map(float, bhi))
                     
         # get data
         try:
@@ -135,13 +135,13 @@ class popup_fit_results(template_fit_popup):
             yvals, yerrs = self.fittab.get_values(ystr)
         except UnboundLocalError as err:
             self.logger.error('Bad input parameter selection')
-            messagebox.showerror("Error",'Select two input parameters')
+            messagebox.showerror("Error", 'Select two input parameters')
             raise err
-        except (KeyError,AttributeError) as err:
-            self.logger.error('Parameter "%s or "%s" not found for fitting',
-                              xstr,ystr)
-            messagebox.showerror("Error",
-                    'Parameter "%s" or "%s" not found' % (xstr,ystr))
+        except (KeyError, AttributeError) as err:
+            self.logger.error('Parameter "%s or "%s" not found for fitting', 
+                              xstr, ystr)
+            messagebox.showerror("Error", 
+                    'Parameter "%s" or "%s" not found' % (xstr, ystr))
             raise err
         
         # split errors    
@@ -207,10 +207,10 @@ class popup_fit_results(template_fit_popup):
         else:               chi = ls(par)/dof
         
         # display results 
-        self.chi_label['text'] = 'ChiSq: %.2f' % np.around(chi,2)
+        self.chi_label['text'] = 'ChiSq: %.2f' % np.around(chi, 2)
         self.chi = chi
         
-        self.logger.info('Fit model results: %s, Errors-: %s, Errors+: %s',
+        self.logger.info('Fit model results: %s, Errors-: %s, Errors+: %s', 
                         str(par), str(std_l), str(std_h))
         
         self.draw_model(xvals, yvals, (xerrs_l, xerrs_h), (yerrs_l, yerrs_h), par, text)    
@@ -225,7 +225,7 @@ class popup_fit_results(template_fit_popup):
         xstr = self.xaxis.get()
         ystr = self.yaxis.get()
         
-        self.logger.info('Draw model parameters "%s" vs "%s"',ystr,xstr)
+        self.logger.info('Draw model parameters "%s" vs "%s"', ystr, xstr)
         
         # get fit function and label id
         fn = self.model_fn
@@ -256,7 +256,7 @@ class popup_fit_results(template_fit_popup):
 
         # draw data
         self.fittab.plt.errorbar('param', id, xvals, yvals, 
-                                 yerr=yerrs,
+                                 yerr=yerrs, 
                                  xerr=xerrs, 
                                  fmt='.', 
                                  annot_label=mouse_label)

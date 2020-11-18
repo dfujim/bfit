@@ -13,7 +13,7 @@ from iminuit import Minuit
 import inspect
 
 # ========================================================================== #
-def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
+def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='', 
               xlims=None, asym_mode='c', fixed=None, minimizer='migrad', **kwargs):
     """
         Fit combined asymetry from bdata.
@@ -37,7 +37,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
         
         hist_select:    string for selecting histograms to use in asym calc
         
-        xlims:          list of 2-tuple for (low,high) bounds on fitting range 
+        xlims:          list of 2-tuple for (low, high) bounds on fitting range 
                             based on x values
         
         asym_mode:      input for asymmetry calculation type 
@@ -78,7 +78,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
         ndata = 1
     
     # get fn
-    if not isinstance(fn,collections.Iterable):
+    if not isinstance(fn, collections.Iterable):
         fn = [fn]
     fn.extend([fn[-1] for i in range(ndata-len(fn))])
     
@@ -116,11 +116,11 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
         print('Running shared parameter fitting... ', flush=True)
         g = global_bdata_fitter(data = data, 
                                 fn = fn, 
-                                xlims = xlims,
+                                xlims = xlims, 
                                 shared = shared, 
                                 asym_mode = asym_mode, 
                                 rebin = rebin, 
-                                fixed = fixed,
+                                fixed = fixed, 
                                 )
                                 
         g.fit(minimizer=minimizer, **kwargs)
@@ -137,7 +137,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
             bounds = kwargs['bounds']
             del kwargs['bounds']
         else:
-            bounds = [(-np.inf,np.inf)]*ndata 
+            bounds = [(-np.inf, np.inf)]*ndata 
             
         # check p0 dimensionality
         if len(np.asarray(kwargs['p0']).shape) < 2:
@@ -170,16 +170,16 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
         gchi = 0.
         dof = 0.
         
-        iter_obj = tqdm(zip(data, fn, omit, rebin, p0, bounds, xlims, fixed),
+        iter_obj = tqdm(zip(data, fn, omit, rebin, p0, bounds, xlims, fixed), 
                         total=ndata, desc='Independent Fitting')
         for d, f, om, re, p, b, xl, fix in iter_obj:
             
             # get data for chisq calculations
-            x,y,dy = _get_asym(d, asym_mode, rebin=re, omit=om)
+            x, y, dy = _get_asym(d, asym_mode, rebin=re, omit=om)
             
             # get x limits
             if xl is None:  
-                xl = [-np.inf,np.inf]
+                xl = [-np.inf, np.inf]
             else:
                 if xl[0] is None: xl[0] = -np.inf
                 if xl[1] is None: xl[1] = np.inf
@@ -193,15 +193,15 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
             # trivial case: all parameters fixed
             if all(fix):
                 lenp = len(p)
-                c = np.full((lenp,lenp),np.nan)
+                c = np.full((lenp, lenp), np.nan)
                 s = np.diag(c)
-                ch = np.sum(np.square((y-f(x,*p))/dy))/len(y)
+                ch = np.sum(np.square((y-f(x, *p))/dy))/len(y)
                 
             # fit with free parameters
             else:            
                 kwargs['p0'] = p
                 kwargs['bounds'] = b
-                p, c, sl, sh, ch, m = _fit_single(d, f, om, re, hist_select, xlim=xl,
+                p, c, sl, sh, ch, m = _fit_single(d, f, om, re, hist_select, xlim=xl, 
                                     asym_mode=asym_mode, fixed=fix, 
                                     minimizer=minimizer, **kwargs)
                                     
@@ -209,27 +209,27 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
                 if m is not None: 
                        
                     if not all((m.fmin.is_valid, 
-                                m.fmin.has_valid_parameters,
-                                not m.fmin.hesse_failed,
-                                m.fmin.has_accurate_covar,
-                                m.fmin.has_covariance,
-                                m.fmin.has_posdef_covar,
-                                not m.fmin.has_made_posdef_covar,
-                                not m.fmin.has_reached_call_limit,
+                                m.fmin.has_valid_parameters, 
+                                not m.fmin.hesse_failed, 
+                                m.fmin.has_accurate_covar, 
+                                m.fmin.has_covariance, 
+                                m.fmin.has_posdef_covar, 
+                                not m.fmin.has_made_posdef_covar, 
+                                not m.fmin.has_reached_call_limit, 
                                 not m.fmin.is_above_max_edm,                                
                                 )):
                         
                         try: 
-                            msg = ('====== %d.%d ======\n' % (d.year, d.run),
-                               str(m.fmin), '\n',
-                               str(m.params), '\n',
+                            msg = ('====== %d.%d ======\n' % (d.year, d.run), 
+                               str(m.fmin), '\n', 
+                               str(m.params), '\n', 
                                )
                                
                             iter_obj.write(''.join(msg))
                         except UnicodeEncodeError:
-                            msg = ('====== %d.%d ======\n' % (d.year, d.run),
-                               repr(m.fmin), '\n',
-                               repr(m.params), '\n',
+                            msg = ('====== %d.%d ======\n' % (d.year, d.run), 
+                               repr(m.fmin), '\n', 
+                               repr(m.params), '\n', 
                                )
                             iter_obj.write(''.join(msg))
                     
@@ -241,7 +241,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
             chis.append(ch)
             
             # get global chi             
-            gchi += np.sum(np.square((y-f(x,*p))/dy))
+            gchi += np.sum(np.square((y-f(x, *p))/dy))
             dof += len(x)-len(p)
         gchi /= dof
         
@@ -262,7 +262,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
     return(pars, stds_l, stds_h, covs, chis, gchi)
 
 # =========================================================================== #
-def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
+def _fit_single(data, fn, omit='', rebin=1, hist_select='', xlim=None, asym_mode='c', 
                fixed=None, minimizer='migrad', **kwargs):
     """
         Fit combined asymetry from bdata.
@@ -276,7 +276,7 @@ def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
         
         hist_select:    string for selecting histograms to use in asym calc
         
-        xlim:           2-tuple for (low,high) bounds on fitting range based on 
+        xlim:           2-tuple for (low, high) bounds on fitting range based on 
                             x values
         
         asym_mode:      input for asymmetry calculation type 
@@ -299,14 +299,14 @@ def _fit_single(data,fn,omit='',rebin=1,hist_select='',xlim=None,asym_mode='c',
         
         kwargs:         keyword arguments for curve_fit. See curve_fit docs. 
         
-        Returns: (par,cov,chi)
+        Returns: (par, cov, chi)
             par: best fit parameters
             cov: covariance matrix
             chi: chisquared of fit
     """
     
     # Get data input
-    x,y,dy = _get_asym(data,asym_mode,rebin=rebin,omit=omit)
+    x, y, dy = _get_asym(data, asym_mode, rebin=rebin, omit=omit)
             
     # check for values with error == 0. Omit these values. 
     tag = dy != 0
@@ -353,14 +353,14 @@ def _fit_single_minuit(fn, x, y, dy, fixed, do_minos=True, **kwargs):
     # set up minuit inputs
     bounds = np.array(kwargs['bounds']).T
     
-    kwargs_minuit = {'start':kwargs['p0'],
-                     'limit':bounds,
-                     'fix':fixed,
-                     'print_level':kwargs.get('print_level',0),
-                     'errordef':1,
+    kwargs_minuit = {'start':kwargs['p0'], 
+                     'limit':bounds, 
+                     'fix':fixed, 
+                     'print_level':kwargs.get('print_level', 0), 
+                     'errordef':1, 
                      }
     
-    name = kwargs.get('name',None)
+    name = kwargs.get('name', None)
     if name is None:    
         name = inspect.getfullargspec(fn).args
         if 'self' in name:                  name.remove('self')
@@ -418,13 +418,13 @@ def _fit_single_curve_fit(fn, x, y, dy, fixed, minimizer, **kwargs):
         else:                   bounds = None
         
         # get fixed version
-        fn,kwargs['p0'], bounds = _get_fixed_values(fixed, fn, kwargs['p0'], bounds)
+        fn, kwargs['p0'], bounds = _get_fixed_values(fixed, fn, kwargs['p0'], bounds)
         
         # modify fiting inputs
         if bounds is not None:  kwargs['bounds'] = bounds
         
     # do the fit
-    par,cov = curve_fit(fn, x, y, sigma=dy, absolute_sigma=True, 
+    par, cov = curve_fit(fn, x, y, sigma=dy, absolute_sigma=True, 
                         method=minimizer, **kwargs)
     dof = len(y) - len(kwargs['p0'])
     
@@ -441,10 +441,10 @@ def _fit_single_curve_fit(fn, x, y, dy, fixed, minimizer, **kwargs):
         par = par_inflated
         
         # inflate cov matrix with NaN
-        nfixed_flat = np.concatenate(np.outer(~fixed,~fixed))
-        c_inflated = np.full(npar**2,np.nan)
+        nfixed_flat = np.concatenate(np.outer(~fixed, ~fixed))
+        c_inflated = np.full(npar**2, np.nan)
         c_inflated[nfixed_flat] = np.concatenate(cov)
-        cov = c_inflated.reshape(npar,-1)
+        cov = c_inflated.reshape(npar, -1)
     
     # get errors
     std = np.diag(cov)**0.5
@@ -452,7 +452,7 @@ def _fit_single_curve_fit(fn, x, y, dy, fixed, minimizer, **kwargs):
     return (par, cov, std, std, chi)
 
 # =========================================================================== #
-def _get_asym(data,asym_mode,**asym_kwargs):
+def _get_asym(data, asym_mode, **asym_kwargs):
     """
         Get asymmetry
         
@@ -460,17 +460,17 @@ def _get_asym(data,asym_mode,**asym_kwargs):
         asym_mode: mode as described above
     """
     
-    if asym_mode in ('c','p','n','sc','dc','sl_c','dif_c'):
-        x,y,dy = data.asym(asym_mode,**asym_kwargs)
-    elif asym_mode in ('h','sh','dh','sl_h','dif_h'):
+    if asym_mode in ('c', 'p', 'n', 'sc', 'dc', 'sl_c', 'dif_c'):
+        x, y, dy = data.asym(asym_mode, **asym_kwargs)
+    elif asym_mode in ('h', 'sh', 'dh', 'sl_h', 'dif_h'):
         raise RuntimeError('Split helicity fitting not yet implemented')
     elif 'raw' in asym_mode:
         raise RuntimeError('2e Time-resolved fitting not yet implemented')
 
-    return (x,y,dy)
+    return (x, y, dy)
     
 # =========================================================================== #
-def _get_fixed_values(fixed,fn,p0,bounds=None):
+def _get_fixed_values(fixed, fn, p0, bounds=None):
     """
         Get fixed function, p0, bounds
     """
@@ -484,11 +484,11 @@ def _get_fixed_values(fixed,fn,p0,bounds=None):
     idx = np.where(fixed)
     
     # make new fitting function with fixed parameter(s)
-    def fn(x,*args):
+    def fn(x, *args):
         args_fixed = np.zeros(npar_orig)
         args_fixed[fixed] = p0_orig[fixed]
         args_fixed[~fixed] = args
-        return fn_orig(x,*args_fixed)
+        return fn_orig(x, *args_fixed)
     
     # make new p0
     p0 = np.asarray(p0_orig)[~fixed]
@@ -501,4 +501,4 @@ def _get_fixed_values(fixed,fn,p0,bounds=None):
         except IndexError:
             pass
     
-    return (fn,p0,bounds)
+    return (fn, p0, bounds)

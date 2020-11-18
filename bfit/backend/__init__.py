@@ -1,4 +1,4 @@
-__all__=['colors',
-        'fitdata',
-        'FunctionPlacer',
+__all__=['colors', 
+        'fitdata', 
+        'FunctionPlacer', 
         'ConstrainedFunction']

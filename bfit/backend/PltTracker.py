@@ -16,13 +16,13 @@ class PltTracker(object):
     def __init__(self):
         
         # lists for tracking all plots 
-        self.plots = {'inspect':[],'data':[],'fit':[],'param':[],'periodic':[]}
+        self.plots = {'inspect':[], 'data':[], 'fit':[], 'param':[], 'periodic':[]}
         
         # track the active plot 
-        self.active = {'inspect':0,'data':0,'fit':0,'param':0,'periodic':0}
+        self.active = {'inspect':0, 'data':0, 'fit':0, 'param':0, 'periodic':0}
     
     # ======================================================================= #
-    def _close_figure(self,event):
+    def _close_figure(self, event):
         """Remove figure from list"""
         
         # get number and style
@@ -47,7 +47,7 @@ class PltTracker(object):
             self.active[style] = 0
                         
     # ======================================================================= #
-    def _decorator(self,style,fn,*args,id=None,unique=True,**kwargs):
+    def _decorator(self, style, fn, *args, id=None, unique=True, **kwargs):
         """
             Function wrapper
             
@@ -63,19 +63,19 @@ class PltTracker(object):
             
         # clear old objects
         if unique and id is not None:
-            self._remove_drawn_object(ax,id)
+            self._remove_drawn_object(ax, id)
         
         # run function 
-        output = fn(*args,**kwargs)
+        output = fn(*args, **kwargs)
         
         # track the drawn object
         if id is not None:
-            ax.draw_objs.setdefault(id,[]).append(output) 
+            ax.draw_objs.setdefault(id, []).append(output) 
         
         return output
     
     # ======================================================================= #
-    def _remove_drawn_object(self,ax,draw_id):
+    def _remove_drawn_object(self, ax, draw_id):
         """
             Remove an object labelled by draw_id from the figure, based on draw 
             style.
@@ -112,31 +112,31 @@ class PltTracker(object):
             del ax.draw_objs[draw_id]
         
     # ======================================================================= #
-    def _set_hover_annotation(self,fig,ax):
+    def _set_hover_annotation(self, fig, ax):
         """
             Setup the annotate object for mouse hover drawing
         """
-        if not hasattr(ax,'hover_annot'):
-            ax.hover_annot = ax.annotate('',
-                             xy=(0,0),
-                             xytext=(-3, 20),
+        if not hasattr(ax, 'hover_annot'):
+            ax.hover_annot = ax.annotate('', 
+                             xy=(0, 0), 
+                             xytext=(-3, 20), 
                              textcoords='offset points', 
                              ha='right', 
-                             va='bottom',
-                             bbox=dict(boxstyle='round,pad=0.1',
+                             va='bottom', 
+                             bbox=dict(boxstyle='round, pad=0.1', 
                                        fc='white', 
-                                       alpha=0.1),
+                                       alpha=0.1), 
                              arrowprops=dict(arrowstyle = '->', 
-                                             connectionstyle='arc3,rad=0'),
-                             fontsize='xx-small',
+                                             connectionstyle='arc3, rad=0'), 
+                             fontsize='xx-small', 
                             )    
         ax.hover_annot.set_visible(False)
         
         fig.canvas.mpl_connect("motion_notify_event", \
-                               lambda x: self._show_annot_on_hover(x,fig,ax))
+                               lambda x: self._show_annot_on_hover(x, fig, ax))
         
     # ======================================================================= #
-    def _show_annot_on_hover(self,event,fig,ax):
+    def _show_annot_on_hover(self, event, fig, ax):
         """
             If the cursor is near enough to the line, show the annotation. 
             
@@ -147,7 +147,7 @@ class PltTracker(object):
             for line in ax.lines:        
                 cont, ind = line.contains(event)
                 if cont:
-                    self._update_hover_annot(ind,line,ax)
+                    self._update_hover_annot(ind, line, ax)
                     fig.canvas.draw_idle()
                     break
                 else:
@@ -156,7 +156,7 @@ class PltTracker(object):
                         fig.canvas.draw_idle()
         
     # ======================================================================= #
-    def _update_active_id(self,event):
+    def _update_active_id(self, event):
         """
             Update the active figure id based on click event.
         """
@@ -165,7 +165,7 @@ class PltTracker(object):
         self.active[style] = number
     
     # ======================================================================= #
-    def _update_hover_annot(self,ind,line,ax):
+    def _update_hover_annot(self, ind, line, ax):
         """
             Update the hover annotation with that object's label.
             
@@ -173,11 +173,11 @@ class PltTracker(object):
         """
     
         i = ind["ind"][0]
-        x,y = line.get_data()
+        x, y = line.get_data()
         annot = ax.hover_annot
         annot.xy = (x[i], y[i])
         
-        if hasattr(line,'annot_label'):
+        if hasattr(line, 'annot_label'):
             text = line.annot_label[i]
         else:
             text = line.get_label()
@@ -188,21 +188,21 @@ class PltTracker(object):
         annot.set_visible(True)
     
     # ======================================================================= #
-    def annotate(self,style,id,*args,unique=True,**kwargs):
-        return self._decorator(style,plt.annotate,*args,id=id,unique=unique,**kwargs)
+    def annotate(self, style, id, *args, unique=True, **kwargs):
+        return self._decorator(style, plt.annotate, *args, id=id, unique=unique, **kwargs)
     
     # ======================================================================= #
-    def axhline(self,style,id,*args,unique=True,**kwargs):
-        return self._decorator(style,plt.axhline,*args,id=id,unique=unique,**kwargs)
+    def axhline(self, style, id, *args, unique=True, **kwargs):
+        return self._decorator(style, plt.axhline, *args, id=id, unique=unique, **kwargs)
         
     # ======================================================================= #
-    def axvline(self,style,id,*args,unique=True,**kwargs):
-        return self._decorator(style,plt.axvline,*args,id=id,unique=unique,**kwargs)
+    def axvline(self, style, id, *args, unique=True, **kwargs):
+        return self._decorator(style, plt.axvline, *args, id=id, unique=unique, **kwargs)
         
     # ======================================================================= #
-    def clf(self,style):
+    def clf(self, style):
         """Clear the figure for a given style"""
-        out = self._decorator(style,plt.clf)
+        out = self._decorator(style, plt.clf)
         ax = plt.gca()
         ax.draw_objs = {}
         
@@ -210,7 +210,7 @@ class PltTracker(object):
     def errorbar(self, style, id, x, y, yerr=None, xerr=None, fmt='', ecolor=None, 
                  elinewidth=None, capsize=None, barsabove=False, lolims=False, 
                  uplims=False, xlolims=False, xuplims=False, errorevery=1, 
-                 capthick=None, *, data=None, unique=True, annot_label=None,
+                 capthick=None, *, data=None, unique=True, annot_label=None, 
                  **kwargs):
         """
             Plot data.
@@ -231,8 +231,8 @@ class PltTracker(object):
         ax = fig.axes[0]
         
         # redraw old objects and lines
-        if unique:  self._remove_drawn_object(ax,id)
-        self._remove_drawn_object(ax,'line')
+        if unique:  self._remove_drawn_object(ax, id)
+        self._remove_drawn_object(ax, 'line')
         
         # set up labelling of line objects for mouseover
         if 'label' in kwargs:
@@ -255,12 +255,12 @@ class PltTracker(object):
             ax.lines[-1].annot_label = annot_label
             
         # save the drawn object to the file
-        ax.draw_objs.setdefault(id,[]).append(obj)
+        ax.draw_objs.setdefault(id, []).append(obj)
         
         return obj
     
     # ======================================================================= #
-    def figure(self,style,**kwargs):
+    def figure(self, style, **kwargs):
         """
             Make new figure.
             
@@ -279,7 +279,7 @@ class PltTracker(object):
         fig.canvas.style = style
         
         # set window name 
-        fig.canvas.set_window_title('Figure %d (%s)' % (fig.number,style.title()))
+        fig.canvas.set_window_title('Figure %d (%s)' % (fig.number, style.title()))
         
         # update lists
         self.plots[style].append(fig.number)
@@ -287,30 +287,30 @@ class PltTracker(object):
         
         # track drawn objects
         ax = plt.gca()
-        if not hasattr(ax,'draw_objs'):
+        if not hasattr(ax, 'draw_objs'):
             ax.draw_objs = {}
         
         # set up the hover annotations 
-        self._set_hover_annotation(fig,ax)
+        self._set_hover_annotation(fig, ax)
         
         return fig
 
     # ======================================================================= #
-    def gca(self,style):
+    def gca(self, style):
         if not self.plots[style]: self.figure(style)
-        return self._decorator(style,plt.gca)
+        return self._decorator(style, plt.gca)
     
     # ======================================================================= #
-    def gcf(self,style):
+    def gcf(self, style):
         if not self.plots[style]: self.figure(style)
-        return self._decorator(style,plt.gcf)
+        return self._decorator(style, plt.gcf)
     
     # ======================================================================= #
-    def legend(self,style,*args,**kwargs):
-        self._decorator(style,plt.legend,*args,**kwargs)
+    def legend(self, style, *args, **kwargs):
+        self._decorator(style, plt.legend, *args, **kwargs)
         
     # ======================================================================= #
-    def plot(self,style,id,*args,scalex=True,scaley=True,data=None,unique=True,**kwargs):
+    def plot(self, style, id, *args, scalex=True, scaley=True, data=None, unique=True, **kwargs):
         """
             Plot data.
             
@@ -330,55 +330,55 @@ class PltTracker(object):
         ax = fig.axes[0]
         
         # redraw old objects and lines
-        if unique:  self._remove_drawn_object(ax,id)
-        self._remove_drawn_object(ax,'line')
+        if unique:  self._remove_drawn_object(ax, id)
+        self._remove_drawn_object(ax, 'line')
         
-        obj = plt.plot(*args,scalex=scalex, scaley=scaley, data=data,**kwargs)
-        ax.draw_objs.setdefault(id,[]).append(obj)
+        obj = plt.plot(*args, scalex=scalex, scaley=scaley, data=data, **kwargs)
+        ax.draw_objs.setdefault(id, []).append(obj)
         
         return obj
 
     # ======================================================================= #
-    def text(self,style,*args,id=None,unique=True,**kwargs):
-        return self._decorator(style,plt.text,*args,id=id,unique=unique,**kwargs)
+    def text(self, style, *args, id=None, unique=True, **kwargs):
+        return self._decorator(style, plt.text, *args, id=id, unique=unique, **kwargs)
 
     # ======================================================================= #
-    def tight_layout(self,style,*args,**kwargs):
-        return self._decorator(style,plt.tight_layout,*args,**kwargs)
+    def tight_layout(self, style, *args, **kwargs):
+        return self._decorator(style, plt.tight_layout, *args, **kwargs)
 
     # ======================================================================= #
-    def xlabel(self,style,*args,**kwargs):
-        return self._decorator(style,plt.xlabel,*args,**kwargs)
+    def xlabel(self, style, *args, **kwargs):
+        return self._decorator(style, plt.xlabel, *args, **kwargs)
     
     # ======================================================================= #
-    def xlim(self,style,*args,**kwargs):
-        return self._decorator(style,plt.xlim,*args,**kwargs)
+    def xlim(self, style, *args, **kwargs):
+        return self._decorator(style, plt.xlim, *args, **kwargs)
     
     # ======================================================================= #
-    def xticks(self,style,*args,**kwargs):
-        return self._decorator(style,plt.xticks,*args,**kwargs)
+    def xticks(self, style, *args, **kwargs):
+        return self._decorator(style, plt.xticks, *args, **kwargs)
     
     # ======================================================================= #
-    def ylabel(self,style,*args,**kwargs):
-        return self._decorator(style,plt.ylabel,*args,**kwargs)
+    def ylabel(self, style, *args, **kwargs):
+        return self._decorator(style, plt.ylabel, *args, **kwargs)
     
     # ======================================================================= #
-    def ylim(self,style,*args,**kwargs):
-        return self._decorator(style,plt.ylim,*args,**kwargs)
+    def ylim(self, style, *args, **kwargs):
+        return self._decorator(style, plt.ylim, *args, **kwargs)
     
     # ======================================================================= #
-    def yticks(self,style,*args,**kwargs):
-        return self._decorator(style,plt.yticks,*args,**kwargs)
+    def yticks(self, style, *args, **kwargs):
+        return self._decorator(style, plt.yticks, *args, **kwargs)
     
     # ======================================================================= #
-    def zlabel(self,style,*args,**kwargs):
-        return self._decorator(style,plt.zlabel,*args,**kwargs)
+    def zlabel(self, style, *args, **kwargs):
+        return self._decorator(style, plt.zlabel, *args, **kwargs)
     
     # ======================================================================= #
-    def zlim(self,style,*args,**kwargs):
-        return self._decorator(style,plt.zlim,*args,**kwargs)
+    def zlim(self, style, *args, **kwargs):
+        return self._decorator(style, plt.zlim, *args, **kwargs)
     
     # ======================================================================= #
-    def zticks(self,style,*args,**kwargs):
-        return self._decorator(style,plt.zticks,*args,**kwargs)
+    def zticks(self, style, *args, **kwargs):
+        return self._decorator(style, plt.zticks, *args, **kwargs)
     

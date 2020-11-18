@@ -31,38 +31,38 @@ class popup_param(object):
         p0:             dictionary of StringVar objects to link parameters
         selection:      StringVar, track run selection
         win:            TopLevel window
-        xy:             (x,asym,dasym) tuple
+        xy:             (x, asym, dasym) tuple
     """
 
     # parameter mapping
-    parmap = {  '1_T1':'lam',
-                '1_T1b':'lamb',
-                'amp':'amp',
-                'beta':'beta',
-                'fraction_b':'fraction_b',
-                'baseline':'base',
-                'peak':'peak',
-                'fwhmA':'fwhm',
-                'fwhmB':'fwhm',
-                'height':'amp',
-                'heightA':'amp',
-                'heightB':'amp',
-                'sigma':'fwhm',
-                'mean':'peak',
-                'amp0':'amp0',
-                'amp1':'amp1',
-                'amp2':'amp2',
-                'amp3':'amp3',
-                'nu_0':'nu_0',
-                'nu_q':'nu_q',
-                'efgAsym':'eta',
-                'efgPhi':'phi',
-                'efgTheta':'theta',
-                'fwhm':'fwhm',
+    parmap = {  '1_T1':'lam', 
+                '1_T1b':'lamb', 
+                'amp':'amp', 
+                'beta':'beta', 
+                'fraction_b':'fraction_b', 
+                'baseline':'base', 
+                'peak':'peak', 
+                'fwhmA':'fwhm', 
+                'fwhmB':'fwhm', 
+                'height':'amp', 
+                'heightA':'amp', 
+                'heightB':'amp', 
+                'sigma':'fwhm', 
+                'mean':'peak', 
+                'amp0':'amp0', 
+                'amp1':'amp1', 
+                'amp2':'amp2', 
+                'amp3':'amp3', 
+                'nu_0':'nu_0', 
+                'nu_q':'nu_q', 
+                'efgAsym':'eta', 
+                'efgPhi':'phi', 
+                'efgTheta':'theta', 
+                'fwhm':'fwhm', 
              }
 
     # ====================================================================== #
-    def __init__(self,bfit,id=''):
+    def __init__(self, bfit, id=''):
         self.bfit = bfit
         
         # get logger
@@ -72,19 +72,19 @@ class popup_param(object):
         # make a new window
         self.win = Toplevel(bfit.mainframe)
         self.win.title('Find P0')
-        frame = ttk.Frame(self.win,relief='sunken',pad=5)
+        frame = ttk.Frame(self.win, relief='sunken', pad=5)
         
         # icon 
         self.bfit.set_icon(self.win)
         
         # Labels
-        ttk.Label(frame,text="Select Run").grid(column=0,row=0,sticky=E)
+        ttk.Label(frame, text="Select Run").grid(column=0, row=0, sticky=E)
         
         # box for run select
         self.selection = StringVar()
-        select_box = ttk.Combobox(frame,textvariable=self.selection,
+        select_box = ttk.Combobox(frame, textvariable=self.selection, 
                                   state='readonly')
-        select_box.bind('<<ComboboxSelected>>',self.setup)
+        select_box.bind('<<ComboboxSelected>>', self.setup)
         
         # get run list
         runlist = list(self.bfit.fit_files.fit_lines.keys())
@@ -93,8 +93,8 @@ class popup_param(object):
         select_box['values'] = runlist
         
         # gridding
-        frame.grid(column=0,row=1,sticky=(N,W,E,S))
-        select_box.grid(column=0,row=1,sticky=E)
+        frame.grid(column=0, row=1, sticky=(N, W, E, S))
+        select_box.grid(column=0, row=1, sticky=E)
         
         # start looking automatically
         if id:
@@ -103,22 +103,22 @@ class popup_param(object):
             self.win.withdraw()
                 
     # ====================================================================== #
-    def setup(self,*args):
+    def setup(self, *args):
         """Get parameters for placing function and start the run squence"""
         
         # get run selection 
         run_id = self.selection.get()
-        self.logger.info('Running P0 GUI finder on run %s',run_id)
+        self.logger.info('Running P0 GUI finder on run %s', run_id)
         
         # get data
         self.data = self.bfit.data[run_id]
         mode = self.data.mode
         
         # mode switching
-        if mode in ('20','2h'):         self.mode = 2
-        elif mode in ('1f','2e','1w'):  self.mode = 1
+        if mode in ('20', '2h'):         self.mode = 2
+        elif mode in ('1f', '2e', '1w'):  self.mode = 1
         else:
-            self.logger.warning('P0 Finder not configured for run mode %s',mode)
+            self.logger.warning('P0 Finder not configured for run mode %s', mode)
             print('P0 Finder not configured for run mode %s'%mode)
         
         # make new window 
@@ -129,9 +129,9 @@ class popup_param(object):
         omit = self.data.omit.get()
         if omit == self.bfit.fetch_files.bin_remove_starter_line:
             omit = ''
-        self.xy = self.data.asym(self.bfit.get_asym_mode(self.bfit.fit_files),
-                                 rebin=self.data.rebin.get(),omit=omit)
-        ax.errorbar(*self.xy,fmt='.',color='k',ecolor='k')
+        self.xy = self.data.asym(self.bfit.get_asym_mode(self.bfit.fit_files), 
+                                 rebin=self.data.rebin.get(), omit=omit)
+        ax.errorbar(*self.xy, fmt='.', color='k', ecolor='k')
         
         # plot elements - don't do tight_layout here - blocks matplotlib signals
         ax.set_ylabel('Asymmetry')
@@ -144,7 +144,7 @@ class popup_param(object):
         self.fitter = fit_tab.fitter
         self.n_components = fit_tab.n_component.get()
         self.fname = fit_tab.fit_function_title.get()
-        self.parnames = self.fitter.gen_param_names(fn_name=self.fname,
+        self.parnames = self.fitter.gen_param_names(fn_name=self.fname, 
                                           ncomp=self.n_components)
         parentry = fit_tab.fit_lines[run_id].parentry
         
@@ -167,7 +167,7 @@ class popup_param(object):
             pass
         else:
             self.fig.axes[0].cla()
-            self.fig.axes[0].errorbar(*self.xy,fmt='.')
+            self.fig.axes[0].errorbar(*self.xy, fmt='.')
         
         # ensure matplotlib signals work. Not sure why this is needed.
         self.fig.tight_layout()
@@ -188,17 +188,17 @@ class popup_param(object):
         
         # get fitting function 
         if self.fname == 'Lorentzian':
-            fn = fns.lorentzian     # freq,peak,fwhm,amp
+            fn = fns.lorentzian     # freq, peak, fwhm, amp
         elif self.fname == 'BiLorentzian':
-            fn = lambda freq,peak,fwhm,amp : fns.bilorentzian(freq,peak,fwhm,amp/3,fwhm/3,amp*2/3)
+            fn = lambda freq, peak, fwhm, amp : fns.bilorentzian(freq, peak, fwhm, amp/3, fwhm/3, amp*2/3)
         elif self.fname == 'Gaussian':
-            fn = lambda freq,peak,fwhm,amp : fns.gaussian(freq,peak,fwhm,amp)
+            fn = lambda freq, peak, fwhm, amp : fns.gaussian(freq, peak, fwhm, amp)
         elif self.fname == 'QuadLorentz':
             fn = lambda freq, nu_0, nu_q, eta, theta, phi, \
                         amp0, amp1, amp2, amp3, fwhm: \
                         fns.quadlorentzian(freq, nu_0, nu_q, eta, theta, phi, \
                         amp0, amp1, amp2, amp3, \
-                        fwhm, fwhm, fwhm, fwhm,
+                        fwhm, fwhm, fwhm, fwhm, 
                         I = self.fitter.spin[self.fitter.probe_species])
                 
         elif self.fname in ('Exp', 'Str Exp'):
@@ -208,41 +208,41 @@ class popup_param(object):
             lifetime = bd.life[self.bfit.probe_species.get()]
         
             if self.fname == 'Exp':
-                f1 = fns.pulsed_exp(lifetime=lifetime,pulse_len=pulse)
+                f1 = fns.pulsed_exp(lifetime=lifetime, pulse_len=pulse)
                 
                 if self.bfit.probe_species.get() == 'Mg31':
-                    fn = lambda x,lam,amp : fa_31Mg(x,pulse)*f1(x,lam,amp)
+                    fn = lambda x, lam, amp : fa_31Mg(x, pulse)*f1(x, lam, amp)
                 else:
-                    fn = lambda x,lam,amp : f1(x,lam,amp)
+                    fn = lambda x, lam, amp : f1(x, lam, amp)
             
             elif self.fname == 'Str Exp':
-                f1 = fns.pulsed_strexp(lifetime=lifetime,pulse_len=pulse)
+                f1 = fns.pulsed_strexp(lifetime=lifetime, pulse_len=pulse)
                 
                 if self.bfit.probe_species.get() == 'Mg31':
-                    fn = lambda x,lam,amp,beta : fa_31Mg(x,pulse)*f1(x,lam,beta,amp)
+                    fn = lambda x, lam, amp, beta : fa_31Mg(x, pulse)*f1(x, lam, beta, amp)
                 else:
-                    fn = lambda x,lam,amp,beta : f1(x,lam,beta,amp)
+                    fn = lambda x, lam, amp, beta : f1(x, lam, beta, amp)
         else:
             self.cancel()
             errormsg = 'Function "%s" not implemented in P0 Finder' % self.fname
             self.logger.warning(errormsg)
-            messagebox.showerror("Error",errormsg)
+            messagebox.showerror("Error", errormsg)
             raise RuntimeError(errormsg)
         
-        self.fig.canvas.mpl_connect('close_event',self.cancel)
+        self.fig.canvas.mpl_connect('close_event', self.cancel)
         
-        self.fplace = FunctionPlacer(fig=self.fig,
-                                     data=self.data,
-                                     fn_single=fn,
-                                     ncomp=self.n_components,
-                                     p0=p0,
-                                     fnname=self.fname,
-                                     asym_mode=self.bfit.get_asym_mode(self.bfit.fit_files),
-                                     endfn=self.endfn,
+        self.fplace = FunctionPlacer(fig=self.fig, 
+                                     data=self.data, 
+                                     fn_single=fn, 
+                                     ncomp=self.n_components, 
+                                     p0=p0, 
+                                     fnname=self.fname, 
+                                     asym_mode=self.bfit.get_asym_mode(self.bfit.fit_files), 
+                                     endfn=self.endfn, 
                                      spin=self.fitter.spin[self.fitter.probe_species])
         
     # ====================================================================== #        
-    def endfn(self,p0,base):
+    def endfn(self, p0, base):
         """Set output fields"""
         
         # single component
@@ -265,9 +265,9 @@ class popup_param(object):
             self.p0['baseline'].set(base)
         
     # ====================================================================== #
-    def cancel(self,*args):
-        if hasattr(self,'fplace'):  del self.fplace
-        if hasattr(self,'fig'):     
+    def cancel(self, *args):
+        if hasattr(self, 'fplace'):  del self.fplace
+        if hasattr(self, 'fig'):     
             plt.close(self.fig.number)
             del self.fig
         
