@@ -165,6 +165,8 @@ class fileviewer(object):
     # ======================================================================= #
     def draw(self, figstyle, quiet=False):
         """Get data then draw."""
+        self.bfit.logger.info('Draw button pressed')
+        
         if self.get_data(quiet=quiet):
             self.bfit.draw(self.data, 
                     self.bfit.asym_dict[self.asym_type.get()], rebin=self.rebin.get(), 

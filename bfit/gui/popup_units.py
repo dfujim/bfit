@@ -83,6 +83,7 @@ class popup_units(object):
     def set(self, *args):
         """Set entered values"""     
            
+        self.logger.info('Setting')
         for key, value in self.input.items():
             self.parent.units[key] = [float(value[0].get()), value[1].get()]
         self.win.destroy()

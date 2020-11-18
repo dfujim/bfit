@@ -181,6 +181,8 @@ class popup_add_param(object):
                         for p, e in self.new_par.items()}
         except SyntaxError: # on empty set
             pass
+            
+        self.logger.info('Added new parameters ', self.set_par)
         
         # update the lists
         self.bfit.fit_files.populate_param()

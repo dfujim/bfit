@@ -70,7 +70,7 @@ class popup_terminal(object):
         lines = self.text.get(line_num, END)
         
         # run commands
-        self.logger.info('Commands given: "%s"'% ('", "'.join(lines.split('\n')[:-1])))
+        self.logger.info('Commands run: "%s"'% ('", "'.join(lines.split('\n')[:-1])))
         
         exec(lines)
         

@@ -104,6 +104,8 @@ class popup_fit_constraints(template_fit_popup):
             proper displays. 
         """
         
+        self.logger.info('Starting fit')
+        
         # get equations and defined variables
         defined = [t.split('=')[0].strip() for t in text]
         eqn = [t.split('=')[1].strip() for t in text]
@@ -262,5 +264,7 @@ class popup_fit_constraints(template_fit_popup):
 
         # do end-of-fit stuff
         fit_files.do_end_of_fit()
+        
+        self.logger.info('Fitting end')
         
         return (par[0, :], std_l[0, :], std_u[0, :])

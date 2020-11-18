@@ -795,6 +795,8 @@ class fetch_files(object):
             Update labels
         """
         
+        self.logger.info('Updating data')
+        
         # fetch
         for dat in self.bfit.data.values():
             dat.read()
@@ -1040,7 +1042,7 @@ class dataline(object):
         
         # draw data
         if self.check_data.get():
-            self.logger.debug('Draw run %d (%d)', self.run, self.year)
+            self.logger.info('Draw run %d (%d)', self.run, self.year)
                     
             # get new data file
             data = self.bfit.data[self.bfit.get_run_key(self.bdfit.bd)]

@@ -586,6 +586,9 @@ class fit_files(object):
     # ======================================================================= #
     def do_add_param(self, *args):
         """Launch popup for adding user-defined parameters to draw"""
+        
+        self.logger.info('Launching add paraemeter popup')
+        
         if hasattr(self, 'pop_addpar'):
             p = self.pop_addpar
             
@@ -769,6 +772,9 @@ class fit_files(object):
         
     # ======================================================================= #
     def do_fit_constraints(self):
+        
+        self.logger.info('Launching fit constraints popup')
+        
         if hasattr(self, 'pop_fitconstr'):
             p = self.pop_fitconstr
             
@@ -788,6 +794,8 @@ class fit_files(object):
     
     # ======================================================================= #
     def do_fit_model(self):
+        
+        self.logger.info('Launching fit model popup')
         
         if hasattr(self, 'pop_fitres'):
             p = self.pop_fitres
@@ -813,11 +821,15 @@ class fit_files(object):
     # ======================================================================= #
     def do_gui_param(self, id=''):
         """Set initial parmeters with GUI"""
+        
+        self.logger.info('Launching initial fit parameters popup')
         popup_param(self.bfit, id)
         
     # ======================================================================= #
     def do_set_result_as_initial(self, *args):
         """Set initial parmeters as the fitting results"""
+        
+        self.logger.info('Setting initial parameters as fit results')
         
         # turn off modify all 
         modify_all_value = self.set_as_group.get()
@@ -842,6 +854,8 @@ class fit_files(object):
     # ======================================================================= #
     def do_reset_initial(self, *args):
         """Reset initial parmeters to defaults"""
+                
+        self.logger.info('Reset initial parameters')
                 
         for k in self.fit_lines.keys():
             self.fit_lines[k].populate(force_modify=True)
@@ -1751,6 +1765,8 @@ class fit_files(object):
         """
         
         setall = self.set_as_group.get()
+        self.logger.info('Set modify all as %s', setall)
+        
         for k in self.fit_lines.keys():
             self.fit_lines[k].set_input(source, par, column, setall)        
     
@@ -1865,6 +1881,8 @@ class fit_files(object):
     def show_all_results(self):
         """Make a window to display table of fit results"""
         
+        self.logger.info('Launching parameter table popup')
+        
         # get fit results
         df = self.export(savetofile=False)
         popup_show_param(df)
@@ -1872,6 +1890,8 @@ class fit_files(object):
     # ======================================================================= #
     def update_param(self, *args):
         """Update all figures with parameters drawn with new fit results"""
+        
+        self.logger.info('Updating parameter figures')
         
         # get list of figure numbers for parameters
         figlist = self.plt.plots['param']
@@ -1911,6 +1931,8 @@ class fit_files(object):
             ax = plt.figure(fig_num).axes[0]
             ax.set_xscale(xscale)
             ax.set_yscale(yscale)
+            
+            self.logger.debug('Updated figure %d (%s vs %s)', fig_num, ylab, xlab)
             
         # reset to old settings
         self.bfit.draw_style.set(current_style)
@@ -2420,6 +2442,8 @@ class fitline(object):
         """
             Draw window with function components and total
         """
+        
+        self.logger.info('Drawing fit composition for run %s', self.dataline.id)
         
         # get top objects
         fit_files = self.bfit.fit_files
