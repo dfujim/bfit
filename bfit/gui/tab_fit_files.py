@@ -694,7 +694,7 @@ class fit_files(object):
         
         # do fit then kill window
         for d in data_list:
-            self.logger.info('Fitting run %s: %s',self.bfit.get_run_key(d[0]),d[1:])    
+            self.logger.info('Fitting run %s: %s',self.bfit.get_run_key(d[0]), d[1:])    
         try:
             # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
             fit_output, gchi = fitter(fn_name=fn_name,

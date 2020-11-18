@@ -4,7 +4,7 @@
 # Nov 2018
 
 from tkinter import *
-from bdata import bdata,bmerged
+from bdata import bdata, bmerged
 from bfit.gui.calculator_nqr_B0 import current2field
 from bfit import logger_name
 
@@ -49,11 +49,11 @@ class fitdata(object):
     """
      
     # ======================================================================= #
-    def __init__(self,parentbfit,bd):
+    def __init__(self, parentbfit, bd):
         
         # get logger
         self.logger = logging.getLogger(logger_name)
-        self.logger.debug('Initializing run %d (%d).',bd.run,bd.year)
+        self.logger.debug('Initializing run %d (%d).', bd.run, bd.year)
         
         # top level pointer
         self.bfit = parentbfit
@@ -76,24 +76,24 @@ class fitdata(object):
         self.id = self.bfit.get_run_key(data=bd)
         
         # initialize fitpar with fitinputtab.collist
-        for k in ['p0','blo','bhi','res','dres+','dres-','chi','fixed','shared']:
+        for k in ['p0', 'blo', 'bhi', 'res', 'dres+', 'dres-', 'chi', 'fixed', 'shared']:
             self.fitpar[k] = {}
         
         self.read()
 
     # ======================================================================= #
-    def __getattr__(self,name):
+    def __getattr__(self, name):
         """Access bdata attributes in the case that fitdata doesn't have it."""
         try:
             return self.__dict__[name]
         except KeyError:
-            return getattr(self.bd,name)
+            return getattr(self.bd, name)
 
     # ======================================================================= #
-    def asym(self,*args,**kwargs):  return self.bd.asym(*args,**kwargs)
+    def asym(self, *args, **kwargs):  return self.bd.asym(*args, **kwargs)
 
     # ======================================================================= #
-    def get_temperature(self,channel='A'):
+    def get_temperature(self, channel='A'):
         """
             Get the temperature of the run.
             Return (T, std T)
@@ -121,7 +121,7 @@ class fitdata(object):
             T = np.nan
             dT = np.nan
         
-        return (T,dT)
+        return (T, dT)
         
     # ======================================================================= #
     def read(self):
@@ -129,11 +129,11 @@ class fitdata(object):
         
         # bdata access
         if type(self.bd) is bdata:
-            self.bd = bdata(self.run,self.year)
+            self.bd = bdata(self.run, self.year)
         elif type(self.bd) is bmerged:
-            years = list(map(int,textwrap.wrap(str(self.year),4)))
-            runs = list(map(int,textwrap.wrap(str(self.run),5)))
-            self.bd = bmerged([bdata(r,y) for r,y in zip(runs,years)])
+            years = list(map(int, textwrap.wrap(str(self.year), 4)))
+            runs = list(map(int, textwrap.wrap(str(self.run), 5)))
+            self.bd = bmerged([bdata(r, y) for r, y in zip(runs, years)])
                 
         # set temperature 
         try:
@@ -172,10 +172,10 @@ class fitdata(object):
             self.bias = np.nan
 
     # ======================================================================= #
-    def set_fitpar(self,values):
+    def set_fitpar(self, values):
         """Set fitting initial parameters
         values: output of routine gen_init_par: 
-                {par_name:(par,lobnd,hibnd)}
+                {par_name:(par, lobnd, hibnd)}
         """
     
         self.parnames = list(values.keys())
@@ -186,14 +186,14 @@ class fitdata(object):
             self.fitpar['bhi'][v] = values[v][2]
             self.fitpar['fixed'][v] = values[v][3]
         
-        self.logger.debug('Fit parameters set to %s',self.fitpar)
+        self.logger.debug('Fit parameters set to %s', self.fitpar)
 
     # ======================================================================= #
-    def set_fitresult(self,values):
+    def set_fitresult(self, values):
         """
             Set fit results. Values is output of fitting routine. It is a list 
             of tuples
-            [(parname),(par),(err-),(err+),chi,fnpointer]
+            [(parname), (par), (err-), (err+), chi, fnpointer]
         """
         self.parnames = values[0]
         
@@ -206,7 +206,7 @@ class fitdata(object):
         self.chi = values[4]
         self.fitfn = values[5]
         
-        self.logger.debug('Setting fit results to %s',self.fitpar)
+        self.logger.debug('Setting fit results to %s', self.fitpar)
     
 
 # ========================================================================== #
