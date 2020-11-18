@@ -37,7 +37,7 @@ class fitter(object):
                                        'baseline'), 
                         'Gaussian'  :('mean', 'sigma', 'height', 'baseline'), }
 
-    # nice parameter names for labels
+    # nice parameter names for labels - must be one to one unique for later inversion
     pretty_param = {'1_T1':             r'$1 / T_1$ (s$^{-1}$)', 
                     'amp':              'Amplitude', 
                     'fraction_b':       r'$f_{T_1^{(b)}}$', 

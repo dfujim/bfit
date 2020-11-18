@@ -1560,7 +1560,7 @@ class fit_files(object):
             err = (err_l, err_u)
             
         # check user-defined parameters
-        elif select in self.pop_addpar.set_par.keys():
+        elif hasattr(self, 'pop_addpar') and select in self.pop_addpar.set_par.keys():
             val = self.pop_addpar.set_par[select]()
             err = np.full(len(val), np.nan)
         
@@ -1893,6 +1893,11 @@ class fit_files(object):
             ylab = ax.get_ylabel()
             xscale = ax.get_xscale()
             yscale = ax.get_yscale()
+            
+            # back-translate pretty labels to originals
+            ivd = {v: k for k, v in self.fitter.pretty_param.items()}
+            xlab = ivd.get(xlab, xlab)
+            ylab = ivd.get(ylab, ylab)
             
             # set new labels
             self.xaxis.set(xlab)
