@@ -85,7 +85,9 @@ if __name__ == '__main__':
             
             # check if latest
             if 'latest' not in vlst[1]:
-                print(vstr.strip())
+                print('A new version of bfit is available')
+                print(vlst[1])
+                print(vlst[2])
     
     process_get_version = Process(target = check_version)
     process_get_version.start()
