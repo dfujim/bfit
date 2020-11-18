@@ -84,11 +84,8 @@ if __name__ == '__main__':
     process_get_version.start()
     
     # start bfit --------------------------------------------------------------
-    process_bfit = Process(target = bfit,
-                           args = (testfn,))
-    process_bfit.start()    
+    bfit(testfn)
     
     # join
     process_get_version.join()
-    process_bfit.join() # this one never ends - tkinter mainloop
     
