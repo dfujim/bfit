@@ -2498,7 +2498,7 @@ class fitline(object):
                             unique=False, ls='--', label='%s %d'%(fn_name,i),zorder=6)
             
         # plot legend
-        bfit.plt.legend('fit',fontsize='xx-small')
+        bfit.plt.legend('fit')
         
         # reset to old draw mode
         bfit.draw_style.set(draw_mode)

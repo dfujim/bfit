@@ -18,53 +18,53 @@ class fitter(object):
     __name__ = 'base'
     
     # Define possible fit functions for given run modes
-    function_names = {  '20':('Exp','Bi Exp','Str Exp'),
-                        '2h':('Exp','Bi Exp','Str Exp'),
-                        '1f':('Lorentzian','Gaussian','BiLorentzian','QuadLorentz'),
-                        '1w':('Lorentzian','Gaussian','BiLorentzian',),
-                        '1n':('Lorentzian','Gaussian','BiLorentzian',),
-                        '2e':('Lorentzian','Gaussian','BiLorentzian','QuadLorentz')}
+    function_names = {  '20':('Exp', 'Bi Exp', 'Str Exp'), 
+                        '2h':('Exp', 'Bi Exp', 'Str Exp'), 
+                        '1f':('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz'), 
+                        '1w':('Lorentzian', 'Gaussian', 'BiLorentzian', ), 
+                        '1n':('Lorentzian', 'Gaussian', 'BiLorentzian', ), 
+                        '2e':('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz')}
      
     # Define names of fit parameters:
-    param_names = {     'Exp'       :('1_T1','amp'),
-                        'Bi Exp'    :('1_T1','1_T1b','fraction_b','amp'),
-                        'Str Exp'   :('1_T1','beta','amp'),
-                        'Lorentzian':('peak','fwhm','height','baseline'),
-                        'BiLorentzian':('peak','fwhmA','heightA',
-                                               'fwhmB','heightB','baseline'),
+    param_names = {     'Exp'       :('1_T1', 'amp'), 
+                        'Bi Exp'    :('1_T1', '1_T1b', 'fraction_b', 'amp'), 
+                        'Str Exp'   :('1_T1', 'beta', 'amp'), 
+                        'Lorentzian':('peak', 'fwhm', 'height', 'baseline'), 
+                        'BiLorentzian':('peak', 'fwhmA', 'heightA', 
+                                               'fwhmB', 'heightB', 'baseline'), 
                         'QuadLorentz':('nu_0', 'nu_q', 'efgAsym', 'efgTheta', 'efgPhi', 
-	                               'amp0', 'amp1', 'amp2', 'amp3', 'fwhm',
-                                       'baseline'),
-                        'Gaussian'  :('mean','sigma','height','baseline'),}
+	                               'amp0', 'amp1', 'amp2', 'amp3', 'fwhm', 
+                                       'baseline'), 
+                        'Gaussian'  :('mean', 'sigma', 'height', 'baseline'), }
 
     # nice parameter names for labels
-    pretty_param = {'1_T1':             r'$1 / T_1$ (s$^{-1}$)',
-                    'amp':              'Amplitude',
-                    'fraction_b':       r'$f_{T_1^{(b)}}$',
-                    '1_T1b':            r'$1/T_1^{(b)}$ (s$^{-1}$)',
-                    'beta':             r'$\beta$',
-                    'fwhm':             'FWHM (%s)',
-                    'height':           'Height',
-                    'baseline':         'Baseline',
-                    'peak':             'Peak (%s)',
-                    'fwhmA':            'FWHM$_A$ (%s)',
-                    'fwhmB':            'FWHM$_B$ (%s)',
-                    'heightA':          'Height$_A$',
-                    'heightB':          'Height$_B$',
-                    'nu_0':             r'$\nu_0$ (%s)',
-                    'nu_q':             r'$\nu_q$ (%s)',
-                    'efgAsym':          r'$\eta$',
-                    'efgTheta':         r'Principle Axes $\theta$ (rad)',
-                    'efgPhi':           r'Principle Axes $\phi$ (rad)',
-                    'amp0':             'Amplitude$_0$',
-                    'amp1':             'Amplitude$_1$',
-                    'amp2':             'Amplitude$_2$',
-                    'amp3':             'Amplitude$_3$',
-                    'fmwh':             'FWHM (%s)',
-                    'mean':             r'$\langle\nu\rangle$ (%s)',
-                    'sigma':            r'$\sigma$ (%s)',
-                    'Beta-Avg 1/<T1>':  r'$1/\langle T_1\rangle_\beta$ (s$^{-1}$)',
-                    'B0 Field (T)':     r'$B_0$ Field (T)',
+    pretty_param = {'1_T1':             r'$1 / T_1$ (s$^{-1}$)', 
+                    'amp':              'Amplitude', 
+                    'fraction_b':       r'$f_{T_1^{(b)}}$', 
+                    '1_T1b':            r'$1/T_1^{(b)}$ (s$^{-1}$)', 
+                    'beta':             r'$\beta$', 
+                    'fwhm':             'FWHM (%s)', 
+                    'height':           'Height', 
+                    'baseline':         'Baseline', 
+                    'peak':             'Peak (%s)', 
+                    'fwhmA':            'FWHM$_A$ (%s)', 
+                    'fwhmB':            'FWHM$_B$ (%s)', 
+                    'heightA':          'Height$_A$', 
+                    'heightB':          'Height$_B$', 
+                    'nu_0':             r'$\nu_0$ (%s)', 
+                    'nu_q':             r'$\nu_q$ (%s)', 
+                    'efgAsym':          r'$\eta$', 
+                    'efgTheta':         r'Principle Axes $\theta$ (rad)', 
+                    'efgPhi':           r'Principle Axes $\phi$ (rad)', 
+                    'amp0':             'Amplitude$_0$', 
+                    'amp1':             'Amplitude$_1$', 
+                    'amp2':             'Amplitude$_2$', 
+                    'amp3':             'Amplitude$_3$', 
+                    'fmwh':             'FWHM (%s)', 
+                    'mean':             r'$\langle\nu\rangle$ (%s)', 
+                    'sigma':            r'$\sigma$ (%s)', 
+                    'Beta-Avg 1/<T1>':  r'$1/\langle T_1\rangle_\beta$ (s$^{-1}$)', 
+                    'B0 Field (T)':     r'$B_0$ Field (T)', 
                     }
 
     # dictionary of initial parameters
@@ -73,7 +73,7 @@ class fitter(object):
     epsilon = 1e-9  # for fixing parameters
 
     # define list of ok run modes 
-    valid_asym_modes = ('c','p','n','sl_c','dif_c',)
+    valid_asym_modes = ('c', 'p', 'n', 'sl_c', 'dif_c', )
     
     # probe species spin numbers
     spin = {'Li8':2,    # radioactive daughters: none
@@ -91,9 +91,9 @@ class fitter(object):
     # ======================================================================= #
     def __init__(self, keyfn, probe_species='Li8'):
         """
-            keyfn:          function takes as input bdata or bjoined object, 
-                            returns string corresponding to unique id of that 
-                            object
+            keyfn:          function takes as input bdata or bjoined or bmerged 
+                            object, returns string corresponding to unique id of 
+                            that object
             probe_species: one of the keys in the bdata.life dictionary.
         """
         self.keyfn = keyfn
@@ -106,7 +106,7 @@ class fitter(object):
             
             fn_name: name of function to fit
             ncomp : number of components to incude (2 = biexp, for example)
-            data_list: list of [[bdata object, pdict, doptions],]
+            data_list: list of [[bdata object, pdict, doptions], ]
             
                 where pdict = {par:(init val,   # initial guess
                                     bound_lo,   # lower fitting bound
@@ -134,8 +134,8 @@ class fitter(object):
                             
                             ex: sl_c or raw_h or dif_c
             xlims: fit subrange of x axis
-            returns dictionary of {runid: [[par_names],[par_values],[par_errors],
-                                          [chisquared],[fitfunction pointers]]}
+            returns dictionary of {runid: [[par_names], [par_values], [par_errors], 
+                                          [chisquared], [fitfunction pointers]]}
                                    and global chisquared
         """
 
@@ -143,7 +143,7 @@ class fitter(object):
         if ncomp < 1:
             raise RuntimeError('ncomp needs to be >= 1')
             
-        asym_mode = asym_mode.replace('2e_','')
+        asym_mode = asym_mode.replace('2e_', '')
             
         # parameter names
         keylist = self.gen_param_names(fn_name, ncomp)
@@ -156,7 +156,7 @@ class fitter(object):
         bounds = []
         omit = []
         rebin = []
-        sharelist = np.zeros(npar,dtype=bool)
+        sharelist = np.zeros(npar, dtype=bool)
         fixedlist = []
         
         for data in data_list:
@@ -170,21 +170,21 @@ class fitter(object):
             life = bd.life[self.probe_species]
             
             # get fitting function for 20 and 2h
-            if dat.mode in ['20','2h']: 
+            if dat.mode in ['20', '2h']: 
                 pulse = dat.get_pulse_s()
                 
                 # fit function
-                fn1 = self.get_fn(fn_name,ncomp,pulse,life)
+                fn1 = self.get_fn(fn_name, ncomp, pulse, life)
                 
                 # add corrections for probe daughters
                 if self.probe_species == 'Mg31':
-                    fn.append(lambda x,*par : fa_31Mg(x,pulse)*fn1(x,*par))
+                    fn.append(lambda x, *par : fa_31Mg(x, pulse)*fn1(x, *par))
                 else:
                     fn.append(fn1)
                 
             # 1f functions
             else:                       
-                fn.append(self.get_fn(fn_name,ncomp,-1,life))
+                fn.append(self.get_fn(fn_name, ncomp, -1, life))
             
             # get bdata objects
             bdata_list.append(dat)
@@ -193,7 +193,7 @@ class fitter(object):
             p0.append(tuple(pdict[k][0] for k in keylist))
             
             # get fitting bounds
-            bound = [[],[]]
+            bound = [[], []]
             shlist = []
             fixed = []
             for k in keylist:
@@ -228,20 +228,20 @@ class fitter(object):
         # fit data
         kwargs = {'p0':p0, 'bounds':bounds}
         pars, stds_l, stds_h, covs, chis, gchi = self._do_fit(
-                                        bdata_list,
-                                        fn,
-                                        omit,
-                                        rebin,
-                                        sharelist,
-                                        hist_select=hist_select,
-                                        asym_mode=asym_mode,
-                                        fixed=fixedlist,
-                                        xlims=xlims,
-                                        parnames=keylist,
+                                        bdata_list, 
+                                        fn, 
+                                        omit, 
+                                        rebin, 
+                                        sharelist, 
+                                        hist_select=hist_select, 
+                                        asym_mode=asym_mode, 
+                                        fixed=fixedlist, 
+                                        xlims=xlims, 
+                                        parnames=keylist, 
                                         **kwargs)
         
         # collect results
-        if not isinstance(chis,collections.Iterable):   # single run
+        if not isinstance(chis, collections.Iterable):   # single run
             d = bdata_list[0]
             return ({self.keyfn(d):[keylist, pars, stds_l, stds_h, chis, fn[0]]}, gchi)
         else:                                           # multiple runs    
@@ -313,10 +313,10 @@ class fitter(object):
             raise RuntimeError(errmsg)
         
         # get asymmetry
-        x,a,da = bdataobj.asym(asym_mode)
+        x, a, da = bdataobj.asym(asym_mode)
         
         # set pulsed exp fit initial parameters
-        if fn_name in ('Exp','Bi Exp','Str Exp'):
+        if fn_name in ('Exp', 'Bi Exp', 'Str Exp'):
             # ampltitude average of first 5 bins
             amp = abs(np.mean(a[0:5])/ncomp)
             
@@ -331,20 +331,20 @@ class fitter(object):
             
             # bounds and amp
             if asym_mode == 'n':
-                amp_bounds = (-np.inf,np.inf)
+                amp_bounds = (-np.inf, np.inf)
                 amp = -amp
             else:
-                amp_bounds = (0,np.inf)
+                amp_bounds = (0, np.inf)
             
             # set values
-            par_values = {'amp':(amp,*amp_bounds,False),
-                          '1_T1':(1./T1,0,np.inf,False),
-                          '1_T1b':(10./T1,0,np.inf,False),
-                          'fraction_b':(0.5,0,1,False),
-                          'beta':(0.5,0,1,False)}
+            par_values = {'amp':(amp, *amp_bounds, False), 
+                          '1_T1':(1./T1, 0, np.inf, False), 
+                          '1_T1b':(10./T1, 0, np.inf, False), 
+                          'fraction_b':(0.5, 0, 1, False), 
+                          'beta':(0.5, 0, 1, False)}
                          
         # set time integrated fit initial parameters
-        elif fn_name in ('Lorentzian','Gaussian','BiLorentzian','QuadLorentz'):
+        elif fn_name in ('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz'):
             
             # get peak asym value
             amin = min(a[a!=0])
@@ -356,45 +356,45 @@ class fitter(object):
             
             # bounds
             if asym_mode == 'n':
-                height_bounds = (-np.inf,0)
+                height_bounds = (-np.inf, 0)
             else:
-                height_bounds = (0,np.inf)
+                height_bounds = (0, np.inf)
             
             # set values (value, low bnd, high bnd, fixed)
             if fn_name == 'Lorentzian':	
-                par_values = {'peak':(peak,min(x),max(x),False),
-                              'fwhm':(width,0,np.inf,False),
-                              'height':(height,*height_bounds,False),
-                              'baseline':(base,-np.inf,np.inf,False)
+                par_values = {'peak':(peak, min(x), max(x), False), 
+                              'fwhm':(width, 0, np.inf, False), 
+                              'height':(height, *height_bounds, False), 
+                              'baseline':(base, -np.inf, np.inf, False)
                              }
             elif fn_name == 'Gaussian':
-                par_values = {'mean':(peak,min(x),max(x),False),
-                              'sigma':(width,0,np.inf,False),
-                              'height':(height,*height_bounds,False),
-                              'baseline':(base,-np.inf,np.inf,False)
+                par_values = {'mean':(peak, min(x), max(x), False), 
+                              'sigma':(width, 0, np.inf, False), 
+                              'height':(height, *height_bounds, False), 
+                              'baseline':(base, -np.inf, np.inf, False)
                               }
             elif fn_name == 'BiLorentzian':
-                par_values = {'peak':(peak,min(x),max(x),False),
-                              'fwhmA':(width*10,0,np.inf,False),
-                              'heightA':(height/10,*height_bounds,False),
-                              'fwhmB':(width,0,np.inf,False),
-                              'heightB':(height*9/10,*height_bounds,False),
-                              'baseline':(base,-np.inf,np.inf,False)
+                par_values = {'peak':(peak, min(x), max(x), False), 
+                              'fwhmA':(width*10, 0, np.inf, False), 
+                              'heightA':(height/10, *height_bounds, False), 
+                              'fwhmB':(width, 0, np.inf, False), 
+                              'heightB':(height*9/10, *height_bounds, False), 
+                              'baseline':(base, -np.inf, np.inf, False)
                              }
             elif fn_name == 'QuadLorentz':
                 
                 dx = max(x)-min(x)
-                par_values = {'nu_0':((max(x)+min(x))/2,min(x),max(x),False),
-                              'nu_q':(dx/12,0,dx,False),
-                              'efgAsym':(0,0,1,True),
-                              'efgTheta':(0,0,2*np.pi,True),
-                              'efgPhi':(0,0,2*np.pi,True),
-                              'amp0':(height,height*0.1,np.inf,False), 
-                              'amp1':(height,height*0.1,np.inf,False), 
-                              'amp2':(height,height*0.1,np.inf,False), 
-                              'amp3':(height,height*0.1,np.inf,False), 
-                              'fwhm':(dx/10,0,dx,False),
-                              'baseline':(base,-np.inf,np.inf,False)
+                par_values = {'nu_0':((max(x)+min(x))/2, min(x), max(x), False), 
+                              'nu_q':(dx/12, 0, dx, False), 
+                              'efgAsym':(0, 0, 1, True), 
+                              'efgTheta':(0, 0, 2*np.pi, True), 
+                              'efgPhi':(0, 0, 2*np.pi, True), 
+                              'amp0':(height, height*0.1, np.inf, False), 
+                              'amp1':(height, height*0.1, np.inf, False), 
+                              'amp2':(height, height*0.1, np.inf, False), 
+                              'amp3':(height, height*0.1, np.inf, False), 
+                              'fwhm':(dx/10, 0, dx, False), 
+                              'baseline':(base, -np.inf, np.inf, False)
                              }
          
         else:
@@ -424,7 +424,7 @@ class fitter(object):
                 pulse_len: duration of beam on in s
                 lifetime: lifetime of probe in s
             
-            Returns python function(x,*pars)
+            Returns python function(x, *pars)
         """
         
         # set fitting function
@@ -446,13 +446,13 @@ class fitter(object):
             fn =  fns.gaussian
             self.mode=1
         elif fn_name == 'Exp':
-            fn =  fns.pulsed_exp(lifetime,pulse_len)
+            fn =  fns.pulsed_exp(lifetime, pulse_len)
             self.mode=2
         elif fn_name == 'Bi Exp':
-            fn =  fns.pulsed_biexp(lifetime,pulse_len)
+            fn =  fns.pulsed_biexp(lifetime, pulse_len)
             self.mode=2
         elif fn_name == 'Str Exp':
-            fn =  fns.pulsed_strexp(lifetime,pulse_len)
+            fn =  fns.pulsed_strexp(lifetime, pulse_len)
             self.mode=2
         else:
             raise RuntimeError('Fitting function not found.')
@@ -461,7 +461,7 @@ class fitter(object):
         fnlist = [fn]*ncomp
         
         if self.mode == 1:
-            fnlist.append(lambda x,b: b)
+            fnlist.append(lambda x, b: b)
         fn = fns.get_fn_superpos(fnlist)
         
         return fn
