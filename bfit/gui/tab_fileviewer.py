@@ -402,14 +402,14 @@ class fileviewer(object):
                                      else ('L+', 'L-', 'R-', 'R+')
         try:     
             val = int(np.sum([data.hist[h].data for h in hist]))
-            data_sw['Total Counts Sample'] = f'{val:, }'.replace(', ', ' ')
+            data_sw['Total Counts Sample'] = f'{val:,}'.replace(',', ' ')
             key_order_sw.append('Total Counts Sample')
         except (AttributeError, KeyError):
             pass
         
         try: 
             val = int(np.sum([data.hist[h].data for h in hist])/data.duration)
-            data_sw['Rate Sample'] =  f'{val:, } (1/s)'.replace(', ', ' ')
+            data_sw['Rate Sample'] =  f'{val:,} (1/s)'.replace(',', ' ')
             key_order_sw.append('Rate Sample')
         except (AttributeError, KeyError):
             pass
@@ -417,14 +417,14 @@ class fileviewer(object):
         hist = ('F+', 'F-', 'B-', 'B+')    
         try: 
             val = int(np.sum([data.hist['NBM'+h].data for h in hist]))
-            data_sw['Total Counts NBM'] = f'{val:, }'.replace(', ', ' ')
+            data_sw['Total Counts NBM'] = f'{val:,}'.replace(',', ' ')
             key_order_sw.append('Total Counts NBM')
         except (AttributeError, KeyError):
             pass
         
         try: 
             val = int(np.sum([data.hist['NBM'+h].data for h in hist])/data.duration)
-            data_sw['Rate NBM'] = f'{val:, } (1/s)'.replace(', ', ' ')
+            data_sw['Rate NBM'] = f'{val:,} (1/s)'.replace(',', ' ')
             key_order_sw.append('Rate NBM')
         except (AttributeError, KeyError):
             pass
