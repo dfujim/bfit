@@ -3,8 +3,15 @@ import logging, os, sys
 from logging.handlers import RotatingFileHandler
 import argparse, subprocess
 from textwrap import dedent
+
+# check if maxOS
+if sys.platform == 'darwin':
+    os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
+
+# now we can import multiprocessing
 from multiprocessing import Process
 
+# run
 if __name__ == '__main__':
 
     # command line switches ---------------------------------------------------
