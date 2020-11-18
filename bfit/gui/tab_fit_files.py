@@ -48,7 +48,7 @@ class fit_files(object):
             fit_data_tab:   containing frame (for destruction)
             fit_function_title: StringVar, title of fit function to use
             fit_function_title_box: combobox for fit function names
-            fit_input:      fitting input values = (fn_name,ncomp,data_list)
+            fit_input:      fitting input values = (fn_name, ncomp, data_list)
             fit_lines:      Dict storing fitline objects
             fit_lines_old: dictionary of previously used fitline objects, keyed by run
             fit_routine_label: label for fit routine
@@ -78,21 +78,21 @@ class fit_files(object):
             xaxis_combobox: box for choosing x axis draw parameter
             yaxis_combobox: box for choosing y axis draw parameter
             
-            xlo,hi:         StringVar, fit range limits on x axis
+            xlo, hi:         StringVar, fit range limits on x axis
     """ 
     
     default_fit_functions = {
-            '20':('Exp','Str Exp'),
-            '2h':('Exp','Str Exp'),
-            '1f':('Lorentzian','Gaussian'),
-            '1w':('Lorentzian','Gaussian'),
-            '1n':('Lorentzian','Gaussian')}
+            '20':('Exp', 'Str Exp'), 
+            '2h':('Exp', 'Str Exp'), 
+            '1f':('Lorentzian', 'Gaussian'), 
+            '1w':('Lorentzian', 'Gaussian'), 
+            '1n':('Lorentzian', 'Gaussian')}
     mode = ""
     chi_threshold = 1.5 # threshold for red highlight on bad fits 
     n_fitx_pts = 500    # number of points to draw in fitted curves
     
     # ======================================================================= #
-    def __init__(self,fit_data_tab,bfit):
+    def __init__(self, fit_data_tab, bfit):
         
         # get logger
         self.logger = logging.getLogger(logger_name)
@@ -102,188 +102,188 @@ class fit_files(object):
         self.bfit = bfit
         self.fit_output = {}
         self.share_var = {}
-        self.fitter = self.bfit.routine_mod.fitter(keyfn = bfit.get_run_key,
+        self.fitter = self.bfit.routine_mod.fitter(keyfn = bfit.get_run_key, 
                                                    probe_species = bfit.probe_species.get())
         self.draw_components = list(bfit.draw_components)
         self.fit_data_tab = fit_data_tab
         self.plt = self.bfit.plt
         
         # additional button bindings
-        self.bfit.root.bind('<Control-Key-u>',self.update_param)
+        self.bfit.root.bind('<Control-Key-u>', self.update_param)
         
         # make top level frames
-        mid_fit_frame = ttk.Labelframe(fit_data_tab,
-                                       text='Set Initial Parameters',pad=5)
+        mid_fit_frame = ttk.Labelframe(fit_data_tab, 
+                                       text='Set Initial Parameters', pad=5)
                     
-        mid_fit_frame.grid(column=0,row=1,rowspan=6,sticky=(S,W,E,N),padx=5,pady=5)
+        mid_fit_frame.grid(column=0, row=1, rowspan=6, sticky=(S, W, E, N), padx=5, pady=5)
         
-        fit_data_tab.grid_columnconfigure(0,weight=1)   # fitting space
-        fit_data_tab.grid_rowconfigure(6,weight=1)      # push bottom window in right frame to top
-        mid_fit_frame.grid_columnconfigure(0,weight=1)
-        mid_fit_frame.grid_rowconfigure(0,weight=1)
+        fit_data_tab.grid_columnconfigure(0, weight=1)   # fitting space
+        fit_data_tab.grid_rowconfigure(6, weight=1)      # push bottom window in right frame to top
+        mid_fit_frame.grid_columnconfigure(0, weight=1)
+        mid_fit_frame.grid_rowconfigure(0, weight=1)
         
         # TOP FRAME -----------------------------------------------------------
         
         # fit function select 
-        fn_select_frame = ttk.Labelframe(fit_data_tab,text='Fit Function')
+        fn_select_frame = ttk.Labelframe(fit_data_tab, text='Fit Function')
         self.fit_function_title = StringVar()
         self.fit_function_title.set("")
         self.fit_function_title_box = ttk.Combobox(fn_select_frame, 
-                textvariable=self.fit_function_title,state='readonly')
-        self.fit_function_title_box.bind('<<ComboboxSelected>>',
+                textvariable=self.fit_function_title, state='readonly')
+        self.fit_function_title_box.bind('<<ComboboxSelected>>', 
             lambda x :self.populate_param(force_modify=True))
         
         # number of components in fit spinbox
         self.n_component = IntVar()
         self.n_component.set(1)
-        self.n_component_box = Spinbox(fn_select_frame,from_=1,to=20, 
-                textvariable=self.n_component,width=5,
+        self.n_component_box = Spinbox(fn_select_frame, from_=1, to=20, 
+                textvariable=self.n_component, width=5, 
                 command=lambda:self.populate_param(force_modify=True))
         
         # fit and other buttons
-        fit_button = ttk.Button(fn_select_frame,text='        Fit        ',command=self.do_fit,\
+        fit_button = ttk.Button(fn_select_frame, text='        Fit        ', command=self.do_fit, \
                                 pad=1)
-        constraint_button = ttk.Button(fn_select_frame,text='Constrained Fit',
-                                       command=self.do_fit_constraints,pad=1)
-        set_param_button = ttk.Button(fn_select_frame,text='   Set Result as P0   ',
-                        command=self.do_set_result_as_initial,pad=1)                        
-        reset_param_button = ttk.Button(fn_select_frame,text='     Reset P0     ',
-                        command=self.do_reset_initial,pad=1)
+        constraint_button = ttk.Button(fn_select_frame, text='Constrained Fit', 
+                                       command=self.do_fit_constraints, pad=1)
+        set_param_button = ttk.Button(fn_select_frame, text='   Set Result as P0   ', 
+                        command=self.do_set_result_as_initial, pad=1)                        
+        reset_param_button = ttk.Button(fn_select_frame, text='     Reset P0     ', 
+                        command=self.do_reset_initial, pad=1)
             
         # GRIDDING
             
         # top frame gridding
-        fn_select_frame.grid(column=0,row=0,sticky=(W,E,N),padx=5,pady=5)
+        fn_select_frame.grid(column=0, row=0, sticky=(W, E, N), padx=5, pady=5)
         
         c = 0
-        self.fit_function_title_box.grid(column=c,row=0,padx=5); c+=1
-        ttk.Label(fn_select_frame,text="Number of Terms:").grid(column=c,
-                  row=0,padx=5,pady=5,sticky=W); c+=1
-        self.n_component_box.grid(column=c,row=0,padx=5,pady=5,sticky=W); c+=1
-        fit_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
-        constraint_button.grid(column=c,row=0,padx=5,pady=1,sticky=(W,E)); c+=1
-        set_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
-        reset_param_button.grid(column=c,row=0,padx=5,pady=1,sticky=W); c+=1
+        self.fit_function_title_box.grid(column=c, row=0, padx=5); c+=1
+        ttk.Label(fn_select_frame, text="Number of Terms:").grid(column=c, 
+                  row=0, padx=5, pady=5, sticky=W); c+=1
+        self.n_component_box.grid(column=c, row=0, padx=5, pady=5, sticky=W); c+=1
+        fit_button.grid(column=c, row=0, padx=5, pady=1, sticky=W); c+=1
+        constraint_button.grid(column=c, row=0, padx=5, pady=1, sticky=(W, E)); c+=1
+        set_param_button.grid(column=c, row=0, padx=5, pady=1, sticky=W); c+=1
+        reset_param_button.grid(column=c, row=0, padx=5, pady=1, sticky=W); c+=1
         
         # MID FRAME -----------------------------------------------------------
         
         # Scrolling frame to hold fitlines
         yscrollbar = ttk.Scrollbar(mid_fit_frame, orient=VERTICAL)         
-        self.fit_canvas = Canvas(mid_fit_frame,bd=0,                # make a canvas for scrolling
+        self.fit_canvas = Canvas(mid_fit_frame, bd=0,                # make a canvas for scrolling
                 yscrollcommand=yscrollbar.set,                      # scroll command receive
-                scrollregion=(0, 0, 5000, 5000),confine=True)       # default size
+                scrollregion=(0, 0, 5000, 5000), confine=True)       # default size
         yscrollbar.config(command=self.fit_canvas.yview)            # scroll command send
-        self.runframe = ttk.Frame(self.fit_canvas,pad=5)           # holds 
+        self.runframe = ttk.Frame(self.fit_canvas, pad=5)           # holds 
         
-        self.canvas_frame_id = self.fit_canvas.create_window((0,0),    # make window which can scroll
-                window=self.runframe,
+        self.canvas_frame_id = self.fit_canvas.create_window((0, 0),    # make window which can scroll
+                window=self.runframe, 
                 anchor='nw')
-        self.runframe.bind("<Configure>",self.config_canvas) # bind resize to alter scrollable region
-        self.fit_canvas.bind("<Configure>",self.config_runframe) # bind resize to change size of contained frame
+        self.runframe.bind("<Configure>", self.config_canvas) # bind resize to alter scrollable region
+        self.fit_canvas.bind("<Configure>", self.config_runframe) # bind resize to change size of contained frame
         
         # gridding
-        self.fit_canvas.grid(column=0,row=0,sticky=(E,W,S,N))
-        yscrollbar.grid(column=1,row=0,sticky=(W,S,N))
+        self.fit_canvas.grid(column=0, row=0, sticky=(E, W, S, N))
+        yscrollbar.grid(column=1, row=0, sticky=(W, S, N))
         
-        self.runframe.grid_columnconfigure(0,weight=1) 
-        self.fit_canvas.grid_columnconfigure(0,weight=1) 
-        self.fit_canvas.grid_rowconfigure(0,weight=1)
+        self.runframe.grid_columnconfigure(0, weight=1) 
+        self.fit_canvas.grid_columnconfigure(0, weight=1) 
+        self.fit_canvas.grid_rowconfigure(0, weight=1)
         
-        self.runframe.bind("<Configure>",self.config_canvas) # bind resize to alter scrollable region
-        self.fit_canvas.bind("<Configure>",self.config_runframe) # bind resize to change size of contained frame
+        self.runframe.bind("<Configure>", self.config_canvas) # bind resize to alter scrollable region
+        self.fit_canvas.bind("<Configure>", self.config_runframe) # bind resize to change size of contained frame
         
         # RIGHT FRAME ---------------------------------------------------------
         
         # run mode 
-        fit_runmode_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
-                text='Run Mode',)
-        self.fit_runmode_label = ttk.Label(fit_runmode_label_frame,text="",justify=CENTER)
+        fit_runmode_label_frame = ttk.Labelframe(fit_data_tab, pad=(10, 5, 10, 5), 
+                text='Run Mode', )
+        self.fit_runmode_label = ttk.Label(fit_runmode_label_frame, text="", justify=CENTER)
         
         # fitting routine
-        fit_routine_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
-                text='Minimizer',)
-        self.fit_routine_label = ttk.Label(fit_routine_label_frame,text="",
+        fit_routine_label_frame = ttk.Labelframe(fit_data_tab, pad=(10, 5, 10, 5), 
+                text='Minimizer', )
+        self.fit_routine_label = ttk.Label(fit_routine_label_frame, text="", 
                                            justify=CENTER)
         
         # probe species
-        probe_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
-                text='Probe',)
-        self.probe_label = ttk.Label(probe_label_frame,
-                                     text=self.bfit.probe_species.get(),
+        probe_label_frame = ttk.Labelframe(fit_data_tab, pad=(10, 5, 10, 5), 
+                text='Probe', )
+        self.probe_label = ttk.Label(probe_label_frame, 
+                                     text=self.bfit.probe_species.get(), 
                                      justify=CENTER)
         
         # global chisquared
-        gchi_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
-                text='Global ChiSq',)
-        self.gchi_label = ttk.Label(gchi_label_frame,text='',justify=CENTER)
+        gchi_label_frame = ttk.Labelframe(fit_data_tab, pad=(10, 5, 10, 5), 
+                text='Global ChiSq', )
+        self.gchi_label = ttk.Label(gchi_label_frame, text='', justify=CENTER)
                      
         # asymmetry calculation
-        asym_label_frame = ttk.Labelframe(fit_data_tab,pad=(60,5,5,5),
-                text='Asymmetry Calculation',)
+        asym_label_frame = ttk.Labelframe(fit_data_tab, pad=(60, 5, 5, 5), 
+                text='Asymmetry Calculation', )
         self.asym_type = StringVar()
         self.asym_type.set('')
-        self.entry_asym_type = ttk.Combobox(asym_label_frame,\
-                textvariable=self.asym_type,state='readonly',\
+        self.entry_asym_type = ttk.Combobox(asym_label_frame, \
+                textvariable=self.asym_type, state='readonly', \
                 width=20)
         self.entry_asym_type['values'] = ()
         
         # other settings
-        other_settings_label_frame = ttk.Labelframe(fit_data_tab,pad=(10,5,10,5),
-                text='Switches',)
+        other_settings_label_frame = ttk.Labelframe(fit_data_tab, pad=(10, 5, 10, 5), 
+                text='Switches', )
                 
         # set as group checkbox
         self.set_as_group = BooleanVar()
-        set_group_check = ttk.Checkbutton(other_settings_label_frame,
-                text='Modify for all',\
-                variable=self.set_as_group,onvalue=True,offvalue=False)
+        set_group_check = ttk.Checkbutton(other_settings_label_frame, 
+                text='Modify for all', \
+                variable=self.set_as_group, onvalue=True, offvalue=False)
         self.set_as_group.set(False)
 
         # rebin checkbox
         self.use_rebin = BooleanVar()
-        set_use_rebin = ttk.Checkbutton(other_settings_label_frame,
-                text='Rebin data (set in fetch)',\
-                variable=self.use_rebin,onvalue=True,offvalue=False)
+        set_use_rebin = ttk.Checkbutton(other_settings_label_frame, 
+                text='Rebin data (set in fetch)', \
+                variable=self.use_rebin, onvalue=True, offvalue=False)
         self.use_rebin.set(False)
         
         # set P0 as prior checkbox
         self.set_prior_p0 = BooleanVar()
-        set_prior_p0 = ttk.Checkbutton(other_settings_label_frame,
-                text='Set P0 of new run to prior result',\
-                variable=self.set_prior_p0,onvalue=True,offvalue=False)
+        set_prior_p0 = ttk.Checkbutton(other_settings_label_frame, 
+                text='Set P0 of new run to prior result', \
+                variable=self.set_prior_p0, onvalue=True, offvalue=False)
         self.set_prior_p0.set(False)
         
         # specify x axis --------------------
-        xspecify_frame = ttk.Labelframe(fit_data_tab,
-            text='Restrict x limits',pad=5)
+        xspecify_frame = ttk.Labelframe(fit_data_tab, 
+            text='Restrict x limits', pad=5)
         
         self.xlo = StringVar()
         self.xhi = StringVar()
         self.xlo.set('-inf')
         self.xhi.set('inf')
         
-        entry_xspecify_lo = ttk.Entry(xspecify_frame,textvariable=self.xlo,width=10)
-        entry_xspecify_hi = ttk.Entry(xspecify_frame,textvariable=self.xhi,width=10)
-        label_xspecify = ttk.Label(xspecify_frame,text=" < x < ")
+        entry_xspecify_lo = ttk.Entry(xspecify_frame, textvariable=self.xlo, width=10)
+        entry_xspecify_hi = ttk.Entry(xspecify_frame, textvariable=self.xhi, width=10)
+        label_xspecify = ttk.Label(xspecify_frame, text=" < x < ")
         
         # fit results -----------------------
-        results_frame = ttk.Labelframe(fit_data_tab,
-            text='Fit Results and Run Conditions',pad=5)     # draw fit results
+        results_frame = ttk.Labelframe(fit_data_tab, 
+            text='Fit Results and Run Conditions', pad=5)     # draw fit results
         
         # draw and export buttons
         button_frame = Frame(results_frame)
-        draw_button = ttk.Button(button_frame,text='Draw', command=self.draw_param)
-        update_button = ttk.Button(button_frame,text='Update', command=self.update_param)
-        export_button = ttk.Button(button_frame,text='Export', command=self.export)
-        show_button = ttk.Button(button_frame,text='Compare', command=self.show_all_results)
-        model_fit_button = ttk.Button(button_frame,text='Fit a\nModel',
+        draw_button = ttk.Button(button_frame, text='Draw', command=self.draw_param)
+        update_button = ttk.Button(button_frame, text='Update', command=self.update_param)
+        export_button = ttk.Button(button_frame, text='Export', command=self.export)
+        show_button = ttk.Button(button_frame, text='Compare', command=self.show_all_results)
+        model_fit_button = ttk.Button(button_frame, text='Fit a\nModel', 
                                       command=self.do_fit_model)
         
         
         # menus for x and y values
-        x_button = ttk.Button(results_frame,text="x axis:", command=self.do_add_param, pad=0)
-        y_button = ttk.Button(results_frame,text="y axis:", command=self.do_add_param, pad=0)
-        ann_button = ttk.Button(results_frame,text=" Annotation:", command=self.do_add_param, pad=0)
-        label_label = ttk.Label(results_frame,text="Label:")
+        x_button = ttk.Button(results_frame, text="x axis:", command=self.do_add_param, pad=0)
+        y_button = ttk.Button(results_frame, text="y axis:", command=self.do_add_param, pad=0)
+        ann_button = ttk.Button(results_frame, text=" Annotation:", command=self.do_add_param, pad=0)
+        label_label = ttk.Label(results_frame, text="Label:")
         
         self.xaxis = StringVar()
         self.yaxis = StringVar()
@@ -295,15 +295,15 @@ class fit_files(object):
         self.annotation.set('')
         self.par_label.set('')
         
-        self.xaxis_combobox = ttk.Combobox(results_frame,textvariable=self.xaxis,
-                                      state='readonly',width=19)
-        self.yaxis_combobox = ttk.Combobox(results_frame,textvariable=self.yaxis,
-                                      state='readonly',width=19)
-        self.annotation_combobox = ttk.Combobox(results_frame,
-                                      textvariable=self.annotation,
-                                      state='readonly',width=19)
-        self.par_label_entry = ttk.Entry(results_frame,
-                                    textvariable=self.par_label,width=21)
+        self.xaxis_combobox = ttk.Combobox(results_frame, textvariable=self.xaxis, 
+                                      state='readonly', width=19)
+        self.yaxis_combobox = ttk.Combobox(results_frame, textvariable=self.yaxis, 
+                                      state='readonly', width=19)
+        self.annotation_combobox = ttk.Combobox(results_frame, 
+                                      textvariable=self.annotation, 
+                                      state='readonly', width=19)
+        self.par_label_entry = ttk.Entry(results_frame, 
+                                    textvariable=self.par_label, width=21)
         
         # gridding
         button_frame.grid(column=0, row=0, columnspan=2)
@@ -313,68 +313,68 @@ class fit_files(object):
         export_button.grid(column=1, row=1, padx=5, pady=5)
         model_fit_button.grid(column=2, row=0, rowspan=2, pady=5, sticky=(N, S))
         
-        x_button.grid(column=0, row=1, sticky=(E,W), padx=5)
-        y_button.grid(column=0, row=2, sticky=(E,W), padx=5)
-        ann_button.grid(column=0, row=3, sticky=(E,W), padx=5)
-        label_label.grid(column=0, row=4, sticky=(E,W), padx=10)
+        x_button.grid(column=0, row=1, sticky=(E, W), padx=5)
+        y_button.grid(column=0, row=2, sticky=(E, W), padx=5)
+        ann_button.grid(column=0, row=3, sticky=(E, W), padx=5)
+        label_label.grid(column=0, row=4, sticky=(E, W), padx=10)
         
         self.xaxis_combobox.grid(column=1, row=1, pady=5)
         self.yaxis_combobox.grid(column=1, row=2, pady=5)
         self.annotation_combobox.grid(column=1, row=3, pady=5)
-        self.par_label_entry.grid(column=1,row=4, pady=5)
+        self.par_label_entry.grid(column=1, row=4, pady=5)
         
         # save/load state -----------------------
         state_frame = ttk.Labelframe(fit_data_tab, text='Program State', pad=5)
         state_save_button = ttk.Button(state_frame, text='Save', command=self.save_state)
         state_load_button = ttk.Button(state_frame, text='Load', command=self.load_state)
        
-        state_save_button.grid(column=0,row=0,padx=5,pady=5)
-        state_load_button.grid(column=1,row=0,padx=5,pady=5)
+        state_save_button.grid(column=0, row=0, padx=5, pady=5)
+        state_load_button.grid(column=1, row=0, padx=5, pady=5)
         
         # gridding
-        fit_runmode_label_frame.grid(column=1,row=0,pady=5,padx=2,sticky=(N,E,W))
-        self.fit_runmode_label.grid(column=0,row=0,sticky=(E,W))
+        fit_runmode_label_frame.grid(column=1, row=0, pady=5, padx=2, sticky=(N, E, W))
+        self.fit_runmode_label.grid(column=0, row=0, sticky=(E, W))
         
-        fit_routine_label_frame.grid(column=2,row=0,pady=5,padx=2,sticky=(N,E,W))
-        self.fit_routine_label.grid(column=0,row=0,sticky=(E,W))
+        fit_routine_label_frame.grid(column=2, row=0, pady=5, padx=2, sticky=(N, E, W))
+        self.fit_routine_label.grid(column=0, row=0, sticky=(E, W))
         
-        probe_label_frame.grid(column=1,row=1,columnspan=1,sticky=(E,W,N),pady=2,padx=2)
-        self.probe_label.grid(column=0,row=0)
+        probe_label_frame.grid(column=1, row=1, columnspan=1, sticky=(E, W, N), pady=2, padx=2)
+        self.probe_label.grid(column=0, row=0)
         
-        gchi_label_frame.grid(column=2,row=1,columnspan=1,sticky=(E,W,N),pady=2,padx=2)
-        self.gchi_label.grid(column=0,row=0)
+        gchi_label_frame.grid(column=2, row=1, columnspan=1, sticky=(E, W, N), pady=2, padx=2)
+        self.gchi_label.grid(column=0, row=0)
         
-        asym_label_frame.grid(column=1,row=2,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
-        self.entry_asym_type.grid(column=0,row=0)
+        asym_label_frame.grid(column=1, row=2, columnspan=2, sticky=(E, W, N), pady=2, padx=2)
+        self.entry_asym_type.grid(column=0, row=0)
         
-        other_settings_label_frame.grid(column=1,row=3,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
-        set_group_check.grid(column=0,row=0,padx=5,pady=1,sticky=W)
-        set_use_rebin.grid(column=0,row=1,padx=5,pady=1,sticky=W)
-        set_prior_p0.grid(column=0,row=2,padx=5,pady=1,sticky=W)
+        other_settings_label_frame.grid(column=1, row=3, columnspan=2, sticky=(E, W, N), pady=2, padx=2)
+        set_group_check.grid(column=0, row=0, padx=5, pady=1, sticky=W)
+        set_use_rebin.grid(column=0, row=1, padx=5, pady=1, sticky=W)
+        set_prior_p0.grid(column=0, row=2, padx=5, pady=1, sticky=W)
         
-        entry_xspecify_lo.grid(column=0,row=0)
-        label_xspecify.grid(column=1,row=0)
-        entry_xspecify_hi.grid(column=2,row=0)
+        entry_xspecify_lo.grid(column=0, row=0)
+        label_xspecify.grid(column=1, row=0)
+        entry_xspecify_hi.grid(column=2, row=0)
         
-        xspecify_frame.grid(column=1,row=4,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
-        results_frame.grid(column=1,row=5,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
-        state_frame.grid(column=1,row=6,columnspan=2,sticky=(E,W,N),pady=2,padx=2)
+        xspecify_frame.grid(column=1, row=4, columnspan=2, sticky=(E, W, N), pady=2, padx=2)
+        results_frame.grid(column=1, row=5, columnspan=2, sticky=(E, W, N), pady=2, padx=2)
+        state_frame.grid(column=1, row=6, columnspan=2, sticky=(E, W, N), pady=2, padx=2)
         
         # resizing
         
         # fn select
-        fn_select_frame.grid_columnconfigure(1,weight=1)    # Nterms label
-        fn_select_frame.grid_columnconfigure(4,weight=100)    # constraints
-        fn_select_frame.grid_columnconfigure(5,weight=1)  # set results as p0
-        fn_select_frame.grid_columnconfigure(6,weight=1)  # reset p0
+        fn_select_frame.grid_columnconfigure(1, weight=1)    # Nterms label
+        fn_select_frame.grid_columnconfigure(4, weight=100)    # constraints
+        fn_select_frame.grid_columnconfigure(5, weight=1)  # set results as p0
+        fn_select_frame.grid_columnconfigure(6, weight=1)  # reset p0
         
         # fitting frame
-        self.fit_canvas.grid_columnconfigure(0,weight=1)    # fetch frame 
-        self.fit_canvas.grid_rowconfigure(0,weight=1)
+        self.fit_canvas.grid_columnconfigure(0, weight=1)    # fetch frame 
+        self.fit_canvas.grid_rowconfigure(0, weight=1)
         
         # right frame
         for i in range(2):
-            results_frame.grid_columnconfigure(i,weight=0)
+            results_frame.grid_columnconfigure(i, weight=0)
         
         # store lines for fitting
         self.fit_lines = {}
@@ -383,9 +383,9 @@ class fit_files(object):
     # ======================================================================= #
     def __del__(self):
         
-        if hasattr(self,'fit_lines'):       del self.fit_lines
-        if hasattr(self,'fit_lines_old'):   del self.fit_lines_old
-        if hasattr(self,'fitter'):          del self.fitter
+        if hasattr(self, 'fit_lines'):       del self.fit_lines
+        if hasattr(self, 'fit_lines_old'):   del self.fit_lines_old
+        if hasattr(self, 'fitter'):          del self.fitter
         
         # kill buttons and frame
         try:
@@ -396,27 +396,27 @@ class fit_files(object):
             pass
             
      # ======================================================================= #
-    def _annotate(self,id,x,y,ptlabels,color='k',unique=True):
+    def _annotate(self, id, x, y, ptlabels, color='k', unique=True):
         """Add annotation"""
         
         # base case
         if ptlabels is None: return
         
         # do annotation
-        for label,xcoord,ycoord in zip(ptlabels,x,y):        
+        for label, xcoord, ycoord in zip(ptlabels, x, y):        
             if type(label) != type(None):
-                self.plt.annotate('param',id,label,
-                             xy=(xcoord,ycoord),
-                             xytext=(-3, 20),
+                self.plt.annotate('param', id, label, 
+                             xy=(xcoord, ycoord), 
+                             xytext=(-3, 20), 
                              textcoords='offset points', 
                              ha='right', 
-                             va='bottom',
-                             bbox=dict(boxstyle='round,pad=0.1',
+                             va='bottom', 
+                             bbox=dict(boxstyle='round, pad=0.1', 
                                        fc=color, 
-                                       alpha=0.1),
+                                       alpha=0.1), 
                              arrowprops=dict(arrowstyle = '->', 
-                                             connectionstyle='arc3,rad=0'),
-                             fontsize='xx-small',
+                                             connectionstyle='arc3, rad=0'), 
+                             fontsize='xx-small', 
                              unique=unique
                             )    
    
@@ -427,7 +427,7 @@ class fit_files(object):
         # get parameter list
         try:
             parlst = [p for p in self.fitter.gen_param_names(
-                                                self.fit_function_title.get(),
+                                                self.fit_function_title.get(), 
                                                 self.n_component.get())]
                                                 
         # no paramteters: empty out the variable list
@@ -448,27 +448,27 @@ class fit_files(object):
         self.share_var = share_var
             
     # ======================================================================= #
-    def canvas_scroll(self,event):
+    def canvas_scroll(self, event):
         """Scroll canvas with files selected."""
         if event.num == 4:
-            self.fit_canvas.yview_scroll(-1,"units")
+            self.fit_canvas.yview_scroll(-1, "units")
         elif event.num == 5:
-            self.fit_canvas.yview_scroll(1,"units")  
+            self.fit_canvas.yview_scroll(1, "units")  
     
     # ======================================================================= #
-    def config_canvas(self,event):
+    def config_canvas(self, event):
         """Alter scrollable region based on canvas bounding box size. 
         (changes scrollbar properties)"""
         self.fit_canvas.configure(scrollregion=self.fit_canvas.bbox("all"))
     
     # ======================================================================= #
-    def config_runframe(self,event):
+    def config_runframe(self, event):
         """Alter size of contained frame in canvas. Allows for inside window to 
         be resized with mouse drag""" 
-        self.fit_canvas.itemconfig(self.canvas_frame_id,width=event.width)
+        self.fit_canvas.itemconfig(self.canvas_frame_id, width=event.width)
     
     # ======================================================================= #
-    def populate(self,*args):
+    def populate(self, *args):
         """
             Make tabs for setting fit input parameters. 
         """
@@ -477,7 +477,7 @@ class fit_files(object):
         dl = self.bfit.fetch_files.data_lines
         keylist = [k for k in dl.keys() if dl[k].check_state.get()]
         keylist.sort()
-        self.logger.debug('Populating data for %s',keylist)
+        self.logger.debug('Populating data for %s', keylist)
         
         # get run mode by looking at one of the data dictionary keys
         for key_zero in self.bfit.data.keys(): break
@@ -490,7 +490,7 @@ class fit_files(object):
                 self.mode = self.bfit.data[key_zero].mode 
                 self.fit_runmode_label['text'] = \
                         self.bfit.fetch_files.runmode_relabel[self.mode]
-                self.logger.debug('Set new run mode %s',self.mode)
+                self.logger.debug('Set new run mode %s', self.mode)
                 
                 # set routine
                 self.fit_routine_label['text'] = self.fitter.__name__
@@ -524,14 +524,14 @@ class fit_files(object):
                 if k in self.fit_lines_old.keys():
                     self.fit_lines[k] = self.fit_lines_old[k]
                 else:
-                    self.fit_lines[k] = fitline(self.bfit,self.runframe,dl[k],n)
+                    self.fit_lines[k] = fitline(self.bfit, self.runframe, dl[k], n)
             self.fit_lines[k].grid(n)
             n+=1
         
         self.populate_param()
             
     # ======================================================================= #
-    def populate_param(self,*args,force_modify=False):
+    def populate_param(self, *args, force_modify=False):
         """
             Populate the list of parameters
             
@@ -545,7 +545,7 @@ class fit_files(object):
         
         try:
             parlst = [p for p in self.fitter.gen_param_names(
-                                                self.fit_function_title.get(),
+                                                self.fit_function_title.get(), 
                                                 self.n_component.get())]
         except KeyError:
             self.xaxis_combobox['values'] = []
@@ -586,7 +586,7 @@ class fit_files(object):
     # ======================================================================= #
     def do_add_param(self, *args):
         """Launch popup for adding user-defined parameters to draw"""
-        if hasattr(self,'pop_addpar'):
+        if hasattr(self, 'pop_addpar'):
             p = self.pop_addpar
             
             # don't make more than one window
@@ -595,7 +595,7 @@ class fit_files(object):
                 return
             
             # make a new window, using old inputs and outputs
-            self.pop_addpar = popup_add_param(self.bfit,
+            self.pop_addpar = popup_add_param(self.bfit, 
                                     input_fn_text=p.input_fn_text)
         
         # make entirely new window
@@ -603,7 +603,7 @@ class fit_files(object):
             self.pop_addpar = popup_add_param(self.bfit)
         
     # ======================================================================= #
-    def do_fit(self,*args):
+    def do_fit(self, *args):
         # fitter
         fitter = self.fitter
         figstyle = 'fit'
@@ -612,7 +612,7 @@ class fit_files(object):
         fn_name = self.fit_function_title.get()
         ncomp = self.n_component.get()
         
-        xlims = [self.xlo.get(),self.xhi.get()]
+        xlims = [self.xlo.get(), self.xhi.get()]
         if not xlims[0]: 
             xlims[0] = '-inf'
             self.xlo.set('-inf')
@@ -621,13 +621,13 @@ class fit_files(object):
             self.xhi.set('inf')
         
         try:
-            xlims = tuple(map(float,xlims))
+            xlims = tuple(map(float, xlims))
         except ValueError as err:
-            messagebox.showerror("Error",'Bad input for xlims')
+            messagebox.showerror("Error", 'Bad input for xlims')
             self.logger.exception(str(err))
             raise err
             
-        self.logger.info('Fitting with "%s" with %d components',fn_name,ncomp)
+        self.logger.info('Fitting with "%s" with %d components', fn_name, ncomp)
         
         # build data list
         data_list = []
@@ -649,12 +649,12 @@ class fit_files(object):
                 for col in fitline.collist:
                     
                     # get number entries
-                    if col in ('p0','blo','bhi'):
+                    if col in ('p0', 'blo', 'bhi'):
                         try:
                             line.append(float(pline[col][0].get()))
                         except ValueError as errmsg:
                             self.logger.exception("Bad input.")
-                            messagebox.showerror("Error",str(errmsg))
+                            messagebox.showerror("Error", str(errmsg))
                     
                     # get "Fixed" entry
                     elif col in ['fixed']:
@@ -673,12 +673,12 @@ class fit_files(object):
             if self.use_rebin.get():
                 doptions['rebin'] = bdfit.rebin.get()
             
-            if self.mode in ('1f','1w'):
+            if self.mode in ('1f', '1w'):
                 dline = self.bfit.fetch_files.data_lines[key]
                 doptions['omit'] = dline.bin_remove.get()
                 if doptions['omit'] == dline.bin_remove_starter_line: 
                     doptions['omit'] = ''
-            elif self.mode in ('20','2h','2e'):
+            elif self.mode in ('20', '2h', '2e'):
                 pass
             else:
                 msg = 'Fitting mode %s not recognized' % self.mode
@@ -694,18 +694,18 @@ class fit_files(object):
         
         # do fit then kill window
         for d in data_list:
-            self.logger.info('Fitting run %s: %s',self.bfit.get_run_key(d[0]), d[1:])    
+            self.logger.info('Fitting run %s: %s', self.bfit.get_run_key(d[0]), d[1:])    
         try:
             # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
-            fit_output, gchi = fitter(fn_name=fn_name,
-                                      ncomp=ncomp,
-                                      data_list=data_list,
-                                      hist_select=self.bfit.hist_select,
-                                      asym_mode=self.bfit.get_asym_mode(self),
+            fit_output, gchi = fitter(fn_name=fn_name, 
+                                      ncomp=ncomp, 
+                                      data_list=data_list, 
+                                      hist_select=self.bfit.hist_select, 
+                                      asym_mode=self.bfit.get_asym_mode(self), 
                                       xlims=xlims)
         except Exception as errmsg:
             self.logger.exception('Fitting error')
-            messagebox.showerror("Error",str(errmsg))
+            messagebox.showerror("Error", str(errmsg))
             raise errmsg from None
         finally:
             fit_status_window.destroy()
@@ -722,7 +722,7 @@ class fit_files(object):
             self.fit_lines[key].show_fit_result()
         
         # show global chi
-        self.gchi_label['text'] = str(np.around(gchi,2))
+        self.gchi_label['text'] = str(np.around(gchi, 2))
         
         self.do_end_of_fit()
         
@@ -747,12 +747,12 @@ class fit_files(object):
         # draw fit results
         style = self.bfit.draw_style.get()
         
-        if style in ['redraw','new']:
+        if style in ['redraw', 'new']:
             self.bfit.draw_style.set('stack')
         
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            self.bfit.fetch_files.draw_all(figstyle='fit',ignore_check=False)
+            self.bfit.fetch_files.draw_all(figstyle='fit', ignore_check=False)
         
         if len(self.fit_lines.keys()) > self.bfit.legend_max_draw:
             
@@ -769,7 +769,7 @@ class fit_files(object):
         
     # ======================================================================= #
     def do_fit_constraints(self):
-        if hasattr(self,'pop_fitconstr'):
+        if hasattr(self, 'pop_fitconstr'):
             p = self.pop_fitconstr
             
             # don't make more than one window
@@ -778,8 +778,8 @@ class fit_files(object):
                 return
             
             # make a new window, using old inputs and outputs
-            self.pop_fitconstr = popup_fit_constraints(self.bfit,
-                                    output_par_text=p.output_par_text_val,
+            self.pop_fitconstr = popup_fit_constraints(self.bfit, 
+                                    output_par_text=p.output_par_text_val, 
                                     output_text=p.output_text_val)
         
         # make entirely new window
@@ -789,7 +789,7 @@ class fit_files(object):
     # ======================================================================= #
     def do_fit_model(self):
         
-        if hasattr(self,'pop_fitres'):
+        if hasattr(self, 'pop_fitres'):
             p = self.pop_fitres
             
             # don't make more than one window
@@ -798,12 +798,12 @@ class fit_files(object):
                 return
             
             # make a new window, using old inputs and outputs
-            self.pop_fitres = popup_fit_results(self.bfit,
-                                    input_fn_text=p.input_fn_text,
-                                    output_par_text=p.output_par_text_val,
-                                    output_text=p.output_text_val,
-                                    chi=p.chi,
-                                    x = p.xaxis.get(),
+            self.pop_fitres = popup_fit_results(self.bfit, 
+                                    input_fn_text=p.input_fn_text, 
+                                    output_par_text=p.output_par_text_val, 
+                                    output_text=p.output_text_val, 
+                                    chi=p.chi, 
+                                    x = p.xaxis.get(), 
                                     y = p.yaxis.get())        
         
         # make entirely new window
@@ -811,12 +811,12 @@ class fit_files(object):
             self.pop_fitres = popup_fit_results(self.bfit)
     
     # ======================================================================= #
-    def do_gui_param(self,id=''):
+    def do_gui_param(self, id=''):
         """Set initial parmeters with GUI"""
-        popup_param(self.bfit,id)
+        popup_param(self.bfit, id)
         
     # ======================================================================= #
-    def do_set_result_as_initial(self,*args):
+    def do_set_result_as_initial(self, *args):
         """Set initial parmeters as the fitting results"""
         
         # turn off modify all 
@@ -840,19 +840,19 @@ class fit_files(object):
         self.set_as_group.set(modify_all_value)
         
     # ======================================================================= #
-    def do_reset_initial(self,*args):
+    def do_reset_initial(self, *args):
         """Reset initial parmeters to defaults"""
                 
         for k in self.fit_lines.keys():
             self.fit_lines[k].populate(force_modify=True)
     
     # ======================================================================= #
-    def draw_residual(self,id,figstyle,rebin=1,**drawargs):
+    def draw_residual(self, id, figstyle, rebin=1, **drawargs):
         """Draw fitting residuals for a single run"""
         
         self.logger.info('Drawing residual for run %s, rebin %d, '+\
-                         'standardized: %s, %s',id,rebin,
-                         self.bfit.draw_standardized_res.get(),drawargs)
+                         'standardized: %s, %s', id, rebin, 
+                         self.bfit.draw_standardized_res.get(), drawargs)
         
         # get draw setting 
         figstyle = 'data'
@@ -869,7 +869,7 @@ class fit_files(object):
         if 'label' not in drawargs.keys():
             label = str(data.run)
         else:
-            label = drawargs.pop('label',None)
+            label = drawargs.pop('label', None)
             
         # set drawing style arguments
         for k in self.bfit.style:
@@ -890,8 +890,8 @@ class fit_files(object):
         style = self.bfit.draw_style.get()
 
         # get residuals
-        x,a,da = data.asym(self.bfit.get_asym_mode(self),rebin=rebin)
-        res = a - fn(x,*fit_par)
+        x, a, da = data.asym(self.bfit.get_asym_mode(self), rebin=rebin)
+        res = a - fn(x, *fit_par)
             
         # set x axis
         if data.mode in self.bfit.units: 
@@ -903,30 +903,30 @@ class fit_files(object):
 
         # draw 
         if self.bfit.draw_standardized_res.get():
-            self.plt.errorbar(figstyle,id,x,res/da,np.zeros(len(x)),
-                              label=label,**drawargs)
+            self.plt.errorbar(figstyle, id, x, res/da, np.zeros(len(x)), 
+                              label=label, **drawargs)
             
             # draw fill
             ax = self.plt.gca(figstyle)
             lim = ax.get_xlim()
-            for i in range(1,4):
-                ax.fill_between(lim,-1*i,i,color='k',alpha=0.1)
-            self.plt.xlim(figstyle,lim)
-            self.plt.ylabel(figstyle,r'Standardized Residual ($\sigma$)')
+            for i in range(1, 4):
+                ax.fill_between(lim, -1*i, i, color='k', alpha=0.1)
+            self.plt.xlim(figstyle, lim)
+            self.plt.ylabel(figstyle, r'Standardized Residual ($\sigma$)')
         else:
-            self.plt.errorbar(figstyle,id,x,res,da,label=label,**drawargs)
-            self.plt.ylabel(figstyle,'Residual')
+            self.plt.errorbar(figstyle, id, x, res, da, label=label, **drawargs)
+            self.plt.ylabel(figstyle, 'Residual')
         
         # draw pulse marker
         if '2' in data.mode: 
-            self.plt.axvline(figstyle,'line',data.get_pulse_s(),ls='--',color='k')
+            self.plt.axvline(figstyle, 'line', data.get_pulse_s(), ls='--', color='k')
             unq = False
         else:
             unq = True
             
         # plot elements
-        self.plt.xlabel(figstyle,xlabel)
-        self.plt.axhline(figstyle,'line',0,color='k',linestyle='-',zorder=20,
+        self.plt.xlabel(figstyle, xlabel)
+        self.plt.axhline(figstyle, 'line', 0, color='k', linestyle='-', zorder=20, 
                         unique=unq)
         
         # show
@@ -936,7 +936,7 @@ class fit_files(object):
         raise_window()
         
     # ======================================================================= #
-    def draw_fit(self,id,figstyle,unique=True,**drawargs):
+    def draw_fit(self, id, figstyle, unique=True, **drawargs):
         """
             Draw fit for a single run
             
@@ -945,7 +945,7 @@ class fit_files(object):
                     to draw in
         """
         
-        self.logger.info('Drawing fit for run %s. %s',id,drawargs)
+        self.logger.info('Drawing fit for run %s. %s', id, drawargs)
                      
         # get data and fit results
         data = self.bfit.data[id]
@@ -975,7 +975,7 @@ class fit_files(object):
         for k in self.bfit.style:
             if k not in drawargs.keys() \
                     and 'marker' not in k \
-                    and k not in ['elinewidth','capsize']:
+                    and k not in ['elinewidth', 'capsize']:
                 drawargs[k] = self.bfit.style[k]
         
         # linestyle reset
@@ -984,9 +984,9 @@ class fit_files(object):
         
         # draw
         asym_mode = self.bfit.get_asym_mode(self)
-        t,a,da = data.asym(asym_mode)
+        t, a, da = data.asym(asym_mode)
         
-        fitx = np.linspace(min(t),max(t),self.n_fitx_pts)
+        fitx = np.linspace(min(t), max(t), self.n_fitx_pts)
         
         if self.mode in self.bfit.units: 
             unit = self.bfit.units[self.mode]
@@ -997,7 +997,7 @@ class fit_files(object):
             xlabel = self.bfit.xlabel_dict[self.mode]
     
         # get fity
-        fity = fn(fitx,*fit_par)
+        fity = fn(fitx, *fit_par)
     
         # account for normalized draw modes
         draw_mode = self.bfit.asym_dict[self.bfit.fetch_files.asym_type.get()]
@@ -1010,18 +1010,18 @@ class fit_files(object):
             if 'amp' in data.fitpar['res'].keys():
                 fity /= data.fitpar['res']['amp']
             else:
-                fity /= fn(t[0],*par)
+                fity /= fn(t[0], *par)
         
         elif draw_mode == 'cs':
             draw_mode += 'f'
             fity -= data.fitpar['res']['baseline']
                 
-        self.plt.plot(figstyle,draw_id,fitxx,fity,zorder=10,
-                      unique=unique,**drawargs)
+        self.plt.plot(figstyle, draw_id, fitxx, fity, zorder=10, 
+                      unique=unique, **drawargs)
         
         # plot elements
-        self.plt.ylabel(figstyle,self.bfit.ylabel_dict.get(draw_mode,'Asymmetry'))
-        self.plt.xlabel(figstyle,xlabel)
+        self.plt.ylabel(figstyle, self.bfit.ylabel_dict.get(draw_mode, 'Asymmetry'))
+        self.plt.xlabel(figstyle, xlabel)
         
         # show
         self.plt.tight_layout(figstyle)
@@ -1031,7 +1031,7 @@ class fit_files(object):
         raise_window()
     
     # ======================================================================= #
-    def draw_param(self,*args):
+    def draw_param(self, *args):
         """Draw the fit parameters"""
         figstyle = 'param'
         
@@ -1045,7 +1045,7 @@ class fit_files(object):
         label = self.par_label.get()
         
         self.logger.info('Draw fit parameters "%s" vs "%s" with annotation "%s"'+\
-                         ' and label %s',ydraw,xdraw,ann,label)
+                         ' and label %s', ydraw, xdraw, ann, label)
         
         # get plottable data
         try:
@@ -1053,13 +1053,13 @@ class fit_files(object):
             yvals, yerrs = self.get_values(ydraw)
         except UnboundLocalError as err:
             self.logger.error('Bad input parameter selection')
-            messagebox.showerror("Error",'Select two input parameters')
+            messagebox.showerror("Error", 'Select two input parameters')
             raise err from None
-        except (KeyError,AttributeError) as err:
-            self.logger.error('Parameter "%s or "%s" not found for drawing',
-                              xdraw,ydraw)
-            messagebox.showerror("Error",
-                    'Drawing parameter "%s" or "%s" not found' % (xdraw,ydraw))
+        except (KeyError, AttributeError) as err:
+            self.logger.error('Parameter "%s or "%s" not found for drawing', 
+                              xdraw, ydraw)
+            messagebox.showerror("Error", 
+                    'Drawing parameter "%s" or "%s" not found' % (xdraw, ydraw))
             raise err from None
         
         # get asymmetric errors
@@ -1083,9 +1083,9 @@ class fit_files(object):
                 ann, _ = self.get_values(ann)
             except UnboundLocalError:
                 ann = None
-            except (KeyError,AttributeError) as err:
-                self.logger.error('Bad input annotation value "%s"',ann)
-                messagebox.showerror("Error",
+            except (KeyError, AttributeError) as err:
+                self.logger.error('Bad input annotation value "%s"', ann)
+                messagebox.showerror("Error", 
                         'Annotation "%s" not found' % (ann))
                 raise err from None
         
@@ -1114,9 +1114,9 @@ class fit_files(object):
         # fix annotation values (round floats)
         if ann is not None: 
             number_string = '%.'+'%df' % self.bfit.rounding
-            for i,a in enumerate(ann):
-                if type(a) in [float,np.float64]:
-                    ann[i] = number_string % np.around(a,self.bfit.rounding)
+            for i, a in enumerate(ann):
+                if type(a) in [float, np.float64]:
+                    ann[i] = number_string % np.around(a, self.bfit.rounding)
             
         # get default data_id
         if label:   
@@ -1138,7 +1138,7 @@ class fit_files(object):
         ax = self.plt.gca(figstyle)
         
         # set dates axis
-        if xdraw in ('Start Time',): 
+        if xdraw in ('Start Time', ): 
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%y/%m/%d (%H:%M)'))
             xvals = np.array([datetime.datetime.fromtimestamp(x) for x in xvals])
             xerrs = None
@@ -1149,7 +1149,7 @@ class fit_files(object):
             except AttributeError:
                 pass
         
-        if ydraw in ('Start Time',):    
+        if ydraw in ('Start Time', ):    
             ax.yaxis.set_major_formatter(mdates.DateFormatter('%y/%m/%d (%H:%M)'))
             yvals = mdates.epoch2num(yvals)
             yerrs = None
@@ -1188,7 +1188,7 @@ class fit_files(object):
         ydraw = ydraw + ysuffix
         
         # attempt to insert units and scale
-        unit_scale, unit = self.bfit.units.get(self.mode, [1,''])
+        unit_scale, unit = self.bfit.units.get(self.mode, [1, ''])
         
         if '%s' in xdraw:        
             xdraw = xdraw % unit
@@ -1213,14 +1213,14 @@ class fit_files(object):
         else:                                       yerr = (yerrs_l, yerrs_h)
         
         # draw
-        f = self.plt.errorbar(  figstyle,
-                                draw_id,
-                                xvals,
-                                yvals,
-                                xerr = xerr,
-                                yerr = yerr,
-                                label=draw_id,
-                                annot_label=mouse_label,
+        f = self.plt.errorbar(  figstyle, 
+                                draw_id, 
+                                xvals, 
+                                yvals, 
+                                xerr = xerr, 
+                                yerr = yerr, 
+                                label=draw_id, 
+                                annot_label=mouse_label, 
                                 **self.bfit.style)
         self._annotate(draw_id, xvals, yvals, ann, color=f[0].get_color(), unique=False)
         
@@ -1234,7 +1234,7 @@ class fit_files(object):
         self.plt.tight_layout(figstyle)
         
         if draw_id:
-            self.plt.legend(figstyle,fontsize='x-small')
+            self.plt.legend(figstyle, fontsize='x-small')
         
         # bring window to front
         raise_window()
@@ -1265,21 +1265,21 @@ class fit_files(object):
         
         # make data frame for output
         df = pd.DataFrame(val)
-        df.set_index('Run Number',inplace=True)
+        df.set_index('Run Number', inplace=True)
         
         # drop completely empty columns
         bad_cols = [c for c in df.columns if all(df[c].isna())]
         for c in bad_cols:
-            df.drop(c,axis='columns',inplace=True)
+            df.drop(c, axis='columns', inplace=True)
         
         if savetofile:
             
             # get file name
-            filename = filedialog.asksaveasfilename(filetypes=[('csv','*.csv'),
-                                                               ('allfiles','*')],
+            filename = filedialog.asksaveasfilename(filetypes=[('csv', '*.csv'), 
+                                                               ('allfiles', '*')], 
                                                 defaultextension='.csv')
             if not filename:    return
-            self.logger.info('Exporting parameters to "%s"',filename)
+            self.logger.info('Exporting parameters to "%s"', filename)
             
             # check extension 
             if os.path.splitext(filename)[1] == '':
@@ -1287,16 +1287,16 @@ class fit_files(object):
             
             # write header
             data = self.bfit.data[list(self.fit_lines.keys())[0]]
-            header = ['# Fit function : %s' % data.fit_title,
-                      '# Number of components: %d' % data.ncomp,
-                      '# Global Chi-Squared: %s' % self.gchi_label['text'],
+            header = ['# Fit function : %s' % data.fit_title, 
+                      '# Number of components: %d' % data.ncomp, 
+                      '# Global Chi-Squared: %s' % self.gchi_label['text'], 
                       '#\n#\n']
             
-            with open(filename,'w') as fid:
+            with open(filename, 'w') as fid:
                 fid.write('\n'.join(header))
             
             # write data
-            df.to_csv(filename,mode='a+')
+            df.to_csv(filename, mode='a+')
             self.logger.debug('Export success')
         else:
             self.logger.info('Returned exported parameters')
@@ -1325,17 +1325,18 @@ class fit_files(object):
             
             # get data
             data = self.bfit.data[id]
-            t,a,da = data.asym(asym_mode)
+            t, a, da = data.asym(asym_mode)
             
             # get fit data
-            fitx = np.linspace(min(t),max(t),self.n_fitx_pts)
+            fitx = np.linspace(min(t), max(t), self.n_fitx_pts)
             
             try:
                 fit_par = [data.fitpar['res'][p] for p in data.parnames]
             except AttributeError:
                 continue
-            dfit_par = [data.fitpar['dres'][p] for p in data.parnames]
-            fity = data.fitfn(fitx,*fit_par)
+            dfit_par_l = [data.fitpar['dres-'][p] for p in data.parnames]
+            dfit_par_h = [data.fitpar['dres+'][p] for p in data.parnames]
+            fity = data.fitfn(fitx, *fit_par)
             
             if data.mode in self.bfit.units: 
                 unit = self.bfit.units[data.mode]
@@ -1346,29 +1347,30 @@ class fit_files(object):
                 xlabel = self.bfit.xlabel_dict[self.mode]
 
             # write header
-            fname = filename%(data.year,data.run)
-            header = ['# %s' % data.id,
-                      '# %s' % data.title,
-                      '# Fit function : %s' % data.fit_title,
-                      '# Number of components: %d' % data.ncomp,
-                      '# Rebin: %d' % data.rebin.get(),
+            fname = filename%(data.year, data.run)
+            header = ['# %s' % data.id, 
+                      '# %s' % data.title, 
+                      '# Fit function : %s' % data.fit_title, 
+                      '# Number of components: %d' % data.ncomp, 
+                      '# Rebin: %d' % data.rebin.get(), 
                       '# Bin Omission: %s' % data.omit.get().replace(
-                                self.bfit.fetch_files.bin_remove_starter_line,''),
-                      '# Chi-Squared: %f' % data.chi,
-                      '# Parameter names: %s' % ', '.join(data.parnames),
-                      '# Parameter values: %s' % ', '.join(list(map(str,fit_par))),
-                      '# Parameter errors: %s' % ', '.join(list(map(str,dfit_par))),
-                      '#',
-                      '# Generated by bfit v%s on %s' % (__version__,datetime.datetime.now()),
+                                self.bfit.fetch_files.bin_remove_starter_line, ''), 
+                      '# Chi-Squared: %f' % data.chi, 
+                      '# Parameter names: %s' % ', '.join(data.parnames), 
+                      '# Parameter values: %s' % ', '.join(list(map(str, fit_par))), 
+                      '# Parameter errors (-): %s' % ', '.join(list(map(str, dfit_par_l))), 
+                      '# Parameter errors (+): %s' % ', '.join(list(map(str, dfit_par_h))), 
+                      '#', 
+                      '# Generated by bfit v%s on %s' % (__version__, datetime.datetime.now()), 
                       '#']
             
-            with open(fname,'w') as fid:
+            with open(fname, 'w') as fid:
                 fid.write('\n'.join(header) + '\n')
             
             # write data
-            df = pd.DataFrame({xlabel:fitx,'asymmetry':fity})
-            df.to_csv(fname,index=False,mode='a+')
-            self.logger.info('Exporting fit to %s',fname)
+            df = pd.DataFrame({xlabel:fitx, 'asymmetry':fity})
+            df.to_csv(fname, index=False, mode='a+')
+            self.logger.info('Exporting fit to %s', fname)
     
     # ======================================================================= #
     def get_values(self, select):
@@ -1381,10 +1383,10 @@ class fit_files(object):
         runs = [dlines[k].id for k in dlines if dlines[k].check_state.get()]
         runs.sort()
         
-        self.logger.debug('Fetching parameter %s',select)
+        self.logger.debug('Fetching parameter %s', select)
         
         # parameter names 
-        parnames = self.fitter.gen_param_names(self.fit_function_title.get(),
+        parnames = self.fitter.gen_param_names(self.fit_function_title.get(), 
                                                self.n_component.get())
         
         # Data file options
@@ -1444,7 +1446,7 @@ class fit_files(object):
             for r in runs:
                 try:
                     val.append(data[r].chi)
-                except(KeyError,AttributeError):
+                except(KeyError, AttributeError):
                     val.append(np.nan)
             err = [np.nan for r in runs]
         
@@ -1462,7 +1464,7 @@ class fit_files(object):
             idx = select.find('_')
             if idx < 0:     comp_num = ''
             else:           comp_num = select[idx:]
-            comp_num = comp_num.replace('>','')
+            comp_num = comp_num.replace('>', '')
             
             # initialize
             val = []
@@ -1486,7 +1488,7 @@ class fit_files(object):
                 # take average
                 betai = 1./beta
                 pd_T1 = gamma(betai)/beta
-                pd_beta = -T1*gamma(betai)*(1+betai*polygamma(0,betai))*(betai**2)
+                pd_beta = -T1*gamma(betai)*(1+betai*polygamma(0, betai))*(betai**2)
                 T1avg = T1*pd_T1
                 dT1avg = ( (pd_T1*dT1)**2 + (pd_beta*dbeta)**2 )**0.5
                 
@@ -1528,13 +1530,13 @@ class fit_files(object):
         
         elif 'NBM Rate (count/s)' in select:
             rate = lambda b : np.sum([b.hist['NBM'+h].data \
-                                    for h in ('F+','F-','B-','B+')])/b.duration
+                                    for h in ('F+', 'F-', 'B-', 'B+')])/b.duration
             val = [rate(data[r].bd) for r in runs]
             err = np.full(len(val), np.nan)
             
         elif 'Sample Rate (count/s)' in select:
-            hist = ('F+','F-','B-','B+') if data[runs[0]].area == 'BNMR' \
-                                         else ('L+','L-','R-','R+')
+            hist = ('F+', 'F-', 'B-', 'B+') if data[runs[0]].area == 'BNMR' \
+                                         else ('L+', 'L-', 'R-', 'R+')
                 
             rate = lambda b : np.sum([b.hist[h].data for h in hist])/b.duration
             val = [rate(data[r].bd) for r in runs]
@@ -1575,15 +1577,15 @@ class fit_files(object):
         """
         
         # get the filename 
-        filename = filedialog.askopenfilename(filetypes=[('yaml','*.yaml'),
-                                                         ('allfiles','*')])
+        filename = filedialog.askopenfilename(filetypes=[('yaml', '*.yaml'), 
+                                                         ('allfiles', '*')])
         if not filename:
             return
         
-        self.logger.info('Loading program state from %s',filename)
+        self.logger.info('Loading program state from %s', filename)
         
         # load the object with the data
-        with open(filename,'r') as fid:
+        with open(filename, 'r') as fid:
             from_file = yaml.safe_load(fid)
     
         # clear loaded runs
@@ -1648,13 +1650,13 @@ class fit_files(object):
             fetch_tab.data_lines[id].draw_res_checkbox['state'] = 'normal'
         
             # set fit inputs
-            d_fitdata[id].set_fitpar({p:[parentry[p]['p0'],
-                                         parentry[p]['blo'],
-                                         parentry[p]['bhi'],
+            d_fitdata[id].set_fitpar({p:[parentry[p]['p0'], 
+                                         parentry[p]['blo'], 
+                                         parentry[p]['bhi'], 
                                          parentry[p]['fixed']] for p in parentry})
             
             # get chisq
-            keylist = self.fitter.gen_param_names(from_file['fitfn'],
+            keylist = self.fitter.gen_param_names(from_file['fitfn'], 
                                                   from_file['ncomponents'])
             for k in keylist: 
                 if 'chi' in parentry[k].keys():
@@ -1664,29 +1666,29 @@ class fit_files(object):
             # get pulse length
             d_actual = fetch_tab.data_lines[id]
             pulse_len = 0
-            if d_actual.mode in ('20','2h'):
+            if d_actual.mode in ('20', '2h'):
                 pulse_len = d_actual.bdfit.get_pulse_s()
                     
             # get probe lifetime
             lifetime = bd.life[from_file['probe_species']]
             
             # get fit function
-            fitfn = self.fitter.get_fn(from_file['fitfn'],
-                                       from_file['ncomponents'],
-                                       pulse_len,
+            fitfn = self.fitter.get_fn(from_file['fitfn'], 
+                                       from_file['ncomponents'], 
+                                       pulse_len, 
                                        lifetime)
             
             if '2' in d_actual.mode and from_file['probe_species'] == 'Mg31':
-                fitfn1 = lambda x,*par : fa_31Mg(x,pulse_len)*fitfn(x,*par)
+                fitfn1 = lambda x, *par : fa_31Mg(x, pulse_len)*fitfn(x, *par)
             else:
                 fitfn1 = fitfn
 
             # set fit results
-            d_fitdata[id].set_fitresult([keylist,
-                              [float(parentry[p]['res']) for p in keylist],
-                              [float(parentry[p]['dres-']) for p in keylist],
-                              [float(parentry[p]['dres+']) for p in keylist],
-                              chi,
+            d_fitdata[id].set_fitresult([keylist, 
+                              [float(parentry[p]['res']) for p in keylist], 
+                              [float(parentry[p]['dres-']) for p in keylist], 
+                              [float(parentry[p]['dres+']) for p in keylist], 
+                              chi, 
                               fitfn1]
                             )
         
@@ -1714,11 +1716,11 @@ class fit_files(object):
         """Window to show that fitting is in progress"""
         fit_status_window = Toplevel(self.bfit.root)
         fit_status_window.lift()
-        fit_status_window.resizable(FALSE,FALSE)
-        ttk.Label(fit_status_window,
-                  text="Fitting in progress\nTo cancel press <Ctrl-C> in terminal ONCE",
-                  justify='center',
-                  pad=0).grid(column=0,row=0,padx=15,pady=15)
+        fit_status_window.resizable(FALSE, FALSE)
+        ttk.Label(fit_status_window, 
+                  text="Fitting in progress\nTo cancel press <Ctrl-C> in terminal ONCE", 
+                  justify='center', 
+                  pad=0).grid(column=0, row=0, padx=15, pady=15)
         fit_status_window.update_idletasks()
         self.bfit.root.update_idletasks()
         
@@ -1738,7 +1740,7 @@ class fit_files(object):
         return fit_status_window
         
     # ======================================================================= #
-    def modify_all(self,*args,source=None,par='',column=''):
+    def modify_all(self, *args, source=None, par='', column=''):
         """
             Modify all input fields of each line to match the altered one, 
             conditional on self.set_as_group
@@ -1768,9 +1770,9 @@ class fit_files(object):
         focus = self.bfit.root.focus_get()
         
         # right frame items
-        draw_par_items = (  self.xaxis_combobox,
-                            self.yaxis_combobox,
-                            self.annotation_combobox,
+        draw_par_items = (  self.xaxis_combobox, 
+                            self.yaxis_combobox, 
+                            self.annotation_combobox, 
                             self.par_label_entry)
         
         # do action 
@@ -1804,15 +1806,15 @@ class fit_files(object):
         for id in datalines:
             d = datalines[id]
             dlines[id] = {
-                    'bin_remove'   :d.bin_remove.get(),
-                    'check_data'   :d.check_data.get(),
-                    'check_fit'    :d.check_fit.get(),
-                    'check_res'    :d.check_res.get(),
-                    'check_state'  :d.check_state.get(),
-                    'id'           :d.id,
-                    'label'        :d.label.get(),
-                    'rebin'        :d.rebin.get(),
-                    'run'          :d.run,
+                    'bin_remove'   :d.bin_remove.get(), 
+                    'check_data'   :d.check_data.get(), 
+                    'check_fit'    :d.check_fit.get(), 
+                    'check_res'    :d.check_res.get(), 
+                    'check_state'  :d.check_state.get(), 
+                    'id'           :d.id, 
+                    'label'        :d.label.get(), 
+                    'rebin'        :d.rebin.get(), 
+                    'run'          :d.run, 
                     'year'         :d.year
                     }
         to_file['datalines'] = dlines
@@ -1850,14 +1852,14 @@ class fit_files(object):
         to_file['xhi'] = self.xhi.get()
   
         # save file ----------------------------------------------------------
-        fid = filedialog.asksaveasfile(mode='w',filetypes=[('yaml','*.yaml'),
-                                                           ('allfiles','*')],
+        fid = filedialog.asksaveasfile(mode='w', filetypes=[('yaml', '*.yaml'), 
+                                                           ('allfiles', '*')], 
                                        defaultextension='.yaml')
         if fid:
-            yaml.dump(to_file,fid)
+            yaml.dump(to_file, fid)
             fid.close()
     
-        self.logger.info('Saving program state to %s',fid)
+        self.logger.info('Saving program state to %s', fid)
     
     # ======================================================================= #
     def show_all_results(self):
@@ -1868,7 +1870,7 @@ class fit_files(object):
         popup_show_param(df)
         
     # ======================================================================= #
-    def update_param(self,*args):
+    def update_param(self, *args):
         """Update all figures with parameters drawn with new fit results"""
         
         # get list of figure numbers for parameters
@@ -1936,7 +1938,7 @@ class fitline(object):
     selected = 0        # index of selected run 
     
     # ======================================================================= #
-    def __init__(self,bfit, parent, dataline, row):
+    def __init__(self, bfit, parent, dataline, row):
         """
             Inputs:
                 bfit:       top level pointer
@@ -1948,8 +1950,8 @@ class fitline(object):
         
         # get logger
         self.logger = logging.getLogger(logger_name)
-        self.logger.debug('Initializing fit line for run %d in row %d',
-                          dataline.run,row)
+        self.logger.debug('Initializing fit line for run %d in row %d', 
+                          dataline.run, row)
         
         # initialize
         self.bfit = bfit
@@ -1961,55 +1963,55 @@ class fitline(object):
         self.disable_entry_callback = False
              
         # get parent frame
-        fitframe = ttk.Frame(self.parent,pad=(5,0))
+        fitframe = ttk.Frame(self.parent, pad=(5, 0))
         
         # label for displyaing run number
         if type(self.dataline.bdfit.bd) is bdata:
-            self.run_label = Label(fitframe,
-                            text='[ %d - %d ]' % (self.dataline.run,
-                                                  self.dataline.year),
-                           bg=colors.foreground,fg=colors.background)
+            self.run_label = Label(fitframe, 
+                            text='[ %d - %d ]' % (self.dataline.run, 
+                                                  self.dataline.year), 
+                           bg=colors.foreground, fg=colors.background)
             
         elif type(self.dataline.bdfit.bd) is bmerged:
-            runs = textwrap.wrap(str(self.dataline.run),5)
+            runs = textwrap.wrap(str(self.dataline.run), 5)
              
-            self.run_label = Label(fitframe,
-                                text='[ %s ]' % ' + '.join(runs),
-                                bg=colors.foreground,fg=colors.background)
+            self.run_label = Label(fitframe, 
+                                text='[ %s ]' % ' + '.join(runs), 
+                                bg=colors.foreground, fg=colors.background)
 
         # title of run
-        self.run_label_title = Label(fitframe,
-                            text=self.dataline.bdfit.title,
-                            justify='right',fg='red3')
+        self.run_label_title = Label(fitframe, 
+                            text=self.dataline.bdfit.title, 
+                            justify='right', fg='red3')
                     
         # Parameter input labels
-        gui_param_button = ttk.Button(fitframe,text='Initial Value',
-                        command=lambda : self.bfit.fit_files.do_gui_param(id=self.dataline.id),
+        gui_param_button = ttk.Button(fitframe, text='Initial Value', 
+                        command=lambda : self.bfit.fit_files.do_gui_param(id=self.dataline.id), 
                         pad=0)
-        result_comp_button = ttk.Button(fitframe,text='Result',
-                        command=self.show_fn_composition,pad=0)
+        result_comp_button = ttk.Button(fitframe, text='Result', 
+                        command=self.show_fn_composition, pad=0)
         
         c = 0
-        ttk.Label(fitframe,text='Parameter').grid(    column=c,row=1,padx=5); c+=1
-        gui_param_button.grid(column=c,row=1,padx=5,pady=2); c+=1
-        ttk.Label(fitframe,text='Low Bound').grid(    column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='High Bound').grid(   column=c,row=1,padx=5); c+=1
-        result_comp_button.grid(column=c,row=1,padx=5,pady=2,sticky=(E,W)); c+=1
-        ttk.Label(fitframe,text='Error (-)').grid(        column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='Error (+)').grid(        column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='ChiSq').grid(        column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='Fixed').grid(        column=c,row=1,padx=5); c+=1
-        ttk.Label(fitframe,text='Shared').grid(       column=c,row=1,padx=5); c+=1
+        ttk.Label(fitframe, text='Parameter').grid(    column=c, row=1, padx=5); c+=1
+        gui_param_button.grid(column=c, row=1, padx=5, pady=2); c+=1
+        ttk.Label(fitframe, text='Low Bound').grid(    column=c, row=1, padx=5); c+=1
+        ttk.Label(fitframe, text='High Bound').grid(   column=c, row=1, padx=5); c+=1
+        result_comp_button.grid(column=c, row=1, padx=5, pady=2, sticky=(E, W)); c+=1
+        ttk.Label(fitframe, text='Error (-)').grid(        column=c, row=1, padx=5); c+=1
+        ttk.Label(fitframe, text='Error (+)').grid(        column=c, row=1, padx=5); c+=1
+        ttk.Label(fitframe, text='ChiSq').grid(        column=c, row=1, padx=5); c+=1
+        ttk.Label(fitframe, text='Fixed').grid(        column=c, row=1, padx=5); c+=1
+        ttk.Label(fitframe, text='Shared').grid(       column=c, row=1, padx=5); c+=1
     
-        self.run_label.grid(column=0,row=0,padx=5,pady=5,columnspan=2,sticky=W)
-        self.run_label_title.grid(column=1,row=0,padx=5,pady=5,columnspan=c-1,sticky=E)
+        self.run_label.grid(column=0, row=0, padx=5, pady=5, columnspan=2, sticky=W)
+        self.run_label_title.grid(column=1, row=0, padx=5, pady=5, columnspan=c-1, sticky=E)
         
         # save frame 
         self.fitframe = fitframe
         
         # resizing
         for i in range(c):
-            self.fitframe.grid_columnconfigure(i,weight=1)
+            self.fitframe.grid_columnconfigure(i, weight=1)
         
         # fill with initial parameters
         self.parlabels = []     # track all labels and inputs
@@ -2018,7 +2020,7 @@ class fitline(object):
     # ======================================================================= #
     def __del__(self):
         
-        if hasattr(self,'parlabels'):   del self.parlabels
+        if hasattr(self, 'parlabels'):   del self.parlabels
         
         # kill buttons and frame
         try:
@@ -2027,10 +2029,10 @@ class fitline(object):
         except Exception:
             pass
     
-        if hasattr(self,'parentry'):    del self.parentry
+        if hasattr(self, 'parentry'):    del self.parentry
     
     # ======================================================================= #
-    def populate(self,force_modify=False):
+    def populate(self, force_modify=False):
         """
             Fill and grid new parameters. Reuse old fields if possible
             
@@ -2043,17 +2045,17 @@ class fitline(object):
         except KeyError as err:
             return          # returns if no parameters found
         except RuntimeError as err:
-            messagebox.showerror('RuntimeError',err)
+            messagebox.showerror('RuntimeError', err)
             raise err from None
         else:
             n_old_par = len(self.parlabels)
             n_new_par = len(plist)
-            min_n_par = min(n_old_par,n_new_par)
+            min_n_par = min(n_old_par, n_new_par)
             parkeys = list(self.parentry.keys())    # old parameter keys
             parkeys.sort()
             
             # destroy excess labels and entries
-            for i in range(n_new_par,n_old_par):
+            for i in range(n_new_par, n_old_par):
                 self.parlabels[-1].destroy()
                 for p in self.parentry[parkeys[i]].keys():
                     self.parentry[parkeys[i]][p][1].destroy()
@@ -2061,7 +2063,7 @@ class fitline(object):
                 del self.parlabels[-1]
                 del self.parentry[parkeys[i]]
         
-        self.logger.debug('Populating parameter list with %s',plist)
+        self.logger.debug('Populating parameter list with %s', plist)
 
         # get data and frame
         fitframe = self.fitframe
@@ -2075,9 +2077,9 @@ class fitline(object):
             self.parlabels[i]['text'] = plist[i]
         
         # make new labels
-        for i in range(n_old_par,n_new_par):
-            self.parlabels.append(ttk.Label(fitframe,text=plist[i],justify=LEFT))
-            self.parlabels[-1].grid(column=c,row=2+i,padx=5,sticky=E)
+        for i in range(n_old_par, n_new_par):
+            self.parlabels.append(ttk.Label(fitframe, text=plist[i], justify=LEFT))
+            self.parlabels[-1].grid(column=c, row=2+i, padx=5, sticky=E)
         
         # move all parameters entries and values to new key set
         new_parentry = {}
@@ -2098,37 +2100,37 @@ class fitline(object):
             r += 1
             
             # clear entry and insert new text
-            for col in ('p0','blo','bhi'):                
+            for col in ('p0', 'blo', 'bhi'):                
                 entry = self.parentry[p][col][1]
                 
                 if force_modify:
-                    entry.delete(0,'end')
+                    entry.delete(0, 'end')
                     self.parentry[p]['fixed'][0].set(fitdat.fitpar['fixed'][p])
                     
                 if not entry.get():
-                    entry.insert(0,str(fitdat.fitpar[col][p]))
+                    entry.insert(0, str(fitdat.fitpar[col][p]))
                 
-                entry.grid(column=c,row=r,padx=5,sticky=E); c += 1
+                entry.grid(column=c, row=r, padx=5, sticky=E); c += 1
             
         r = min_n_par+1
         
         self.disable_entry_callback = False
                  
         # make new parameter fields
-        for i in range(n_old_par,n_new_par):
+        for i in range(n_old_par, n_new_par):
             p = plist[i]            
             self.parentry[p] = {}
             
             c = 0               # gridding column         
             r += 1              # gridding row         
             
-            for col in ('p0','blo','bhi'):
+            for col in ('p0', 'blo', 'bhi'):
                 c += 1
                 value = StringVar()
-                entry = ttk.Entry(fitframe,textvariable=value,width=13)
-                entry.insert(0,str(fitdat.fitpar[col][p]))
-                entry.grid(column=c,row=r,padx=5,sticky=E)
-                self.parentry[p][col] = (value,entry)
+                entry = ttk.Entry(fitframe, textvariable=value, width=13)
+                entry.insert(0, str(fitdat.fitpar[col][p]))
+                entry.grid(column=c, row=r, padx=5, sticky=E)
+                self.parentry[p][col] = (value, entry)
         
         # fit results ------------------------------------------------------- 
         
@@ -2140,33 +2142,33 @@ class fitline(object):
             p = plist[i]
             
             # clear text in parentry fields
-            for col in ('res','dres-','dres+','chi'):
+            for col in ('res', 'dres-', 'dres+', 'chi'):
                 if col in self.parentry[p].keys():  # exception needed for chi
                     par = self.parentry[p][col][1]
-                    par.delete(0,'end')
+                    par.delete(0, 'end')
                     
                     if col == 'chi':
-                        par.grid(column=c,row=r,padx=5,sticky=E,rowspan=len(plist))
+                        par.grid(column=c, row=r, padx=5, sticky=E, rowspan=len(plist))
                     else:
-                        par.grid(column=c,row=r,padx=5,sticky=E)
+                        par.grid(column=c, row=r, padx=5, sticky=E)
                 c += 1
                     
             # do fixed box
-            self.parentry[p]['fixed'][1].grid(column=c,row=r,padx=5,sticky=E); c += 1
+            self.parentry[p]['fixed'][1].grid(column=c, row=r, padx=5, sticky=E); c += 1
             
             # do shared box
-            self.parentry[p]['shared'][1].grid(column=c,row=r,padx=5,sticky=E); c += 1
+            self.parentry[p]['shared'][1].grid(column=c, row=r, padx=5, sticky=E); c += 1
         
         # make new result fields
         r = min_n_par+1
-        for i in range(n_old_par,n_new_par):
+        for i in range(n_old_par, n_new_par):
             r += 1
             c = 4
             p = plist[i]
             
             # do results
             par_val = StringVar()
-            par = ttk.Entry(fitframe,textvariable=par_val,width=15)
+            par = ttk.Entry(fitframe, textvariable=par_val, width=15)
             par['state'] = 'readonly'
             par['foreground'] = colors.foreground
             
@@ -2179,29 +2181,29 @@ class fitline(object):
             dpar_u['state'] = 'readonly'
             dpar_u['foreground'] = colors.foreground
                                      
-            par. grid(column=c,row=r,padx=5,sticky=E); c += 1
-            dpar_l.grid(column=c,row=r,padx=5,sticky=E); c += 1
-            dpar_u.grid(column=c,row=r,padx=5,sticky=E); c += 1
+            par. grid(column=c, row=r, padx=5, sticky=E); c += 1
+            dpar_l.grid(column=c, row=r, padx=5, sticky=E); c += 1
+            dpar_u.grid(column=c, row=r, padx=5, sticky=E); c += 1
             
             # do chi only once
             if i==0:
                 chi_val = StringVar()
-                chi = Entry(fitframe,textvariable=chi_val,width=7)
+                chi = Entry(fitframe, textvariable=chi_val, width=7)
                 chi['state'] = 'readonly'
                 chi['foreground'] = colors.foreground
                 
-                chi.grid(column=c,row=r,padx=5,sticky=E,rowspan=len(plist)); 
-                self.parentry[p]['chi'] = (chi_val,chi)
+                chi.grid(column=c, row=r, padx=5, sticky=E, rowspan=len(plist)); 
+                self.parentry[p]['chi'] = (chi_val, chi)
             c += 1
             
             # save ttk.Entry objects in dictionary [parname][colname]
-            self.parentry[p]['res'] = (par_val,par)
-            self.parentry[p]['dres-'] = (dpar_val_l,dpar_l)
-            self.parentry[p]['dres+'] = (dpar_val_u,dpar_u)
+            self.parentry[p]['res'] = (par_val, par)
+            self.parentry[p]['dres-'] = (dpar_val_l, dpar_l)
+            self.parentry[p]['dres+'] = (dpar_val_u, dpar_u)
             
             # do fixed box
             value = BooleanVar()
-            entry = ttk.Checkbutton(fitframe, text='',\
+            entry = ttk.Checkbutton(fitframe, text='', \
                                      variable=value, onvalue=True, offvalue=False)
             entry.grid(column=c, row=r, padx=5, sticky=E); c += 1
             self.parentry[p]['fixed'] = (value, entry)
@@ -2215,13 +2217,13 @@ class fitline(object):
         # set p0 synchronization ----------------------------------------------
         
         # make callback function to set p0 values in bdfit object
-        def callback(*args,parname,col,source):
+        def callback(*args, parname, col, source):
             
             if self.disable_entry_callback:
                 return 
                 
             # set parameter entry synchronization
-            self.bfit.fit_files.modify_all(source=source,par=parname,column=col)
+            self.bfit.fit_files.modify_all(source=source, par=parname, column=col)
             
             # set bdfit p0 values
             if col != 'fixed':
@@ -2231,7 +2233,7 @@ class fitline(object):
                 # failure cases: 
                 #   KeyError on ncomp change
                 #   ValueError on bad user input
-                except (ValueError,KeyError):
+                except (ValueError, KeyError):
                     pass
             
             elif col == 'fixed':
@@ -2251,20 +2253,20 @@ class fitline(object):
             parentry['shared'][1].config(variable=var)
                         
             # set callback
-            for k in ('p0','blo','bhi','fixed'):
+            for k in ('p0', 'blo', 'bhi', 'fixed'):
                         
                 # remove old trace callbacks
                 for t in parentry[k][0].trace_vinfo():
                     parentry[k][0].trace_vdelete(*t)
                 
                 # set new trace callback
-                parentry[k][0].trace_id = parentry[k][0].trace("w",\
-                                partial(callback,parname=p,col=k,source=self))
+                parentry[k][0].trace_id = parentry[k][0].trace("w", \
+                                partial(callback, parname=p, col=k, source=self))
                 parentry[k][0].trace_callback = \
-                                partial(callback,parname=p,col=k,source=self)
+                                partial(callback, parname=p, col=k, source=self)
                 
         # disallow fixed shared parameters
-        def callback2(*args,parname):
+        def callback2(*args, parname):
             parentry = self.parentry[parname]
             var = self.bfit.fit_files.share_var[parname]
             if var.get():
@@ -2273,8 +2275,8 @@ class fitline(object):
         for p in self.parentry.keys():
             parentry = self.parentry[p]
             share = parentry['shared'][0]
-            share.trace_id = share.trace("w",partial(callback2,parname=p))
-            share.trace_callback = partial(callback2,parname=p)
+            share.trace_id = share.trace("w", partial(callback2, parname=p))
+            share.trace_callback = partial(callback2, parname=p)
     
     # ======================================================================= #
     def get_new_parameters(self):
@@ -2293,7 +2295,7 @@ class fitline(object):
         fn_title = fit_files.fit_function_title.get()
         
         # get list of parameter names
-        plist = list(fitter.gen_param_names(fn_title,ncomp))
+        plist = list(fitter.gen_param_names(fn_title, ncomp))
         plist.sort()
         
         # check if we are using the fit results of the prior fit
@@ -2310,15 +2312,15 @@ class fitline(object):
                 isfitted = any([res[k] for k in res]) # is the latest run fitted?
                 if isfitted and data.run > r:
                     r = data.run
-                    values = {k:(res[k],
-                                 data.fitpar['blo'][k],
-                                 data.fitpar['bhi'][k],
+                    values = {k:(res[k], 
+                                 data.fitpar['blo'][k], 
+                                 data.fitpar['bhi'][k], 
                                  data.fitpar['fixed'][k]) for k in res}
                     parentry = self.bfit.fit_files.fit_lines[rkey].parentry
                     
         # get calcuated initial values
         if values is None:
-            values = fitter.gen_init_par(fn_title,ncomp,self.bfit.data[run].bd,
+            values = fitter.gen_init_par(fn_title, ncomp, self.bfit.data[run].bd, 
                                      self.bfit.get_asym_mode(fit_files))
             
         # set to data
@@ -2327,17 +2329,17 @@ class fitline(object):
         return tuple(plist)
         
     # ======================================================================= #
-    def grid(self,row):
+    def grid(self, row):
         """Re-grid a dataline object so that it is in order by run number"""
         self.row = row
-        self.fitframe.grid(column=0,row=row, sticky=(W,N))
+        self.fitframe.grid(column=0, row=row, sticky=(W, N))
         self.fitframe.update_idletasks()
            
     # ======================================================================= #
     def degrid(self):
         """Remove displayed dataline object from file selection. """
         
-        self.logger.debug('Degridding fitline for run %s',self.dataline.id)
+        self.logger.debug('Degridding fitline for run %s', self.dataline.id)
         self.fitframe.grid_forget()
         self.fitframe.update_idletasks()
     
@@ -2367,7 +2369,7 @@ class fitline(object):
             p = parentry[column][0]
             
             # remove the trace
-            p.trace_vdelete("w",p.trace_id)
+            p.trace_vdelete("w", p.trace_id)
             
             # set the value
             p.set(source_entry[column][0].get())
@@ -2378,7 +2380,7 @@ class fitline(object):
     # ======================================================================= #
     def show_fit_result(self):
         
-        self.logger.debug('Showing fit result for run %s',self.dataline.id)
+        self.logger.debug('Showing fit result for run %s', self.dataline.id)
         
         # Set up variables
         displays = self.parentry
@@ -2464,11 +2466,11 @@ class fitline(object):
         
         # draw baseline
         if 'baseline' in pnames_single:
-            bfit.plt.axhline('fit', bdfit.id+'_base', results['baseline'], ls='--',zorder=6)
+            bfit.plt.axhline('fit', bdfit.id+'_base', results['baseline'], ls='--', zorder=6)
         
         # get x pts
-        t,a,da = bdfit.asym(bfit.get_asym_mode(fit_files))
-        fitx = np.linspace(min(t),max(t),fit_files.n_fitx_pts)
+        t, a, da = bdfit.asym(bfit.get_asym_mode(fit_files))
+        fitx = np.linspace(min(t), max(t), fit_files.n_fitx_pts)
                 
         # get x axis scaling
         if bdfit.mode in bfit.units: 
@@ -2480,8 +2482,8 @@ class fitline(object):
         # draw the combined
         params = [results[name] for name in pnames_combined]
         
-        bfit.plt.plot('fit', bdfit.id+'_comb', fitxx, fn_combined(fitx,*params), 
-                            unique=False, label='Combined',zorder=5)
+        bfit.plt.plot('fit', bdfit.id+'_comb', fitxx, fn_combined(fitx, *params), 
+                            unique=False, label='Combined', zorder=5)
         
         # draw each component
         for i in range(ncomp):
@@ -2494,8 +2496,8 @@ class fitline(object):
                 params.append(results['baseline'])
             
             # draw     
-            bfit.plt.plot('fit', bdfit.id+'_%d'%i, fitxx, fn_single(fitx,*params), 
-                            unique=False, ls='--', label='%s %d'%(fn_name,i),zorder=6)
+            bfit.plt.plot('fit', bdfit.id+'_%d'%i, fitxx, fn_single(fitx, *params), 
+                            unique=False, ls='--', label='%s %d'%(fn_name, i), zorder=6)
             
         # plot legend
         bfit.plt.legend('fit')
