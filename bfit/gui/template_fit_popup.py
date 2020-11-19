@@ -76,11 +76,7 @@ class template_fit_popup(object):
         right_frame = ttk.Frame(frame)
 
         # set icon
-        try:
-            img = PhotoImage(file=os.path.dirname(__file__)+'/../images/icon.gif')
-            self.win.tk.call('wm', 'iconphoto', self.win._w, img)
-        except Exception as err:
-            print(err)
+        self.bfit.set_icon(self.win)
 
         # Key bindings
         self.win.bind('<Control-Key-Return>', self.do_fit)
