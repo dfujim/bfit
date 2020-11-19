@@ -313,7 +313,8 @@ class bfit(object):
         """
         # logging
         self.logger = logging.getLogger(logger_name)
-        self.logger.info('Initializing ' + '-'*50)
+        self.logger.info('Initializing v%s' % __version__ + '-'*50)
+        self.logger.info('bdata: v%s' % bd.__version__)
         
         # plot tracker 
         self.plt = PltTracker()
@@ -1254,7 +1255,9 @@ class bfit(object):
         # get new keys
         asym_out = {}
         for k in asym.keys():
+            
             if len(asym[k]) == 2:
+                
                 asym_out[title_dict[k]] = asym[k][0]
                 asym_out[title_dict[k]+"_err"] = asym[k][1]
             else:
