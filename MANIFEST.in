@@ -10,4 +10,4 @@ include bfit/fitting/FastNumericalIntegration_src/*
 include bfit/gui/*.py
 include bfit/gui/help.html
 
-recursive-include bfit/images *.gif
+recursive-include bfit/data *
