@@ -33,6 +33,7 @@ from bfit.gui.tab_fetch_files import fetch_files
 from bfit.gui.tab_fit_files import fit_files
 from bfit.gui.calculator_nqr_B0 import calculator_nqr_B0
 from bfit.gui.calculator_nmr_B1 import calculator_nmr_B1
+from bfit.gui.calculator_nmr_atten import calculator_nmr_atten
 from bfit.gui.popup_drawstyle import popup_drawstyle
 from bfit.gui.popup_redraw_period import popup_redraw_period
 from bfit.gui.popup_terminal import popup_terminal
@@ -426,8 +427,9 @@ class bfit(object):
         # File
         menu_file = Menu(menubar)
         menu_file.add_command(label='Search archive', command=self.search_archive)
-        menu_file.add_command(label='NMR B1 Calculator', command=calculator_nmr_B1)
         menu_file.add_command(label='NQR B0 Calculator', command=calculator_nqr_B0)
+        menu_file.add_command(label='NMR B1 Calculator', command=calculator_nmr_B1)
+        menu_file.add_command(label='NMR RF Attenuation', command=calculator_nmr_atten)
         menu_file.add_command(label='Run Commands', command=lambda:popup_terminal(wref.proxy(self)))
         menu_file.add_command(label='Export Data', command=self.do_export)
         menu_file.add_command(label='Export Fits', command=self.do_export_fit)
