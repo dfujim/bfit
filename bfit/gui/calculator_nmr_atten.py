@@ -114,15 +114,15 @@ class calculator_nmr_atten(object):
         for loc in ['bottom', 'top', 'right', 'left']:
             ax.spines[loc].set_color(colors.foreground)
         ax.tick_params(axis='both', labelsize='small', colors=colors.foreground)
-        fig.tight_layout()
+        fig.set_tight_layout(True)
         
         canvas = FigureCanvasTkAgg(fig, master=root)  # A tk.DrawingArea.
         canvas.draw()
         
-        
         # grid onto mainframe
-        entry_frame.grid(column=0, row=0)
-        canvas.get_tk_widget().grid(column=0, row=1, padx=5, pady=5)
+        entry_frame.grid(column=0, row=0, sticky=(E, W))
+        canvas.get_tk_widget().grid(column=0, row=1, padx=5, pady=5, sticky=(E, W))
+        mainframe.columnconfigure(0, weight=1)
         
         # runloop
         self.root = root
