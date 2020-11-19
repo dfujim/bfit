@@ -1264,8 +1264,12 @@ class fit_files(object):
             
             try:
                 v2 = self.get_values(v) 
-            except AttributeError:
+                
+            # value not found
+            except (KeyError, AttributeError):
                 continue
+            
+            # if other error, don't crash but print the result
             except Exception: 
                 traceback.print_exc()
             else:
