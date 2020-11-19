@@ -68,17 +68,18 @@ class calculator_nmr_atten(object):
         mainframe.rowconfigure(0, weight=1)
         
         # Entry and other objects
-        title_line = ttk.Label(mainframe,   
+        entry_frame = ttk.Frame(mainframe)
+        title_line = ttk.Label(entry_frame,   
                 text='B-NMR RF Power -- DAC Linear Interpolation', 
                 justify=CENTER)
-        self.entry_power = ttk.Entry(mainframe, textvariable=self.power, width=10, 
+        self.entry_power = ttk.Entry(entry_frame, textvariable=self.power, width=10, 
                 justify=RIGHT)
-        percent = ttk.Label(mainframe, text='RF Power (%)')
-        equals = ttk.Label(mainframe, text='=')
-        self.entry_dac = ttk.Entry(mainframe, 
+        percent = ttk.Label(entry_frame, text='RF Power (%)')
+        equals = ttk.Label(entry_frame, text='=')
+        self.entry_dac = ttk.Entry(entry_frame, 
                 textvariable=self.dac, width=10, justify=RIGHT)
-        dac = ttk.Label(mainframe, text='DAC Setpoint')
-        explanation = ttk.Label(mainframe, 
+        dac = ttk.Label(entry_frame, text='DAC Setpoint')
+        explanation = ttk.Label(entry_frame, 
                 text='Press Enter to convert', 
                 justify=CENTER)
         
@@ -93,7 +94,7 @@ class calculator_nmr_atten(object):
         explanation.grid(       column=0, row=2, padx=5, pady=5, columnspan=5)
         
         # embed the data figure in the tk window
-        fig = Figure(figsize=(6, 4), dpi=100)
+        fig = Figure(figsize=(6, 4))
         ax = fig.add_subplot(111)
         
         ax.plot(self.data['rf_level_control (DAC)'], self.data['power (%)'], 'o', 
@@ -118,7 +119,10 @@ class calculator_nmr_atten(object):
         canvas = FigureCanvasTkAgg(fig, master=root)  # A tk.DrawingArea.
         canvas.draw()
         
-        canvas.get_tk_widget().grid(column=0, row=3, padx=5, pady=5, columnspan=5)
+        
+        # grid onto mainframe
+        entry_frame.grid(column=0, row=0)
+        canvas.get_tk_widget().grid(column=0, row=1, padx=5, pady=5)
         
         # runloop
         self.root = root
