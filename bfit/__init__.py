@@ -10,7 +10,7 @@ __all__ = ['gui','fitting','backend']
 __version__ = '4.2.4'
 __author__ = 'Derek Fujimoto'
 logger_name = 'bfit'
-icon_path = os.path.join(os.path.dirname(__file__),'images','icon.gif')
+icon_path = os.path.join(os.path.dirname(__file__),'data','icon.gif')
 
 __all__.extend(("lorentzian", 
                 "bilorentzian", 
