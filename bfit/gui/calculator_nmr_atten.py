@@ -36,6 +36,7 @@ class calculator_nmr_atten(object):
         root.title("Iain's Caculator")
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
+        root.minsize(100, 100)
 
         # icon
         try:
@@ -63,7 +64,7 @@ class calculator_nmr_atten(object):
         
         # main frame
         mainframe = ttk.Frame(root, pad=5)
-        mainframe.grid(column=0, row=0, sticky=(N, W))
+        mainframe.grid(column=0, row=0, sticky=(N, W, E))
         mainframe.columnconfigure(0, weight=1)
         mainframe.rowconfigure(0, weight=1)
         
@@ -84,14 +85,16 @@ class calculator_nmr_atten(object):
                 justify=CENTER)
         
         # Gridding
-        c = 0
-        title_line.grid(        column=0, row=0, padx=5, pady=5, columnspan=5)
+        c = 1
+        title_line.grid(        column=1, row=0, padx=5, pady=5, columnspan=5)
         percent.grid(           column=c, row=1, padx=5, pady=5); c+=1
         self.entry_power.grid(  column=c, row=1, padx=5, pady=5); c+=1
         equals.grid(            column=c, row=1, padx=20, pady=5); c+=1
         self.entry_dac.grid(    column=c, row=1, padx=5, pady=5); c+=1
         dac.grid(               column=c, row=1, padx=5, pady=5); c+=1
-        explanation.grid(       column=0, row=2, padx=5, pady=5, columnspan=5)
+        explanation.grid(       column=1, row=2, padx=5, pady=5, columnspan=5)
+        
+        entry_frame.columnconfigure([0,c], weight=1)
         
         # embed the data figure in the tk window
         fig = Figure(figsize=(6, 4))
@@ -122,7 +125,6 @@ class calculator_nmr_atten(object):
         # grid onto mainframe
         entry_frame.grid(column=0, row=0, sticky=(E, W))
         canvas.get_tk_widget().grid(column=0, row=1, padx=5, pady=5, sticky=(E, W))
-        mainframe.columnconfigure(0, weight=1)
         
         # runloop
         self.root = root
