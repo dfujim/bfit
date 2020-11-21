@@ -64,9 +64,9 @@ class calculator_nmr_atten(object):
         
         # main frame
         mainframe = ttk.Frame(root, pad=5)
-        mainframe.grid(column=0, row=0, sticky=(N, W, E))
+        mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
         mainframe.columnconfigure(0, weight=1)
-        mainframe.rowconfigure(0, weight=1)
+        mainframe.rowconfigure(1, weight=1)
         
         # Entry and other objects
         entry_frame = ttk.Frame(mainframe)
@@ -94,7 +94,7 @@ class calculator_nmr_atten(object):
         dac.grid(               column=c, row=1, padx=5, pady=5); c+=1
         explanation.grid(       column=1, row=2, padx=5, pady=5, columnspan=5)
         
-        entry_frame.columnconfigure([0,c], weight=1)
+        entry_frame.columnconfigure([0, c], weight=1)
         
         # embed the data figure in the tk window
         fig = Figure(figsize=(6, 4))
@@ -119,12 +119,13 @@ class calculator_nmr_atten(object):
         ax.tick_params(axis='both', labelsize='small', colors=colors.foreground)
         fig.set_tight_layout(True)
         
-        canvas = FigureCanvasTkAgg(fig, master=root)  # A tk.DrawingArea.
+        canvas = FigureCanvasTkAgg(fig, master=mainframe)  # A tk.DrawingArea.
         canvas.draw()
         
         # grid onto mainframe
         entry_frame.grid(column=0, row=0, sticky=(E, W))
-        canvas.get_tk_widget().grid(column=0, row=1, padx=5, pady=5, sticky=(E, W))
+        canvas.get_tk_widget().grid(column=0, row=1, padx=5, pady=5, 
+                                    sticky=(E, W, N, S))
         
         # runloop
         self.root = root
