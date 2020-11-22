@@ -489,8 +489,8 @@ class fetch_files(object):
                 data[runkey] = fitdata(self.bfit, new_dat)
     
         # check that data is all the same runtype
-        run_types = [self.bfit.data[k].mode for k in self.bfit.data.keys()]
-        run_types = run_types + [data[k].mode for k in data.keys()]
+        run_types = [d.mode for d in self.bfit.data.values()]
+        run_types = run_types + [d.mode for d in data.values()]
         
         # different run types: select all runs of same type
         if not all([r==run_types[0] for r in run_types]):
@@ -514,6 +514,7 @@ class fetch_files(object):
             else:
                 del data[k]
         
+        # get runmode
         try:
             self.runmode = run_types[0]
         except IndexError:
@@ -522,8 +523,14 @@ class fetch_files(object):
             self.logger.warning(s)
             raise RuntimeError(s)
         self.runmode_label['text'] = self.runmode_relabel[self.runmode]
-        self.bfit.set_asym_calc_mode_box(self.runmode, self)
-        self.bfit.set_asym_calc_mode_box(self.runmode, self.bfit.fit_files)
+        
+        # get area
+        area = [d.area for d in self.bfit.data.values()]
+        area = ''.join(np.unique(area))
+        
+        # set asym type comboboxes
+        self.bfit.set_asym_calc_mode_box(self.runmode, self, area)
+        self.bfit.set_asym_calc_mode_box(self.runmode, self.bfit.fit_files, area)
         
         keys_list = list(self.bfit.data.keys())
         keys_list.sort()

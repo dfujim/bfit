@@ -228,6 +228,7 @@ class fileviewer(object):
         if run < 40000:
             
             runlist = []
+            
             # look for latest run by run number
             for d in [self.bfit.bnmr_archive_label, self.bfit.bnqr_archive_label]:
                 dirloc = os.environ[d]
@@ -263,7 +264,7 @@ class fileviewer(object):
         self.data = data
         
         # set draw parameters
-        self.bfit.set_asym_calc_mode_box(data.mode, self)
+        self.bfit.set_asym_calc_mode_box(data.mode, self, data.area)
         
         # quiet mode: don't update text
         if quiet: return True

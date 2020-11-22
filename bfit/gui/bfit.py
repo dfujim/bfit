@@ -132,17 +132,15 @@ class bfit(object):
     legend_max_draw = 8 # max number of items to draw before removing the legend
     
     # csymmetry calculation options
-    asym_dict_keys = {'20':("Combined Helicity", 
+    asym_dict_keys = {'20':["Combined Helicity", 
                             "Split Helicity", 
                             "Combined Normalized", 
                             "Matched Helicity", 
                             "Histograms", 
                             "Positive Helicity", 
                             "Negative Helicity", 
-                            "Forward Counter", 
-                            "Backward Counter", 
-                            ), 
-                      '1f':("Combined Helicity", 
+                            ], 
+                      '1f':["Combined Helicity", 
                             "Split Helicity", 
                             "Raw Scans", 
                             "Shifted Split", 
@@ -151,29 +149,23 @@ class bfit(object):
                             "Histograms", 
                             "Positive Helicity", 
                             "Negative Helicity", 
-                            "Forward Counter", 
-                            "Backward Counter", 
-                            ), 
-                      '1n':("Combined Helicity", 
+                            ], 
+                      '1n':["Combined Helicity", 
                             "Split Helicity", 
                             "Raw Scans", 
                             "Matched Peak Finding", 
                             "Histograms", 
                             "Positive Helicity", 
                             "Negative Helicity", 
-                            "Forward Counter", 
-                            "Backward Counter", 
-                            ), 
-                      '1e':("Combined Helicity", 
+                            ], 
+                      '1e':["Combined Helicity", 
                             "Split Helicity", 
                             "Raw Scans", 
                             "Histograms", 
                             "Positive Helicity", 
                             "Negative Helicity", 
-                            "Forward Counter", 
-                            "Backward Counter", 
-                            ), 
-                      '1w':("Combined Helicity", 
+                            ], 
+                      '1w':["Combined Helicity", 
                             "Split Helicity", 
                             "Raw Scans", 
                             "Shifted Split", 
@@ -182,10 +174,8 @@ class bfit(object):
                             "Histograms", 
                             "Positive Helicity", 
                             "Negative Helicity", 
-                            "Forward Counter", 
-                            "Backward Counter", 
-                            ), 
-                      '2e':("Combined Hel Slopes", 
+                            ], 
+                      '2e':["Combined Hel Slopes", 
                             "Combined Hel Diff", 
                             "Combined Hel Raw", 
                             "Split Hel Slopes", 
@@ -194,8 +184,8 @@ class bfit(object):
                             "Split Slopes Shifted", 
                             "Split Diff Shifted", 
                             "Split Raw Shifted", 
-                            ), 
-                      '2h':("Combined Helicity", 
+                            ], 
+                      '2h':["Combined Helicity", 
                             "Split Helicity", 
                             "Normalized Combined", 
                             "Positive Helicity", 
@@ -208,9 +198,7 @@ class bfit(object):
                             "Histograms", 
                             "Negative Helicity", 
                             "Matched Helicity", 
-                            "Forward Counter", 
-                            "Backward Counter", 
-                            )}
+                            ]}
     
     # asymmetry calculation codes
     asym_dict = {"Combined Helicity"        :'c', 
@@ -219,6 +207,8 @@ class bfit(object):
                  "Negative Helicity"        :'n', 
                  "Forward Counter"          :'fc', 
                  "Backward Counter"         :'bc', 
+                 "Right Counter"            :'rc', 
+                 "Left Counter"             :'lc', 
                  "Matched Helicity"         :'hm', 
                  "Shifted Split"            :'hs', 
                  "Shifted Combined"         :'cs', 
@@ -900,32 +890,45 @@ class bfit(object):
             # plot forward counter
             elif asym_type == 'fc':
                 
-                # fetch new x
-                if data.mode in ('1f', '1n', '1w'):
-                    x = a[self.x_tag[data.mode]+'_cntr']
-                
                 # remove zero asym
-                afwd = a.fwd[0]
-                tag = afwd!=0
+                af = a.f[0]
+                tag = af!=0
                 
                 # draw
-                self.plt.errorbar(figstyle, data.id, x[tag], afwd[tag], a.fwd[1][tag], 
+                self.plt.errorbar(figstyle, data.id, x[tag], af[tag], a.f[1][tag], 
                                         label=label+" (Fwd)", **drawargs)
                 
-            # plot forward counter
+            # plot back counter
             elif asym_type == 'bc':
                                 
-                # fetch new x
-                if data.mode in ('1f', '1n', '1w'):
-                    x = a[self.x_tag[data.mode]+'_cntr']
-                
                 # remove zero asym
-                abck = a.bck[0]
-                tag = abck!=0
+                ab = a.b[0]
+                tag = ab!=0
                 
                 # draw
-                self.plt.errorbar(figstyle, data.id, x[tag], abck[tag], a.bck[1][tag], 
+                self.plt.errorbar(figstyle, data.id, x[tag], ab[tag], a.b[1][tag], 
                                         label=label+" (Bck)", **drawargs)
+            # plot right counter
+            elif asym_type == 'rc':
+                
+                # remove zero asym
+                ar = a.r[0]
+                tag = ar!=0
+                
+                # draw
+                self.plt.errorbar(figstyle, data.id, x[tag], ar[tag], a.r[1][tag], 
+                                        label=label+" (Rgt)", **drawargs)
+                
+            # plot left counter
+            elif asym_type == 'lc':
+                                
+                # remove zero asym
+                al = a.l[0]
+                tag = al!=0
+                
+                # draw
+                self.plt.errorbar(figstyle, data.id, x[tag], al[tag], a.l[1][tag], 
+                                        label=label+" (Lft)", **drawargs)
                 
             # plot split helicities, shifted by baseline
             elif asym_type == 'hs':
@@ -1669,25 +1672,30 @@ class bfit(object):
         self.fileviewer.get_data()
      
     # ======================================================================= #
-    def set_asym_calc_mode_box(self, mode, parent, *args):
+    def set_asym_calc_mode_box(self, mode, parent, area, *args):
         """Set asym combobox values. Asymmetry calculation and draw modes."""
         
         self.logger.debug('Setting asym combobox values for mode '+\
-                         '"%s"', mode)
+                         '"%s" and area "%s"', mode, area)
     
         # get list of possible run modes
-        modes = self.asym_dict_keys[mode]
+        modes = list(self.asym_dict_keys[mode])
         
         # prune the list to match only ok files
         if parent == self.fit_files:
-            modes2 = modes
-            modes = [m for m in modes2 if self.asym_dict[m] in \
+            modes = [m for m in modes if self.asym_dict[m] in \
                                         self.fit_files.fitter.valid_asym_modes]
+    
+        # add single counter asymetries based on mode and type
+        if 'BNMR' in area:
+            modes.extend(['Forward Counter', 'Backward Counter'])
+        if 'BNQR' in area:
+            modes.extend(['Left Counter', 'Right Counter'])
             
         # selection: switch if run mode not possible
         if parent.asym_type.get() not in modes:
             parent.asym_type.set(modes[0])
-    
+        
         # set list
         parent.entry_asym_type['values'] = modes
         
