@@ -219,16 +219,15 @@ class popup_fit_constraints(template_fit_popup):
         
         # get minimizer
         if 'trf'   in self.bfit.fit_files.fitter.__name__:  minimizer = 'trf'
-        if 'minos' in self.bfit.fit_files.fitter.__name__:  minimizer = 'migradminos'
-        if 'hesse' in self.bfit.fit_files.fitter.__name__:  minimizer = 'migradhesse'
+        if 'minos' in self.bfit.fit_files.fitter.__name__:  minimizer = 'minos'
+        if 'hesse' in self.bfit.fit_files.fitter.__name__:  minimizer = 'migrad'
         
         # set up queue for results
         que = Queue()
         
         # do fit
         def run_fit():
-            out = fit_bdata(
-                            data=data, 
+            out = fit_bdata(data=data, 
                             fn=fitfns, 
                             shared=sharelist, 
                             asym_mode='c', 
