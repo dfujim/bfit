@@ -313,7 +313,7 @@ class bfit(object):
         # root 
         root = Tk()
         self.root = root
-        root.title("βFIT: β-NMR and β-NQR Data Fitting and Visualization "+\
+        root.title("bfit: β-NMR and β-NQR Data Analysis "+\
                    "(version %s)" % __version__)
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
