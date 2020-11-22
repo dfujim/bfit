@@ -391,7 +391,8 @@ class fetch_files(object):
             raise ValueError(s)
     
         # remove legned if too many drawn values
-        if len(self.data_lines.keys()) > self.bfit.legend_max_draw:
+        n_selected = sum([d.check_state.get() for d in self.data_lines.values()])
+        if n_selected > self.bfit.legend_max_draw:
             
             try:
                 self.bfit.plt.gca(figstyle).get_legend().remove()
