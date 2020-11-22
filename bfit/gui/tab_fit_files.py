@@ -9,6 +9,8 @@ from bdata import bdata, bmerged
 from bfit import logger_name, __version__
 from scipy.special import gamma, polygamma
 from pandas.plotting import register_matplotlib_converters
+from multiprocessing import Process, Queue
+import queue
 
 from bfit.gui.calculator_nqr_B0 import current2field
 from bfit.gui.popup_show_param import popup_show_param
@@ -468,6 +470,59 @@ class fit_files(object):
         self.fit_canvas.itemconfig(self.canvas_frame_id, width=event.width)
     
     # ======================================================================= #
+    def input_disable(self, parent, first=True):
+        """
+            Prevent input while fitting by disabling options
+        """
+        
+        if first:
+            
+            # disable tabs
+            for i in range(2):
+                self.bfit.notebook.tab(i, state='disabled')
+            
+            # disable menu options
+            self.bfit.menubar.entryconfig("File", state="disabled")
+            self.bfit.menubar.entryconfig("Settings", state="disabled")
+            self.bfit.menubar.entryconfig("Draw Mode", state="disabled")
+            self.bfit.menubar.entryconfig("Minimizer", state="disabled")
+        
+        # disable everything in fit_tab
+        for child in parent.winfo_children():
+            try:
+                child.old_state = child['state']
+                child.configure(state='disable')
+            except TclError:
+                pass
+            self.input_disable(child, first=False)
+    
+    # ======================================================================= #
+    def input_enable(self, parent, first=True):
+        """
+            Prevent input while fitting by disabling options
+        """
+        
+        if first:
+            
+            # enable tabs
+            for i in range(2):
+                self.bfit.notebook.tab(i, state='normal')
+        
+            # enable menu options
+            self.bfit.menubar.entryconfig("File", state="normal")
+            self.bfit.menubar.entryconfig("Settings", state="normal")
+            self.bfit.menubar.entryconfig("Draw Mode", state="normal")
+            self.bfit.menubar.entryconfig("Minimizer", state="normal")
+        
+        # enable everything in fit_tab
+        for child in parent.winfo_children():
+            try:
+                child.configure(state=child.old_state)
+            except (TclError, AttributeError):
+                pass
+            self.input_enable(child, first=False)
+    
+    # ======================================================================= #
     def populate(self, *args):
         """
             Make tabs for setting fit input parameters. 
@@ -693,27 +748,79 @@ class fit_files(object):
         
         # call fitter with error message, potentially
         self.fit_input = (fn_name, ncomp, data_list)
-        fit_status_window = self.make_fit_status_window()
         
-        # do fit then kill window
+        # set up queue
+        que = Queue()
+        
+        def run_fit():
+            try:
+                # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
+                fit_output, gchi = fitter(fn_name=fn_name, 
+                                          ncomp=ncomp, 
+                                          data_list=data_list, 
+                                          hist_select=self.bfit.hist_select, 
+                                          asym_mode=self.bfit.get_asym_mode(self), 
+                                          xlims=xlims)
+            except Exception as errmsg:
+                self.logger.exception('Fitting error')
+                messagebox.showerror("Error", str(errmsg))
+                raise errmsg from None
+            que.put((fit_output, gchi))
+        
+        # log fitting
         for d in data_list:
             self.logger.info('Fitting run %s: %s', self.bfit.get_run_key(d[0]), d[1:])    
+        
+        # start fit
+        p = Process(target = run_fit)
+        p.start()
+        
+        # make fit window 
+        kill_status = BooleanVar()
+        kill_status.set(False)
+        fit_status_window = self.make_fit_status_window(p, kill_status)
+        self.input_disable(self.fit_data_tab)
+        
+        # get the output, checking for kill signal
         try:
-            # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
-            fit_output, gchi = fitter(fn_name=fn_name, 
-                                      ncomp=ncomp, 
-                                      data_list=data_list, 
-                                      hist_select=self.bfit.hist_select, 
-                                      asym_mode=self.bfit.get_asym_mode(self), 
-                                      xlims=xlims)
-        except Exception as errmsg:
-            self.logger.exception('Fitting error')
-            messagebox.showerror("Error", str(errmsg))
-            raise errmsg from None
+            while True:  
+                try: 
+                    fit_output, gchi = que.get(timeout = 0.001)
+                except queue.Empty:
+                    
+                    try:
+                        fit_status_window.update()
+                    
+                    # applicated destroyed
+                    except TclError:    
+                        return
+                    
+                    # check if fit cancelled
+                    if kill_status.get():
+                        self.input_enable(self.fit_data_tab)
+                        return 
+                        
+                # fit success
+                else:
+                    p.join()
+                    self.input_enable(self.fit_data_tab)
+                    break
         finally:
-            fit_status_window.destroy()
-            del fit_status_window
-
+            try:
+                # kill process, destroy fit window
+                p.terminate()
+                fit_status_window.destroy()
+                del fit_status_window
+                
+            # window already destroyed case (main window closed)
+            except TclError:    
+                pass
+            
+        fns = fitter.get_fit_fn(fn_name, ncomp, data_list)
+        
+        for k in fit_output.keys():
+            fit_output[k].append(fns[k])
+        
         # set output results
         for key in fit_output.keys():
             self.bfit.data[key].set_fitresult(fit_output[key])
@@ -1730,18 +1837,52 @@ class fit_files(object):
         self.bfit.update_period = from_file['update_period']
         
     # ======================================================================= #
-    def make_fit_status_window(self):
+    def make_fit_status_window(self, process, kill_status):
         """Window to show that fitting is in progress"""
+        
+        # make window
         fit_status_window = Toplevel(self.bfit.root)
         fit_status_window.lift()
         fit_status_window.resizable(FALSE, FALSE)
-        ttk.Label(fit_status_window, 
-                  text="Fitting in progress\nTo cancel press <Ctrl-C> in terminal ONCE", 
-                  justify='center', 
-                  pad=0).grid(column=0, row=0, padx=15, pady=15)
-        fit_status_window.update_idletasks()
+        
+        # set icon
+        self.bfit.set_icon(fit_status_window)
+        
+        # set label
+        label = ttk.Label(fit_status_window, 
+                      text="Fitting in progress...", 
+                      justify='center', 
+                      pad=0)
+        
+        # make progress bar
+        pbar = ttk.Progressbar(fit_status_window, orient=HORIZONTAL, 
+                                mode='indeterminate', length=200, maximum=20)
+        pbar.start()
+        
+        # make button to cancel the fit
+        def kill():
+            process.terminate()
+            kill_status.set(True)
+            self.logger.info('Fit canceled')    
+            print('Fit canceled')    
+        
+        cancel = ttk.Button(fit_status_window, 
+                      text="Cancel", 
+                      command=kill,
+                      pad=0)
+
+        # grid 
+        label.grid(column=0, row=0, padx=15, pady=5)
+        pbar.grid(column=0, row=1, padx=15, pady=5)
+        cancel.grid(column=0, row=2, padx=15, pady=5)
+        
+        # set up close window behaviour 
+        fit_status_window.protocol("WM_DELETE_WINDOW", kill)
+        
+        # update
         self.bfit.root.update_idletasks()
         
+        # set window size
         width = fit_status_window.winfo_reqwidth()
         height = fit_status_window.winfo_reqheight()
         
@@ -1754,7 +1895,6 @@ class fit_files(object):
         y = rt_y + rt_h/3 - (width/2)
         
         fit_status_window.geometry('{}x{}+{}+{}'.format(width, height, int(x), int(y)))
-        fit_status_window.update_idletasks()
         return fit_status_window
         
     # ======================================================================= #
@@ -2013,7 +2153,7 @@ class fitline(object):
         # title of run
         self.run_label_title = Label(fitframe, 
                             text=self.dataline.bdfit.title, 
-                            justify='right', fg='red3')
+                            justify='right', fg=colors.red)
                     
         # Parameter input labels
         gui_param_button = ttk.Button(fitframe, text='Initial Value', 

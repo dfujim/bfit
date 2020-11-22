@@ -365,6 +365,10 @@ class bfit(object):
         ttk_style.configure('TSpinbox', borderwidth=0, background=colors.background)
         ttk_style.map('TSpinbox', borderwidth=[('selected', 1)])
         
+        ttk_style.configure('TProgressbar', 
+                            borderwidth=1, 
+                            background=colors.background)
+        
         # icon
         self.set_icon(root)
             
@@ -578,6 +582,7 @@ class bfit(object):
         # set instance variables ---------------------------------------------
         self.mainframe = mainframe
         self.notebook = notebook
+        self.menubar = menubar
         
         # testing
         if testfn is not None: 

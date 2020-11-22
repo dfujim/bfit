@@ -241,12 +241,52 @@ class fitter(object):
                                         **kwargs)
         
         # collect results
+        # ~ if not isinstance(chis, collections.Iterable):   # single run
+            # ~ d = bdata_list[0]
+            # ~ return ({self.keyfn(d):[keylist, pars, stds_l, stds_h, chis, fn[0]]}, gchi)
+        # ~ else:                                           # multiple runs    
+            # ~ return ({self.keyfn(d):[keylist, p, sl, sh, c, f] 
+                # ~ for d, p, sl, sh, c, f in zip(bdata_list, pars, stds_l, stds_h, chis, fn)}, gchi)
         if not isinstance(chis, collections.Iterable):   # single run
             d = bdata_list[0]
-            return ({self.keyfn(d):[keylist, pars, stds_l, stds_h, chis, fn[0]]}, gchi)
+            return ({self.keyfn(d):[keylist, pars, stds_l, stds_h, chis]}, gchi)
         else:                                           # multiple runs    
-            return ({self.keyfn(d):[keylist, p, sl, sh, c, f] 
-                for d, p, sl, sh, c, f in zip(bdata_list, pars, stds_l, stds_h, chis, fn)}, gchi)
+            return ({self.keyfn(d):[keylist, p, sl, sh, c] 
+                for d, p, sl, sh, c in zip(bdata_list, pars, stds_l, stds_h, chis)}, gchi)
+
+    # ======================================================================= #
+    def get_fit_fn(self, fn_name, ncomp, data_list):
+        
+        fn = []
+        
+        for data in data_list:
+            
+            # split data list into parts
+            dat = data[0]
+            pdict = data[1]
+            doptions = data[2]
+            
+            # probe lifetime
+            life = bd.life[self.probe_species]
+            
+            # get fitting function for 20 and 2h
+            if dat.mode in ['20', '2h']: 
+                pulse = dat.get_pulse_s()
+                
+                # fit function
+                fn1 = self.get_fn(fn_name, ncomp, pulse, life)
+                
+                # add corrections for probe daughters
+                if self.probe_species == 'Mg31':
+                    fn.append(lambda x, *par : fa_31Mg(x, pulse)*fn1(x, *par))
+                else:
+                    fn.append(fn1)
+                
+            # 1f functions
+            else:                       
+                fn.append(self.get_fn(fn_name, ncomp, -1, life))
+
+        return ({self.keyfn(d[0]):f for d, f in zip(data_list, fn)})
 
     # ======================================================================= #
     def gen_param_names(self, fn_name, ncomp):
