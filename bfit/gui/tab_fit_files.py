@@ -782,7 +782,7 @@ class fit_files(object):
         kill_status = BooleanVar()
         kill_status.set(False)
         fit_status_window = self.make_fit_status_window(p, kill_status)
-        self.input_disable(self.fit_data_tab)
+        self.input_disable(self.win)
         
         # get the output, checking for kill signal
         try:

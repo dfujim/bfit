@@ -16,6 +16,9 @@ from bfit.backend.ConstrainedFunction import ConstrainedFunction as CstrFnGenera
 from bfit.fitting.fit_bdata import fit_bdata
 from bfit.gui.template_fit_popup import template_fit_popup
 
+from multiprocessing import Process, Queue
+import queue
+
 # ========================================================================== #
 class popup_fit_constraints(template_fit_popup):
     """
@@ -218,20 +221,72 @@ class popup_fit_constraints(template_fit_popup):
         if 'trf'   in self.bfit.fit_files.fitter.__name__:  minimizer = 'trf'
         if 'minos' in self.bfit.fit_files.fitter.__name__:  minimizer = 'migradminos'
         if 'hesse' in self.bfit.fit_files.fitter.__name__:  minimizer = 'migradhesse'
+        
+        # set up queue for results
+        que = Queue()
+        
+        # do fit
+        def run_fit():
+            out = fit_bdata(
+                            data=data, 
+                            fn=fitfns, 
+                            shared=sharelist, 
+                            asym_mode='c', 
+                            rebin=rebin, 
+                            omit=omit, 
+                            xlims=None, 
+                            hist_select=self.bfit.hist_select, 
+                            minimizer=minimizer, 
+                            **kwargs)
+                            
+            # par, std_l, std_u, cov, chi, gchi
+            que.put(out)
+            
+        # start it
+        p = Process(target = run_fit)
+        p.start()
+        
+        # make fit window 
+        kill_status = BooleanVar()
+        kill_status.set(False)
+        fit_status_window = self.bfit.fit_files.make_fit_status_window(p, kill_status)
+        self.bfit.fit_files.input_disable(self.win, first=False)
+        
+        try:
+            while True:  
+                try: 
+                    par, std_l, std_u, cov, chi, gchi = que.get(timeout = 0.001)
+                except queue.Empty:
+                    
+                    try:
+                        fit_status_window.update()
+                    
+                    # applicated destroyed
+                    except TclError:    
+                        return
+                    
+                    # check if fit cancelled
+                    if kill_status.get():
+                        self.bfit.fit_files.input_enable(self.win, first=False)
+                        return 
+                        
+                # fit success
+                else:
+                    p.join()
+                    self.bfit.fit_files.input_enable(self.win, first=False)
+                    break
+        finally:
+            try:
+                # kill process, destroy fit window
+                p.terminate()
+                fit_status_window.destroy()
+                del fit_status_window
+                
+            # window already destroyed case (main window closed)
+            except TclError:    
+                pass
             
         
-        # do the fit and kill fitting window
-        par, std_l, std_u, cov, chi, gchi = fit_bdata(
-                                                data=data, 
-                                                fn=fitfns, 
-                                                shared=sharelist, 
-                                                asym_mode='c', 
-                                                rebin=rebin, 
-                                                omit=omit, 
-                                                xlims=None, 
-                                                hist_select=self.bfit.hist_select, 
-                                                minimizer=minimizer, 
-                                                **kwargs)
         
         # calculate original parameter equivalents
         for i, k in enumerate(keylist):

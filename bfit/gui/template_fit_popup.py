@@ -194,16 +194,11 @@ class template_fit_popup(object):
         # check for no input
         if not text:    return
     
-        # do the fit and kill fitting window
-        fit_status_window = self.bfit.fit_files.make_fit_status_window()
         try:
             # do the fit
             par, std_l, std_h = self._do_fit(text)
         except Exception as errmsg:
             raise errmsg from None
-        finally:
-            fit_status_window.destroy()
-            del fit_status_window
         
         # display output for global parameters
         for i, j in enumerate(self.new_par.index):
