@@ -187,9 +187,12 @@ class popup_fit_results(template_fit_popup):
         m.minos()
         
         # print fitting quality
-        print(m.fmin)
-        print(m.params)
-        print(m.merrors)
+        try:
+            print(m.fmin)
+            print(m.params)
+            print(m.merrors)
+        except UnicodeEncodeError:
+            pass
         
         # get results
         par = m.np_values()
