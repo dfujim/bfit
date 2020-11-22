@@ -196,9 +196,15 @@ class template_fit_popup(object):
     
         try:
             # do the fit
-            par, std_l, std_h = self._do_fit(text)
+            out = self._do_fit(text)
         except Exception as errmsg:
             raise errmsg from None
+        
+        # check if fit was success
+        if out is None: 
+            return 
+        else:
+            par, std_l, std_h  = out
         
         # display output for global parameters
         for i, j in enumerate(self.new_par.index):
