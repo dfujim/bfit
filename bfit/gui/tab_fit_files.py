@@ -220,7 +220,7 @@ class fit_files(object):
         self.gchi_label = ttk.Label(gchi_label_frame, text='', justify=CENTER)
                      
         # asymmetry calculation
-        asym_label_frame = ttk.Labelframe(fit_data_tab, pad=(60, 5, 5, 5), 
+        asym_label_frame = ttk.Labelframe(fit_data_tab, pad=(5, 5, 5, 5), 
                 text='Asymmetry Calculation', )
         self.asym_type = StringVar()
         self.asym_type.set('')
@@ -330,8 +330,9 @@ class fit_files(object):
         state_save_button = ttk.Button(state_frame, text='Save', command=self.save_state)
         state_load_button = ttk.Button(state_frame, text='Load', command=self.load_state)
        
-        state_save_button.grid(column=0, row=0, padx=5, pady=5)
-        state_load_button.grid(column=1, row=0, padx=5, pady=5)
+        state_save_button.grid(column=1, row=0, padx=5, pady=5)
+        state_load_button.grid(column=2, row=0, padx=5, pady=5)
+        state_frame.columnconfigure([0, 3], weight=1)
         
         # gridding
         fit_runmode_label_frame.grid(column=1, row=0, pady=5, padx=2, sticky=(N, E, W))
@@ -347,16 +348,18 @@ class fit_files(object):
         self.gchi_label.grid(column=0, row=0)
         
         asym_label_frame.grid(column=1, row=2, columnspan=2, sticky=(E, W, N), pady=2, padx=2)
-        self.entry_asym_type.grid(column=0, row=0)
+        asym_label_frame.columnconfigure([0, 2], weight=1)
+        self.entry_asym_type.grid(column=1, row=0)
         
         other_settings_label_frame.grid(column=1, row=3, columnspan=2, sticky=(E, W, N), pady=2, padx=2)
         set_group_check.grid(column=0, row=0, padx=5, pady=1, sticky=W)
         set_use_rebin.grid(column=0, row=1, padx=5, pady=1, sticky=W)
         set_prior_p0.grid(column=0, row=2, padx=5, pady=1, sticky=W)
         
-        entry_xspecify_lo.grid(column=0, row=0)
-        label_xspecify.grid(column=1, row=0)
-        entry_xspecify_hi.grid(column=2, row=0)
+        entry_xspecify_lo.grid(column=1, row=0)
+        label_xspecify.grid(column=2, row=0)
+        entry_xspecify_hi.grid(column=3, row=0)
+        xspecify_frame.columnconfigure([0, 4], weight=1)
         
         xspecify_frame.grid(column=1, row=4, columnspan=2, sticky=(E, W, N), pady=2, padx=2)
         results_frame.grid(column=1, row=5, columnspan=2, sticky=(E, W, N), pady=2, padx=2)
