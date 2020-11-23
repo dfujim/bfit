@@ -2140,22 +2140,24 @@ class fitline(object):
         # get parent frame
         fitframe = ttk.Frame(self.parent, pad=(5, 0))
         
+        frame_title = ttk.Frame(fitframe)
+        
         # label for displyaing run number
         if type(self.dataline.bdfit.bd) is bdata:
-            self.run_label = Label(fitframe, 
+            self.run_label = Label(frame_title, 
                             text='[ %d - %d ]' % (self.dataline.run, 
                                                   self.dataline.year), 
                            bg=colors.foreground, fg=colors.background)
             
         elif type(self.dataline.bdfit.bd) is bmerged:
             runs = textwrap.wrap(str(self.dataline.run), 5)
-             
-            self.run_label = Label(fitframe, 
+            
+            self.run_label = Label(frame_title, 
                                 text='[ %s ]' % ' + '.join(runs), 
                                 bg=colors.foreground, fg=colors.background)
 
         # title of run
-        self.run_label_title = Label(fitframe, 
+        self.run_label_title = Label(frame_title, 
                             text=self.dataline.bdfit.title, 
                             justify='right', fg=colors.red)
                     
@@ -2178,8 +2180,10 @@ class fitline(object):
         ttk.Label(fitframe, text='Fixed').grid(        column=c, row=1, padx=5); c+=1
         ttk.Label(fitframe, text='Shared').grid(       column=c, row=1, padx=5); c+=1
     
-        self.run_label.grid(column=0, row=0, padx=5, pady=5, columnspan=2, sticky=W)
-        self.run_label_title.grid(column=1, row=0, padx=5, pady=5, columnspan=c-1, sticky=E)
+        self.run_label.grid(column=0, row=0, padx=5, pady=5, sticky=W)
+        self.run_label_title.grid(column=2, row=0, padx=5, pady=5, sticky=E)
+        frame_title.grid(column=0, row=0, columnspan=c, sticky=(E, W))
+        frame_title.columnconfigure(1, weight=1)
         
         # save frame 
         self.fitframe = fitframe
