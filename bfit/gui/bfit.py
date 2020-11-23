@@ -414,7 +414,7 @@ class bfit(object):
         root['menu'] = menubar
         
         # File
-        menu_file = Menu(menubar)
+        menu_file = Menu(menubar, title='File')
         menu_file.add_command(label='Search archive', command=self.search_archive)
         menu_file.add_command(label='NQR B0 Calculator', command=calculator_nqr_B0)
         menu_file.add_command(label='NMR B1 Calculator', command=calculator_nmr_B1)
@@ -429,7 +429,7 @@ class bfit(object):
         menubar.add_cascade(menu=menu_file, label='File')
         
         # Settings
-        menu_settings = Menu(menubar)
+        menu_settings = Menu(menubar, title='Settings')
         menubar.add_cascade(menu=menu_settings, label='Settings')
         menu_settings_dir = Menu(menu_settings)
         menu_settings_lab = Menu(menu_settings)
@@ -499,7 +499,7 @@ class bfit(object):
         self.norm_with_param = BooleanVar()
         self.norm_with_param.set(True)
         
-        menu_draw = Menu(menubar)
+        menu_draw = Menu(menubar, title='Draw Mode')
         menubar.add_cascade(menu=menu_draw, label='Draw Mode')
         menu_draw.add_radiobutton(label="Draw in new window", \
                 variable=self.draw_style, value='new', underline=8, 
@@ -522,7 +522,7 @@ class bfit(object):
                 variable=self.use_nbm, selectcolor=colors.selected)
         
         # Fitting minimizers
-        menu_mini = Menu(menubar)
+        menu_mini = Menu(menubar, title='Minimizer')
         menubar.add_cascade(menu=menu_mini, label='Minimizer')
         
         self.minimizer = StringVar()
@@ -537,8 +537,9 @@ class bfit(object):
                 variable=self.minimizer, 
                 selectcolor=colors.selected, 
                 command=self.set_fit_routine_with_popup)
+        
         # Help
-        menu_help = Menu(menubar)
+        menu_help = Menu(menubar, title='Help')
         menubar.add_cascade(menu=menu_help, label='Help')
         menu_help.add_command(label='Show help wiki', command=self.help)
         menu_help.add_command(label="What's new?", command=self.whatsnew)
@@ -577,7 +578,16 @@ class bfit(object):
         # set instance variables ---------------------------------------------
         self.mainframe = mainframe
         self.notebook = notebook
-        self.menubar = menubar
+        
+        # save menus
+        self.menus = {'menubar': menubar}
+        for child in menubar.winfo_children():
+            self.menus[child['title']] = child
+            # ~ print(child.keys())
+            # ~ for child2 in child.winfo_children():
+                # ~ print(child2['name'])
+        
+        # ~ print(self.menus)
         
         # testing
         if testfn is not None: 

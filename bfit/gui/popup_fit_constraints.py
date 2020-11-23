@@ -253,8 +253,8 @@ class popup_fit_constraints(template_fit_popup):
         kill_status = BooleanVar()
         kill_status.set(False)
         fit_status_window = fit_files.make_fit_status_window(p, kill_status)
-        fit_files.input_disable(self.win, first=False)
-        fit_files.input_disable(fit_files.fit_data_tab)
+        fit_files.input_enable_disable(self.win, state='disabled', first=False)
+        fit_files.input_enable_disable(fit_files.fit_data_tab, state='disabled')
         
         try:
             while True:  
@@ -271,15 +271,15 @@ class popup_fit_constraints(template_fit_popup):
                     
                     # check if fit cancelled
                     if kill_status.get():
-                        fit_files.input_enable(self.win, first=False)
-                        fit_files.input_enable(fit_files.fit_data_tab)
+                        fit_files.input_enable_disable(self.win, state='normal', first=False)
+                        fit_files.input_enable_disable(fit_files.fit_data_tab, state='normal')
                         return 
                         
                 # fit returned something
                 else:
                     p.join()
-                    fit_files.input_enable(self.win, first=False)
-                    fit_files.input_enable(fit_files.fit_data_tab)
+                    fit_files.input_enable_disable(self.win, state='normal', first=False)
+                    fit_files.input_enable_disable(fit_files.fit_data_tab, state='normal')
                     
                     if type(output) is str:
                         messagebox.showerror("Error", output)

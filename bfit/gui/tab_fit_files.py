@@ -473,59 +473,6 @@ class fit_files(object):
         self.fit_canvas.itemconfig(self.canvas_frame_id, width=event.width)
     
     # ======================================================================= #
-    def input_disable(self, parent, first=True):
-        """
-            Prevent input while fitting by disabling options
-        """
-        
-        if first:
-            
-            # disable tabs
-            for i in range(2):
-                self.bfit.notebook.tab(i, state='disabled')
-            
-            # disable menu options
-            self.bfit.menubar.entryconfig("File", state="disabled")
-            self.bfit.menubar.entryconfig("Settings", state="disabled")
-            self.bfit.menubar.entryconfig("Draw Mode", state="disabled")
-            self.bfit.menubar.entryconfig("Minimizer", state="disabled")
-        
-        # disable everything in fit_tab
-        for child in parent.winfo_children():
-            try:
-                child.old_state = child['state']
-                child.configure(state='disable')
-            except TclError:
-                pass
-            self.input_disable(child, first=False)
-    
-    # ======================================================================= #
-    def input_enable(self, parent, first=True):
-        """
-            Prevent input while fitting by disabling options
-        """
-        
-        if first:
-            
-            # enable tabs
-            for i in range(2):
-                self.bfit.notebook.tab(i, state='normal')
-        
-            # enable menu options
-            self.bfit.menubar.entryconfig("File", state="normal")
-            self.bfit.menubar.entryconfig("Settings", state="normal")
-            self.bfit.menubar.entryconfig("Draw Mode", state="normal")
-            self.bfit.menubar.entryconfig("Minimizer", state="normal")
-        
-        # enable everything in fit_tab
-        for child in parent.winfo_children():
-            try:
-                child.configure(state=child.old_state)
-            except (TclError, AttributeError):
-                pass
-            self.input_enable(child, first=False)
-    
-    # ======================================================================= #
     def populate(self, *args):
         """
             Make tabs for setting fit input parameters. 
@@ -783,7 +730,7 @@ class fit_files(object):
         kill_status = BooleanVar()
         kill_status.set(False)
         fit_status_window = self.make_fit_status_window(p, kill_status)
-        self.input_disable(self.fit_data_tab)
+        self.input_enable_disable(self.fit_data_tab, state='disabled')
         
         # get the output, checking for kill signal
         try:
@@ -802,14 +749,14 @@ class fit_files(object):
                     
                     # check if fit cancelled
                     if kill_status.get():
-                        self.input_enable(self.fit_data_tab)
+                        self.input_enable_disable(self.fit_data_tab, state='normal')
                         return 
                         
                 # got someting in the queue
                 else:
                     
                     p.join()
-                    self.input_enable(self.fit_data_tab)
+                    self.input_enable_disable(self.fit_data_tab, state='normal')
                     
                     # fit success
                     if type(output) is tuple:
@@ -1710,6 +1657,48 @@ class fit_files(object):
             self.logger.warning('Parameter selection "%s" not found' % select)
             raise AttributeError('Selection "%s" not found' % select) from None
     
+    # ======================================================================= #
+    def input_enable_disable(self, parent, state, first=True):
+        """
+            Prevent input while fitting by disabling options
+            
+            state: "disabled" or "normal"
+            first: do non-recursive items (i.e. menus, tabs)
+        """
+        
+        if first:
+            
+            # disable tabs
+            self.bfit.notebook.tab(1, state=state)
+            
+            # disable menu options
+            file = self.bfit.menus['File']
+            file.entryconfig("Run Commands", state=state)
+            file.entryconfig("Export Fits", state=state)
+            file.entryconfig("Save State", state=state)
+            file.entryconfig("Load State", state=state)
+            
+            settings = self.bfit.menus['Settings']
+            settings.entryconfig("Probe Species", state=state)
+            
+            draw_mode = self.bfit.menus['Draw Mode']
+            draw_mode.entryconfig("Use NBM", state=state)
+            draw_mode.entryconfig("Draw 1f as PPM shift", state=state)
+            
+            self.bfit.menus['menubar'].entryconfig("Minimizer", state=state)
+            
+        # disable everything in fit_tab
+        for child in parent.winfo_children():
+            try:
+                if state == 'disabled':
+                    child.old_state = child['state']
+                    child.configure(state=state)
+                else:
+                    child.configure(state=child.old_state)
+            except (TclError, AttributeError):
+                pass
+            self.input_enable_disable(child, state=state, first=False)
+            
     # ======================================================================= #
     def load_state(self):
         """
