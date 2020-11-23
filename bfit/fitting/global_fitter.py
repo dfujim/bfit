@@ -473,7 +473,7 @@ class global_fitter(object):
         return fig_list
         
     # ======================================================================= #
-    def fit(self, minimizer='migrad', do_minos=True, **fitargs):
+    def fit(self, minimizer='migrad', **fitargs):
         """
             fitargs: parameters to pass to fitter (scipy.optimize.curve_fit) 
             
@@ -640,12 +640,15 @@ class global_fitter(object):
             par, std_l, std_u, cov = self._do_curve_fit(master_fn, p0_first, **fitargs)
         
         # do migrad
-        elif minimizer == 'migrad':
+        elif minimizer in ('migrad', 'minos'):
             fprime_dx = self.fprime_dx
             self.master_fn = master_fn
                     
-            par, std_l, std_u, cov = self._do_migrad(master_fn, master_fnprime, 
-                                                    do_minos, p0_first, **fitargs)
+            par, std_l, std_u, cov = self._do_migrad(master_fn, 
+                                                     master_fnprime, 
+                                                     minimizer == 'minos', 
+                                                     p0_first, 
+                                                     **fitargs)
         else:
             raise RuntimeError("Unrecognized minimizer input '%s'" % minimizer)
         
