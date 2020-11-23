@@ -192,6 +192,11 @@ class PltTracker(object):
         return self._decorator(style, plt.annotate, *args, id=id, unique=unique, **kwargs)
     
     # ======================================================================= #
+    def autoscale(self, style, enable=True, axis='both', tight=None):
+        return self._decorator(style, plt.autoscale, enable=enable, axis=axis, 
+                               tight=tight)
+        
+    # ======================================================================= #
     def axhline(self, style, id, *args, unique=True, **kwargs):
         return self._decorator(style, plt.axhline, *args, id=id, unique=unique, **kwargs)
         

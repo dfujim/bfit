@@ -1108,13 +1108,16 @@ class fileviewer(object):
             # update only in stack mode
             draw_style = self.bfit.draw_style.get()
             self.bfit.draw_style.set('stack')
+            self.bfit.plt.autoscale('periodic', False)
             self.draw(figstyle='periodic', quiet=True)
             draw_style = self.bfit.draw_style.set(draw_style)
             
             # reset year and run 
+            do_quiet = (curent_run != run) or (current_year != year)
+            
             self.year.set(current_year)
             self.runn.set(curent_run)
-            self.get_data(quiet=True)
+            self.get_data(quiet=do_quiet)
             
             # Print update message
             print('Updated figure at:', str(datetime.datetime.now()).split('.')[0], 
