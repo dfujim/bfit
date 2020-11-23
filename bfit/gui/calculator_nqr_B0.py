@@ -34,10 +34,6 @@ class calculator_nqr_B0(object):
         except Exception as err:
             print(err)
 
-        # key bindings
-        root.bind('<Return>', self.calculate)             
-        root.bind('<KP_Enter>', self.calculate)
-        
         # variables
         self.field = StringVar()
         self.field.set("")
@@ -61,9 +57,6 @@ class calculator_nqr_B0(object):
         self.entry_current = Entry(mainframe, 
                 textvariable=self.current, width=10, justify=RIGHT)
         amperes = ttk.Label(mainframe, text='Amperes')
-        explanation = ttk.Label(mainframe, 
-                text='Press Enter to convert', 
-                justify=CENTER)
                 
         link = ttk.Button(mainframe, 
                           text='Calibration Data Here', 
@@ -77,11 +70,15 @@ class calculator_nqr_B0(object):
         equals.grid(            column=2, row=1, padx=20, pady=5)
         self.entry_current.grid(column=3, row=1, padx=5, pady=5)
         amperes.grid(           column=4, row=1, padx=5, pady=5)
-        explanation.grid(       column=0, row=2, padx=5, pady=5, columnspan=5)
         link.grid(              column=0, row=3, padx=5, pady=5, columnspan=5)
         
-        # runloop
         self.root = root
+        
+        # tie key release to calculate 
+        self.entry_current.bind('<KeyRelease>', self.calculate)
+        self.entry_field.bind('<KeyRelease>', self.calculate)
+        
+        # runloop
         self.logger.debug('Initialization success. Starting mainloop.')
         root.mainloop()
         
@@ -97,11 +94,10 @@ class calculator_nqr_B0(object):
                 field = float(self.field.get()) 
                 value = field2current(field)
                 self.current.set("%.4f" % np.around(value, 4))
-                self.logger.info('Field of %g G converted to current of %g A', 
+                self.logger.debug('Field of %g G converted to current of %g A', 
                                  field, value)
             except ValueError:
-                self.logger.exception('Bad input')
-                self.current.set('Error')
+                self.current.set('')
             
         # convert current to field
         elif focus_id == str(self.entry_current):        
@@ -109,11 +105,10 @@ class calculator_nqr_B0(object):
                 current = float(self.current.get()) 
                 value = current2field(current)
                 self.field.set("%.4f" % np.around(value, 4))
-                self.logger.info('Current of %g A converted to field of %g G', 
+                self.logger.debug('Current of %g A converted to field of %g G', 
                                  current, value)
             except ValueError:
-                self.logger.exception('Bad input')
-                self.field.set('Error')
+                self.field.set('debug')
             
 # ======================================================================= #
 def current2field(current):    return current*2.2131+0.175

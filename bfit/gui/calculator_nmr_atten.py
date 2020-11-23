@@ -45,10 +45,6 @@ class calculator_nmr_atten(object):
         except Exception as err:
             print(err)
 
-        # key bindings
-        root.bind('<Return>', self.calculate)             
-        root.bind('<KP_Enter>', self.calculate)
-        
         # variables
         self.power = StringVar()
         self.power.set("")
@@ -80,10 +76,7 @@ class calculator_nmr_atten(object):
         self.entry_dac = Entry(entry_frame, 
                 textvariable=self.dac, width=10, justify=RIGHT)
         dac = ttk.Label(entry_frame, text='DAC Setpoint')
-        explanation = ttk.Label(entry_frame, 
-                text='Press Enter to convert', 
-                justify=CENTER)
-        
+
         # Gridding
         c = 1
         title_line.grid(        column=1, row=0, padx=5, pady=5, columnspan=5)
@@ -92,7 +85,6 @@ class calculator_nmr_atten(object):
         equals.grid(            column=c, row=1, padx=20, pady=5); c+=1
         self.entry_dac.grid(    column=c, row=1, padx=5, pady=5); c+=1
         dac.grid(               column=c, row=1, padx=5, pady=5); c+=1
-        explanation.grid(       column=1, row=2, padx=5, pady=5, columnspan=5)
         
         entry_frame.columnconfigure([0, c], weight=1)
         
@@ -117,7 +109,6 @@ class calculator_nmr_atten(object):
         for loc in ['bottom', 'top', 'right', 'left']:
             ax.spines[loc].set_color(colors.foreground)
         ax.tick_params(axis='both', labelsize='small', colors=colors.foreground)
-        fig.set_tight_layout(True)
         
         canvas = FigureCanvasTkAgg(fig, master=mainframe)  # A tk.DrawingArea.
         canvas.draw()
@@ -127,8 +118,13 @@ class calculator_nmr_atten(object):
         canvas.get_tk_widget().grid(column=0, row=1, padx=5, pady=5, 
                                     sticky=(E, W, N, S))
         
-        # runloop
         self.root = root
+        
+        # tie key release to calculate 
+        self.entry_power.bind('<KeyRelease>', self.calculate)
+        self.entry_dac.bind('<KeyRelease>', self.calculate)
+        
+        # runloop
         self.logger.debug('Initialization success. Starting mainloop.')
         root.mainloop()
         
@@ -144,11 +140,10 @@ class calculator_nmr_atten(object):
                 power = float(self.power.get()) 
                 value = self.power2dac(power)
                 self.dac.set("%d" % value)
-                self.logger.info('Power of %g converted to dac setpoint of %d', 
+                self.logger.debug('Power of %g converted to dac setpoint of %d', 
                                  power, value)
             except ValueError:
-                self.logger.exception('Bad input')
-                self.dac.set('Error')
+                self.dac.set('')
             
         # convert dac to power
         elif focus_id == str(self.entry_dac):        
@@ -157,11 +152,10 @@ class calculator_nmr_atten(object):
                 value = self.dac2power(dac)
                 self.power.set("%.4f" % np.around(value, 4))
                 self.dac.set("%d" % int(dac))
-                self.logger.info('dac setpoint of of %d converted to power of %g', 
+                self.logger.debug('dac setpoint of of %d converted to power of %g', 
                                  dac, value)
             except ValueError:
-                self.logger.exception('Bad input')
-                self.power.set('Error')
+                self.power.set('')
             
     # ======================================================================= #
     def power2dac(self, value): 

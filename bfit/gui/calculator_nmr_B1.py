@@ -34,10 +34,6 @@ class calculator_nmr_B1(object):
         except Exception as err:
             print(err)
         
-        # key bindings
-        root.bind('<Return>', self.calculate)             
-        root.bind('<KP_Enter>', self.calculate)
-        
         # variables
         self.field = StringVar()
         self.field.set("")
@@ -65,8 +61,6 @@ class calculator_nmr_B1(object):
         self.entry_voltage = Entry(mainframe, textvariable=self.volt, 
                 width=10, justify=RIGHT)
         voltage = ttk.Label(mainframe, text='millivolts')
-        explanation = ttk.Label(mainframe, text='Press Enter to convert', 
-                justify=CENTER)
         
         # frequency input
         freq_frame = ttk.Frame(root, pad=5)
@@ -94,11 +88,15 @@ class calculator_nmr_B1(object):
         equals.grid(            column=2, row=2, padx=20, pady=5, sticky=(E, W))
         self.entry_voltage.grid(column=3, row=2, padx=5, pady=5, sticky=W)
         voltage.grid(           column=4, row=2, padx=5, pady=5, sticky=W)
-        explanation.grid(       column=0, row=3, padx=5, pady=5, columnspan=5)
         warning.grid(           column=0, row=2, padx=5, pady=5, columnspan=5)
         
-        # runloop
         self.root = root
+        
+        # tie key release to calculate 
+        self.entry_field.bind('<KeyRelease>', self.calculate)
+        self.entry_voltage.bind('<KeyRelease>', self.calculate)
+        
+        # mainloop
         self.logger.debug('Initialization success. Starting mainloop.')
         root.mainloop()
         
@@ -118,11 +116,10 @@ class calculator_nmr_B1(object):
                 value = field/0.0396*nu
                 self.volt.set("%9.6f" % np.around(value, 6))
                 
-                self.logger.info('Field of %g G converted to voltage of %g mV', 
+                self.logger.debug('Field of %g G converted to voltage of %g mV', 
                                  field, value)
             except ValueError:
-                self.logger.exception('Bad input.')
-                self.volt.set('Error')
+                self.volt.set('')
         
         # convert voltage to field
         elif focus_id == str(self.entry_voltage):        
@@ -131,11 +128,10 @@ class calculator_nmr_B1(object):
                 value = voltage*0.0396/nu
                 self.field.set("%9.6f" % np.around(value, 6))
                 
-                self.logger.info('Voltage of %g mV converted to field of %g G', 
+                self.logger.debug('Voltage of %g mV converted to field of %g G', 
                                  voltage, value)
             except ValueError:
-                self.logger.exception('Bad input.')
-                self.field.set('Error')
+                self.field.set('')
             
 
 
