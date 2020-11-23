@@ -163,6 +163,32 @@ class fileviewer(object):
         pass
         
     # ======================================================================= #
+    def _get_latest_run(self, year, run):
+        """
+            Get run number of latest run in local file system, given an initial 
+            part of the run number
+        """
+        
+        runlist = []
+            
+        # look for latest run by run number
+        for d in [self.bfit.bnmr_archive_label, self.bfit.bnqr_archive_label]:
+            dirloc = os.environ[d]
+            runlist.extend(glob.glob(os.path.join(dirloc, str(year), '0%d*.msr'%run)))
+        runlist = [int(os.path.splitext(os.path.basename(r))[0]) for r in runlist]
+        
+        # get latest run by max run number
+        try:
+            run = max(runlist)
+        except ValueError:
+            self.logger.exception('Run fetch failed')
+            for t in [self.text_nw, self.text_ne, self.text_sw, self.text_se]:
+                self.set_textbox_text(t, 'Run not found.')  
+            return False
+        else:
+            return run
+        
+    # ======================================================================= #
     def draw(self, figstyle, quiet=False):
         """Get data then draw."""
         self.bfit.logger.info('Draw button pressed')
@@ -197,8 +223,9 @@ class fileviewer(object):
     
     # ======================================================================= #
     def get_data(self, quiet=False):
-        """Display data and send bdata object to bfit draw list. 
-        Return True on success, false on Failure
+        """
+            Display data and send bdata object to bfit draw list. 
+            Return True on success, false on Failure
         """
         
         # settings
@@ -226,22 +253,8 @@ class fileviewer(object):
         self.logger.debug('Parsing run input %s', run)
         
         if run < 40000:
-            
-            runlist = []
-            
-            # look for latest run by run number
-            for d in [self.bfit.bnmr_archive_label, self.bfit.bnqr_archive_label]:
-                dirloc = os.environ[d]
-                runlist.extend(glob.glob(os.path.join(dirloc, str(year), '0%d*.msr'%run)))
-            runlist = [int(os.path.splitext(os.path.basename(r))[0]) for r in runlist]
-            
-            # get latest run by max run number
-            try:
-                run = max(runlist)
-            except ValueError:
-                self.logger.exception('Run fetch failed')
-                for t in [self.text_nw, self.text_ne, self.text_sw, self.text_se]:
-                    self.set_textbox_text(t, 'Run not found.')  
+            run = self._get_latest_run(year, run)
+            if run is False:
                 return False
         
         self.logger.info('Fetching run %s from %s', run, year)
@@ -1100,11 +1113,19 @@ class fileviewer(object):
             # update run
             year, run = tuple(map(int, runid.split('.')[:2]))
             current_year = self.year.get()
-            curent_run = self.runn.get()
+            current_run = self.runn.get()
             
             self.year.set(year)
             self.runn.set(run)
             
+            # check current run 
+            if current_run < 40000:
+                current_run2 = self._get_latest_run(current_year, current_run)
+                if current_run2 is False:
+                    return 
+            else:
+                current_run2 = current_run
+                
             # update only in stack mode
             draw_style = self.bfit.draw_style.get()
             self.bfit.draw_style.set('stack')
@@ -1113,10 +1134,10 @@ class fileviewer(object):
             draw_style = self.bfit.draw_style.set(draw_style)
             
             # reset year and run 
-            do_quiet = (curent_run != run) or (current_year != year)
+            do_quiet = (current_run2 != run) or (current_year != year)
             
             self.year.set(current_year)
-            self.runn.set(curent_run)
+            self.runn.set(current_run)
             self.get_data(quiet=do_quiet)
             
             # Print update message
