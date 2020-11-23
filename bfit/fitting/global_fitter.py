@@ -351,7 +351,10 @@ class global_fitter(object):
         self.minuit = m
         
         # minimize
-        m.migrad()
+        try:
+            m.migrad()    
+        except UnicodeEncodeError:  # can't print on older machines
+            pass
         
         # check minimum
         if not m.fmin.is_valid:
@@ -359,10 +362,18 @@ class global_fitter(object):
         
         # get errors
         if do_minos:
-            m.minos()
+            try:
+                m.minos()    
+            except UnicodeEncodeError:  # can't print on older machines
+                pass
+                
             lower, upper = m.np_merrors()
         else:
-            m.hesse()
+            try:
+                m.hesse()
+            except UnicodeEncodeError:  # can't print on older machines
+                pass
+        
             lower = m.np_errors()
             upper = lower
         
