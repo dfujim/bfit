@@ -161,6 +161,11 @@ class fetch_files(object):
         check_bin_remove_entry = Entry(right_frame, \
                 textvariable=self.check_bin_remove, width=20)
         
+        # key bindings
+        check_bin_remove_entry.bind('<KeyRelease>', self.set_all)
+        check_rebin_box.bind('<KeyRelease>', self.set_all)
+        
+        
         check_all_box = ttk.Checkbutton(right_frame, 
                 text='Force Check State', variable=self.check_state, 
                 onvalue=True, offvalue=False, pad=5, command=self.check_all)
@@ -201,7 +206,7 @@ class fetch_files(object):
         check_bin_remove_entry.bind('<FocusIn>', check_entry_fn)
         check_bin_remove_entry.bind('<FocusOut>', check_on_focusout_fn)
         check_bin_remove_entry.config(foreground=colors.entry_grey)
-                
+                    
         # grid
         runmode_label_frame.grid(column=2, row=0, sticky=(N, W, E, S), pady=5, padx=5)
         self.runmode_label.grid(column=0, row=0, sticky=(N, W, E))
@@ -679,11 +684,7 @@ class fetch_files(object):
             self.get_data()
             self.history_hide()
         
-        # checked rebin or checked run omission
-        elif focus_id in [self.check_rebin_box, \
-                          self.check_bin_remove_entry]:
-            self.logger.debug('Focus is: checked rebin or checked run omission')
-            self.set_all()
+        # check all box
         elif focus_id == self.check_all_box:
             self.logger.debug('Focus is: check all box')
             self.draw_all()
@@ -691,7 +692,7 @@ class fetch_files(object):
             pass
 
     # ======================================================================= #
-    def set_all(self):
+    def set_all(self, *args):
         """Set a particular property for all checked items. """
         
         self.logger.info('Set all')
@@ -703,7 +704,12 @@ class fetch_files(object):
             if self.data_lines[r].check_state.get():
                 
                 # get values to enter
-                self.data_lines[r].rebin.set(self.check_rebin.get())
+                try:
+                    rebin = self.check_rebin.get()
+                except TclError:
+                    rebin = 1
+                    
+                self.data_lines[r].rebin.set(rebin)
                 new_text = self.check_bin_remove.get()
                 
                 # check for greyed text
