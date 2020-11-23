@@ -263,8 +263,8 @@ class fit_files(object):
         self.xlo.set('-inf')
         self.xhi.set('inf')
         
-        entry_xspecify_lo = ttk.Entry(xspecify_frame, textvariable=self.xlo, width=10)
-        entry_xspecify_hi = ttk.Entry(xspecify_frame, textvariable=self.xhi, width=10)
+        entry_xspecify_lo = Entry(xspecify_frame, textvariable=self.xlo, width=10)
+        entry_xspecify_hi = Entry(xspecify_frame, textvariable=self.xhi, width=10)
         label_xspecify = ttk.Label(xspecify_frame, text=" < x < ")
         
         # fit results -----------------------
@@ -304,7 +304,7 @@ class fit_files(object):
         self.annotation_combobox = ttk.Combobox(results_frame, 
                                       textvariable=self.annotation, 
                                       state='readonly', width=19)
-        self.par_label_entry = ttk.Entry(results_frame, 
+        self.par_label_entry = Entry(results_frame, 
                                     textvariable=self.par_label, width=21)
         
         # gridding
@@ -2100,7 +2100,7 @@ class fitline(object):
                                     dataline.bdfit parameter values
             parent          pointer to parent object (frame)
             parlabels       label objects, saved for later destruction
-            parentry        [parname][colname] of ttk.Entry objects saved for 
+            parentry        [parname][colname] of Entry objects saved for 
                             retrieval and destruction
             run_label       label for showing which run is selected
             run_label_title label for showing which run is selected
@@ -2301,7 +2301,7 @@ class fitline(object):
             for col in ('p0', 'blo', 'bhi'):
                 c += 1
                 value = StringVar()
-                entry = ttk.Entry(fitframe, textvariable=value, width=13)
+                entry = Entry(fitframe, textvariable=value, width=13)
                 entry.insert(0, str(fitdat.fitpar[col][p]))
                 entry.grid(column=c, row=r, padx=5, sticky=E)
                 self.parentry[p][col] = (value, entry)
@@ -2342,14 +2342,14 @@ class fitline(object):
             
             # do results
             par_val = StringVar()
-            par = ttk.Entry(fitframe, textvariable=par_val, width=15)
+            par = Entry(fitframe, textvariable=par_val, width=15)
             par['state'] = 'readonly'
             par['foreground'] = colors.foreground
             
             dpar_val_l = StringVar()
             dpar_val_u = StringVar()
-            dpar_l = ttk.Entry(fitframe, textvariable=dpar_val_l, width=15)
-            dpar_u = ttk.Entry(fitframe, textvariable=dpar_val_u, width=15)
+            dpar_l = Entry(fitframe, textvariable=dpar_val_l, width=15)
+            dpar_u = Entry(fitframe, textvariable=dpar_val_u, width=15)
             dpar_l['state'] = 'readonly'
             dpar_l['foreground'] = colors.foreground
             dpar_u['state'] = 'readonly'
@@ -2370,7 +2370,7 @@ class fitline(object):
                 self.parentry[p]['chi'] = (chi_val, chi)
             c += 1
             
-            # save ttk.Entry objects in dictionary [parname][colname]
+            # save Entry objects in dictionary [parname][colname]
             self.parentry[p]['res'] = (par_val, par)
             self.parentry[p]['dres-'] = (dpar_val_l, dpar_l)
             self.parentry[p]['dres+'] = (dpar_val_u, dpar_u)

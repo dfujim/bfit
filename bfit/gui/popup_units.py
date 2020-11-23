@@ -58,8 +58,8 @@ class popup_units(object):
             for i in range(2):
                 self.input[key][i].set(units[key][i])
                 
-            entry_val = ttk.Entry(topframe, textvariable=self.input[key][0], width=10, justify=RIGHT)        
-            entry_uni = ttk.Entry(topframe, textvariable=self.input[key][1], width=5, justify=RIGHT)
+            entry_val = Entry(topframe, textvariable=self.input[key][0], width=10, justify=RIGHT)        
+            entry_uni = Entry(topframe, textvariable=self.input[key][1], width=5, justify=RIGHT)
             
             l_val.grid(column=0, row=r)
             entry_val.grid(column=1, row=r, padx=5)

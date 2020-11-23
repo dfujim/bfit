@@ -73,11 +73,11 @@ class calculator_nmr_atten(object):
         title_line = ttk.Label(entry_frame,   
                 text='B-NMR RF Power -- DAC Linear Interpolation', 
                 justify=CENTER)
-        self.entry_power = ttk.Entry(entry_frame, textvariable=self.power, width=10, 
+        self.entry_power = Entry(entry_frame, textvariable=self.power, width=10, 
                 justify=RIGHT)
         percent = ttk.Label(entry_frame, text='RF Power (%)')
         equals = ttk.Label(entry_frame, text='=')
-        self.entry_dac = ttk.Entry(entry_frame, 
+        self.entry_dac = Entry(entry_frame, 
                 textvariable=self.dac, width=10, justify=RIGHT)
         dac = ttk.Label(entry_frame, text='DAC Setpoint')
         explanation = ttk.Label(entry_frame, 

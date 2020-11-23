@@ -87,7 +87,7 @@ class fetch_files(object):
         
         entry_year = Spinbox(fet_entry_frame, textvariable=self.year, width=5, 
                              from_=2000, to=datetime.datetime.today().year)
-        entry_run = ttk.Entry(fet_entry_frame, textvariable=self.run, width=100)
+        entry_run = Entry(fet_entry_frame, textvariable=self.run, width=100)
         entry_run.insert(0, self.run_number_starter_line)
         entry_run.config(foreground=colors.entry_grey)
         
@@ -158,7 +158,7 @@ class fetch_files(object):
         check_rebin_box = Spinbox(right_frame, from_=1, to=100, width=3, \
                 textvariable=self.check_rebin, 
                 command=self.set_all)
-        check_bin_remove_entry = ttk.Entry(right_frame, \
+        check_bin_remove_entry = Entry(right_frame, \
                 textvariable=self.check_bin_remove, width=20)
         
         check_all_box = ttk.Checkbutton(right_frame, 
@@ -880,11 +880,11 @@ class dataline(object):
         line_frame.bind('<Enter>', self.on_line_enter)
         line_frame.bind('<Leave>', self.on_line_leave)
         
-        bin_remove_entry = ttk.Entry(line_frame, textvariable=self.bin_remove, \
+        bin_remove_entry = Entry(line_frame, textvariable=self.bin_remove, \
                 width=17)
                 
         label_label = ttk.Label(line_frame, text="Label:", pad=5)
-        self.label_entry = ttk.Entry(line_frame, textvariable=self.label, \
+        self.label_entry = Entry(line_frame, textvariable=self.label, \
                 width=18)
                 
         remove_button = ttk.Button(line_frame, text='Remove', \

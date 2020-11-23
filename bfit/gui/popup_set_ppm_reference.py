@@ -40,7 +40,7 @@ class popup_set_ppm_reference(object):
         l1 = ttk.Label(topframe, text='PPM Reference Frequency:', pad=5, justify=LEFT)
         self.text = IntVar()
         self.text.set(parent.ppm_reference)
-        entry = ttk.Entry(topframe, textvariable=self.text, width=10, justify=RIGHT)
+        entry = Entry(topframe, textvariable=self.text, width=10, justify=RIGHT)
         l2 = ttk.Label(topframe, text='Hz', pad=5, justify=LEFT)
         
         # make objects: buttons

@@ -58,11 +58,11 @@ class calculator_nmr_B1(object):
                 text='BNMR Magnetic Oscillating Field -- '+\
                      'Antenna Voltage (peak-peak)', 
                      justify=CENTER)
-        self.entry_field = ttk.Entry(mainframe, textvariable=self.field, width=10, 
+        self.entry_field = Entry(mainframe, textvariable=self.field, width=10, 
                 justify=RIGHT)
         gauss = ttk.Label(mainframe, text='Gauss')
         equals = ttk.Label(mainframe, text='=')
-        self.entry_voltage = ttk.Entry(mainframe, textvariable=self.volt, 
+        self.entry_voltage = Entry(mainframe, textvariable=self.volt, 
                 width=10, justify=RIGHT)
         voltage = ttk.Label(mainframe, text='millivolts')
         explanation = ttk.Label(mainframe, text='Press Enter to convert', 
@@ -72,7 +72,7 @@ class calculator_nmr_B1(object):
         freq_frame = ttk.Frame(root, pad=5)
         
         freq1 = ttk.Label(freq_frame, text='Freq:')
-        self.entry_freq = ttk.Entry(freq_frame, textvariable=self.nu, width=10, 
+        self.entry_freq = Entry(freq_frame, textvariable=self.nu, width=10, 
                                     justify=RIGHT)
         freq2 = ttk.Label(freq_frame, text='MHz')
         

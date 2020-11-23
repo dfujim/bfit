@@ -330,9 +330,13 @@ class bfit(object):
         root.option_add("*Menu*Foreground",     colors.foreground)   
         root.option_add("*Spinbox*Foreground",  colors.foreground)
         root.option_add("*Listbox*Foreground",  colors.foreground)
-        root.option_add("*Text*Foreground",     colors.foreground)
-        
-        root.option_add("*Scrollbar.Background", colors.foreground)
+        root.option_add("*Text*Foreground",     colors.foreground)        
+        root.option_add("*Scrollbar.Background",colors.foreground)
+
+        root.option_add("*Entry.Foreground",    colors.insertbackground)
+        root.option_add("*Entry.Background",    colors.fieldbackground)
+        root.option_add("*Entry.HighlightBackground",colors.background)
+        root.option_add("*Entry.DisabledBackground",colors.entry_disabled)
         
         ttk_style = ttk.Style()
         ttk_style.configure('.', font=colors.font, 
@@ -348,15 +352,6 @@ class bfit(object):
         ttk_style.configure("TNotebook.Tab", background=colors.background)
         ttk_style.map("TNotebook.Tab", background=[("selected", colors.tab)])
         
-        ttk_style.configure("TEntry", foreground=colors.foreground, 
-                                     fieldbackground=colors.fieldbackground)
-        
-        ttk_style.map("TEntry", foreground     =[('active',  colors.foreground), 
-                                                ('disabled', colors.disabled)], 
-                               fieldbackground=[('active',  colors.fieldbackground), 
-                                                ('disabled', colors.disabled), 
-                                                ('readonly', colors.readonly)])
-                                                                         
         ttk_style.map("TCheckbutton", foreground=[('selected', colors.selected), 
                                                  ('disabled', colors.disabled)], 
                                      indicatorcolor=[('selected', 'green3')])

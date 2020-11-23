@@ -47,7 +47,7 @@ class popup_drawstyle(object):
             # create objects
             self.label_list.append(ttk.Label(frame, text=key, pad=5, justify=LEFT))
             self.text_list.append(StringVar())
-            self.entry_list.append(ttk.Entry(frame, 
+            self.entry_list.append(Entry(frame, 
                     textvariable=self.text_list[-1], width=20, justify=RIGHT))
             self.entry_list[-1].insert(0, parent.style[key])
             

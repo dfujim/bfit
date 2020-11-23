@@ -54,11 +54,11 @@ class calculator_nqr_B0(object):
         title_line = ttk.Label(mainframe,   
                 text='BNQR Magnetic Static Field -- Current Converter', 
                 justify=CENTER)
-        self.entry_field = ttk.Entry(mainframe, textvariable=self.field, width=10, 
+        self.entry_field = Entry(mainframe, textvariable=self.field, width=10, 
                 justify=RIGHT)
         gauss = ttk.Label(mainframe, text='Gauss')
         equals = ttk.Label(mainframe, text='=')
-        self.entry_current = ttk.Entry(mainframe, 
+        self.entry_current = Entry(mainframe, 
                 textvariable=self.current, width=10, justify=RIGHT)
         amperes = ttk.Label(mainframe, text='Amperes')
         explanation = ttk.Label(mainframe, 

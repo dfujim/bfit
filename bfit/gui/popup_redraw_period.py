@@ -39,7 +39,7 @@ class popup_redraw_period(object):
         l1 = ttk.Label(topframe, text='Redraw update period:', pad=5, justify=LEFT)
         self.text = IntVar()
         self.text.set(parent.update_period)
-        entry = ttk.Entry(topframe, textvariable=self.text, width=10, justify=RIGHT)
+        entry = Entry(topframe, textvariable=self.text, width=10, justify=RIGHT)
         l2 = ttk.Label(topframe, text='s', pad=5, justify=LEFT)
         
         # make objects: buttons
