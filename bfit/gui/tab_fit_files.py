@@ -766,8 +766,9 @@ class fit_files(object):
                                           xlims=xlims)
             except Exception as errmsg:
                 self.logger.exception('Fitting error')
-                messagebox.showerror("Error", str(errmsg))
+                que.put(str(errmsg))
                 raise errmsg from None
+                
             que.put((fit_output, gchi))
         
         # log fitting
@@ -788,7 +789,8 @@ class fit_files(object):
         try:
             while True:  
                 try: 
-                    fit_output, gchi = que.get(timeout = 0.001)
+                    output = que.get(timeout = 0.001)
+                    
                 except queue.Empty:
                     
                     try:
@@ -803,11 +805,21 @@ class fit_files(object):
                         self.input_enable(self.fit_data_tab)
                         return 
                         
-                # fit success
+                # got someting in the queue
                 else:
+                    
                     p.join()
                     self.input_enable(self.fit_data_tab)
-                    break
+                    
+                    # fit success
+                    if type(output) is tuple:
+                        fit_output, gchi = output
+                        break
+                    # error message
+                    elif type(output) is str:
+                        messagebox.showerror("Error", output)
+                        return 
+                    
         finally:
             try:
                 # kill process, destroy fit window
