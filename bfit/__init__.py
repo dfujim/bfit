@@ -7,7 +7,7 @@ from .fitting.fit_bdata import fit_bdata
 from .fitting.minuit import minuit
 
 __all__ = ['gui','fitting','backend']
-__version__ = '4.4.4'
+__version__ = '4.4.5'
 __author__ = 'Derek Fujimoto'
 logger_name = 'bfit'
 icon_path = os.path.join(os.path.dirname(__file__),'data','icon.gif')
