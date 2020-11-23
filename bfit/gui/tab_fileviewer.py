@@ -379,6 +379,13 @@ class fileviewer(object):
             pass
     
         try: 
+            mass = data.camp.he_read
+            data_sw['Mass Flow'] = "%.3f +/- %.3f" % (mass.mean, mass.std)
+            key_order_sw.append('Mass Flow')
+        except AttributeError:
+            pass
+    
+        try: 
             cryo = data.camp.cryo_read
             data_sw['CryoEx Mass Flow'] = "%.3f +/- %.3f" % (cryo.mean, cryo.std)
             key_order_sw.append('CryoEx Mass Flow')
