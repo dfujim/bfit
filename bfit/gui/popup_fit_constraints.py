@@ -218,26 +218,30 @@ class popup_fit_constraints(template_fit_popup):
         kwargs = {'p0':p0, 'bounds':bounds}
         
         # get minimizer
-        if 'trf'   in self.bfit.fit_files.fitter.__name__:  minimizer = 'trf'
-        if 'minos' in self.bfit.fit_files.fitter.__name__:  minimizer = 'minos'
-        if 'hesse' in self.bfit.fit_files.fitter.__name__:  minimizer = 'migrad'
+        if 'trf'   in fit_files.fitter.__name__:  minimizer = 'trf'
+        if 'minos' in fit_files.fitter.__name__:  minimizer = 'minos'
+        if 'hesse' in fit_files.fitter.__name__:  minimizer = 'migrad'
         
         # set up queue for results
         que = Queue()
         
         # do fit
         def run_fit():
-            out = fit_bdata(data=data, 
-                            fn=fitfns, 
-                            shared=sharelist, 
-                            asym_mode='c', 
-                            rebin=rebin, 
-                            omit=omit, 
-                            xlims=None, 
-                            hist_select=self.bfit.hist_select, 
-                            minimizer=minimizer, 
-                            **kwargs)
-                            
+            try:
+                out = fit_bdata(data=data, 
+                                fn=fitfns, 
+                                shared=sharelist, 
+                                asym_mode='c', 
+                                rebin=rebin, 
+                                omit=omit, 
+                                xlims=None, 
+                                hist_select=self.bfit.hist_select, 
+                                minimizer=minimizer, 
+                                **kwargs)
+            except Exception as err:
+                que.put(str(err))
+                raise err from None
+                
             # par, std_l, std_u, cov, chi, gchi
             que.put(out)
             
@@ -248,13 +252,14 @@ class popup_fit_constraints(template_fit_popup):
         # make fit window 
         kill_status = BooleanVar()
         kill_status.set(False)
-        fit_status_window = self.bfit.fit_files.make_fit_status_window(p, kill_status)
-        self.bfit.fit_files.input_disable(self.win, first=False)
+        fit_status_window = fit_files.make_fit_status_window(p, kill_status)
+        fit_files.input_disable(self.win, first=False)
+        fit_files.input_disable(fit_files.fit_data_tab)
         
         try:
             while True:  
                 try: 
-                    par, std_l, std_u, cov, chi, gchi = que.get(timeout = 0.001)
+                    output = que.get(timeout = 0.001)
                 except queue.Empty:
                     
                     try:
@@ -266,14 +271,22 @@ class popup_fit_constraints(template_fit_popup):
                     
                     # check if fit cancelled
                     if kill_status.get():
-                        self.bfit.fit_files.input_enable(self.win, first=False)
+                        fit_files.input_enable(self.win, first=False)
+                        fit_files.input_enable(fit_files.fit_data_tab)
                         return 
                         
-                # fit success
+                # fit returned something
                 else:
                     p.join()
-                    self.bfit.fit_files.input_enable(self.win, first=False)
-                    break
+                    fit_files.input_enable(self.win, first=False)
+                    fit_files.input_enable(fit_files.fit_data_tab)
+                    
+                    if type(output) is str:
+                        messagebox.showerror("Error", output)
+                        return 
+                    elif type(output) is tuple:
+                        par, std_l, std_u, cov, chi, gchi = output
+                        break
         finally:
             try:
                 # kill process, destroy fit window
