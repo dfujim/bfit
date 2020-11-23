@@ -574,7 +574,7 @@ class fit_files(object):
             if k not in keylist:                    # check data list
                 self.fit_lines_old[k] = self.fit_lines[k]
                 del self.fit_lines[k]
-        
+                
         # make or regrid fitline objects
         n = 0
         for k in keylist:
@@ -2242,7 +2242,7 @@ class fitline(object):
         # get data and frame
         fitframe = self.fitframe
         fitdat = self.dataline.bdfit
-    
+        
         # labels ------------------------------------------------------------
         c = 0
 
@@ -2496,7 +2496,7 @@ class fitline(object):
         if values is None:
             values = fitter.gen_init_par(fn_title, ncomp, self.bfit.data[run].bd, 
                                      self.bfit.get_asym_mode(fit_files))
-            
+        
         # set to data
         self.bfit.data[run].set_fitpar(values)
             

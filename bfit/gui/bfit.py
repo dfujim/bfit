@@ -913,6 +913,7 @@ class bfit(object):
                 # draw
                 self.plt.errorbar(figstyle, data.id, x[tag], ab[tag], a.b[1][tag], 
                                         label=label+" (Bck)", **drawargs)
+            
             # plot right counter
             elif asym_type == 'rc':
                 

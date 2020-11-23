@@ -284,8 +284,6 @@ class popup_fit_constraints(template_fit_popup):
             # window already destroyed case (main window closed)
             except TclError:    
                 pass
-            
-        
         
         # calculate original parameter equivalents
         for i, k in enumerate(keylist):

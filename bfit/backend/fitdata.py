@@ -178,7 +178,7 @@ class fitdata(object):
                 {par_name:(par, lobnd, hibnd)}
         """
     
-        self.parnames = list(values.keys())
+        self.parnames = tuple(values.keys())
     
         for v in values.keys():
             self.fitpar['p0'][v] = values[v][0]

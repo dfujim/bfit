@@ -241,12 +241,6 @@ class fitter(object):
                                         **kwargs)
         
         # collect results
-        # ~ if not isinstance(chis, collections.Iterable):   # single run
-            # ~ d = bdata_list[0]
-            # ~ return ({self.keyfn(d):[keylist, pars, stds_l, stds_h, chis, fn[0]]}, gchi)
-        # ~ else:                                           # multiple runs    
-            # ~ return ({self.keyfn(d):[keylist, p, sl, sh, c, f] 
-                # ~ for d, p, sl, sh, c, f in zip(bdata_list, pars, stds_l, stds_h, chis, fn)}, gchi)
         if not isinstance(chis, collections.Iterable):   # single run
             d = bdata_list[0]
             return ({self.keyfn(d):[keylist, pars, stds_l, stds_h, chis]}, gchi)
@@ -377,12 +371,24 @@ class fitter(object):
                 amp_bounds = (0, np.inf)
             
             # set values
-            par_values = {'amp':(amp, *amp_bounds, False), 
-                          '1_T1':(1./T1, 0, np.inf, False), 
-                          '1_T1b':(10./T1, 0, np.inf, False), 
-                          'fraction_b':(0.5, 0, 1, False), 
-                          'beta':(0.5, 0, 1, False)}
-                         
+            if fn_name == 'Exp':
+                par_values = {  '1_T1':(1./T1, 0, np.inf, False), 
+                                'amp':(amp, *amp_bounds, False), 
+                             }
+                            
+            elif fn_name == 'Bi Exp':
+                par_values = {  '1_T1':(1./T1, 0, np.inf, False), 
+                                '1_T1b':(10./T1, 0, np.inf, False), 
+                                'fraction_b':(0.5, 0, 1, False), 
+                                'amp':(amp, *amp_bounds, False), 
+                             }
+            
+            elif fn_name == 'Str Exp':
+                par_values = {  '1_T1':(1./T1, 0, np.inf, False), 
+                                'beta':(0.5, 0, 1, False),
+                                'amp':(amp, *amp_bounds, False), 
+                             }
+                            
         # set time integrated fit initial parameters
         elif fn_name in ('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz'):
             
