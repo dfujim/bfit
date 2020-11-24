@@ -7,12 +7,11 @@ from tkinter import ttk, messagebox
 from functools import partial
 import logging
 import numpy as np
-from iminuit import Minuit
 
 from bfit import logger_name
 from bfit.gui.template_fit_popup import template_fit_popup
 from bfit.backend.raise_window import raise_window
-from bfit.fitting.leastsquares import LeastSquares
+from bfit.fitting.minuit import minuit
 
 # ========================================================================== #
 class popup_fit_results(template_fit_popup):
@@ -173,15 +172,18 @@ class popup_fit_results(template_fit_popup):
         if all(np.isnan(xerrs_h)): xerrs_h = None
         if all(np.isnan(yerrs_h)): yerrs_h = None
         
-        # set up least squares
-        ls = LeastSquares(model, xvals, yvals, 
-                          dy = yerrs_h, 
-                          dx = xerrs_h, 
-                          dy_low = yerrs_l, 
-                          dx_low = xerrs_l)
-        
         # minimize
-        m = Minuit.from_array_func(ls, p0, name=parnames, errordef=1)
+        m = minuit(model, xvals, yvals, 
+                  dy = yerrs_h, 
+                  dx = xerrs_h, 
+                  dy_low = yerrs_l, 
+                  dx_low = xerrs_l,
+                  name = parnames,
+                  print_level = 0,
+                  limit = np.array([blo, bhi]).T,
+                  )
+        
+        
         m.migrad()
         m.hesse()
         m.minos()
@@ -204,12 +206,8 @@ class popup_fit_results(template_fit_popup):
         else:
             std_l, std_h = m.np_merrors()
             
-        # chisquared
-        dof = len(xvals)-npar
-        if dof == 0:        chi = np.nan
-        else:               chi = ls(par)/dof
-        
-        # display results 
+        # chi2
+        chi = m.chi2()
         self.chi_label['text'] = 'ChiSq: %.2f' % np.around(chi, 2)
         self.chi = chi
         
