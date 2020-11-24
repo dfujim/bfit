@@ -36,7 +36,7 @@ A description of these functions can be found [here](https://github.com/dfujim/b
 
 ### Install instructions
 
-`pip3 install bfit`
+`pip3 install --user bfit`
 
 ### Optional seteup
 
