@@ -1,15 +1,14 @@
 from bfit.gui.bfit import bfit, logger_name
+from bfit import __version__
 import logging, os, sys
 from logging.handlers import RotatingFileHandler
-import argparse, subprocess
+import argparse, subprocess, requests, json
 from textwrap import dedent
+from pkg_resources import parse_version 
 
 # check if maxOS
 if sys.platform == 'darwin':
     os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
-
-# now we can import multiprocessing
-from multiprocessing import Process
 
 # run
 if __name__ == '__main__':
@@ -73,28 +72,19 @@ if __name__ == '__main__':
         # ~ plt.close('all')
         # ~ self.fit_files.do_add_param()
         
-    # Check version ----------------------------------------------------------
-    def check_version():
-        try:
-            vstr = subprocess.check_output([sys.executable, '-m', 'pip', 'search', 'bfit'])
-        except subprocess.CalledProcessError:
-            return
-        else:            
-            vstr = vstr.decode('utf-8')
-            vlst = [l.strip() for l in vstr.split('\n') if l]
-            
-            # check if latest
-            if 'latest' not in vlst[1]:
-                print('A new version of bfit is available')
-                print(vlst[1])
-                print(vlst[2])
-    
-    process_get_version = Process(target = check_version)
-    process_get_version.start()
+    # Check version (credit: https://github.com/alexmojaki/outdated) ----------
+    try:
+        latest_version = requests.get('https://pypi.python.org/pypi/bfit/json').text
+        latest_version = json.loads(latest_version)['info']['version']
+        latest_version2 = parse_version(latest_version)
+        current_version = parse_version(str(__version__))
+        
+        if current_version < latest_version2: 
+            messagebox.showinfo("Please update", 
+                                "New version available!\n(%s)" % latest_version)
+    except Exception:
+        pass
     
     # start bfit --------------------------------------------------------------
     bfit(testfn)
-    
-    # join
-    process_get_version.join()
     
