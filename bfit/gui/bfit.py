@@ -458,8 +458,8 @@ class bfit(object):
                 command=self.set_units)
         
         # Settings: data directory
-        menu_settings_dir.add_command(label="BNMR", command=self.set_bnmr_dir)
-        menu_settings_dir.add_command(label="BNQR", command=self.set_bnqr_dir)
+        menu_settings_dir.add_command(label="B-NMR", command=self.set_bnmr_dir)
+        menu_settings_dir.add_command(label="B-NQR", command=self.set_bnqr_dir)
         
         # Settings: set label default
         self.label_default = StringVar()
@@ -556,8 +556,8 @@ class bfit(object):
         menu_help = Menu(menubar, title='Help')
         menubar.add_cascade(menu=menu_help, label='Help')
         menu_help.add_command(label='Show help wiki', command=self.help)
-        menu_help.add_command(label="What's new?", command=self.whatsnew)
         menu_help.add_command(label='Update bfit', command=self.update_bfit)
+        menu_help.add_command(label="What's new?", command=self.whatsnew)
         menu_help.add_command(label='Report an issue', command=self.report_issue)
 
         # load default fitting routines
