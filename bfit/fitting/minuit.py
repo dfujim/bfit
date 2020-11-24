@@ -161,7 +161,7 @@ class minuit(Minuit):
         nfixed = sum(self.fixed.values())
         dof = self.npts - self.narg + nfixed
         
-        if dof == 0:
+        if dof <= 0:
             return np.nan
         else:
             return self.fval/dof
