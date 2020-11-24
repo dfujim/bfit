@@ -524,15 +524,15 @@ class bfit(object):
                 selectcolor=colors.selected)
         
         menu_draw.add_separator()
-        menu_draw.add_checkbutton(label="Draw fit after fitting", \
+        menu_draw.add_checkbutton(label="Draw after fitting", \
                 variable=self.draw_fit, selectcolor=colors.selected)
-        menu_draw.add_checkbutton(label="Try normalizing using fit", \
+        menu_draw.add_checkbutton(label="Normalize with fit results", \
                 variable=self.norm_with_param, selectcolor=colors.selected)
         menu_draw.add_checkbutton(label="Draw residuals as standardized", \
                 variable=self.draw_standardized_res, selectcolor=colors.selected)
         menu_draw.add_checkbutton(label="Draw 1f as PPM shift", \
                 variable=self.draw_ppm, selectcolor=colors.selected)
-        menu_draw.add_checkbutton(label="Use NBM", \
+        menu_draw.add_checkbutton(label="Use NBM in asymmetry", \
                 variable=self.use_nbm, selectcolor=colors.selected)
         
         # Fitting minimizers
