@@ -1098,8 +1098,8 @@ class dataline(object):
         # temperature
         try:
             self.temperature = int(np.round(bdfit.temperature.mean))
-        except AttributeError:
-            self.temperature = -999
+        except (ValueError, AttributeError):
+            self.temperature = np.nan
             
         # field (Tesla)
         if bdfit.field > 0.1:
@@ -1136,8 +1136,11 @@ class dataline(object):
         else:
             unique_id = '%s,' % bdfit.id
         
-        info_str = "%s %3dK, %s, %s, %s" %  (unique_id, 
-                                             self.temperature, field_text, 
+        
+        T = '%3dK' % self.temperature if not np.isnan(self.temperature) else 'nan'
+        
+        info_str = "%s %s, %s, %s, %s" %  (unique_id, 
+                                             T, field_text, 
                                              bias_text, duration_text)
         self.check.config(text=info_str)
     
