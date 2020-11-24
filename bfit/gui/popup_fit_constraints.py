@@ -15,6 +15,7 @@ import bdata as bd
 from bfit.backend.ConstrainedFunction import ConstrainedFunction as CstrFnGenerator
 from bfit.fitting.fit_bdata import fit_bdata
 from bfit.gui.template_fit_popup import template_fit_popup
+from bfit.gui.popup_ongoing_process import popup_ongoing_process 
 
 from multiprocessing import Process, Queue
 import queue
@@ -252,7 +253,10 @@ class popup_fit_constraints(template_fit_popup):
         # make fit window 
         kill_status = BooleanVar()
         kill_status.set(False)
-        fit_status_window = fit_files.make_fit_status_window(p, kill_status)
+        fit_status_window = fit_status_window = popup_ongoing_process(self.bfit, 
+                                message = "Constrained fit in progress...", 
+                                process = p, 
+                                kill_status = kill_status)
         fit_files.input_enable_disable(self.win, state='disabled', first=False)
         fit_files.input_enable_disable(fit_files.fit_data_tab, state='disabled')
         

@@ -18,6 +18,7 @@ from bfit.gui.popup_param import popup_param
 from bfit.gui.popup_fit_results import popup_fit_results
 from bfit.gui.popup_fit_constraints import popup_fit_constraints
 from bfit.gui.popup_add_param import popup_add_param
+from bfit.gui.popup_ongoing_process import popup_ongoing_process 
 from bfit.fitting.decay_31mg import fa_31Mg
 from bfit.backend.entry_color_set import on_focusout, on_entry_click
 from bfit.backend.raise_window import raise_window
@@ -729,7 +730,10 @@ class fit_files(object):
         # make fit window 
         kill_status = BooleanVar()
         kill_status.set(False)
-        fit_status_window = self.make_fit_status_window(p, kill_status)
+        fit_status_window = popup_ongoing_process(self.bfit, 
+                                message="Fitting in progress...", 
+                                process = p, 
+                                kill_status = kill_status)
         self.input_enable_disable(self.fit_data_tab, state='disabled')
         
         # get the output, checking for kill signal
@@ -1839,67 +1843,6 @@ class fit_files(object):
         self.bfit.label_default.set(from_file['label_default'])
         self.bfit.ppm_reference = from_file['ppm_reference']
         self.bfit.update_period = from_file['update_period']
-        
-    # ======================================================================= #
-    def make_fit_status_window(self, process, kill_status):
-        """Window to show that fitting is in progress"""
-        
-        # make window
-        fit_status_window = Toplevel(self.bfit.root)
-        fit_status_window.lift()
-        fit_status_window.resizable(FALSE, FALSE)
-        
-        # set icon
-        self.bfit.set_icon(fit_status_window)
-        
-        # set label
-        label = ttk.Label(fit_status_window, 
-                      text="Fitting in progress...", 
-                      justify='center', 
-                      pad=0)
-        
-        # make progress bar
-        pbar = ttk.Progressbar(fit_status_window, orient=HORIZONTAL, 
-                                mode='indeterminate', length=200, maximum=20)
-        pbar.start()
-        
-        # make button to cancel the fit
-        def kill():
-            process.terminate()
-            kill_status.set(True)
-            self.logger.info('Fit canceled')    
-            print('Fit canceled')    
-        
-        cancel = ttk.Button(fit_status_window, 
-                      text="Cancel", 
-                      command=kill,
-                      pad=0)
-
-        # grid 
-        label.grid(column=0, row=0, padx=15, pady=5)
-        pbar.grid(column=0, row=1, padx=15, pady=5)
-        cancel.grid(column=0, row=2, padx=15, pady=5)
-        
-        # set up close window behaviour 
-        fit_status_window.protocol("WM_DELETE_WINDOW", kill)
-        
-        # update
-        self.bfit.root.update_idletasks()
-        
-        # set window size
-        width = fit_status_window.winfo_reqwidth()
-        height = fit_status_window.winfo_reqheight()
-        
-        rt_x = self.bfit.root.winfo_x()
-        rt_y = self.bfit.root.winfo_y()
-        rt_w = self.bfit.root.winfo_width()
-        rt_h = self.bfit.root.winfo_height()
-        
-        x = rt_x + rt_w/2 - (width/2)
-        y = rt_y + rt_h/3 - (width/2)
-        
-        fit_status_window.geometry('{}x{}+{}+{}'.format(width, height, int(x), int(y)))
-        return fit_status_window
         
     # ======================================================================= #
     def modify_all(self, *args, source=None, par='', column=''):
