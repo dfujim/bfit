@@ -3,7 +3,7 @@ Beta-NMR GUI for reading, drawing, fitting data.
 
 ## Run Instructions
 
-To run the gui, call `python3 -m bfit`
+To run the gui, call `bfit`
 
 bfit also provides the following classes and functions at the top level:
 
