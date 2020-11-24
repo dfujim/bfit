@@ -246,62 +246,37 @@ class popup_fit_constraints(template_fit_popup):
             # par, std_l, std_u, cov, chi, gchi
             que.put(out)
             
-        # start it
-        p = Process(target = run_fit)
-        p.start()
+        # start the fit
+        def do_enable():
+            fit_files.input_enable_disable(self.win, state='normal', first=False)
+            fit_files.input_enable_disable(fit_files.fit_data_tab, state='normal')
+        def do_disable():
+            fit_files.input_enable_disable(self.win, state='disabled', first=False)
+            fit_files.input_enable_disable(fit_files.fit_data_tab, state='disabled')
+            
+        popup = popup_ongoing_process(self.bfit, 
+                    target = run_fit,
+                    message="Constrained fit in progress...", 
+                    queue = que,
+                    do_disable = do_disable,
+                    do_enable = do_enable,
+                    )
+            
+        output = popup.run()
         
-        # make fit window 
-        kill_status = BooleanVar()
-        kill_status.set(False)
-        fit_status_window = fit_status_window = popup_ongoing_process(self.bfit, 
-                                message = "Constrained fit in progress...", 
-                                process = p, 
-                                kill_status = kill_status)
-        fit_files.input_enable_disable(self.win, state='disabled', first=False)
-        fit_files.input_enable_disable(fit_files.fit_data_tab, state='disabled')
+        # fit success
+        if type(output) is tuple:
+            par, std_l, std_u, cov, chi, gchi = output
         
-        try:
-            while True:  
-                try: 
-                    output = que.get(timeout = 0.001)
-                except queue.Empty:
-                    
-                    try:
-                        fit_status_window.update()
-                    
-                    # applicated destroyed
-                    except TclError:    
-                        return
-                    
-                    # check if fit cancelled
-                    if kill_status.get():
-                        fit_files.input_enable_disable(self.win, state='normal', first=False)
-                        fit_files.input_enable_disable(fit_files.fit_data_tab, state='normal')
-                        return 
-                        
-                # fit returned something
-                else:
-                    p.join()
-                    fit_files.input_enable_disable(self.win, state='normal', first=False)
-                    fit_files.input_enable_disable(fit_files.fit_data_tab, state='normal')
-                    
-                    if type(output) is str:
-                        messagebox.showerror("Error", output)
-                        return 
-                    elif type(output) is tuple:
-                        par, std_l, std_u, cov, chi, gchi = output
-                        break
-        finally:
-            try:
-                # kill process, destroy fit window
-                p.terminate()
-                fit_status_window.destroy()
-                del fit_status_window
-                
-            # window already destroyed case (main window closed)
-            except TclError:    
-                pass
+        # error
+        elif type(output) is str:
+            messagebox.showerror("Error", output)
+            return 
         
+        # fit cancelled
+        elif output is None:
+            return
+            
         # calculate original parameter equivalents
         for i, k in enumerate(keylist):
             data = fetch_files.data_lines[k].bdfit

@@ -7,6 +7,7 @@ from tkinter import *
 from tkinter import ttk, filedialog, messagebox
 from bdata import bdata, bmerged
 from scipy.optimize import curve_fit
+from multiprocessing import Process
 
 # set MPL backend
 import matplotlib as mpl
@@ -26,6 +27,8 @@ import matplotlib.pyplot as plt
 import bdata as bd
 import weakref as wref
 
+from multiprocessing import Process, Queue
+import queue
 
 from bfit import __version__, logger_name, icon_path
 from bfit.gui.tab_fileviewer import fileviewer
@@ -39,6 +42,7 @@ from bfit.gui.popup_redraw_period import popup_redraw_period
 from bfit.gui.popup_terminal import popup_terminal
 from bfit.gui.popup_units import popup_units
 from bfit.gui.popup_set_ppm_reference import popup_set_ppm_reference
+from bfit.gui.popup_ongoing_process import popup_ongoing_process
 from bfit.gui.popup_set_histograms import popup_set_histograms
 from bfit.backend.PltTracker import PltTracker
 from bfit.backend.raise_window import raise_window
@@ -1713,10 +1717,35 @@ class bfit(object):
     # ======================================================================= #
     def update_bfit(self):
         """Check pip for updated version"""
+        
         self.logger.info('Using pip to update')
-        subprocess.call([sys.executable, "-m", "pip", "install", "--user", 
-                         "--upgrade", 'bfit'])
-        print('Done. Restart to implement updates.')
+        
+        # set up queue to get signal
+        que = Queue()
+        
+        # run update function
+        def do_update():
+            try:
+                subprocess.call([sys.executable, "-m", "pip", "install", 
+                                 "--user", "--upgrade", 'bfit'])
+            except subprocess.CalledProcessError:
+                que.put('Error')
+            else:
+                que.put('Success')
+        
+        popup = popup_ongoing_process(self, 
+                            target = do_update,
+                            message="Updating bfit...", 
+                            queue = que)
+        output = popup.run()
+        
+        # end update
+        if output == 'Error':
+            messagebox.showerror("Error", 'Update error. Use command line to update.')
+        elif output == 'Success':
+            messagebox.showinfo("Success", 'Close window and restart bfit to implement updates.')
+        else:
+            return
      
     # ======================================================================= #
     def whatsnew(self):

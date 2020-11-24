@@ -724,64 +724,29 @@ class fit_files(object):
             self.logger.info('Fitting run %s: %s', self.bfit.get_run_key(d[0]), d[1:])    
         
         # start fit
-        p = Process(target = run_fit)
-        p.start()
+        popup = popup_ongoing_process(self.bfit, 
+                    target = run_fit,
+                    message="Fitting in progress...", 
+                    queue = que,
+                    do_disable = lambda : self.input_enable_disable(self.fit_data_tab, state='disabled'),
+                    do_enable = lambda : self.input_enable_disable(self.fit_data_tab, state='normal'),
+                    )
+        output = popup.run()
         
-        # make fit window 
-        kill_status = BooleanVar()
-        kill_status.set(False)
-        fit_status_window = popup_ongoing_process(self.bfit, 
-                                message="Fitting in progress...", 
-                                process = p, 
-                                kill_status = kill_status)
-        self.input_enable_disable(self.fit_data_tab, state='disabled')
-        
-        # get the output, checking for kill signal
-        try:
-            while True:  
-                try: 
-                    output = que.get(timeout = 0.001)
-                    
-                except queue.Empty:
-                    
-                    try:
-                        fit_status_window.update()
-                    
-                    # applicated destroyed
-                    except TclError:    
-                        return
-                    
-                    # check if fit cancelled
-                    if kill_status.get():
-                        self.input_enable_disable(self.fit_data_tab, state='normal')
-                        return 
-                        
-                # got someting in the queue
-                else:
-                    
-                    p.join()
-                    self.input_enable_disable(self.fit_data_tab, state='normal')
-                    
-                    # fit success
-                    if type(output) is tuple:
-                        fit_output, gchi = output
-                        break
-                    # error message
-                    elif type(output) is str:
-                        messagebox.showerror("Error", output)
-                        return 
-                    
-        finally:
-            try:
-                # kill process, destroy fit window
-                p.terminate()
-                fit_status_window.destroy()
-                del fit_status_window
-                
-            # window already destroyed case (main window closed)
-            except TclError:    
-                pass
+        # fit success
+        if type(output) is tuple:
+            fit_output, gchi = output
             
+        # error message
+        elif type(output) is str:
+            messagebox.showerror("Error", output)
+            return 
+            
+        # fit cancelled
+        elif output is None:
+            return
+            
+        # get fit functions
         fns = fitter.get_fit_fn(fn_name, ncomp, data_list)
         
         for k in fit_output.keys():
