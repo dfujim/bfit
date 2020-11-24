@@ -786,27 +786,31 @@ class fit_files(object):
         self.bfit.fetch_files.asym_type.set(asym_mode_fit)
         
         # draw fit results
-        style = self.bfit.draw_style.get()
-        
-        if style in ['redraw', 'new']:
-            self.bfit.draw_style.set('stack')
-        
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.bfit.fetch_files.draw_all(figstyle='fit', ignore_check=False)
-        
-        if len(self.fit_lines.keys()) > self.bfit.legend_max_draw:
+        if self.bfit.draw_fit.get():
+            style = self.bfit.draw_style.get()
             
-            try:
-                self.plt.gca('fit').get_legend().remove()
-            except AttributeError:
-                pass
-            else:
-                self.plt.tight_layout('fit')
+            if style in ['redraw', 'new']:
+                self.bfit.draw_style.set('stack')
+            
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self.bfit.fetch_files.draw_all(figstyle='fit', ignore_check=False)
+            
+            if len(self.fit_lines.keys()) > self.bfit.legend_max_draw:
+                
+                try:
+                    self.plt.gca('fit').get_legend().remove()
+                except AttributeError:
+                    pass
+                else:
+                    self.plt.tight_layout('fit')
+            
+            # reset style and asym mode 
+            self.bfit.draw_style.set(style)
+            self.bfit.fetch_files.asym_type.set(asym_mode_fetch)
         
-        # reset style and asym mode 
-        self.bfit.draw_style.set(style)
-        self.bfit.fetch_files.asym_type.set(asym_mode_fetch)
+        else:
+            messagebox.showinfo("Fitting completed", "Fitting completed")
         
     # ======================================================================= #
     def do_fit_constraints(self):

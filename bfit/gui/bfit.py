@@ -100,6 +100,7 @@ class bfit(object):
             data:           dict of fitdata objects for drawing/fitting, keyed by run #
             draw_style:     draw window types # stack, redraw, new
             draw_components:list of titles for labels, options to export, draw.
+            draw_fit:       BooleanVar, if true draw fits after fitting
             draw_ppm:       BoolVar for drawing as ppm shift
             draw_standardized_res: BoolVar for drawing residuals as standardized
             norm_with_param:BoolVar, if true estimate normalization from data only
@@ -502,11 +503,13 @@ class bfit(object):
         self.draw_ppm = BooleanVar()
         self.draw_ppm.set(False)
         self.draw_standardized_res = BooleanVar()
-        self.draw_standardized_res.set(False)
+        self.draw_standardized_res.set(True)
         self.use_nbm = BooleanVar()
         self.use_nbm.set(False)
         self.norm_with_param = BooleanVar()
         self.norm_with_param.set(True)
+        self.draw_fit = BooleanVar()
+        self.draw_fit.set(True)
         
         menu_draw = Menu(menubar, title='Draw Mode')
         menubar.add_cascade(menu=menu_draw, label='Draw Mode')
@@ -521,12 +524,14 @@ class bfit(object):
                 selectcolor=colors.selected)
         
         menu_draw.add_separator()
+        menu_draw.add_checkbutton(label="Draw fit after fitting", \
+                variable=self.draw_fit, selectcolor=colors.selected)
         menu_draw.add_checkbutton(label="Try normalizing using fit", \
                 variable=self.norm_with_param, selectcolor=colors.selected)
-        menu_draw.add_checkbutton(label="Draw 1f as PPM shift", \
-                variable=self.draw_ppm, selectcolor=colors.selected)
         menu_draw.add_checkbutton(label="Draw residuals as standardized", \
                 variable=self.draw_standardized_res, selectcolor=colors.selected)
+        menu_draw.add_checkbutton(label="Draw 1f as PPM shift", \
+                variable=self.draw_ppm, selectcolor=colors.selected)
         menu_draw.add_checkbutton(label="Use NBM", \
                 variable=self.use_nbm, selectcolor=colors.selected)
         
