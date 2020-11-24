@@ -5,6 +5,7 @@ from logging.handlers import RotatingFileHandler
 import argparse, subprocess, requests, json
 from textwrap import dedent
 from pkg_resources import parse_version 
+from tkinter import messagebox
 
 # check if maxOS
 if sys.platform == 'darwin':
@@ -78,10 +79,9 @@ if __name__ == '__main__':
         latest_version = json.loads(latest_version)['info']['version']
         latest_version2 = parse_version(latest_version)
         current_version = parse_version(str(__version__))
-        
         if current_version < latest_version2: 
-            messagebox.showinfo("Please update", 
-                                "New version available!\n(%s)" % latest_version)
+            testfn = lambda x: messagebox.showinfo("Please update", 
+                                "Version %s available!" % latest_version)
     except Exception:
         pass
     
