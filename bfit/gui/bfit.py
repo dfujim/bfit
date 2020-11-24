@@ -104,6 +104,7 @@ class bfit(object):
             logger:         logging object 
             logger_name:    string of unique logger name
             mainframe:      main frame for the object
+            menus:          dict {title: Menu} of menubar options
             minimizer:      StringVar: path to python module with fitter object
             notebook:       contains all tabs for operations:
                 fileviewer
@@ -416,9 +417,6 @@ class bfit(object):
         # File
         menu_file = Menu(menubar, title='File')
         menu_file.add_command(label='Search archive', command=self.search_archive)
-        menu_file.add_command(label='NQR B0 Calculator', command=calculator_nqr_B0)
-        menu_file.add_command(label='NMR B1 Calculator', command=calculator_nmr_B1)
-        menu_file.add_command(label='NMR RF Attenuation', command=calculator_nmr_atten)
         menu_file.add_command(label='Run Commands', command=lambda:popup_terminal(wref.proxy(self)))
         menu_file.add_command(label='Export Data', command=self.do_export)
         menu_file.add_command(label='Export Fits', command=self.do_export_fit)
@@ -486,6 +484,13 @@ class bfit(object):
                     variable=self.thermo_channel, 
                     value=k, 
                     command=self.set_thermo_channel)
+        
+        # calculate
+        menu_calculate = Menu(menubar, title='Calculate')
+        menubar.add_cascade(menu=menu_calculate, label='Calculate')
+        menu_calculate.add_command(label='NQR B0', command=calculator_nqr_B0)
+        menu_calculate.add_command(label='NMR B1', command=calculator_nmr_B1)
+        menu_calculate.add_command(label='NMR B1 Attenuation', command=calculator_nmr_atten)
         
         # Draw style
         self.draw_style = StringVar()
@@ -583,12 +588,7 @@ class bfit(object):
         self.menus = {'menubar': menubar}
         for child in menubar.winfo_children():
             self.menus[child['title']] = child
-            # ~ print(child.keys())
-            # ~ for child2 in child.winfo_children():
-                # ~ print(child2['name'])
-        
-        # ~ print(self.menus)
-        
+            
         # testing
         if testfn is not None: 
             testfn(self)
