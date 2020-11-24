@@ -160,7 +160,11 @@ class minuit(Minuit):
     def chi2(self):
         nfixed = sum(self.fixed.values())
         dof = self.npts - self.narg + nfixed
-        return self.fval/dof
+        
+        if dof == 0:
+            return np.nan
+        else:
+            return self.fval/dof
         
 def get_depth(lst, depth=0):
     try: 
