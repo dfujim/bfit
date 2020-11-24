@@ -41,6 +41,7 @@ setuptools.setup(
                       'pyyaml>=5.1', 'scipy>=1.2.0', 'iminuit>=1.5.2', 
                       'requests>=2.25.0', 'argparse>=1.4.0'],
     package_data={'': ['./data']},
+    entry_points={'console_scripts':['bfit = bfit:main']},
     include_package_data=True,
     ext_modules = cythonize([ext], include_path=[numpy.get_include()]),
 )
