@@ -1655,7 +1655,7 @@ class fit_files(object):
             settings.entryconfig("Probe Species", state=state)
             
             draw_mode = self.bfit.menus['Draw Mode']
-            draw_mode.entryconfig("Use NBM", state=state)
+            draw_mode.entryconfig("Use NBM in asymmetry", state=state)
             draw_mode.entryconfig("Draw 1f as PPM shift", state=state)
             
             self.bfit.menus['menubar'].entryconfig("Minimizer", state=state)
