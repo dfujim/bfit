@@ -1370,12 +1370,11 @@ class fit_files(object):
         filename = self.bfit.fileviewer.default_export_filename
         filename = '_fit'.join(os.path.splitext(filename))
         
-        if not filename: return
+        directory = filedialog.askdirectory()
+        if not directory:
+            return
         
-        try:
-            filename = filedialog.askdirectory()+'/'+filename
-        except TypeError:
-            pass
+        filename = os.path.join(directory, filename)
         
         # asymmetry type
         asym_mode = self.bfit.get_asym_mode(self)
