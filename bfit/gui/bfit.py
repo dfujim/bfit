@@ -333,10 +333,10 @@ class bfit(object):
         root.option_add("*Borderwidth", 2)
         
         # don't change all foregrounds or you will break the filedialog windows
-        root.option_add("*Menu*Foreground",     colors.foreground)   
+        root.option_add("*Menu*Foreground",     colors.foreground)
         root.option_add("*Spinbox*Foreground",  colors.foreground)
         root.option_add("*Listbox*Foreground",  colors.foreground)
-        root.option_add("*Text*Foreground",     colors.foreground)        
+        root.option_add("*Text*Foreground",     colors.foreground)     
         root.option_add("*Scrollbar.Background",colors.foreground)
 
         root.option_add("*Entry.Foreground",    colors.insertbackground)
@@ -350,7 +350,10 @@ class bfit(object):
                                    foreground=colors.foreground, 
                                    arrowcolor=colors.foreground, 
                                    borderwidth=2)
-                                   
+            
+        ttk_style.configure("TEntry", foreground=colors.foreground, 
+                                      fieldbackground=colors.fieldbackground)
+
         ttk_style.map('.', background=[('disabled', colors.background)], 
                            fieldbackground=[('selected', colors.selected)])
                                          
@@ -360,7 +363,7 @@ class bfit(object):
         
         ttk_style.map("TCheckbutton", foreground=[('selected', colors.selected), 
                                                  ('disabled', colors.disabled)], 
-                                     indicatorcolor=[('selected', 'green3')])
+                                      indicatorcolor=[('selected', 'green3')])
         ttk_style.map('TCombobox', fieldbackground=[('readonly', colors.background)])
         
         ttk_style.configure('TSpinbox', borderwidth=0, background=colors.background)
