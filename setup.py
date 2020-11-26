@@ -18,10 +18,10 @@ ext = Extension("bfit.fitting.integrator",
 
 setuptools.setup(
     name="bfit",
-    version="4.6.0",
+    version="4.6.1",
     author="Derek Fujimoto",
     author_email="fujimoto@phas.ubc.ca",
-    description="BNMR/BNQR Data Fitting and Visualization",
+    description="B-NMR/B-NQR Data Fitting and Visualization",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dfujim/bfit",
