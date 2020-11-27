@@ -478,4 +478,32 @@ class global_bdata_fitter(data, fn, xlims=None, rebin=1, asym_mode='c', **kwargs
 
 ## Fit bdata
 
+Function for fitting a list of bdata objects with shared or independant variables. Backend to GUI fitting. 
+
+```python
+def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='', xlims=None, asym_mode='c', fixed=None, minimizer='migrad', **kwargs)
+```
+
+* `data`: list of [bdata objects](https://github.com/dfujim/bdata) (or single object)
+* `fn`: Function handle, or list of function handles (same as [`global_fitter`](#Global-Fitter))
+* `omit`: list of strings of space-separated bin ranges to omit
+* `rebin`: asymmetry rebinning factor for both fitting and drawing
+* `shared`: Boolean list specifiying which parameters of `fn` are shared globally
+* `xlims`: list of 2-tuples for (low, high) bounds on fitting range based on x values. If list is not depth 2, use this range on all runs
+* `asym_mode`: asymmetry type to calculate and fit, passed to [bdata](https://github.com/dfujim/bdata)
+* `fixed`: Boolean list specifiying which parameters of `fn` are fixed to their initial parameters
+* `minimizer`: One of `trf`, `dogbox`, `migrad`, or `minos` indicating which algorithm to use in minimizing chi-squared. Both `trf` and `dogbox` are implemented in [`scipy.optimize.curve_fit`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html). Both `migrad` and `minos` are implemented in the [`iminuit`](https://iminuit.readthedocs.io/en/stable/) package and call the MIGRAD algorithm, although the `minos` option will additionally call the MINOS error solving algorithm. 
+* `kwargs`: keyword arguments for [curve_fit](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html)/[minuit](https://iminuit.readthedocs.io/en/stable/).
+
+**Returns**
+
+Tuple of `(par, std_l, std_h, cov, chi, gchi)`, where
+            
+* `par`:    array of best fit parameters
+* `std_l`:  array of lower best fit errors
+* `std_h`:  array of upper best fit errors
+* `cov`:    2D array, covariance matrix
+* `chi`:    array of chisquare of each fit
+* `gchi`:   global chisquared of fits
+
 ## Minuit
