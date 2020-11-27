@@ -398,16 +398,7 @@ Calculate the chi-squared per degree of freedom for each data set, and globally.
 
 Returns `(global chi2, list of chi2)`
 
-The chi-squared calculation for asymmetric errors, and errors in x is as follows, following the procedure outlined by [ROOT](https://root.cern.ch/doc/master/classTGraph.html#aa978c8ee0162e661eae795f6f3a35589)
-
-<img src="https://render.githubusercontent.com/render/math?math=\Large \chi^2 = \sum\frac{[y-f(x)]^2}{\sigma_y^2 %2B [\frac{1}{2}(\sigma_{xlow} %2B \sigma_{xup})f'(x)]^2}"> 
-
-where 
-
-* <img src="https://render.githubusercontent.com/render/math?math=\sigma_y"> is the error in _y_, where <img src="https://render.githubusercontent.com/render/math?math=\sigma_y = \sigma_{ylow}"> if <img src="https://render.githubusercontent.com/render/math?math=f(x) < y"> and <img src="https://render.githubusercontent.com/render/math?math=\sigma_y = \sigma_{yup}"> if <img src="https://render.githubusercontent.com/render/math?math=f(x) > y">
-* <img src="https://render.githubusercontent.com/render/math?math=\sigma_{xlow}"> is the lower error in x
-* <img src="https://render.githubusercontent.com/render/math?math=\sigma_{xup}"> is the upper error in x
-
+The chi-squared calculation follows the procedure outlined in the [`minuit`](#Minuit) object, noting that both the `trf` and `dogbox` algorithms use an internal chi-squared calculation and do not account for asymmetric errors or errors in x. 
 
 **Get Parameters and Errors Function**
 
@@ -507,3 +498,45 @@ Tuple of `(par, std_l, std_h, cov, chi, gchi)`, where
 * `gchi`:   global chisquared of fits
 
 ## Minuit
+
+Conveience wrapper for the [`iminuit.Minuit`](https://iminuit.readthedocs.io/en/stable/) class, with pre-defined chi-squared.
+
+**Constructor**
+
+```python
+minuit(fn, x, y, dy=None, dx=None, dy_low=None, dx_low=None, fn_prime=None, fn_prime_dx=1e-6, name=None, start=None, error=None, limit=None, fix=None, print_level=1, **kwargs)
+```
+
+* `fn`: function handle. f(x, a, b, c, ...)
+* `x`: x data
+* `y`: y data
+* `dy`: [optional] error in y
+* `dx`: [optional] error in x
+* `dy_low`: [optional] if error in y is asymmetric. If not none, dy is upper error
+* `dx_low`: [optional] if error in y is asymmetric. If not none, dx is upper error
+* `fn_prime`: [optional] function handle for the first derivative of `fn`. f'(x, a, b, c, ...)
+* `fn_prime_dx`: Spacing in x to calculate the derivative for default calculation
+* `name`: [optional] sequence of strings. If set, use this for 
+* `start`: [optional] sequence of numbers. Required if the function takes an array as input or if it has the form `f(x, *pars)`, and name is not defined. Default: 1, broadcasted to all inputs
+* `error`: [optional] sequence of numbers. Initial step sizes. 
+* `limit`: [optional] sequence of limits that restrict the range format: `[[low, high], [low, high], ...]` in which a parameter is varied by minuit., with `None`, `inf` or `-inf` used to disable limit
+* `fix`: [optional] sequence of booleans. Default: `False`
+* `print_level`: Set the print_level
+    * 0 is quiet. 
+    * 1 prints out at the end of MIGRAD/HESSE/MINOS. 
+    * 2 prints debug messages.
+* `kwargs`: passed to `Minuit.from_array_func` and `Minuit`. To set for parameter "a" one can assign the following keywords instead of the array inputs:
+    * `a` = initial_value
+    * `error_a` = start_error
+    * `limit_a` = (low, high)
+    * `fix_a` = True
+    
+The chi-squared is caluclated to include both errors in x and asymmetric errors, following the procedure outlined by [ROOT](https://root.cern.ch/doc/master/classTGraph.html#aa978c8ee0162e661eae795f6f3a35589):
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large \chi^2 = \sum\frac{[y-f(x)]^2}{\sigma_y^2 %2B [\frac{1}{2}(\sigma_{xlow} %2B \sigma_{xup})f'(x)]^2}"> 
+
+where 
+
+* <img src="https://render.githubusercontent.com/render/math?math=\sigma_y"> is the error in _y_, where <img src="https://render.githubusercontent.com/render/math?math=\sigma_y = \sigma_{ylow}"> if <img src="https://render.githubusercontent.com/render/math?math=f(x) < y"> and <img src="https://render.githubusercontent.com/render/math?math=\sigma_y = \sigma_{yup}"> if <img src="https://render.githubusercontent.com/render/math?math=f(x) > y">
+* <img src="https://render.githubusercontent.com/render/math?math=\sigma_{xlow}"> is the lower error in x
+* <img src="https://render.githubusercontent.com/render/math?math=\sigma_{xup}"> is the upper error in x
