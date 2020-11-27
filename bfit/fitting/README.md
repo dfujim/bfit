@@ -284,6 +284,163 @@ plt.plot(t, pexp(t, 0.5, 0.5, 1))
 
 ## Global Fitter
 
+Chi-squared minimization with parameters shared across multiple data sets.
+
+**Constructor**
+
+```python
+class global_fitter(fn, x, y, dy=None, dx=None, dy_low=None, dx_low=None, shared=None, fixed=None, metadata=None, fprime_dx=1e-6)
+```
+
+* `fn`: Function handle, or list of function handles. Fit this to the data `x` and `y`
+* `x`: Independent variable
+* `y`: Dependent variable
+* `dy`: [optional] Error in `y`
+* `dx`: [optional] Error in `x`
+* `dy_low`: [optional] Used when `y` has asymmetric errors. In this case `dy` is the upper error
+* `dx_low`: [optional] Used when `x` has asymmetric errors. In this case `dx` is the upper error
+* `shared`: **[mandatory]** Boolean list specifiying which parameters of `fn` are shared globally
+* `fixed`: [optional] Boolean list specifiying which parameters of `fn` are fixed to their initial parameters
+* `metadata`: [optional] List of fixed values to pass to function. `len(metadata)` must equal the number of data sets
+* `fprime_dx`: `x` spacing for calculating centered differences derivative in `fn`
+
+Data inputs and their errors must be organized as such: 
+
+```python
+x = [[a, b, c, ...],    # data set 1
+     [d, e, f, ...],    # data set 2
+     ...
+     ]
+```
+
+Each data set is not requred to be of the same length. 
+
+**Attributes**
+
+| Attribute | Description |
+| :-- | :-- |
+| `chi` | list of chisquared values for each data set |
+| `chi_glbl` | global chisqured |
+| `cov` | fit covarince matrix with unnecessary variables stripped |
+| `cov_runwise` | fit covarince matrix run-by-run with all needed inputs |
+| `fn` | list of fitting function handles |
+| `fixed` | list of fixed variables (corresponds to input) |
+| `fprime_dx` | x spacing in calculating centered differences derivative |
+| `metadata` | array of additional inputs, fixed for each data set (`if len(shared) < len(actual inputs)`) |
+| `minuit` | `iminuit.Minuit` object for minimizing with migrad algorithm |
+| `minimizer` | One of `trf`, `dogbox`, `migrad`, or `minos` |
+| `npar` | number of parameters in input function |
+| `nsets` | number of data sets |
+| `par` | fit results with unnecessary variables stripped |
+| `par_runwise` | fit results run-by-run with all needed inputs |
+| `shared` | array of bool of `len = npar`, share parameter if true |
+| `sharing_links` | 2D array of ints, linking global inputs to function-wise inputs |
+| `std_l`, `std_u` | lower/upper errors with unnecessary variables stripped |
+| `std_l_runwise`, `std_u_runwise` | lower/upper errors run-by-run with all needed inputs |
+| `x` | input array of x data sets [array1, array2, ...] |
+| `xcat` | concatenated x data for global fitting |
+| `y` | input array of y data sets [array1, array2, ...] |
+| `ycat` | concatenated y data for global fitting |
+| `dx` | input array of x error data sets [array1, array2, ...] |
+| `dxcat` | concatenated x error data for global fitting |
+| `dy` | input array of x error data sets [array1, array2, ...] |
+| `dycat` | concatenated x error data for global fitting |
+| `dx_low` | input array of x lower error data sets [array1, array2, ...] |
+| `dxcat_low` | concatenated x lower error data for global fitting |
+| `dy_low` | input array of y lower error data sets [array1, array2, ...] |
+| `dycat_low` | concatenated y lower error data for global fitting |
+
+**Functions**
+
+```python
+def draw(mode='stack', xlabel='', ylabel='', do_legend=False, labels=None, savefig='', **errorbar_args)
+```
+
+Draw the fit
+
+* `mode`: one of `stack`, `new`, `append` (or first character for shorhand)
+* `xlabel`: string, label for the x axis
+* `do_legend`: boolean, if True, draw with legend
+* `labels`: list of strings identifying each data set in the legend
+* `savefig`: if not `''`, save the figure as this string
+* `errorbar_args`: keyword arguments to pass to `matplotlib.pyplot.errorbar`
+
+Returns list of `matplotlib.pyplot.figure` objects with drawn fits and data
+
+```python
+def fit(minimizer='migrad', **fitargs)
+```
+
+Run the fit
+
+* `minimizer`: One of `trf`, `dogbox`, `migrad`, or `minos` indicating which algorithm to use in minimizing chi-squared. Both `trf` and `dogbox` are implemented in [`scipy.optimize.curve_fit`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html). Both `migrad` and `minos` are implemented in the [`iminuit`](https://iminuit.readthedocs.io/en/stable/) package and call the MIGRAD algorithm, although the `minos` option will additionally call the MINOS error solving algorithm. 
+
+Keyword arguments
+
+* `p0`: initial parameters. May take two different shapes:
+     * `[(p1, p2, ...), ...]`: innermost tuple is initial parameters for each data set, list of tuples for all data sets (`p0.shape = (nsets, npars)`).
+     * `(p1, p2, ...)`: single tuple to set same initial parameters for all data sets, broadcasted internally to match the prior option (`p0.shape = (npars, )`).
+* `bounds`: fitting limits. May take two different shapes:
+     * `[((lower1, lower2, ...), (upper1, upper2, ...)), ...]`: similar to `p0` option 1, but use 2-tuples instead of 1-tuples (`bounds.shape = (nsets, 2, npars)`).
+     * `((lower1, lower2, ...), (upper1, upper2, ...))`: single 2-tuple to set same bounds for all data sets (`bounds.shape = (2, npars)`).
+
+Returns tuple of output arrays: `(parameters, lower errors, upper errors, covariance matrix)` with the same format as `get_par()` (below)
+
+```python
+def get_chi()
+```
+
+Calculate the chi-squared per degree of freedom for each data set, and globally. 
+
+Returns `(global chi2, list of chi2)`
+
+```python
+def get_par()
+```
+
+Get the parameters of best fit, organized data-set-wise. 
+
+Return 4-tuple of `(parameters, lower errors, upper errors, covariance matrix)` with format
+
+```python
+( [ [par1_data1, par2_data1, ...],
+    [par1_data2, par2_data2, ...], 
+    ...],
+  [ [low1_data1, low2_data1, ...], 
+    [low1_data2, low2_data2, ...], 
+    ...],
+  [ [upp1_data1, upp2_data1, ...],
+    [upp1_data2, upp2_data2, ...],
+    ...],
+  [ [cov1_data1, cov2_data1, ...], 
+    [cov1_data2, cov2_data2, ...], 
+    ...]
+)
+```
+
+**Example**
+
+```python
+import bfit
+import numpy as np
+
+x = [np.arange(10), np.arange(11)]
+y = [np.arange(10)**2, np.arange(11)**2+4]
+f = lambda x, a, b: x**a + b
+
+# fit with shared exponent
+gf = bfit.global_fitter(f, x, y, shared=[True, False])
+gf.fit(p0 = [2, 1], bounds = [[0, -np.inf], [np.inf, np.inf]])
+par, errl, erru, cov = gf.get_par()
+gchi, chi = gf.get_chi()
+gf.draw('append')
+
+# fit with fixed offset in first function only
+gf = bfit.global_fitter(f, x, y, shared=[True, False], fixed = [[False, True], [False, False]])
+gf.fit(p0 = [2, 10], bounds = [[0, 0], [np.inf, np.inf]])
+gf.draw('append')
+```
+
 ## Global Fitter for β-NMR
 
 ## Fit bdata
