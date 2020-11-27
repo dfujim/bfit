@@ -29,8 +29,8 @@ A full description of the API is [here](https://github.com/dfujim/bfit/blob/mast
 
 ### Dependencies needed pre-install
 
-* Cython: `pip3 install Cython`
-* numpy: `pip3 install numpy`
+* Cython: `pip3 install --user Cython`
+* numpy: `pip3 install --user numpy`
 * Tkinter for python3: `sudo apt-get install python3-tk` (for example), 
 * python version 3.6 or higher
 
