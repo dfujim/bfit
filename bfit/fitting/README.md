@@ -190,6 +190,42 @@ plt.plot(t, pexp(t, 0.5, 1))
 ```
 
 ## Pulsed Bi-Exponential Function
+
+Superposition of two pulsed exponentials, for convenience. 
+
+**Constructor**
+
+```python
+class pulsed_biexp(lifetime, pulse_len)
+```
+
+* `lifetime`: Nuclear lifetime of the probe. See also [lifetimes defined in bdata](https://github.com/dfujim/bdata#life)
+* `pulse_len`: Duration of the beam on pulse in seconds. See also the `get_pulse_s` function from [bdata](https://github.com/dfujim/bdata#bdata)
+
+**Call**
+```python
+def pulsed_biexp(time, lambda_s, lambdab_s, fracb, amp)
+```
+
+* `time`: Times at which to evaluate the function. Must be an `np.ndarray`.
+* `lambda_s`: SLR rate, equivalent to 1/T<sub>1</sub>
+* `lambdab_s`: SLR rate of the other component, equivalent to 1/T<sub>1</sub><sup>(b)</sup>
+* `fracb`: Fraction of the output attributed to the component with 1/T<sub>1</sub><sup>(b)</sup> 
+* `amp`: Initial asymmetry
+
+**Returns**
+
+Bi-exponential function convoluted with beam pulse, with the same shape as `time`. Equivalent to `(1-fracb)*pulsed_exp(time, lambda_s, amp) + fracb*pulsed_exp(time, lambdab_s, amp)`
+
+**Example**
+```python
+import bfit
+import matplotlib.pyplot as plt
+pexp = bfit.pulsed_biexp(1.21, 4)    # 8Li probe with 4s beam pulse
+t = np.linspace(0, 10, 500)
+plt.plot(t, pexp(t, 0.5, 1, 0.5, 1))
+```
+
 ## Pulsed Stretched Exponential Function
 ## Global Fitter
 ## Global Fitter for β-NMR
