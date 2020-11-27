@@ -28,7 +28,7 @@
 ```python
 def lorentzian(freq, peak, fwhm, amp)
 ```
-An inverted Lorentzian function (positive amplitude results in negative output) for fitting β-NMR resonances
+An inverted Lorentzian function (positive amplitude results in negative output) for fitting β-NMR resonances.
 
 **Arguments**
 * `freq`: Frequencies at which to evaluate the Lorentzian. Can be a `float` or an `np.ndarray`
@@ -40,7 +40,7 @@ An inverted Lorentzian function (positive amplitude results in negative output) 
 
 Lorentzian equation with the same shape as `freq`, according to the equation
 
-<img src="https://render.githubusercontent.com/render/math?math=L(x, x_0, \Gamma, A) = -A\frac{\left(\frac{1}{2}\Gamma\right)^2}{(x-x_0)^2%2B\left(\frac{1}{2}\Gamma\right)^2}">
+<img src="https://render.githubusercontent.com/render/math?math=\Large L(x, x_0, \Gamma, A) = -A\frac{\left(\frac{1}{2}\Gamma\right)^2}{(x-x_0)^2%2B\left(\frac{1}{2}\Gamma\right)^2}">
 
 See also [wolfram alpha](https://mathworld.wolfram.com/LorentzianFunction.html) for details.
 
@@ -66,7 +66,7 @@ The superposition of two inverted Lorentzian functions (positive amplitude resul
 
 **Returns**
 
-Superimposed Lorentzian equations with the same shape as `freq`. Equivalent to `lorentzian(freq, peak, fwhmA, ampA) + lorentzian(freq, peak, fwhmB, ampB)`
+Superimposed Lorentzian equations with the same shape as `freq`. Equivalent to `lorentzian(freq, peak, fwhmA, ampA) + lorentzian(freq, peak, fwhmB, ampB)`.
 
 **Example**
 ```python
@@ -81,8 +81,7 @@ def quadlorentzian(freq, nu_0, nu_q, eta, theta, phi,
                    fwhm0, fwhm1, fwhm2, fwhm3, I)
 ```
 
-Superposition of four Lorentzians according to 2nd order perturbation theory quadrupole splitting 
-
+Superposition of Lorentzians according to 2nd order perturbation theory quadrupole splitting of the Zeeman interaction.
 
 **Arguments**
 * `freq`: Frequencies at which to evaluate the function. Can be a `float` or an `np.ndarray`
@@ -91,18 +90,52 @@ Superposition of four Lorentzians according to 2nd order perturbation theory qua
 * `eta`: Electric field gradient asymmetry in the range [0, 1]
 * `theta`: Azimuthal angle of the principal axis system (β in notation of Euler angles in the paper)
 * `phi`: Polar angle of the principal axis system (α in notation of Euler angles in the paper)
-* `m`: Magnetic sublevel for the m -> m - 1 nuclear transition
 * `amp#`: Amplitudes of each of the peaks
 * `fwhm#`: Full width at half maximum of each of the peaks
 * `I`: Total nuclear spin
 
+The definition of the quadrupole splitting frequency in this formulation is:
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large \nu_q = \frac{3e^2Qq}{4I(2I-1)}">
+
+**Returns**
+
+Superimposed Lorentzian equations whose peak values correspond to the locations of a split Zeeman interaction by a quadrupole interaction with an electric field gradient. 
+
 Reference: [P. P. Man, "Quadrupolar Interactions", in Encyclopedia of Magnetic Resonance, edited by R. K. Harris and R. E. Wasylishen](https://doi.org/10.1002/9780470034590.emrstm0429.pub2)
         
-Note the definition of the quadrupole splitting frequency as:
-
-<img src="https://render.githubusercontent.com/render/math?math=\nu_q = \frac{3e^2Qq}{4I(2I-1)}">
+**Example**
+```python
+quadlorentzian(np.linspace(1e6,1e6+200,1000), 1e6+100, 10, 1, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2)
+```
 
 ## Gaussian Function
+
+```python
+def gaussian(freq, mean, sigma, amp)
+```
+
+Your standard Gaussian function, inverted for ease of fitting β-NMR resonances.
+
+**Arguments**
+* `freq`: Frequencies at which to evaluate the function. Can be a `float` or an `np.ndarray`
+* `mean`: Location of the peak, coincident with the average
+* `sigma`: Standard deviation of the distribution
+* `amp`: Height of the function (minimum value, given that the function is inverted)
+
+**Returns**
+
+Gaussian function according to 
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large G(x, \mu, \sigma, A) = -A \cdot \exp\left(-\frac{1}{2}\frac{(x-\mu)^2}{\sigma^2}\right)">
+
+See also [wolfram alpha](https://mathworld.wolfram.com/GaussianFunction.html) for details.
+
+**Example**
+```python
+gaussian(np.arange(100), 50, 10, 1)
+```
+
 ## Pulsed Exponential Function
 ## Pulsed Bi-Exponential Function
 ## Pulsed Stretched Exponential Function
