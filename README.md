@@ -22,7 +22,7 @@ bfit also provides the following classes and functions at the top level:
     * `bfit.global_bdata_fitter`
     * `bfit.fit_bdata`
 
-A description of these functions can be found [here](https://github.com/dfujim/bfit/blob/master/bfit/fitting/README.md). 
+A full description of the API is [here](https://github.com/dfujim/bfit/blob/master/bfit/fitting/README.md). 
 
 
 ## Setup
