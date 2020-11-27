@@ -137,6 +137,58 @@ gaussian(np.arange(100), 50, 10, 1)
 ```
 
 ## Pulsed Exponential Function
+
+Exponential convoluted with square beam pulse for fitting pulsed β-NMR spin-lattice relaxation (SLR) measurements. 
+
+**Constructor**
+
+```python
+class pulsed_exp(lifetime, pulse_len)
+```
+
+* `lifetime`: Nuclear lifetime of the probe. See also [lifetimes defined in bdata](https://github.com/dfujim/bdata#life)
+* `pulse_len`: Duration of the beam on pulse in seconds. See also the `get_pulse_s` function from [bdata](https://github.com/dfujim/bdata#bdata)
+
+**Call**
+```python
+def pulsed_exp(time, lambda_s, amp)
+```
+
+* `time`: Times at which to evaluate the function. Must be an `np.ndarray`.
+* `lambda_s`: SLR rate, equivalent to 1/T<sub>1</sub>
+* `amp`: Initial asymmetry
+
+**Returns**
+
+Exponential function convoluted with beam pulse, with the same shape as `time`. 
+
+During the pulse, the output is given by: 
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large \mathcal{P}(t) = p_0 \left(\frac{\tau'}{\tau}\right) \left(\frac{1-\exp(-t/\tau')}{1-\exp(-t/\tau)}\right)">
+
+and after the pulse the output is 
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large \mathcal{P}(t) = p_0 \left(\frac{\tau'}{\tau}\right) \left(\frac{\exp(-t/T_1)[1-\exp(-\Delta/\tau')]}{1-\exp(-\Delta/\tau)}\right)">
+
+where 
+
+* <img src="https://render.githubusercontent.com/render/math?math=p_0"> is the initial polarization at the moment of implantation,
+* <img src="https://render.githubusercontent.com/render/math?math=\tau"> is the nuclear lifetime of the probe, 
+* <img src="https://render.githubusercontent.com/render/math?math=T_1"> is the SLR relaxation time,
+* <img src="https://render.githubusercontent.com/render/math?math=1/\tau' = 1/\tau %2B 1/T_1">,
+* <img src="https://render.githubusercontent.com/render/math?math=\Delta"> is the duration of the beam on time.
+
+The above two equations together form the peicewise definition of the pulsed exponential function. 
+
+**Example**
+```python
+import bfit
+import matplotlib.pyplot as plt
+pexp = bfit.pulsed_exp(1.21, 4)    # 8Li probe with 4s beam pulse
+t = np.linspace(0, 10, 500)
+plt.plot(t, pexp(t, 0.5, 1))
+```
+
 ## Pulsed Bi-Exponential Function
 ## Pulsed Stretched Exponential Function
 ## Global Fitter
