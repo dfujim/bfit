@@ -11,7 +11,7 @@
 | [`quadlorentzian(freq, nu_0, nu_q, eta, theta, phi, amp0, amp1, amp2, amp3, fwhm0, fwhm1, fwhm2, fwhm3, I)`](#Quad-Lorentzian-Function) | Superposition of four Lorentzians according to 2nd order perturbation theory quadrupole splitting |
 | [`gaussian(freq, mean, sigma, amp)`](#Gaussian-Function) | Gaussian function with height set by `amp` |
 | [`pulsed_exp`](#Pulsed-Exponential-Function) | Exponential convoluted with square beam pulse |
-| [`pulsed_biexp`](#Pulsed-Bi-Exponential-Function) | Supeposition of two pulsed exponentials |
+| [`pulsed_biexp`](#Pulsed-Bi-Exponential-Function) | Superposition of two pulsed exponentials |
 | [`pulsed_strexp`](#Pulsed-Stretched-Exponential-Function) | Stretched exponential convoluted with square beam pulse |
       
 ### Curve Fitting 
