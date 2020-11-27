@@ -37,6 +37,7 @@ An inverted Lorentzian function (positive amplitude results in negative output) 
 * `amp`: Height of the function (minimum value, given that the function is inverted)
 
 **Returns**
+
 Lorentzian equation with the same shape as `freq`, according to the equation
 
 <img src="https://render.githubusercontent.com/render/math?math=L(x, x_0, \Gamma, A) = -A\frac{\left(\frac{1}{2}\Gamma\right)^2}{(x-x_0)^2%2B\left(\frac{1}{2}\Gamma\right)^2}">
@@ -48,8 +49,30 @@ See also [wolfram alpha](https://mathworld.wolfram.com/LorentzianFunction.html) 
 lorentzian(np.arange(100), 50, 10, 1)
 ```
 
-
 ## Bi-Lorentzian Function
+
+```python
+def bilorentzian(freq, peak, fwhmA, ampA, fwhmB, ampB)
+```
+The superposition of two inverted Lorentzian functions (positive amplitude results in negative output) for fitting β-NMR resonances with the same peak value
+
+**Arguments**
+* `freq`: Frequencies at which to evaluate the Lorentzian. Can be a `float` or an `np.ndarray`
+* `peak`: Location of the peak
+* `fwhmA`: Full width at the half-maximum of one of the Lorentzians
+* `ampA`: Height of of one of the Lorentzians
+* `fwhmB`: Full width at the half-maximum of the other Lorentzian
+* `ampB`: Height of the other Lorentzian
+
+**Returns**
+
+Superimposed Lorentzian equations with the same shape as `freq`. Equivalent to `lorentzian(freq, peak, fwhmA, ampA) + lorentzian(freq, peak, fwhmB, ampB)`
+
+**Example**
+```python
+bilorentzian(np.arange(100), 50, 10, 1, 0.1, 0.5)
+```
+
 ## Quad-Lorentzian Function
 ## Gaussian Function
 ## Pulsed Exponential Function
