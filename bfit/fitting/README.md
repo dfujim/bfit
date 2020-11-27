@@ -210,7 +210,7 @@ def pulsed_biexp(time, lambda_s, lambdab_s, fracb, amp)
 * `time`: Times at which to evaluate the function. Must be an `np.ndarray`.
 * `lambda_s`: SLR rate, equivalent to 1/T<sub>1</sub>
 * `lambdab_s`: SLR rate of the other component, equivalent to 1/T<sub>1</sub><sup>(b)</sup>
-* `fracb`: Fraction of the output attributed to the component with 1/T<sub>1</sub><sup>(b)</sup> 
+* `fracb`: Fraction of the output attributed to the component with 1/T<sub>1</sub><sup>(b)</sup>. Valid only in the range [0, 1]
 * `amp`: Initial asymmetry
 
 **Returns**
@@ -227,7 +227,65 @@ plt.plot(t, pexp(t, 0.5, 1, 0.5, 1))
 ```
 
 ## Pulsed Stretched Exponential Function
+
+Stretched exponential convoluted with square beam pulse for fitting pulsed β-NMR spin-lattice relaxation (SLR) measurements. 
+
+**Constructor**
+
+```python
+class pulsed_strexp(lifetime, pulse_len)
+```
+
+* `lifetime`: Nuclear lifetime of the probe. See also [lifetimes defined in bdata](https://github.com/dfujim/bdata#life)
+* `pulse_len`: Duration of the beam on pulse in seconds. See also the `get_pulse_s` function from [bdata](https://github.com/dfujim/bdata#bdata)
+
+**Call**
+```python
+def pulsed_strexp(time, lambda_s, beta, amp)
+```
+
+* `time`: Times at which to evaluate the function. Must be an `np.ndarray` > 0.
+* `lambda_s`: SLR rate, equivalent to 1/T<sub>1</sub>
+* `beta`: stretchin exponent
+* `amp`: Initial asymmetry
+
+**Returns**
+
+Stretched exponential function convoluted with beam pulse, with the same shape as `time`. 
+
+Unlike the [pulsed exponential](#Pulsed-Exponential-Function), no closed form solution exists for the stretched exponential. The equivalent integrals are computed numerically with a [double-exponential intergration scheme](https://www.codeproject.com/Articles/31550/Fast-Numerical-Integration):
+
+During the beam pulse: 
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large \mathcal{P}(t) = \frac{p_0}{\tau[1-\exp(-t/\tau)]} \int_0^t \exp\left[\frac{-(t-t')}{\tau}\right]p(t-t')dt'">
+
+and after the pulse:
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large \mathcal{P}(t) = \frac{p_0}{\tau\exp(-t/\tau)[\exp(-\Delta/\tau)-1]} \int_0^\Delta \exp\left[\frac{-(t-t')}{\tau}\right]p(t-t')dt'">
+
+
+where 
+
+* <img src="https://render.githubusercontent.com/render/math?math=p_0"> is the initial polarization at the moment of implantation,
+* <img src="https://render.githubusercontent.com/render/math?math=\tau"> is the nuclear lifetime of the probe, 
+* <img src="https://render.githubusercontent.com/render/math?math=t'"> is time of implantation,
+* <img src="https://render.githubusercontent.com/render/math?math=p(t-t') = \exp\left[-\left(\frac{t-t'}{T_1}\right)^\beta\right]"> is the stretched exponential function, 
+* <img src="https://render.githubusercontent.com/render/math?math=T_1"> is the SLR relaxation time,
+* <img src="https://render.githubusercontent.com/render/math?math=\Delta"> is the duration of the beam on time.
+
+**Example**
+```python
+import bfit
+import matplotlib.pyplot as plt
+pexp = bfit.pulsed_strexp(1.21, 4)    # 8Li probe with 4s beam pulse
+t = np.linspace(0, 10, 500) + 1e-9    # required t > 0
+plt.plot(t, pexp(t, 0.5, 0.5, 1))
+```
+
 ## Global Fitter
+
 ## Global Fitter for β-NMR
+
 ## Fit bdata
+
 ## Minuit
