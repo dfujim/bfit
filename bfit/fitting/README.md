@@ -24,6 +24,31 @@
 |[`minuit(fn, x, y, dy=None, dx=None, dy_low=None, dx_low=None, fn_prime=None, fn_prime_dx=1e-6, name=None, start=None, error=None, limit=None, fix=None, print_level=1, **kwargs)`](#Minuit) | iminuit wrapper with pre-defined least squares equations for ease of use |
 
 ## Lorentzian Function
+
+```python
+def lorentzian(freq, peak, fwhm, amp)
+```
+An inverted Lorentzian function (positive amplitude results in negative output) for fitting β-NMR resonances
+
+**Arguments**
+* `freq`: Frequencies at which to evaluate the Lorentzian. Can be a `float` or an `np.ndarray`
+* `peak`: Location of the peak
+* `fwhm`: Full width at the half-maximum
+* `amp`: Height of the function (minimum value, given that the function is inverted)
+
+**Returns**
+Lorentzian equation with the same shape as `freq`, according to the equation
+
+<img src="https://render.githubusercontent.com/render/math?math=L(x, x_0, \Gamma, A) = -A\frac{\left(\frac{1}{2}\Gamma\right)^2}{(x-x_0)^2%2B\left(\frac{1}{2}\Gamma\right)^2}">
+
+See also [wolfram alpha](https://mathworld.wolfram.com/LorentzianFunction.html) for details.
+
+**Example**
+```python
+lorentzian(np.arange(100), 50, 10, 1)
+```
+
+
 ## Bi-Lorentzian Function
 ## Quad-Lorentzian Function
 ## Gaussian Function
