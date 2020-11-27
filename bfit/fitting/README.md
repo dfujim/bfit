@@ -8,7 +8,7 @@
 | :-- | :-- |
 | [`lorentzian(freq, peak, fwhm, amp)`](#Lorentzian-Function) | Lorentzian function with height set by `amp` |
 | [`bilorentzian(freq, peak, fwhmA, ampA, fwhmB, ampB)`](#Bi-Lorentzian-Function) | Superposition of two Lorentzian functions, with equal peak location |
-| [`quadlorentzian(freq, nu_0, nu_q, eta, theta, phi, amp0, amp1, amp2, amp3, fwhm0, fwhm1, fwhm2, fwhm3, I)`](#Quad-Lorentzian-Function) | Superposition of four Lorentzians according to quadrupole splitting 2nd order perturbation theory |
+| [`quadlorentzian(freq, nu_0, nu_q, eta, theta, phi, amp0, amp1, amp2, amp3, fwhm0, fwhm1, fwhm2, fwhm3, I)`](#Quad-Lorentzian-Function) | Superposition of four Lorentzians according to 2nd order perturbation theory quadrupole splitting |
 | [`gaussian(freq, mean, sigma, amp)`](#Gaussian-Function) | Gaussian function with height set by `amp` |
 | [`pulsed_exp`](#Pulsed-Exponential-Function) | Exponential convoluted with square beam pulse |
 | [`pulsed_biexp`](#Pulsed-Bi-Exponential-Function) | Supeposition of two pulsed exponentials |
@@ -74,6 +74,34 @@ bilorentzian(np.arange(100), 50, 10, 1, 0.1, 0.5)
 ```
 
 ## Quad-Lorentzian Function
+
+```python
+def quadlorentzian(freq, nu_0, nu_q, eta, theta, phi, 
+                   amp0, amp1, amp2, amp3, 
+                   fwhm0, fwhm1, fwhm2, fwhm3, I)
+```
+
+Superposition of four Lorentzians according to 2nd order perturbation theory quadrupole splitting 
+
+
+**Arguments**
+* `freq`: Frequencies at which to evaluate the function. Can be a `float` or an `np.ndarray`
+* `nu_0`: Larmor frequency 
+* `nu_q`: Quadrupole splitting frequency 
+* `eta`: Electric field gradient asymmetry in the range [0, 1]
+* `theta`: Azimuthal angle of the principal axis system (β in notation of Euler angles in the paper)
+* `phi`: Polar angle of the principal axis system (α in notation of Euler angles in the paper)
+* `m`: Magnetic sublevel for the m -> m - 1 nuclear transition
+* `amp#`: Amplitudes of each of the peaks
+* `fwhm#`: Full width at half maximum of each of the peaks
+* `I`: Total nuclear spin
+
+Reference: [P. P. Man, "Quadrupolar Interactions", in Encyclopedia of Magnetic Resonance, edited by R. K. Harris and R. E. Wasylishen](https://doi.org/10.1002/9780470034590.emrstm0429.pub2)
+        
+Note the definition of the quadrupole splitting frequency as:
+
+<img src="https://render.githubusercontent.com/render/math?math=\nu_q = \frac{3e^2Qq}{4I(2I-1)}">
+
 ## Gaussian Function
 ## Pulsed Exponential Function
 ## Pulsed Bi-Exponential Function
