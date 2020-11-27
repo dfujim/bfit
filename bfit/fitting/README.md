@@ -350,7 +350,7 @@ Each data set is not requred to be of the same length.
 | `dy_low` | input array of y lower error data sets [array1, array2, ...] |
 | `dycat_low` | concatenated y lower error data for global fitting |
 
-**Functions**
+**Draw Function**
 
 ```python
 def draw(mode='stack', xlabel='', ylabel='', do_legend=False, labels=None, savefig='', **errorbar_args)
@@ -366,6 +366,8 @@ Draw the fit
 * `errorbar_args`: keyword arguments to pass to `matplotlib.pyplot.errorbar`
 
 Returns list of `matplotlib.pyplot.figure` objects with drawn fits and data
+
+**Fit Function**
 
 ```python
 def fit(minimizer='migrad', **fitargs)
@@ -386,6 +388,8 @@ Keyword arguments
 
 Returns tuple of output arrays: `(parameters, lower errors, upper errors, covariance matrix)` with the same format as `get_par()` (below)
 
+**Get Chi-Squared Function**
+
 ```python
 def get_chi()
 ```
@@ -393,6 +397,19 @@ def get_chi()
 Calculate the chi-squared per degree of freedom for each data set, and globally. 
 
 Returns `(global chi2, list of chi2)`
+
+The chi-squared calculation for asymmetric errors, and errors in x is as follows, following the procedure outlined by [ROOT](https://root.cern.ch/doc/master/classTGraph.html#aa978c8ee0162e661eae795f6f3a35589)
+
+<img src="https://render.githubusercontent.com/render/math?math=\Large \chi^2 = \sum\frac{[y-f(x)]^2}{\sigma_y^2 %2B [\frac{1}{2}(\sigma_{xlow} %2B \sigma_{xup})f'(x)]^2}"> 
+
+where 
+
+* <img src="https://render.githubusercontent.com/render/math?math=\sigma_y"> is the error in _y_, where <img src="https://render.githubusercontent.com/render/math?math=\sigma_y = \sigma_{ylow}"> if <img src="https://render.githubusercontent.com/render/math?math=f(x) < y"> and <img src="https://render.githubusercontent.com/render/math?math=\sigma_y = \sigma_{yup}"> if <img src="https://render.githubusercontent.com/render/math?math=f(x) > y">
+* <img src="https://render.githubusercontent.com/render/math?math=\sigma_{xlow}"> is the lower error in x
+* <img src="https://render.githubusercontent.com/render/math?math=\sigma_{xup}"> is the upper error in x
+
+
+**Get Parameters and Errors Function**
 
 ```python
 def get_par()
@@ -442,6 +459,22 @@ gf.draw('append')
 ```
 
 ## Global Fitter for β-NMR
+
+Uses `global_fitter` to fit β-NMR asymmetry, calculated by the [bdata object](https://github.com/dfujim/bdata).
+
+**Constructor**
+
+```python
+class global_bdata_fitter(data, fn, xlims=None, rebin=1, asym_mode='c', **kwargs)
+```
+
+* `data`: list of bdata objects
+* `fn`: Function handle, or list of function handles (same as [`global_fitter`](#Global-Fitter))
+* `xlims`: list of 2-tuples for (low, high) bounds on fitting range based on x values. If list is not depth 2, use this range on all runs
+* `rebin`: asymmetry rebinning factor for both fitting and drawing
+* `asym_mode`: asymmetry type to calculate and fit
+* `kwargs`: keyword arguments to pass to [`global_fitter`](#Global-Fitter)
+
 
 ## Fit bdata
 
