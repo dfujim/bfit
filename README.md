@@ -1,16 +1,17 @@
 # bfit
-Beta-NMR GUI for reading, drawing, fitting data. 
+
+A Python application for the analysis of β-NMR and β-NQR data taken at TRIUMF. 
 
 ## Run Instructions
 
-To run the gui, call `bfit`
+To run the graphical user interface, call `bfit` in a terminal. 
 
 bfit also provides the following classes and functions at the top level:
 
 * Functions
     * `bfit.pulsed_exp`
-    * `bfit.pulsed_strexp`
     * `bfit.pulsed_biexp`
+    * `bfit.pulsed_strexp`
     * `bfit.lorentzian` 
     * `bfit.bilorentzian`
     * `bfit.quadlorentzian`
