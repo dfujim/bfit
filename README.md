@@ -39,7 +39,7 @@ A full description of the API is [here](https://github.com/dfujim/bfit/wiki/API-
 
 `pip3 install --user bfit`
 
-### Optional seteup
+### Optional setup
 
 You may want to tell bfit where the data is stored. This is done by defining environment variables
 `BNMR_ARCHIVE` and `BNQR_ARCHIVE` (for convenience add this to your .bashrc script). The expected file format is as follows: 
