@@ -116,8 +116,7 @@ class popup_set_histograms(object):
     # ====================================================================== #
     def help(self):
         self.logger.info('Opening help')
-        p = os.path
-        webbrowser.open(p.split(p.abspath(p.realpath(__file__)))[0]+'/help.html')
+        webbrowser.open('https://github.com/dfujim/bfit/wiki/Histograms')
 
     # ====================================================================== #
     def set(self, *args):

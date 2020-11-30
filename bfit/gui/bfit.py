@@ -1480,8 +1480,7 @@ class bfit(object):
     def help(self):
         """Display help wiki"""
         self.logger.info('Opening help wiki')
-        p = os.path
-        webbrowser.open(p.split(p.abspath(p.realpath(__file__)))[0]+'/help.html')
+        webbrowser.open('https://github.com/dfujim/bfit/wiki')
     
     # ======================================================================= #
     def on_closing(self):
