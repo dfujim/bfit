@@ -8,22 +8,22 @@ To run the graphical user interface, call `bfit` in a terminal.
 
 bfit also provides the following classes and functions at the top level:
 
-* Functions
-    * `bfit.pulsed_exp`
-    * `bfit.pulsed_biexp`
-    * `bfit.pulsed_strexp`
-    * `bfit.lorentzian` 
-    * `bfit.bilorentzian`
-    * `bfit.quadlorentzian`
-    * `bfit.gaussian`
+### Functions
+* [`bfit.pulsed_exp`](https://github.com/dfujim/bfit/wiki/Pulsed-Exponential-Function)
+* [`bfit.pulsed_biexp`](https://github.com/dfujim/bfit/wiki/Pulsed-Bi-Exponential-Function)
+* [`bfit.pulsed_strexp`](https://github.com/dfujim/bfit/wiki/Pulsed-Streched-Exponential-Function)
+* [`bfit.lorentzian`](https://github.com/dfujim/bfit/wiki/Lorentzian-Function)
+* [`bfit.bilorentzian`](https://github.com/dfujim/bfit/wiki/Bi-Lorentzian-Function)
+* [`bfit.quadlorentzian`](https://github.com/dfujim/bfit/wiki/Quad-Lorentzian-Function)
+* [`bfit.gaussian`](https://github.com/dfujim/bfit/wiki/Gaussian-Function)
     
-* Minimization
-    * `bfit.minuit`
-    * `bfit.global_fitter`
-    * `bfit.global_bdata_fitter`
-    * `bfit.fit_bdata`
+### Curve Fitting
+* [`bfit.minuit`](https://github.com/dfujim/bfit/wiki/Minuit)
+* [`bfit.global_fitter`](https://github.com/dfujim/bfit/wiki/Global-Fitter)
+* [`bfit.global_bdata_fitter`](https://github.com/dfujim/bfit/wiki/Global-Fitter-for-β-NMR)
+* [`bfit.fit_bdata`](https://github.com/dfujim/bfit/wiki/Fit-bdata)
 
-A full description of the API is [here](https://github.com/dfujim/bfit/blob/master/bfit/fitting/README.md). 
+A full description of the API is [here](https://github.com/dfujim/bfit/wiki/API-Reference). 
 
 
 ## Setup
