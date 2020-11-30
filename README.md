@@ -8,22 +8,22 @@ To run the graphical user interface, call `bfit` in a terminal.
 
 bfit also provides the following classes and functions at the top level:
 
-* Functions
-    * `bfit.pulsed_exp`
-    * `bfit.pulsed_biexp`
-    * `bfit.pulsed_strexp`
-    * `bfit.lorentzian` 
-    * `bfit.bilorentzian`
-    * `bfit.quadlorentzian`
-    * `bfit.gaussian`
+### Functions
+* [`bfit.pulsed_exp`](Pulsed-Exponential-Function)
+* [`bfit.pulsed_biexp`](Pulsed-Bi-Exponential-Function)
+* [`bfit.pulsed_strexp`](Pulsed-Streched-Exponential-Function)
+* [`bfit.lorentzian`](Lorentzian-Function)
+* [`bfit.bilorentzian`](Bi-Lorentzian-Function)
+* [`bfit.quadlorentzian`](Quad-Lorentzian-Function)
+* [`bfit.gaussian`](Gaussian-Function)
     
-* Minimization
-    * `bfit.minuit`
-    * `bfit.global_fitter`
-    * `bfit.global_bdata_fitter`
-    * `bfit.fit_bdata`
+### Curve Fitting
+* [`bfit.minuit`](Minuit)
+* [`bfit.global_fitter`](Global-Fitter)
+* [`bfit.global_bdata_fitter`](Global-Fitter-for-β-NMR)
+* [`bfit.fit_bdata`](Fit-bdata)
 
-A full description of the API is [here](https://github.com/dfujim/bfit/blob/master/bfit/fitting/README.md). 
+A full description of the API is [here](https://github.com/dfujim/bfit/wiki/API-Reference). 
 
 
 ## Setup
