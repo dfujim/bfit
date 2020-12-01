@@ -2,7 +2,6 @@ import setuptools
 from distutils.core import Extension
 from Cython.Build import cythonize
 import numpy, os
-from bfit import __version__
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -19,7 +18,7 @@ ext = Extension("bfit.fitting.integrator",
 
 setuptools.setup(
     name="bfit",
-    version=__version__,
+    version="4.6.4",
     author="Derek Fujimoto",
     author_email="fujimoto@phas.ubc.ca",
     description="β-NMR and β-NQR Data Analysis",
@@ -29,8 +28,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.6",     
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Cython",
         "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
