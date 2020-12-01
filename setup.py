@@ -2,6 +2,7 @@ import setuptools
 from distutils.core import Extension
 from Cython.Build import cythonize
 import numpy, os
+import bfit
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -18,7 +19,7 @@ ext = Extension("bfit.fitting.integrator",
 
 setuptools.setup(
     name="bfit",
-    version="4.6.4",
+    version=bfit.__version__,
     author="Derek Fujimoto",
     author_email="fujimoto@phas.ubc.ca",
     description="B-NMR/B-NQR Data Fitting and Visualization",
