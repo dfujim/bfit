@@ -1971,6 +1971,9 @@ class fit_files(object):
         current_xlab = self.xaxis.get()
         current_ylab = self.yaxis.get()
         
+        # get current unit
+        unit = self.bfit.units[self.mode][1]
+        
         for fig_num in figlist:
             
             # get figure and drawn axes
@@ -1981,7 +1984,14 @@ class fit_files(object):
             yscale = ax.get_yscale()
             
             # back-translate pretty labels to originals
-            ivd = {v: k for k, v in self.fitter.pretty_param.items()}
+            ivd = {}
+            for  k, v in self.fitter.pretty_param.items():
+                try:
+                    v = v % unit
+                except TypeError:
+                    pass
+                ivd[v] = k
+                
             xlab = ivd.get(xlab, xlab)
             ylab = ivd.get(ylab, ylab)
             

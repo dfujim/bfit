@@ -1711,10 +1711,11 @@ class bfit(object):
                                         self.fit_files.fitter.valid_asym_modes]
     
         # add single counter asymetries based on mode and type
-        if 'BNMR' in area:
-            modes.extend(['Forward Counter', 'Backward Counter'])
-        if 'BNQR' in area:
-            modes.extend(['Left Counter', 'Right Counter'])
+        if mode != '2e':
+            if 'BNMR' in area:
+                modes.extend(['Forward Counter', 'Backward Counter'])
+            if 'BNQR' in area:
+                modes.extend(['Left Counter', 'Right Counter'])
             
         # selection: switch if run mode not possible
         if parent.asym_type.get() not in modes:

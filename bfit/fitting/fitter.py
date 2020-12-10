@@ -60,7 +60,6 @@ class fitter(object):
                     'amp1':             'Amplitude$_1$', 
                     'amp2':             'Amplitude$_2$', 
                     'amp3':             'Amplitude$_3$', 
-                    'fmwh':             'FWHM (%s)', 
                     'mean':             r'$\langle\nu\rangle$ (%s)', 
                     'sigma':            r'$\sigma$ (%s)', 
                     'Beta-Avg 1/<T1>':  r'$1/\langle T_1\rangle_\beta$ (s$^{-1}$)', 
