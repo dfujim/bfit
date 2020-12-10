@@ -20,7 +20,10 @@ class popup_fit_results(template_fit_popup):
         
         chi_label:      Label, chisquared output
         fittab:         notebook tab
+        par:            list, fit results
         reserved_pars:  dict, keys: x, y vals: strings of parameter names
+        
+        text:           string, model text
         
         xaxis:          StringVar, x axis drawing/fitting parameter
         yaxis:          StringVar, y axis drawing/fitting parameter
@@ -88,6 +91,10 @@ class popup_fit_results(template_fit_popup):
         self.entry_label['text'] = 'Enter a one line equation using "x"'+\
                                  ' to model y(x)'+\
                                  '\nEx: "y = a*x+b"'
+             
+        # draw button
+        button_draw = ttk.Button(self.right_frame, text='Draw', 
+                                 command=self.draw_model, pad=1)
                 
         # gridding
         modules_label.grid(column=0, row=0)
@@ -95,13 +102,17 @@ class popup_fit_results(template_fit_popup):
         self.xaxis_combobox.grid(column=1, row=1)
         self.yaxis_combobox.grid(column=1, row=2)
         
-        
         axis_frame.grid(column=0, row=0, rowspan=1, sticky=(E, W), padx=1, pady=1)
         module_frame.grid(column=0, row=1, sticky=(E, W), padx=1, pady=1)
         chi_frame.grid(column=0, row=2, sticky=(E, W), padx=1, pady=1, rowspan=2)
         
+        button_draw.grid(column=0, row=3, sticky=(E, W))
+        
     # ====================================================================== #
     def _do_fit(self, text):
+        
+        # save model text
+        self.text= text[-1]
         
         # get fit data
         xstr = self.xaxis.get()
@@ -128,49 +139,9 @@ class popup_fit_results(template_fit_popup):
         blo = list(map(float, blo))
         bhi = list(map(float, bhi))
                     
-        # get data
-        try:
-            xvals, xerrs = self.fittab.get_values(xstr)
-            yvals, yerrs = self.fittab.get_values(ystr)
-        except UnboundLocalError as err:
-            self.logger.error('Bad input parameter selection')
-            messagebox.showerror("Error", 'Select two input parameters')
-            raise err
-        except (KeyError, AttributeError) as err:
-            self.logger.error('Parameter "%s or "%s" not found for fitting', 
-                              xstr, ystr)
-            messagebox.showerror("Error", 
-                    'Parameter "%s" or "%s" not found' % (xstr, ystr))
-            raise err
-        
-        # split errors    
-        if type(xerrs) is tuple: 
-            xerrs_l = xerrs[0]
-            xerrs_h = xerrs[1]
-        else:
-            xerrs_l = xerrs
-            xerrs_h = xerrs
-        
-        if type(yerrs) is tuple: 
-            yerrs_l = yerrs[0]
-            yerrs_h = yerrs[1]
-        else:
-            yerrs_l = yerrs
-            yerrs_h = yerrs
-        
-        
-        xvals = np.asarray(xvals)
-        yvals = np.asarray(yvals)
-        xerrs_l = np.asarray(xerrs_l)
-        yerrs_l = np.asarray(yerrs_l)
-        xerrs_h = np.asarray(xerrs_h)
-        yerrs_h = np.asarray(yerrs_h)
-                        
-        # check errors 
-        if all(np.isnan(xerrs_l)): xerrs_l = None
-        if all(np.isnan(yerrs_l)): yerrs_l = None
-        if all(np.isnan(xerrs_h)): xerrs_h = None
-        if all(np.isnan(yerrs_h)): yerrs_h = None
+        # get data to fit
+        xvals, xerrs_l, xerrs_h = self._get_data(xstr)
+        yvals, yerrs_l, yerrs_h = self._get_data(ystr)
         
         # minimize
         m = minuit(model, xvals, yvals, 
@@ -182,7 +153,6 @@ class popup_fit_results(template_fit_popup):
                   print_level = 0,
                   limit = np.array([blo, bhi]).T,
                   )
-        
         
         m.migrad()
         m.hesse()
@@ -198,6 +168,7 @@ class popup_fit_results(template_fit_popup):
         
         # get results
         par = m.np_values()
+        self.par = par
         
         if npar == 1:
             std_l, std_h = m.np_merrors().T[0]
@@ -214,34 +185,69 @@ class popup_fit_results(template_fit_popup):
         self.logger.info('Fit model results: %s, Errors-: %s, Errors+: %s', 
                         str(par), str(std_l), str(std_h))
         
-        self.draw_model(xvals, yvals, (xerrs_l, xerrs_h), (yerrs_l, yerrs_h), par, text)    
+        self.bfit.plt.figure('param')
+        self.draw_data()
+        self.draw_model()    
         
         return (par, std_l, std_h)
         
+    # ====================================================================== #
+    def _get_data(self, xstr):
+        """
+            Get data and clean
+            
+            xstr: label for data to fetch
+        """
+        
+        # get data
+        try:
+            xvals, xerrs = self.fittab.get_values(xstr)
+        except UnboundLocalError as err:
+            self.logger.error('Bad input parameter')
+            messagebox.showerror("Error", 'Bad input parameter')
+            raise err
+        except (KeyError, AttributeError) as err:
+            self.logger.error('Parameter "%s not found for fitting', xstr)
+            messagebox.showerror("Error", 'Parameter "%s" not found' % xstr)
+            raise err
+        
+        # split errors    
+        if type(xerrs) is tuple: 
+            xerrs_l = xerrs[0]
+            xerrs_h = xerrs[1]
+        else:
+            xerrs_l = xerrs
+            xerrs_h = xerrs
+        
+        xvals = np.asarray(xvals)
+        xerrs_l = np.asarray(xerrs_l)
+        xerrs_h = np.asarray(xerrs_h)
+                        
+        # check errors 
+        if all(np.isnan(xerrs_l)): xerrs_l = None
+        if all(np.isnan(xerrs_h)): xerrs_h = None
+        
+        return (xvals, xerrs_l, xerrs_h)
+    
     # ======================================================================= #
-    def draw_model(self, xvals, yvals, xerrs, yerrs, par, text):
+    def draw_data(self):
         figstyle = 'param'
         
         # get draw components
         xstr = self.xaxis.get()
         ystr = self.yaxis.get()
-        
-        self.logger.info('Draw model parameters "%s" vs "%s"', ystr, xstr)
-        
-        # get fit function and label id
-        fn = self.model_fn
         id = self.fittab.par_label.get()
+        
+        self.logger.info('Draw model fit data "%s" vs "%s"', ystr, xstr)
 
-        # get mouseover annotation labels
-        mouse_label, _ = self.fittab.get_values('Unique Id')
+        # get data
+        xvals, xerrs_l, xerrs_h = self._get_data(xstr)
+        yvals, yerrs_l, yerrs_h = self._get_data(ystr)
 
         # sort by x values, check for empty arrays
         idx = np.argsort(xvals)
         xvals = np.asarray(xvals)[idx]
         yvals = np.asarray(yvals)[idx]
-        
-        xerrs_l, xerrs_h = xerrs
-        yerrs_l, yerrs_h = yerrs
         
         if xerrs_h is not None:     xerrs_h = np.asarray(xerrs_h)[idx]
         if xerrs_l is not None:     xerrs_l = np.asarray(xerrs_l)[idx]
@@ -253,23 +259,45 @@ class popup_fit_results(template_fit_popup):
         if yerrs_h is None and yerrs_l is None:     yerrs = None
         else:                                       yerrs = (yerrs_l, yerrs_h)
         
+        # get mouseover annotation labels
+        mouse_label, _ = self.fittab.get_values('Unique Id')
         mouse_label = np.asarray(mouse_label)[idx]
 
-        # draw data
-        self.fittab.plt.errorbar('param', id, xvals, yvals, 
+        #draw data
+        self.fittab.plt.errorbar(figstyle, id, xvals, yvals, 
                                  yerr=yerrs, 
                                  xerr=xerrs, 
                                  fmt='.', 
                                  annot_label=mouse_label)
 
-        # draw fit
-        fitx = np.linspace(min(xvals), max(xvals), self.fittab.n_fitx_pts)
-        f = self.fittab.plt.plot(figstyle, id+text[0], fitx, fn(fitx, *par), 
-                                 color='k', label=text[0])
+        # pretty labels
+        xstr = self.fittab.fitter.pretty_param.get(xstr, xstr)
+        ystr = self.fittab.fitter.pretty_param.get(ystr, ystr)
         
         # plot elements
         self.fittab.plt.xlabel(figstyle, xstr)
         self.fittab.plt.ylabel(figstyle, ystr)
         self.fittab.plt.tight_layout(figstyle)
+
+        raise_window()
+
+    # ======================================================================= #
+    def draw_model(self):
+        figstyle = 'param'
         
+        self.logger.info('Draw model "%s"', self.text)
+        
+        # get fit function and label id
+        fn = self.model_fn
+        id = self.fittab.par_label.get()
+        
+        # get x data
+        xstr = self.xaxis.get()
+        xvals, _, _ = self._get_data(xstr)
+        
+        # draw fit
+        fitx = np.linspace(min(xvals), max(xvals), self.fittab.n_fitx_pts)
+        f = self.fittab.plt.plot(figstyle, id+self.text, fitx, fn(fitx, *self.par), 
+                                 color='k', label=self.text)
+                
         raise_window()

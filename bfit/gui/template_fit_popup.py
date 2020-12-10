@@ -38,6 +38,7 @@ class template_fit_popup(object):
         output_text_val     dict of strings, contents of output_text
        
         reserved_pars:      dict, define values in bdata that can be accessed
+        right_frame:        Frame, for input and actions
         win:                Toplevel
     """
     
@@ -161,6 +162,7 @@ class template_fit_popup(object):
         # initialize 
         self.new_par = pd.DataFrame(columns=['name', 'p0', 'blo', 'bhi', 'res', 'err-', 'err+']) 
         self.left_frame = left_frame
+        self.right_frame = right_frame
         
         self.logger.debug('Initialization success. Starting mainloop.')
     
@@ -193,7 +195,7 @@ class template_fit_popup(object):
         
         # check for no input
         if not text:    return
-    
+        
         try:
             # do the fit
             out = self._do_fit(text)
@@ -205,7 +207,7 @@ class template_fit_popup(object):
             return 
         else:
             par, std_l, std_h  = out
-        
+    
         # display output for global parameters
         for i, j in enumerate(self.new_par.index):
             self.new_par.loc[j, 'res'] = par[i]
