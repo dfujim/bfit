@@ -461,8 +461,8 @@ class bfit(object):
                 command=self.set_units)
         
         # Settings: data directory
-        menu_settings_dir.add_command(label="B-NMR", command=self.set_bnmr_dir)
-        menu_settings_dir.add_command(label="B-NQR", command=self.set_bnqr_dir)
+        menu_settings_dir.add_command(label="β-NMR", command=self.set_bnmr_dir)
+        menu_settings_dir.add_command(label="β-NQR", command=self.set_bnqr_dir)
         
         # Settings: set label default
         self.label_default = StringVar()
