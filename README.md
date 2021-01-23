@@ -34,4 +34,5 @@ As a whole, the package should be easy to install to ease distribution.
 ## Useful links
 
 * [Install instructions](https://github.com/dfujim/bfit/wiki/Installation-and-first-startup)
+* [Example of basic usage](https://github.com/dfujim/bfit/wiki/Example-Usage)
 * [API](https://github.com/dfujim/bfit/wiki/API-Reference)
