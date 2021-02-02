@@ -137,6 +137,10 @@ class bfit(object):
                                 # normalizing alpha diffusion runs
     legend_max_draw = 8 # max number of items to draw before removing the legend
     
+    # track settings for use_nbm
+    use_nbm_settings = {'default':False,
+                        '1n':True}
+    
     # csymmetry calculation options
     asym_dict_keys = {'20':["Combined Helicity", 
                             "Split Helicity", 
@@ -417,6 +421,14 @@ class bfit(object):
         mainframe.columnconfigure(0, weight=1)
         mainframe.rowconfigure(0, weight=1)
         
+        # nbm variables
+        self.nbm_dict = {''  :BooleanVar(),
+                         '1n':BooleanVar()}
+    
+        self.nbm_dict[''].set(False)
+        self.nbm_dict['1n'].set(True)
+        
+        
         # Menu bar options ----------------------------------------------------
         root.option_add('*tearOff', FALSE)
         menubar = Menu(root)
@@ -507,8 +519,7 @@ class bfit(object):
         self.draw_ppm.set(False)
         self.draw_standardized_res = BooleanVar()
         self.draw_standardized_res.set(True)
-        self.use_nbm = BooleanVar()
-        self.use_nbm.set(False)
+        self.use_nbm = self.nbm_dict['']
         self.norm_with_param = BooleanVar()
         self.norm_with_param.set(True)
         self.draw_fit = BooleanVar()
@@ -536,7 +547,7 @@ class bfit(object):
         menu_draw.add_checkbutton(label="Draw 1f as PPM shift", \
                 variable=self.draw_ppm, selectcolor=colors.selected)
         menu_draw.add_checkbutton(label="Use NBM in asymmetry", \
-                variable=self.use_nbm, selectcolor=colors.selected)
+                variable=self.nbm_dict[''], selectcolor=colors.selected)        
         
         # Fitting minimizers
         menu_mini = Menu(menubar, title='Minimizer')
@@ -578,8 +589,7 @@ class bfit(object):
         notebook.add(fit_files_tab,  text='  Fit  ')
         
         # set drawing styles
-        notebook.bind("<<NotebookTabChanged>>", 
-            lambda event: self.set_tab_change(event.widget.index("current")))
+        notebook.bind("<<NotebookTabChanged>>", self.set_tab_change)
     
         # gridding
         notebook.grid(column=0, row=0, sticky=(N, E, W, S))
@@ -1659,6 +1669,29 @@ class bfit(object):
     def set_draw_style(self):       popup_drawstyle(wref.proxy(self))
     def set_histograms(self, *a):    popup_set_histograms(wref.proxy(self))
     def set_focus_tab(self, idn, *a): self.notebook.select(idn)
+    def set_nbm(self, mode):
+        """
+            Set the nbm variable based on the run mode
+        """
+            
+        # get new nbm BooleanVar
+        new_nbm = self.nbm_dict.get(mode, self.nbm_dict[''])
+        
+        # switch the variable
+        menu = self.menus['Draw Mode']
+        try:
+            idx = menu.index('Use NBM in asymmetry')
+        except TclError:
+            idx = menu.index('Use NBM in asymmetry (1n)')
+        
+        menu.entryconfig(idx, variable = new_nbm)
+        self.use_nbm = new_nbm
+        
+        # change the menu label
+        if mode == '1n':
+            menu.entryconfig(idx, label = 'Use NBM in asymmetry (1n)')
+        else:
+            menu.entryconfig(idx, label = 'Use NBM in asymmetry')
     def set_ppm_reference(self, *a): popup_set_ppm_reference(wref.proxy(self))
     def set_probe_species(self, *a): 
         species = self.probe_species.get()
@@ -1676,21 +1709,24 @@ class bfit(object):
     def set_style_redraw(self, x):   
         self.logger.info('Setting draw style to "redraw"')
         self.draw_style.set('redraw')
-    def set_tab_change(self, tab_id):
+    def set_tab_change(self, event):
         
-        self.logger.debug('Changing to tab %d', tab_id)
+        new_tab = event.widget.index("current")
+        
+        self.logger.debug('Changing to tab %d', new_tab)
         
         # fileviewer
-        if tab_id == 0:
-            pass
+        if new_tab == 0:
+            self.fileviewer.set_nbm()
             
         # fetch files
-        elif tab_id == 1:
-            pass
-        
+        elif new_tab == 1:
+            self.fetch_files.set_nbm()
+            
         # fit files
-        elif tab_id == 2:
+        elif new_tab == 2:
             self.fit_files.populate()
+            
     def set_thermo_channel(self, ):  
         self.fetch_files.update_data()
         self.fileviewer.get_data()

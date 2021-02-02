@@ -200,6 +200,88 @@ class fileviewer(object):
                     figstyle=figstyle)
             
     # ======================================================================= #
+    def draw_diagnostics(self):
+        """
+            Get data then draw in debug mode.
+        """
+        
+        # isssue with data fetch
+        if not self.get_data(quiet=quiet):
+            return
+        
+        # get data
+        dat = self.data
+    
+        # make figure
+        fix, (ax1, ax2, ax3, ax4) = plt.subplots(nrows=2, ncols=2)
+    
+        # get asym
+        a = data.asym(hist_select=self.bit.hist_select)
+        x = a[self.x_tag[data.mode]]
+        xlabel = self.xlabel_dict[data.mode]
+            
+        # draw 2e mode 
+        if '2e' == dat.mode:
+            pass 
+            
+        # draw TD mode
+        elif '2' in dat.mode:
+            
+            # draw combined asym -------------------------
+            tag = a.c[0]!=0 # remove zero asym
+            ax1.errorbar(x[tag], a.c[0][tag], a.c[1][tag])
+            ax1.set_xlabel(xlabel)
+            ax1.set_ylabel(self.bfit.ylabel_dict['c'])
+            
+            # draw split asym ----------------------------
+            
+            # remove zero asym
+            ap = a.p[0]
+            an = a.n[0]
+            tag_p = ap!=0
+            tag_n = an!=0
+            tag_cmb = tag_p*tag_n
+            
+            # get average
+            avg = np.mean(ap[tag_cmb]+an[tag_cmb])/2
+            
+            # draw
+            ax2.errorbar(x[tag_p], ap[tag_p], a.p[1][tag_p], label='+')
+            ax2.errorbar(x[tag_n], an[tag_n], a.n[1][tag_n], label="-")
+            ax2.axhline(avg, color='k', linestyle='--')
+            ax2.set_xlabel(xlabel)
+            ax2.set_ylabel(self.bfit.ylabel_dict['h'])
+        
+            # draw histograms  --------------------------
+            hist = data.hist
+            
+            # draw
+            keylist = ('F+', 'F-', 'B+', 'B-', 'L+', 'R+', 'L-', 'R-', 
+                         'NBMF+', 'NBMF-', 'NBMB+', 'NBMB-', 'AL0+', 'AL0-')
+            for i, h in enumerate(keylist):
+                
+                # get bins
+                try:
+                    x = np.arange(len(hist[h].data))
+                except KeyError:
+                    continue
+                
+                # check for non-empty histograms, then draw
+                if np.mean(hist[h].data) > 0:                        
+                    ax3.plot(x, hist[h].data, label=h)
+                    
+            ax3.ylabel(self.bfit.ylabel_dict['rhist'])
+            ax3.xlabel('Bin')
+        
+        # draw TI mode
+        elif '1' in dat.mode:
+            pass
+        
+        # unknown mode
+        else:
+            raise RuntimeError('Unknown mode type')
+    
+    # ======================================================================= #
     def export(self):
         """Export data as csv"""
         
@@ -278,6 +360,9 @@ class fileviewer(object):
         
         # set draw parameters
         self.bfit.set_asym_calc_mode_box(data.mode, self, data.area)
+        
+        # set nbm variable
+        self.set_nbm()
         
         # quiet mode: don't update text
         if quiet: return True
@@ -1056,6 +1141,21 @@ class fileviewer(object):
         
         return True
    
+    # ======================================================================= #
+    def set_nbm(self):
+        """
+            Set the nbm variable based on the run mode
+        """
+        
+        # check if data
+        if not hasattr(self, 'data'):
+            return
+        
+        # check run mode
+        mode = self.data.mode
+        
+        self.bfit.set_nbm(mode)
+
     # ======================================================================= #
     def set_textbox_text(self, textbox, text):
         """Set the text in a tkinter Text widget"""

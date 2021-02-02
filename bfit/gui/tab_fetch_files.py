@@ -568,6 +568,9 @@ class fetch_files(object):
             if self.data_lines[r].bdfit.mode != self.runmode:
                 self.data_lines[r].degrid()
             
+        # set nbm variable
+        self.set_nbm()
+        
         self.logger.info('Fetched runs %s', list(data.keys()))
         
     # ======================================================================= #
@@ -734,6 +737,21 @@ class fetch_files(object):
         for r in self.data_lines_old.keys():
             self.data_lines_old[r].set_label()
 
+    # ======================================================================= #
+    def set_nbm(self):
+        """
+            Set the nbm variable based on the run mode
+        """
+        
+        # check if data
+        if not hasattr(self, 'runmode'):
+            return
+        
+        # check run mode
+        mode = self.runmode
+        
+        self.bfit.set_nbm(mode)
+    
     # ======================================================================= #
     def string2run(self, string):
         """Parse string, return list of run numbers"""
