@@ -14,7 +14,7 @@ A Python application for the analysis of β-detected nuclear magnetic and quadru
 * Provide the means for quick on-line analyses during beam time. 
 * Provide a useful and flexible API for refined analyses in Python3, in conjunction with [bdata](https://github.com/dfujim/bdata). 
 * User-friendly for non-programmers. 
-* Easily maintainable. 
+* Be easily maintainable and distributable. 
 
 ### Useful links
 
