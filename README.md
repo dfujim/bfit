@@ -29,6 +29,8 @@ The intended audience is any user of the the β-NMR or β-NQR spectrometers, be 
 * Contributing: Please submit a pull request!
 * Reporting issues or seeking support: please create an [issue](https://github.com/dfujim/bfit/issues), and I will get an email with your problem. 
 
+---
+
 ## Installation
 
 ### Dependencies needed pre-install
