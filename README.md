@@ -16,20 +16,20 @@ A Python application for the analysis of β-detected nuclear magnetic and quadru
 * User-friendly for non-programmers. 
 * Easily maintainable. 
 
-## Useful links
+### Useful links
 
 * [Example of basic usage](https://github.com/dfujim/bfit/wiki/Example-Usage)
+* [Documentation](https://github.com/dfujim/bfit/wiki)
 * [API reference](https://github.com/dfujim/bfit/wiki/API-Reference)
-* [Wiki](https://github.com/dfujim/bfit/wiki)
 
-## Community Guidelines
+### Community Guidelines
 
 * Contributing: Please submit a pull request!
 * Reporting issues or seeking support: please create an [issue](https://github.com/dfujim/bfit/issues), and I will get an email with your problem. 
 
-# Installation
+## Installation
 
-## Dependencies needed pre-install
+### Dependencies needed pre-install
 
 | Package | Install Instruction |
 |:-- | :--|
@@ -38,7 +38,7 @@ NumPy | `pip3 install --user numpy` |
 | Tkinter for python3 | [Directions](https://tkdocs.com/tutorial/install.html) |
 | python version 3.6 or higher | [Directions](https://www.python.org/downloads/) |
 
-## Installation
+### Installation
 
 |  | Command |
 |:-- | :--|
@@ -47,7 +47,7 @@ Install as root | `pip install bfit` |
 
 Note that `pip` should point to the python3 version. If the above does not work try `pip3` or `python3 -m pip` instead.
 
-## Optional Setup
+### Optional Setup
 
 You may want to tell bfit where the data is stored. This is done by defining environment variables
 `BNMR_ARCHIVE` and `BNQR_ARCHIVE` (for convenience add this to your .bashrc script). The expected file format is as follows: 
@@ -63,7 +63,7 @@ In this example, you would set `BNQR_ARCHIVE=/path/bnqr/` to the directory conta
 
 If bfit cannot find the data, it will attempt to download the files from [musr.ca](http://musr.ca/mud/runSel.html) according to the defaults set in the [bdata](https://pypi.org/project/bdata/) package. 
 
-## First Startup 
+### First Startup 
 
 To launch the GUI, simply call 
 
@@ -79,7 +79,7 @@ python3 -m bfit
 
 syntax, where ``python3`` may be replaced with any python3 executable. 
 
-## Testing your installation 
+### Testing your installation 
 
 Testing bfit is most easily accomplished by comparing with a number of other independently developed codes:
 
