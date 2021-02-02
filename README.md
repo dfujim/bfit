@@ -16,6 +16,8 @@ A Python application for the analysis of β-detected nuclear magnetic and quadru
 * User-friendly for non-programmers. 
 * Be easily maintainable and distributable. 
 
+The intended audience is any user of the the β-NMR or β-NQR spectrometers, be they a new student, visiting scientist, or someone from the local group with decades of experience. 
+
 ### Useful links
 
 * [Example of basic usage](https://github.com/dfujim/bfit/wiki/Example-Usage)
