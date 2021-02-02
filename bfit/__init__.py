@@ -12,7 +12,7 @@ from pkg_resources import parse_version
 from tkinter import messagebox
 
 __all__ = ['gui','fitting','backend']
-__version__ = '4.6.4'
+__version__ = '4.6.5'
 __author__ = 'Derek Fujimoto'
 logger_name = 'bfit'
 icon_path = os.path.join(os.path.dirname(__file__),'data','icon.gif')
