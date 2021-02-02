@@ -20,9 +20,9 @@ The intended audience is any user of the the β-NMR or β-NQR spectrometers, be 
 
 ### Useful links
 
-* [Example of basic usage](https://github.com/dfujim/bfit/wiki/Example-Usage)
 * [Documentation](https://github.com/dfujim/bfit/wiki)
 * [API reference](https://github.com/dfujim/bfit/wiki/API-Reference)
+* [GUI Tutorial](https://github.com/dfujim/bfit/wiki/GUI-Tutorial)
 
 ### Community Guidelines
 
