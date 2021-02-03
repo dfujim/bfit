@@ -25,9 +25,8 @@ def lorentzian(freq, peak, fwhm, amp):
     return -amp*np.square(0.5*fwhm)/(np.square(freq-peak)+np.square(0.5*fwhm))
 
 def bilorentzian(freq, peak, fwhmA, ampA, fwhmB, ampB):
-    return -ampA*0.25*np.square(fwhmA)/(np.square(freq-peak)+np.square(0.5*fwhmA))\
-           -ampB*0.25*np.square(fwhmB)/(np.square(freq-peak)+np.square(0.5*fwhmB))
-
+    return lorentzian(freq, peak, fwhmA, ampA) + lorentzian(freq, peak, fwhmB, ampB)
+    
 def gaussian(freq, mean, sigma, amp):
     return -amp*np.exp(-np.square((freq-mean)/(sigma))/2)
 
