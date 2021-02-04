@@ -1,7 +1,7 @@
 import bfit.test.functions as fn
 import bfit.test.leastsquares as ls
 import bfit.test.minuit as mnt
-
+import bfit.test.global_fitter as gf
 
 # test functions
 # ~ fn.test_lorentzian()
@@ -22,9 +22,11 @@ import bfit.test.minuit as mnt
 # ~ ls.test_dxa_dy()
 # ~ ls.test_dxa_dya()
 
+# ~ mnt.test_start()
+# ~ mnt.test_name()
+# ~ mnt.test_error()
+# ~ mnt.test_limit()
+# ~ mnt.test_fix()
 
-mnt.test_start()
-mnt.test_name()
-mnt.test_error()
-mnt.test_limit()
-mnt.test_fix()
+gf.test_constructor()
+g = gf.test_fitting()
