@@ -8,8 +8,7 @@ from bdata import bdata
 from scipy.optimize import curve_fit
 from tqdm import tqdm
 from bfit.fitting.global_bdata_fitter import global_bdata_fitter
-from bfit.fitting.leastsquares import LeastSquares
-from iminuit import Minuit
+from bfit.fitting.minuit import minuit
 import inspect
 
 # ========================================================================== #
@@ -347,9 +346,6 @@ def _fit_single_minuit(fn, x, y, dy, fixed, do_minos=True, **kwargs):
         Fit data with minuit minimizer
     """
     
-    # make least squares function 
-    ls = LeastSquares(fn, x, y, dy)
-    
     # set up minuit inputs
     bounds = np.array(kwargs['bounds']).T
     
@@ -357,7 +353,6 @@ def _fit_single_minuit(fn, x, y, dy, fixed, do_minos=True, **kwargs):
                      'limit':bounds, 
                      'fix':fixed, 
                      'print_level':kwargs.get('print_level', 0), 
-                     'errordef':1, 
                      }
     
     name = kwargs.get('name', None)
@@ -367,28 +362,31 @@ def _fit_single_minuit(fn, x, y, dy, fixed, do_minos=True, **kwargs):
         if len(name) == len(kwargs['p0']):  kwargs_minuit['name'] = name
     else:
         kwargs_minuit['name'] = name
-
-    m = Minuit.from_array_func(ls, **kwargs_minuit)
+    
+    m = minuit(fn, x, y, dy, **kwargs_minuit)
     m.migrad()
     
     if do_minos:
         try:
             m.minos()
-            lower, upper = m.np_merrors()
+            
+            n = len(m.merrors)
+            lower = np.array([m.merrors[i].lower for i in range(n)])
+            upper = np.array([m.merrors[i].lower for i in range(n)])
         except RuntimeError as errmsg: # migrad did not converge
             print(errmsg)
-            err = m.np_errors()
+            err = m.errors
             lower, upper = (err, err)
     else:
         m.hesse()
-        err = m.np_errors()
+        err = m.errors
         lower, upper = (err, err)
     
     # get parameters
-    par = m.np_values()
+    par = m.values
     
     try:
-        cov = m.np_covariance()
+        cov = m.covariance
     except RuntimeError:
         cov = None
     

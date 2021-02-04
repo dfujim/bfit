@@ -63,6 +63,7 @@ class minuit(Minuit):
                         dx_low = dx_low, 
                         fn_prime = fn_prime, 
                         fn_prime_dx = fn_prime_dx)
+        self.ls = ls
 
         # get number of data points
         self.npts = len(x)
@@ -97,9 +98,6 @@ class minuit(Minuit):
                     if '*' in n:
                         raise RuntimeError("If array input must define name or start")
                     
-        # set errordef for least squares minimization
-        kwargs['errordef'] = 1
-        
         # set starting values, limits, fixed
         is_start = start is not None
         is_error = error is not None
@@ -130,36 +128,32 @@ class minuit(Minuit):
                         
                 else:
                     kwargs[n] = 1
-                    
-            # error
-            if is_error and 'error_'+n not in keys:
-                
-                if broadcast_error:     kwargs['error_'+n] = error
-                else:                   kwargs['error_'+n] = error[nidx]
-                    
-            # limit
-            if is_limit and 'limit_'+n not in keys:
-                
-                if broadcast_limit:     kwargs['limit_'+n] = limit
-                else:                   kwargs['limit_'+n] = limit[nidx]    
-            
-            # fix
-            if is_fix and 'fix_'+n not in keys:
-                
-                if broadcast_fix:       kwargs['fix_'+n] = fix
-                else:                   kwargs['fix_'+n] = fix[nidx]
                 
         # make minuit object
         super().__init__(ls, 
-                         use_array_call=True, 
                          name = name, 
-                         print_level = print_level, 
                          **kwargs)
+        
+        # set errors, limits, fix
+        if is_error:
+            self.errors = error
+        if is_limit:
+            self.limits = limit
+        if is_fix:
+            self.fixed = fix
+                        
+        # set errordef for least squares minimization
+        self.errordef = 1
+        
+        # set print level
+        self.print_level = print_level
+        
         
     # ====================================================================== #
     def chi2(self):
-        nfixed = sum(self.fixed.values())
-        dof = self.npts - self.narg + nfixed
+        nfixed = sum(self.fixed)
+        narg = len(self.values)
+        dof = self.npts - narg + nfixed
         
         if dof <= 0:
             return np.nan

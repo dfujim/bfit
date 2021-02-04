@@ -96,7 +96,7 @@ class LeastSquares:
         else:
             raise RuntimeError("Missing error assignment case")
      
-    def __call__(self, pars):
+    def __call__(self, *pars):
         return self.__call__(*pars)
         
     def ls_no_errors(self, *pars):

@@ -38,7 +38,7 @@ setuptools.setup(
     ],
     install_requires=['cython>=0.28', 'numpy>=1.14', 'tqdm>=4.25.0',
                       'bdata>=6.1.6', 'matplotlib>=2.2.4', 'pandas>=0.23.0',
-                      'pyyaml>=5.1', 'scipy>=1.2.0', 'iminuit>=1.5.2', 
+                      'pyyaml>=5.1', 'scipy>=1.2.0', 'iminuit>=2.3.0', 
                       'requests>=2.25.0', 'argparse>=1.4.0'],
     package_data={'': ['./data']},
     entry_points={'console_scripts':['bfit = bfit:main']},

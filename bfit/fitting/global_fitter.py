@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import os, collections
 import time
-from iminuit import Minuit
+from bfit.fitting.minuit import minuit
 from bfit.fitting.leastsquares import LeastSquares
 import warnings
 
@@ -325,15 +325,7 @@ class global_fitter(object):
     
     # ======================================================================= #
     def _do_migrad(self, master_fn, master_fnprime, do_minos, p0_first, **fitargs):
-        
-        # get least squares
-        ls = LeastSquares(master_fn, self.xcat, self.ycat, 
-                            dy = self.dycat, 
-                            dx = self.dxcat, 
-                            dy_low = self.dycat_low, 
-                            dx_low = self.dxcat_low, 
-                            fn_prime = master_fnprime)
-        
+                
         # set args
         limit = fitargs.get('bounds', None)
         if limit is not None:
@@ -342,12 +334,18 @@ class global_fitter(object):
         kwargs_minuit = {'start':p0_first, 
                          'limit':limit, 
                          'print_level':fitargs.get('print_level', 1), 
-                         'errordef':1, 
                         }
         
         # get minuit obj
-        m = Minuit.from_array_func(ls, **kwargs_minuit)
-        self.ls = ls
+        m = minuit(master_fn, self.xcat, self.ycat, 
+                            dy = self.dycat, 
+                            dx = self.dxcat, 
+                            dy_low = self.dycat_low, 
+                            dx_low = self.dxcat_low, 
+                            fn_prime = master_fnprime,
+                            **kwargs_minuit)
+
+        self.ls = m.ls
         self.minuit = m
         
         # minimize
@@ -367,19 +365,21 @@ class global_fitter(object):
             except UnicodeEncodeError:  # can't print on older machines
                 pass
                 
-            lower, upper = m.np_merrors()
+            n = len(m.merrors)
+            lower = np.array([m.merrors[i].lower for i in range(n)])
+            upper = np.array([m.merrors[i].upper for i in range(n)])
         else:
             try:
                 m.hesse()
             except UnicodeEncodeError:  # can't print on older machines
                 pass
         
-            lower = m.np_errors()
+            lower = m.errors
             upper = lower
         
         # get output
-        par = m.np_values()
-        cov = m.np_covariance()
+        par = m.values
+        cov = m.covariance
         
         return (par, lower, upper, cov)
         
@@ -734,7 +734,7 @@ class global_fitter(object):
                             dx_low = self.dxcat_low, 
                             fn_prime = self.master_fnprime)
             
-            self.chi_glbl = ls(self.par) / dof
+            self.chi_glbl = ls(*self.par) / dof
             
         # single fn chisq
         self.chi = []
@@ -766,7 +766,7 @@ class global_fitter(object):
                 warnings.warn("Zero degrees of freedom for data set %d, using len(x) as dof" % i)
                 dof = len(x)
             
-            self.chi.append(ls(np.concatenate((p, m))) / dof)
+            self.chi.append(ls(*np.concatenate((p, m))) / dof)
         
         return (self.chi_glbl, self.chi)
 

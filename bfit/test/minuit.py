@@ -37,6 +37,9 @@ def test_error():
     m = minuit(fn, x, y, error=5)
     test_perfect(m.errors['e'], 5, 'minuit errors broadcasting')
     
+    m = minuit(fn, x, y, error_e=5)
+    test_perfect(m.errors['e'], 5, 'minuit errors name single assignment')
+    
 def test_limit():
     m = minuit(fn, x, y, limit=[[0,1],[0,2],[0,3],[0,4],[0,5]])
     test_perfect(m.limits['e'][1], 5, 'minuit limits assignment')    

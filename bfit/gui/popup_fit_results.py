@@ -167,15 +167,16 @@ class popup_fit_results(template_fit_popup):
             pass
         
         # get results
-        par = m.np_values()
+        par = m.values
         self.par = par
+        n = len(m.merrors)
         
         if npar == 1:
-            std_l, std_h = m.np_merrors().T[0]
-            std_l = np.array([std_l])
-            std_h = np.array([std_h])
+            std_l = np.array([m.merrors[i].lower for i in range(n)])
+            std_h = np.array([std_l])
         else:
-            std_l, std_h = m.np_merrors()
+            std_l = np.array([m.merrors[i].lower for i in range(n)])
+            std_h = np.array([m.merrors[i].upper for i in range(n)])
             
         # chi2
         chi = m.chi2()
