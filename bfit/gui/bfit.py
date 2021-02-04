@@ -98,7 +98,7 @@ class bfit(object):
         Data Fields:
             asym_dict_keys: asym calc and draw types
             data:           dict of fitdata objects for drawing/fitting, keyed by run #
-            draw_style:     draw window types # stack, redraw, new
+            draw_style:     StringVar, draw window types # stack, redraw, new
             draw_components:list of titles for labels, options to export, draw.
             draw_fit:       BooleanVar, if true draw fits after fitting
             draw_ppm:       BoolVar for drawing as ppm shift
@@ -311,7 +311,7 @@ class bfit(object):
             testfn: if not none, expect a function handle with input self to run
                     automate setting parameters, button pushes, etc for rapid 
                     testing
-            commandline:    if True, don't draw gui and leave user in interactive mode
+            commandline:    if True leave user in interactive mode with no mainloop running
         """
         # logging
         self.logger = logging.getLogger(logger_name)
@@ -623,7 +623,6 @@ class bfit(object):
         if commandline:
             root.update_idletasks()
             root.update()
-            self.on_closing()
         else:
             self.root.mainloop()
     
