@@ -5,7 +5,7 @@ from .fitting.global_bdata_fitter import global_bdata_fitter
 from .fitting.fit_bdata import fit_bdata
 from .fitting.minuit import minuit
 
-import logging, os, sys, argparse, subprocess, requests, json
+import logging, os, sys, argparse, subprocess, requests, json, code
 from logging.handlers import RotatingFileHandler
 from textwrap import dedent
 from pkg_resources import parse_version 
@@ -48,6 +48,13 @@ def main():
     parser.add_argument("-d", "--debug", 
                         help='Run in debug mode', 
                         dest='debug', 
+                        action='store_true', 
+                        default=False)
+    
+    # no gui mode
+    parser.add_argument("-c", "--commandline", 
+                        help='Run in command line mode', 
+                        dest='commandline', 
                         action='store_true', 
                         default=False)
 
@@ -111,7 +118,10 @@ def main():
         pass
     
     # start bfit --------------------------------------------------------------
-    bfit(testfn)
+    b = bfit(testfn, args.commandline)
+    if args.commandline:
+        code.interact(local=locals())
+        print('bfit object set to variable "b"')
     
 
     

@@ -306,11 +306,12 @@ class bfit(object):
         bnqr_data_dir = os.getcwd()
         
     # ======================================================================= #
-    def __init__(self, testfn=None):
+    def __init__(self, testfn=None, commandline=False):
         """
             testfn: if not none, expect a function handle with input self to run
                     automate setting parameters, button pushes, etc for rapid 
                     testing
+            commandline:    if True, don't draw gui and leave user in interactive mode
         """
         # logging
         self.logger = logging.getLogger(logger_name)
@@ -617,9 +618,14 @@ class bfit(object):
         
         # logging 
         self.logger.debug('Initialization success. Starting mainloop.')
-    
+        
         # runloop
-        self.root.mainloop()
+        if commandline:
+            root.update_idletasks()
+            root.update()
+            self.on_closing()
+        else:
+            self.root.mainloop()
     
     # ======================================================================= #
     def __del__(self):
