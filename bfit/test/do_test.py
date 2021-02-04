@@ -1,9 +1,7 @@
-import bfit.test.functions as fn
-import bfit.test.leastsquares as ls
-import bfit.test.minuit as mnt
-import bfit.test.global_fitter as gf
+import sys
 
-# test functions
+# functions
+# ~ import bfit.test.functions as fn
 # ~ fn.test_lorentzian()
 # ~ fn.test_bilorentzian()
 # ~ fn.test_gaussian()
@@ -11,7 +9,8 @@ import bfit.test.global_fitter as gf
 # ~ fn.test_pulsed_exp()
 # ~ fn.test_pulsed_strexp()
 
-# test least squares
+# least squares
+# ~ import bfit.test.leastsquares as ls
 # ~ ls.test_no_errors()
 # ~ ls.test_dy()
 # ~ ls.test_dx()
@@ -22,11 +21,38 @@ import bfit.test.global_fitter as gf
 # ~ ls.test_dxa_dy()
 # ~ ls.test_dxa_dya()
 
+# minuit
+# ~ import bfit.test.minuit as mnt
 # ~ mnt.test_start()
 # ~ mnt.test_name()
 # ~ mnt.test_error()
 # ~ mnt.test_limit()
 # ~ mnt.test_fix()
 
-gf.test_constructor()
-gf.test_fitting()
+# global fitting
+# ~ import bfit.test.global_fitter as gf
+# ~ gf.test_constructor()
+# ~ gf.test_fitting()
+
+# inspect tab
+import bfit.test.tab_fileviewer as tfview
+tfview.test_fetch(40123, 2020, '20')
+tfview.test_fetch(40033, 2020, '1f')
+tfview.test_fetch(40037, 2020, '1w')
+tfview.test_fetch(40011, 2020, '1n')
+tfview.test_fetch(45539, 2019, '2h')
+tfview.test_fetch(40326, 2019, '2e')
+tfview.test_draw(40123, 2020, '20')
+tfview.test_draw(40033, 2020, '1f')
+tfview.test_draw(40037, 2020, '1w')
+tfview.test_draw(40011, 2020, '1n')
+tfview.test_draw(45539, 2019, '2h')
+tfview.test_draw(40326, 2019, '2e')
+tfview.test_autocomplete()
+bfit.do_close_all()
+
+# calculator nmr rf attenuation
+# ~ import bfit.test.calculator_nmr_atten as calc_nmr_atten
+# ~ calc_nmr_atten.test_calc()
+
+
