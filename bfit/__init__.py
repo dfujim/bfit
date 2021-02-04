@@ -11,7 +11,7 @@ from textwrap import dedent
 from pkg_resources import parse_version 
 from tkinter import messagebox
 
-__all__ = ['gui','fitting','backend']
+__all__ = ['gui','fitting','backend','test']
 __version__ = '4.6.5'
 __author__ = 'Derek Fujimoto'
 logger_name = 'bfit'
