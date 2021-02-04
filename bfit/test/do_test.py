@@ -29,4 +29,4 @@ import bfit.test.global_fitter as gf
 # ~ mnt.test_fix()
 
 gf.test_constructor()
-g = gf.test_fitting()
+gf.test_fitting()

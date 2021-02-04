@@ -129,5 +129,3 @@ def test_fitting():
         raise AssertionError('Failed: global fitter chisquared calculation error')
     else:
         print('Success: Tested global fitter chisquared calculation to run without error')
-        
-    return gf
