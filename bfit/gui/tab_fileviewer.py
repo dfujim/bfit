@@ -200,7 +200,7 @@ class fileviewer(object):
                     figstyle=figstyle)
             
     # ======================================================================= #
-    def draw_diagnostics(self):
+    def draw_diagnostics(self): #incomplete
         """
             Get data then draw in debug mode.
         """
