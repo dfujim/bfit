@@ -26,7 +26,7 @@ class minuit(Minuit):
             dx_low:         Optional, if error in y is asymmetric. If not none, dx is upper error
             fn_prime:       Optional, function handle for the first derivative of fn. f'(x, a, b, c, ...)
             fn_prime_dx:    Spacing in x to calculate the derivative for default calculation
-            name:           Optional sequence of strings. If set, use this for 
+            name:           Optional sequence of strings. If set, use this for setting parameter names
             start:          Optional sequence of numbers. Required if the 
                                 function takes an array as input or if it has 
                                 the form f(x, *pars), and name is not defined. 
@@ -85,7 +85,7 @@ class minuit(Minuit):
                 # if they don't match assume array input to function
                 try:
                     if len(start) != len(name):
-                        name = ['x%d' for d in range(len(start))]
+                        name = ['x%d'%d for d in range(len(start))]
                 
                 # start is a scalar to be broadcasted
                 except TypeError:
