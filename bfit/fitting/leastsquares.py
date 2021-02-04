@@ -22,8 +22,8 @@ class LeastSquares:
             fn_prime_dx:    spacing in x to calculate the derivative in the case of the default calculation
         """
         self.fn = fn
-        self.x = x
-        self.y = y
+        self.x = np.asarray(x)
+        self.y = np.asarray(y)
         self.n = len(x)
         
         # set derivative
@@ -38,12 +38,12 @@ class LeastSquares:
         has_dy = False
         if dy is not None:
             has_dy = True
-            self.dy = dy
+            self.dy = np.asarray(dy)
         
         has_dx = False    
         if dx is not None:
             has_dx = True
-            self.dx = dx
+            self.dx = np.asarray(dx)
         
         # asymmetric errors
         has_dy_asym = False
@@ -54,16 +54,16 @@ class LeastSquares:
                 self.dy = dy_low
             else:
                 has_dy_asym = True
-                self.dy_low = dy_low
+                self.dy_low = np.asarray(dy_low)
         
         has_dx_asym = False
         if dx_low is not None:
             if dx is None:
                 has_dx = True
-                self.dx = dx_low
+                self.dx = np.asarray(dx_low)
             else:
                 has_dx_asym = True
-                self.dx_low = dx_low
+                self.dx_low = np.asarray(dx_low)
         
         # set least squares function
         if not any((has_dy, has_dx)):
@@ -132,7 +132,6 @@ class LeastSquares:
     def ls_dxa(self, *pars):
         fprime = self.fn_prime(self.x, *pars)
         dx = 0.5*(self.dx+self.dx_low)
-        
         num = np.square(self.y - self.fn(self.x, *pars))
         den = np.square(dx*fprime)
         return np.sum(num/den)        
