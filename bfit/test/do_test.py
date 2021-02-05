@@ -35,7 +35,7 @@ import sys
 # ~ gf.test_fitting()
 
 # inspect tab
-# ~ import bfit.test.tab_fileviewer as tfview
+import bfit.test.tab_fileviewer as tfview
 # ~ tfview.test_fetch(40123, 2020, '20')
 # ~ tfview.test_fetch(40033, 2020, '1f')
 # ~ tfview.test_fetch(40037, 2020, '1w')
@@ -49,18 +49,19 @@ import sys
 # ~ tfview.test_draw(45539, 2019, '2h')
 # ~ tfview.test_draw(40326, 2019, '2e')
 # ~ tfview.test_autocomplete()
+tfview.test_draw_mode()
 # ~ bfit.do_close_all()
 
 # calculator nmr rf attenuation
-import bfit.test.calculator_nmr_atten as calc_nmr_atten
-calc_nmr_atten.test_calc()
+# ~ import bfit.test.calculator_nmr_atten as calc_nmr_atten
+# ~ calc_nmr_atten.test_calc()
 
 # calculator nmr B1
-import bfit.test.calculator_nmr_B1 as calc_nmr_b1
-calc_nmr_b1.test_calc()
+# ~ import bfit.test.calculator_nmr_B1 as calc_nmr_b1
+# ~ calc_nmr_b1.test_calc()
 
 # calculator nqr B0
-import bfit.test.calculator_nqr_B0 as calc_nqr_b0
-calc_nqr_b0.test_calc()
+# ~ import bfit.test.calculator_nqr_B0 as calc_nqr_b0
+# ~ calc_nqr_b0.test_calc()
 
 

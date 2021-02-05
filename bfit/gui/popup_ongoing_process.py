@@ -1,4 +1,4 @@
-# Window popup for an ongiong process
+# Window popup for an ongoing process
 # Derek Fujimoto
 # Nov 2020
 
