@@ -35,7 +35,7 @@ import sys
 # ~ gf.test_fitting()
 
 # inspect tab
-import bfit.test.tab_fileviewer as tfview
+# ~ import bfit.test.tab_fileviewer as tfview
 # ~ tfview.test_fetch(40123, 2020, '20')
 # ~ tfview.test_fetch(40033, 2020, '1f')
 # ~ tfview.test_fetch(40037, 2020, '1w')
@@ -49,8 +49,15 @@ import bfit.test.tab_fileviewer as tfview
 # ~ tfview.test_draw(45539, 2019, '2h')
 # ~ tfview.test_draw(40326, 2019, '2e')
 # ~ tfview.test_autocomplete()
-tfview.test_draw_mode()
+# ~ tfview.test_draw_mode()
 # ~ bfit.do_close_all()
+
+# fetch tab
+import bfit.test.tab_fetch_files as tfetch
+# ~ tfetch.test_fetch()
+# ~ tfetch.test_remove()
+tfetch.test_checkbox()
+# ~ tfetch.test_draw()
 
 # calculator nmr rf attenuation
 # ~ import bfit.test.calculator_nmr_atten as calc_nmr_atten
