@@ -24,7 +24,7 @@ class calculator_nmr_atten(object):
                                 'nmr_antenna_data.csv')
     
     # ======================================================================= #
-    def __init__(self):
+    def __init__(self, commandline=False):
         """Draw window for Iain's calculator"""
         
         # get logger
@@ -126,7 +126,12 @@ class calculator_nmr_atten(object):
         
         # runloop
         self.logger.debug('Initialization success. Starting mainloop.')
-        root.mainloop()
+        
+        if commandline:
+            root.update()
+            root.update_idletasks()
+        else:
+            root.mainloop()
         
     # ======================================================================= #
     def calculate(self, *args):

@@ -14,7 +14,7 @@ from bfit import logger_name
 class calculator_nqr_B0(object):
     
     # ======================================================================= #
-    def __init__(self):
+    def __init__(self, commandline=False):
         """Draw window for Zaher's calculator"""
         
         # get logger
@@ -79,9 +79,13 @@ class calculator_nqr_B0(object):
         self.entry_field.bind('<KeyRelease>', self.calculate)
         
         # runloop
-        self.logger.debug('Initialization success. Starting mainloop.')
-        root.mainloop()
-        
+        if commandline: 
+            root.update()
+            root.update_idletasks()
+        else:
+            self.logger.debug('Initialization success. Starting mainloop.')
+            root.mainloop()
+            
     # ======================================================================= #
     def calculate(self, *args):
         
@@ -111,6 +115,8 @@ class calculator_nqr_B0(object):
                 self.field.set('debug')
             
 # ======================================================================= #
-def current2field(current):    return current*2.2131+0.175
-def field2current(field):      return (field-0.175)/2.2131
+# ~ def current2field(current):    return current*2.2131+0.175
+def current2field(current):    return current*2.21309+0.17476
+# ~ def field2current(field):      return (field-0.175)/2.2131
+def field2current(field):      return (field-0.17476)/2.21309
 

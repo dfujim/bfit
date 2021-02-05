@@ -14,7 +14,7 @@ import bfit
 class calculator_nmr_B1(object):
     
     # ======================================================================= #
-    def __init__(self):
+    def __init__(self, commandline=False):
         """Draw window for calculating needed Vpp from desired H1 magnetic field."""
         
         # get logger
@@ -97,8 +97,12 @@ class calculator_nmr_B1(object):
         self.entry_voltage.bind('<KeyRelease>', self.calculate)
         
         # mainloop
-        self.logger.debug('Initialization success. Starting mainloop.')
-        root.mainloop()
+        if commandline:
+            root.update()
+            root.update_idletasks()
+        else:
+            self.logger.debug('Initialization success. Starting mainloop.')
+            root.mainloop()
         
     # ======================================================================= #
     def calculate(self, *args):
