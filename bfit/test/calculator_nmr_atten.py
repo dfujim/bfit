@@ -13,20 +13,20 @@ def test_calc():
     calc.power.set('100')
     calc.entry_power.focus_set()
     calc.calculate()
-    test(float(calc.dac.get()), 0, "calculator nmr atten set power 100%")
+    test(float(calc.dac.get()), 0, "calculator nmr atten set power = 100%")
     
     calc.power.set('0')
     calc.entry_power.focus_set()
     calc.calculate()
-    test(float(calc.dac.get()), 2047, "calculator nmr atten set power 0%")
+    test(float(calc.dac.get()), 2047, "calculator nmr atten set power = 0%")
     
     # dac
     calc.dac.set('0')
     calc.entry_dac.focus_set()
     calc.calculate()
-    test(float(calc.power.get()), 100, "calculator nmr atten set dac 0")
+    test(float(calc.power.get()), 100, "calculator nmr atten set dac = 0")
     
     calc.dac.set('2047')
     calc.entry_dac.focus_set()
     calc.calculate()
-    test(float(calc.power.get()), 0, "calculator nmr atten set dac 2047")
+    test(float(calc.power.get()), 0, "calculator nmr atten set dac = 2047")
