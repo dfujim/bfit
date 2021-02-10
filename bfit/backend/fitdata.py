@@ -23,29 +23,29 @@ class fitdata(object):
         
         Data Fields:
             
-            bfit:       pointer to top level parent object (bfit)
             bd:         bdata object for data and asymmetry (bdata)
-            chi:        chisquared from fit (float)
-            run:        run number (int)
-            year:       run year (int)
-            label:      label for drawing (StringVar)
-            field:      magnetic field in T (float)
-            field_std:  magnetic field standard deviation in T (float)
+            bfit:       pointer to top level parent object (bfit)
             bias:       platform bias in kV (float)
             bias_std:   platform bias in kV (float)
-            
-            id:         key for unique idenfication (str)    
-            fitfnname:  function (str)
+            check_state:(BooleanVar)  
+            chi:        chisquared from fit (float)
+            deadtime:   deadtime value
+            drawarg:    drawing arguments for errorbars (dict)
+            field:      magnetic field in T (float)
+            field_std:  magnetic field standard deviation in T (float)
             fitfn:      function (function pointer)
+            fitfnname:  function (str)
             fitpar:     initial parameters {column:{parname:float}} and results
                         Columns are fit_files.fitinputtab.collist
-            parnames:   parameter names in the order needed by the fit function
-            
-            drawarg:    drawing arguments for errorbars (dict)
-            rebin:      rebin factor (IntVar)
+            id:         key for unique idenfication (str)    
+            label:      label for drawing (StringVar)
             mode:       run mode (str)
             omit:       omit bins, 1f only (StringVar)
-            check_state:(BooleanVar)    
+            parnames:   parameter names in the order needed by the fit function
+            rebin:      rebin factor (IntVar)
+            run:        run number (int)
+            year:       run year (int)
+              
     """
      
     # ======================================================================= #
@@ -90,7 +90,15 @@ class fitdata(object):
             return getattr(self.bd, name)
 
     # ======================================================================= #
-    def asym(self, *args, **kwargs):  return self.bd.asym(*args, **kwargs)
+    def asym(self, *args, **kwargs):
+        
+        # common deadtime
+        if '1' in self.mode:
+            return self.bd.asym(*args, deadtime=self.bfit.deadtime_1f, **kwargs)
+            
+        # individual deadtimes
+        else:            
+            return self.bd.asym(*args, deadtime=self.deadtime, **kwargs)
 
     # ======================================================================= #
     def get_temperature(self, channel='A'):
@@ -170,6 +178,12 @@ class fitdata(object):
         except AttributeError:
             self.logger.exception('Bias not found')
             self.bias = np.nan
+            
+        # deadtime
+        if self.mode in ('20', '2h'):
+            self.deadtime = self.bd.get_deadtime()
+        else:
+            self.deadtime = 0
 
     # ======================================================================= #
     def set_fitpar(self, values):
