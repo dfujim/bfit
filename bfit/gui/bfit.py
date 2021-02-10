@@ -38,6 +38,7 @@ from bfit.gui.calculator_nqr_B0 import calculator_nqr_B0
 from bfit.gui.calculator_nmr_B1 import calculator_nmr_B1
 from bfit.gui.calculator_nmr_atten import calculator_nmr_atten
 from bfit.gui.popup_drawstyle import popup_drawstyle
+from bfit.gui.popup_deadtime import popup_deadtime
 from bfit.gui.popup_redraw_period import popup_redraw_period
 from bfit.gui.popup_terminal import popup_terminal
 from bfit.gui.popup_units import popup_units
@@ -136,6 +137,7 @@ class bfit(object):
     norm_alph_diff_time = 0.1   # number of seconds to take average over when 
                                 # normalizing alpha diffusion runs
     legend_max_draw = 8 # max number of items to draw before removing the legend
+    deadtime = 0        # deadtime in s, for counter corrections in 1f/1w/1n modes
     
     # track settings for use_nbm
     use_nbm_settings = {'default':False,
@@ -457,6 +459,8 @@ class bfit(object):
         
         # Settings cascade commands
         menu_settings.add_cascade(menu=menu_settings_dir, label='Data directory')
+        menu_settings.add_command(label='Deadtime correction', 
+                command=self.set_deadtime)
         menu_settings.add_command(label='Drawing style', 
                 command=self.set_draw_style)
         menu_settings.add_command(label='Histograms', 
@@ -1671,7 +1675,8 @@ class bfit(object):
         state = self.fetch_files.check_state.get()
         self.fetch_files.check_state.set(not state)
         self.fetch_files.check_all()
-    def set_draw_style(self):       popup_drawstyle(wref.proxy(self))
+    def set_deadtime(self):          popup_deadtime(wref.proxy(self))
+    def set_draw_style(self):        popup_drawstyle(wref.proxy(self))
     def set_histograms(self, *a):    popup_set_histograms(wref.proxy(self))
     def set_focus_tab(self, idn, *a): self.notebook.select(idn)
     def set_nbm(self, mode):
