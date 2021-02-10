@@ -551,7 +551,13 @@ class fileviewer(object):
                 key_order_sw.append('RF Amplifier Gain')
             except AttributeError:
                 pass    
-                
+        
+        # deadtime
+        if "SLR" in mode:
+            key_order_sw.append('')
+            data_sw['Deadtime'] = "%.3g s" % data.deadtime            
+            key_order_sw.append('Deadtime')
+        
         # SE -----------------------------------------------------------------
         data_se = {'':''}
         key_order_se = []
@@ -1131,8 +1137,10 @@ class fileviewer(object):
         def set_str(data_dict, key_order, txtbox):
         
             m = max(max(map(len, list(data_dict.keys()))) + 1, 5)
-            s = '\n'.join([k.rjust(m)+': ' + data_dict[k] for k in key_order])
-            self.set_textbox_text(txtbox, s)
+            lines = [k.rjust(m)+':   ' + data_dict[k] for k in key_order]
+            lines = [l if l.strip() != ':' else '' for l in lines]
+            
+            self.set_textbox_text(txtbox, '\n'.join(lines))
         
         set_str(data_nw, key_order_nw, self.text_nw)
         set_str(data_ne, key_order_ne, self.text_ne)
