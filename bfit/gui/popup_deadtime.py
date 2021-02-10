@@ -23,7 +23,7 @@ class popup_deadtime(object):
         
          # make a new window
         self.win = Toplevel(bfit.mainframe)
-        self.win.title('Set deadtime for TI mode')
+        self.win.title('Set deadtime')
         frame = ttk.Frame(self.win, relief='sunken', pad=5)
         
         # icon
@@ -33,26 +33,33 @@ class popup_deadtime(object):
         self.win.bind('<Return>', self.set)        
         self.win.bind('<KP_Enter>', self.set)
         
-        # explanation
-        expl_text = "The deadtime may only be calculated from SLR runs, "+\
-            "however, if you are reasonably certain of its value, the same "+\
-            "correction may be applied to resonance measurements as well. This "+\
-            "setting fixes the deadtime correction value for all 1f, 1w, and 1n "+\
-            "runs"
+        # TD mode input ------------------------------------------------------
+        frame_entry_slr = ttk.Frame(frame, pad=5)
         
-        expl_text = '\n'.join(textwrap.wrap(expl_text, 50))
+        check_slr = ttk.Checkbutton(frame_entry_slr, 
+                text='Calculate and apply deadtime correction for each 20/2h run', 
+                variable=self.bfit.deadtime_slr, onvalue=True, offvalue=False, 
+                pad=5)
         
-        ttk.Label(frame, text=expl_text, pad=5, justify=CENTER).grid(column=0, row=0)
+        # grid
+        check_slr.grid(column=0, row=0)
         
-        # deadtime entry 
-        frame_entry = ttk.Frame(frame, pad=5)
+        # TI mode input ------------------------------------------------------
+        frame_entry_1f = ttk.Frame(frame, pad=5)
+        label_1 = ttk.Label(frame_entry_1f, text="Apply a deadtime correction of ", 
+                            pad=5, justify=LEFT)
+        label_2 = ttk.Label(frame_entry_1f, text="(s) to 1f/1w/1n runs", pad=5, 
+                            justify=LEFT)
         
         self.dt_var = StringVar()
-        self.dt_var.set(str(self.bfit.deadtime))
-        dt_entry = Entry(frame_entry, textvariable=self.dt_var, width=15, justify=CENTER)
+        self.dt_var.set(str(self.bfit.deadtime_1f))
+        dt_entry = Entry(frame_entry_1f, textvariable=self.dt_var, width=15,        
+                         justify=CENTER)
         
-        ttk.Label(frame_entry, text='1f/1w/1n Deadtime (s): ', pad=5, justify=LEFT).grid(column=0, row=0)
+        # grid the input
+        label_1.grid(column=0, row=0)
         dt_entry.grid(column=1, row=0)
+        label_2.grid(column=2, row=0)
         
         # add buttons
         frame_buttons = ttk.Frame(frame, pad=5)
@@ -62,18 +69,19 @@ class popup_deadtime(object):
         set_button.grid(column=0, row=0, padx=2)
         close_button.grid(column=1, row=0, padx=2)
             
-        # grid frame
+        # grid frames --------------------------------------------------------
         frame.grid(column=0, row=0)
-        frame_entry.grid(column=0, row=1)
-        frame_buttons.grid(column=0, row=2)
+        frame_entry_slr.grid(column=0, row=1, sticky=W)
+        frame_entry_1f.grid(column=0, row=2, sticky=W)
+        frame_buttons.grid(column=0, row=3)
         self.logger.debug('Initialization success. Starting mainloop.')
         
     # ====================================================================== #
     def set(self, *args):
         """Set entered values"""
        
-        self.bfit.deadtime = float(self.dt_var.get())
-        self.logger.info('Setting 1f/1w/1n deadtime to %g', self.bfit.deadtime)
+        self.bfit.deadtime_1f = float(self.dt_var.get())
+        self.logger.info('Setting 1f/1w/1n deadtime to %g', self.bfit.deadtime_1f)
         self.win.destroy()
         
     # ====================================================================== #

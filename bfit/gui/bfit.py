@@ -137,7 +137,7 @@ class bfit(object):
     norm_alph_diff_time = 0.1   # number of seconds to take average over when 
                                 # normalizing alpha diffusion runs
     legend_max_draw = 8 # max number of items to draw before removing the legend
-    deadtime = 0        # deadtime in s, for counter corrections in 1f/1w/1n modes
+    deadtime_1f = 0        # deadtime in s, for counter corrections in 1f/1w/1n modes
     
     # track settings for use_nbm
     use_nbm_settings = {'default':False,
@@ -431,6 +431,9 @@ class bfit(object):
         self.nbm_dict[''].set(False)
         self.nbm_dict['1n'].set(True)
         
+        # deadtime slr
+        self.deadtime_slr = BooleanVar()
+        self.deadtime_slr.set(False)
         
         # Menu bar options ----------------------------------------------------
         root.option_add('*tearOff', FALSE)
@@ -551,8 +554,12 @@ class bfit(object):
                 variable=self.draw_standardized_res, selectcolor=colors.selected)
         menu_draw.add_checkbutton(label="Draw 1f as PPM shift", \
                 variable=self.draw_ppm, selectcolor=colors.selected)
+        
+        menu_draw.add_separator()
         menu_draw.add_checkbutton(label="Use NBM in asymmetry", \
                 variable=self.nbm_dict[''], selectcolor=colors.selected)        
+        menu_draw.add_checkbutton(label="Use SLR deadtime correction", \
+                variable=self.deadtime_slr, selectcolor=colors.selected)        
         
         # Fitting minimizers
         menu_mini = Menu(menubar, title='Minimizer')
