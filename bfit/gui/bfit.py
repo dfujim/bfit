@@ -99,6 +99,7 @@ class bfit(object):
         Data Fields:
             asym_dict_keys: asym calc and draw types
             data:           dict of fitdata objects for drawing/fitting, keyed by run #
+            deadtime_switch:BooleanVar, if true, use deadtime correction
             draw_style:     StringVar, draw window types # stack, redraw, new
             draw_components:list of titles for labels, options to export, draw.
             draw_fit:       BooleanVar, if true draw fits after fitting
@@ -137,7 +138,7 @@ class bfit(object):
     norm_alph_diff_time = 0.1   # number of seconds to take average over when 
                                 # normalizing alpha diffusion runs
     legend_max_draw = 8 # max number of items to draw before removing the legend
-    deadtime_1f = 0        # deadtime in s, for counter corrections in 1f/1w/1n modes
+    deadtime = 0        # deadtime in s
     
     # track settings for use_nbm
     use_nbm_settings = {'default':False,
@@ -431,10 +432,6 @@ class bfit(object):
         self.nbm_dict[''].set(False)
         self.nbm_dict['1n'].set(True)
         
-        # deadtime slr
-        self.deadtime_slr = BooleanVar()
-        self.deadtime_slr.set(False)
-        
         # Menu bar options ----------------------------------------------------
         root.option_add('*tearOff', FALSE)
         menubar = Menu(root)
@@ -532,6 +529,8 @@ class bfit(object):
         self.norm_with_param.set(True)
         self.draw_fit = BooleanVar()
         self.draw_fit.set(True)
+        self.deadtime_switch = BooleanVar()
+        self.deadtime_switch.set(False)
         
         menu_draw = Menu(menubar, title='Draw Mode')
         menubar.add_cascade(menu=menu_draw, label='Draw Mode')
@@ -558,8 +557,8 @@ class bfit(object):
         menu_draw.add_separator()
         menu_draw.add_checkbutton(label="Use NBM in asymmetry", \
                 variable=self.nbm_dict[''], selectcolor=colors.selected)        
-        menu_draw.add_checkbutton(label="Use SLR deadtime correction", \
-                variable=self.deadtime_slr, selectcolor=colors.selected)        
+        menu_draw.add_checkbutton(label="Use deadtime correction", \
+                variable=self.deadtime_switch, selectcolor=colors.selected)        
         
         # Fitting minimizers
         menu_mini = Menu(menubar, title='Minimizer')
