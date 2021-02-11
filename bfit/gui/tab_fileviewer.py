@@ -552,12 +552,6 @@ class fileviewer(object):
             except AttributeError:
                 pass    
         
-        # deadtime
-        if "SLR" in mode:
-            key_order_sw.append('')
-            data_sw['Deadtime'] = "%.3g s" % data.deadtime            
-            key_order_sw.append('Deadtime')
-        
         # SE -----------------------------------------------------------------
         data_se = {'':''}
         key_order_se = []

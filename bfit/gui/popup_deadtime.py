@@ -63,8 +63,10 @@ class popup_deadtime(object):
         
         self.year = IntVar()
         self.run = IntVar()
-        self.year.set(self.bfit.get_latest_year())
-        self.run.set(40000)
+        
+        # set year and run
+        self.year.set(self.bfit.fileviewer.year.get())
+        self.run.set(self.bfit.fileviewer.runn.get())
         
         spin_year = Spinbox(frame_run, from_=2000, to=datetime.datetime.today().year, 
                             textvariable=self.year, width=7)
@@ -187,12 +189,12 @@ class popup_deadtime(object):
         
         # draw split helicity ------------------------------------------------
         plt.figure()
-        plt.errorbar(asym['time_s'], *asym['p'], fmt='.k', zorder=0, 
+        plt.errorbar(asym['time_s'], *asym['p'], fmt='.C0', zorder=0, 
                      label='Uncorrected')
-        plt.errorbar(asym['time_s'], *asym['n'], fmt='.k', zorder=0)
-        plt.errorbar(asym_dt['time_s'], *asym_dt['p'], fmt='.r', zorder=5, alpha=0.4, 
+        plt.errorbar(asym['time_s'], *asym['n'], fmt='.C0', zorder=0)
+        plt.errorbar(asym_dt['time_s'], *asym_dt['p'], fmt='.C3', zorder=5, alpha=0.4, 
                      label='Corrected')
-        plt.errorbar(asym_dt['time_s'], *asym_dt['n'], fmt='.r', zorder=5, alpha=0.4 )
+        plt.errorbar(asym_dt['time_s'], *asym_dt['n'], fmt='.C3', zorder=5, alpha=0.4 )
         
         # plot elements
         plt.ylabel('Asymmetry')
@@ -218,12 +220,12 @@ class popup_deadtime(object):
         
         plt.figure()
         
-        plt.errorbar(asym['time_s'], dasym_sub, ddasym_sub, fmt='.k', zorder=0, 
+        plt.errorbar(asym['time_s'], dasym_sub, ddasym_sub, fmt='.C0', zorder=0, 
                      label='Uncorrected')
-        plt.errorbar(asym_dt['time_s'], dasym_dt_sub, ddasym_dt_sub, fmt='.r', 
+        plt.errorbar(asym_dt['time_s'], dasym_dt_sub, ddasym_dt_sub, fmt='.C3', 
                      zorder=5, alpha=0.4, label='Corrected')
         
-        plt.axhline(0, ls='-', color='k')
+        plt.axhline(0, ls='-', color='k', zorder=10)
         
         # plot elements
         plt.ylabel(r'$\frac{1}{2}(\mathcal{A}_+ + \mathcal{A}_-)$ - Time Average')
@@ -233,7 +235,6 @@ class popup_deadtime(object):
             fontsize='small')
         plt.legend(fontsize='small')
         plt.tight_layout()
-        
         
     # ====================================================================== #
     def find(self, *args):
@@ -265,11 +266,18 @@ class popup_deadtime(object):
         self.dt_calc_err.set('%.3f' % ddt)
         self.dt_calc_chi.set('%.3f' % chi2)
         
+        self.logger.info('Found calculated deadtime of %f ns', dt)
+        
         # set the value
         if self.use_calc.get():
             self.bfit.deadtime = dt*1e-9
+            self.logger.info('Set bfit.deadtime to %f s (calculated)', self.bfit.deadtime)
+        
+        # activate deadtime usage
+        self.bfit.deadtime_switch.set(True)
         
         # change toggle strings
+        self.use_calc.set(True)
         self.toggle_check_calc()
         
     # ====================================================================== #
@@ -282,26 +290,36 @@ class popup_deadtime(object):
         try:
             data = bd.bdata(self.run.get(), self.year.get())
         except Exception:
-            return
-        
-        # find the correction
+            data = None
+
+        # find the correction and set the chi2 string
         try:
             dt = float(self.dt_over.get())*1e-9
         except ValueError:
             self.dt_over_chi.set('')
-            return
-        
-        chi2 = data.get_deadtime(dt=dt, search=False)
-        
-        # set the strings
-        self.dt_over_chi.set('%.3f' % chi2)
-        
+            dt = -1
+        else:    
+            if data is not None:
+                chi2 = data.get_deadtime(dt=dt, search=False)            
+                self.dt_over_chi.set('%.3f' % chi2)
+            
         # set the value
-        if not self.use_calc.get():
+        if dt >= 0:
+            self.use_calc.set(False)
             self.bfit.deadtime = dt
+            self.logger.info('Set bfit.deadtime to %f s (override)', self.bfit.deadtime)
+        else:
+            self.bfit.deadtime = 0
+            self.logger.info('Set bfit.deadtime to %f s (override)', self.bfit.deadtime)
+        
+        # activate deadtime usage
+        self.bfit.deadtime_switch.set(True)
         
         # change toggle strings
         self.toggle_check_calc()
+        
+        if dt < 0:
+            self.bfit.deadtime_switch.set(False)
         
     # ====================================================================== #
     def toggle_check_calc(self, *args):
@@ -314,6 +332,7 @@ class popup_deadtime(object):
             try:
                 self.bfit.deadtime = self.dt*1e-9
                 outstring = 'Using calculated value of %.3f ns' % self.dt
+                self.logger.info('Set bfit.deadtime to %f s (calculated)', self.bfit.deadtime)
             except ValueError:
                 outstring = 'Using calculated value' % self.dt
                 
@@ -324,6 +343,7 @@ class popup_deadtime(object):
             try:
                 self.bfit.deadtime = float(self.dt_over.get())*1e-9
                 outstring = 'Using override value of %s ns' % self.dt_over.get()
+                self.logger.info('Set bfit.deadtime to %f s (override)', self.bfit.deadtime)
             except ValueError:
                 outstring = 'Using override value'
         

@@ -92,13 +92,12 @@ class fitdata(object):
     # ======================================================================= #
     def asym(self, *args, **kwargs):
         
-        # common deadtime
-        if '1' in self.mode:
-            return self.bd.asym(*args, deadtime=self.bfit.deadtime_1f, **kwargs)
-            
-        # individual deadtimes
-        else:            
-            return self.bd.asym(*args, deadtime=self.deadtime, **kwargs)
+        deadtime = 0
+        
+        if self.bfit.deadtime_switch.get():    
+            deadtime = self.bfit.deadtime    
+    
+        return self.bd.asym(*args, deadtime=deadtime, **kwargs)
 
     # ======================================================================= #
     def get_temperature(self, channel='A'):
@@ -179,12 +178,6 @@ class fitdata(object):
             self.logger.exception('Bias not found')
             self.bias = np.nan
             
-        # deadtime
-        if self.mode in ('20', '2h'):
-            self.deadtime = self.bd.get_deadtime()
-        else:
-            self.deadtime = 0
-
     # ======================================================================= #
     def set_fitpar(self, values):
         """Set fitting initial parameters
@@ -222,7 +215,6 @@ class fitdata(object):
         
         self.logger.debug('Setting fit results to %s', self.fitpar)
     
-
 # ========================================================================== #
 class temperature_class(object):
     """
