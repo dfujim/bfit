@@ -180,7 +180,7 @@ class popup_deadtime(object):
         # get data
         try:
             data = bd.bdata(self.run.get(), self.year.get())
-        except RuntimeError as msg:
+        except bd.InputError as msg:
             messagebox.showerror('Bad run input', str(msg))
             raise msg
         
@@ -254,6 +254,9 @@ class popup_deadtime(object):
             m = data.get_deadtime(return_minuit=True)
         except RuntimeError as msg:
             messagebox.showerror('Bad run input', str(msg))
+            raise msg
+        except bd.exceptions.MinimizationError as msg:
+            messagebox.showerror('Minimization failed',str(msg))
             raise msg
         
         dt = m.values[0]

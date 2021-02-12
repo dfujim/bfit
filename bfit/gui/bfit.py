@@ -459,8 +459,6 @@ class bfit(object):
         
         # Settings cascade commands
         menu_settings.add_cascade(menu=menu_settings_dir, label='Data directory')
-        menu_settings.add_command(label='Deadtime correction', 
-                command=self.set_deadtime)
         menu_settings.add_command(label='Drawing style', 
                 command=self.set_draw_style)
         menu_settings.add_command(label='Histograms', 
@@ -513,6 +511,8 @@ class bfit(object):
         # calculate
         menu_calculate = Menu(menubar, title='Calculate')
         menubar.add_cascade(menu=menu_calculate, label='Calculate')
+        menu_calculate.add_command(label='Deadtime correction', 
+                command=self.set_deadtime)
         menu_calculate.add_command(label='NQR B0', command=calculator_nqr_B0)
         menu_calculate.add_command(label='NMR B1', command=calculator_nmr_B1)
         menu_calculate.add_command(label='NMR B1 Attenuation', command=calculator_nmr_atten)
@@ -557,8 +557,6 @@ class bfit(object):
         menu_draw.add_separator()
         menu_draw.add_checkbutton(label="Use NBM in asymmetry", \
                 variable=self.nbm_dict[''], selectcolor=colors.selected)        
-        menu_draw.add_checkbutton(label="Use deadtime correction", \
-                variable=self.deadtime_switch, selectcolor=colors.selected)        
         
         # Fitting minimizers
         menu_mini = Menu(menubar, title='Minimizer')
