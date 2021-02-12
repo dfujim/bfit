@@ -94,9 +94,15 @@ class fitdata(object):
         
         deadtime = 0
         
-        if self.bfit.deadtime_switch.get():    
-            deadtime = self.bfit.deadtime    
-    
+        # check if deadtime corrections are needed
+        if self.bfit.deadtime_switch.get():
+            
+            # check if corrections should be calculated for each run
+            if self.bfit.deadtime_global.get():
+                deadtime = self.bfit.deadtime
+            else:
+                deadtime = self.bd.get_deadtime(c=self.bfit.deadtime, fixed='c')
+                
         return self.bd.asym(*args, deadtime=deadtime, **kwargs)
 
     # ======================================================================= #

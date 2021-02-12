@@ -36,6 +36,7 @@ class popup_deadtime(object):
     def __init__(self, bfit):
         self.bfit = bfit
         self.dt = 0
+        self.c = 1
         
         # get logger
         self.logger = logging.getLogger(logger_name)
@@ -72,7 +73,7 @@ class popup_deadtime(object):
                             textvariable=self.year, width=7)
         spin_run = Spinbox(frame_run, from_=0, to=50000, textvariable=self.run, width=7)
         
-        button_find = ttk.Button(frame_run, text='Find Deadtime', command=self.find)
+        button_find = ttk.Button(frame_run, text='Find', command=self.find)
         button_draw = ttk.Button(frame_run, text='Draw', command=self.draw)
         
         # grid
@@ -86,79 +87,58 @@ class popup_deadtime(object):
         
         frame_run.columnconfigure(2, weight=1)
         
-        # calculated deadtime output ----------------------------------------
-        frame_calc = ttk.Labelframe(frame, text='Calculated Deadtime', pad=5)
+        # input ---------------------------------------------------------------
+        frame_input = ttk.Frame(frame, pad=5)
         
-        self.dt_calc = StringVar()
-        self.dt_calc_err = StringVar()
-        self.dt_calc_chi = StringVar()
+        label_dt = ttk.Label(frame_input, text='Deadtime (ns)', pad=2, justify=LEFT)
+        label_c = ttk.Label(frame_input, text='Helicity Scaling (-)', pad=2, justify=LEFT)
         
-        self.dt_calc.set('')
-        self.dt_calc_err.set('')
-        self.dt_calc_chi.set('')
+        self.dt_inpt = StringVar()
+        self.c_inpt = StringVar()
         
-        label_calc_dt = ttk.Label(frame_calc, textvariable=self.dt_calc, pad=2, 
-                                    justify=LEFT)
-        label_calc_dt_err = ttk.Label(frame_calc, textvariable=self.dt_calc_err, 
-                                    pad=2, justify=LEFT)
-        label_calc_dt_chi = ttk.Label(frame_calc, textvariable=self.dt_calc_chi, 
-                                    pad=2, justify=LEFT)
+        self.dt_inpt.set(str(self.dt))
+        self.c_inpt.set(str(self.c))
         
-        label_calc_pm = ttk.Label(frame_calc, text='±', pad=2, justify=LEFT)
-        label_calc_s = ttk.Label(frame_calc, text='ns,', pad=2, justify=LEFT)
-        label_calc_chi = ttk.Label(frame_calc, text='with a χ2 of', pad=2, justify=LEFT)
+        entry_dt = Entry(frame_input, textvariable=self.dt_inpt, width=10, justify=RIGHT)
+        entry_c =  Entry(frame_input, textvariable=self.c_inpt,  width=10, justify=RIGHT)
         
-        # grid
-        frame_calc.grid(column=0, row=1, sticky='new', padx=2, pady=2)
+        entry_dt.bind('<KeyRelease>', self.read_dt)
+        entry_c.bind('<KeyRelease>',  self.read_c)
         
-        c = 0
-        label_calc_dt.grid(column=c, row=0, sticky='sew', padx=2); c+= 1
-        label_calc_pm.grid(column=c, row=0, sticky='sew', padx=2); c+= 1
-        label_calc_dt_err.grid(column=c, row=0, sticky='sew', padx=2); c+= 1
-        label_calc_s.grid(column=c, row=0, sticky='sew', padx=0); c+= 1
-        label_calc_chi.grid(column=c, row=0, sticky='sew', padx=2); c+= 1
-        label_calc_dt_chi.grid(column=c, row=0, sticky='sew', padx=0); c+= 1
-                
-        # deadtime override --------------------------------------------------
-        frame_over = ttk.Labelframe(frame, text='Deadtime Override', pad=5)
+        self.fix_dt = BooleanVar()
+        self.fix_c = BooleanVar()
         
-        self.dt_over = StringVar()
-        self.dt_over.set('')
-        entry_dt_over = Entry(frame_over, textvariable=self.dt_over, width=10,        
-                              justify=CENTER)
-        entry_dt_over.bind('<KeyRelease>', self.find_over)
+        self.fix_dt.set(False)
+        self.fix_c.set(True)
         
-        label_over = ttk.Label(frame_over, text='Use instead a deadtime of', pad=2, justify=LEFT)
-        label_over_s = ttk.Label(frame_over, text='ns,', pad=2, justify=LEFT)
+        check_fix_dt = ttk.Checkbutton(frame_input, text='Fix', pad=5,
+                            variable=self.fix_dt, onvalue=True, offvalue=False) 
+        check_fix_c = ttk.Checkbutton(frame_input, text='Fix', pad=5,
+                            variable=self.fix_c, onvalue=True, offvalue=False) 
         
-        # frame for line 2
-        frame_line2 = ttk.Frame(frame_over)
+        # gridding
+        frame_input.grid(column=0, row=1, sticky='new', padx=2, pady=2)
         
-        label_over_chi = ttk.Label(frame_line2, text='which has a χ2 of', pad=2, justify=LEFT)
+        label_dt.grid(column=0, row=0, sticky='sew', padx=2)
+        entry_dt.grid(column=1, row=0, sticky='sew', padx=2)
+        check_fix_dt.grid(column=2, row=0, sticky='sew', padx=2)
         
-        self.dt_over_chi = StringVar()
-        self.dt_over_chi.set('')
-        label_over_dt_chi = ttk.Label(frame_line2, textvariable=self.dt_over_chi, pad=2, justify=LEFT)
+        label_c.grid(column=0, row=1, sticky='sew', padx=2)
+        entry_c.grid(column=1, row=1, sticky='sew', padx=2)
+        check_fix_c.grid(column=2, row=1, sticky='sew', padx=2)
         
-        # grid
-        frame_over.grid(column=0, row=2, sticky='new', padx=2, pady=2)
+        # chi2 ----------------------------------------------------------------
+        self.chi = StringVar()
+        self.chi.set('')
+        label_chi = ttk.Label(frame, textvariable=self.chi, pad=2, justify=LEFT)
+        label_chi.grid(column=0, row=2, sticky='new', padx=2, pady=2)
         
-        c = 0
-        label_over.grid(column=c, row=0, sticky='new', padx=2); c+= 1
-        entry_dt_over.grid(column=c, row=0, sticky='new', padx=2); c+= 1
-        label_over_s.grid(column=c, row=0, sticky='new', padx=2); c = 0
-        frame_line2.grid(column=0, row=1, sticky='new', padx=2)
-        label_over_chi.grid(column=0, row=0, sticky='new', padx=2)
-        label_over_dt_chi.grid(column=1, row=0, sticky='new', padx=0)
-        
-        # use calculated value -----------------------------------------------
-        self.use_calc = BooleanVar()
-        self.use_calc.set(True)
-        self.check_calc = ttk.Checkbutton(frame, 
-                text='Using calculated value', 
-                variable=self.use_calc, onvalue=True, offvalue=False, 
-                pad=5, command=self.toggle_check_calc)
-        self.check_calc.grid(column=0, row=3, sticky='new', padx=2, pady=2)
+        # global/local switch -------------------------------------------------
+        self.check_global = ttk.Checkbutton(frame, 
+                text='Using deadtime of %.3f ns\nglobally' % self.dt, 
+                variable=self.bfit.deadtime_global, onvalue=True, offvalue=False, 
+                pad=5, command=self.toggle_scope)
+        self.check_global.grid(column=0, row=3, sticky='new', padx=2, pady=2)
             
         # apply correction ---------------------------------------------------
         self.check_corr = ttk.Checkbutton(frame, 
@@ -185,7 +165,12 @@ class popup_deadtime(object):
             raise msg
         
         asym = data.asym('hel')
-        asym_dt = data.asym('hel', deadtime=self.bfit.deadtime)
+        asym_dt = data.asym('hel', deadtime=self.dt*1e-9)
+        
+        asym_dt['n'] = list(asym_dt['n'])
+        asym_dt['n'][0] *= self.c
+        asym_dt['n'][1] *= self.c
+        
         
         # draw split helicity ------------------------------------------------
         plt.figure()
@@ -199,9 +184,10 @@ class popup_deadtime(object):
         # plot elements
         plt.ylabel('Asymmetry')
         plt.xlabel('Time (s)')
-        plt.title('Run %d.%d with deadtime correction of %.3f ns' % \
-            (self.year.get(), self.run.get(), self.bfit.deadtime*1e9),
-            fontsize='small')
+        plt.title('Run %d.%d\nDeadtime correction of %.3f ns' % \
+            (self.year.get(), self.run.get(), self.dt) +\
+            '\nNeg Helicity Scaling of %.3f' % self.c,
+            fontsize='x-small')
         plt.legend(fontsize='small')
         plt.tight_layout()
         
@@ -228,11 +214,14 @@ class popup_deadtime(object):
         plt.axhline(0, ls='-', color='k', zorder=10)
         
         # plot elements
-        plt.ylabel(r'$\frac{1}{2}(\mathcal{A}_+ + \mathcal{A}_-)$ - Time Average')
+        plt.ylabel(r'$\frac{1}{2}(\mathcal{A}_+ + c\mathcal{A}_-) - ' +\
+                     r'\frac{1}{2} \overline{(\mathcal{A}_+ + c\mathcal{A}_-)}$', 
+                     fontsize='small')
         plt.xlabel('Time (s)')
-        plt.title('Run %d.%d with deadtime correction of %.3f ns' % \
-            (self.year.get(), self.run.get(), self.bfit.deadtime*1e9),
-            fontsize='small')
+        plt.title('Run %d.%d\nDeadtime correction of %.3f ns' % \
+            (self.year.get(), self.run.get(), self.dt) +\
+            '\nNeg Helicity Scaling: c = %.3f' % self.c,
+            fontsize='x-small')
         plt.legend(fontsize='small')
         plt.tight_layout()
         
@@ -249,9 +238,18 @@ class popup_deadtime(object):
             messagebox.showerror('Bad run input', str(msg))
             raise msg
         
+        # get fix state
+        fixed = []
+        if self.fix_dt.get():   fixed.append('dt')
+        if self.fix_c.get():    fixed.append('c')
+        
+        # get initial values
+        p0 = {'dt': self.dt*1e-9,
+              'c':  self.c}
+        
         # find the correction
         try:
-            m = data.get_deadtime(return_minuit=True)
+            m = data.get_deadtime(**p0, fixed=fixed, return_minuit=True)
         except RuntimeError as msg:
             messagebox.showerror('Bad run input', str(msg))
             raise msg
@@ -259,96 +257,78 @@ class popup_deadtime(object):
             messagebox.showerror('Minimization failed',str(msg))
             raise msg
         
-        dt = m.values[0]
-        ddt = m.errors[0]
+        self.dt = m.values['dt_ns']
+        self.c = m.values['c']
         chi2 = m.fval
         
         # set the strings
-        self.dt = dt
-        self.dt_calc.set('%.3f' % dt)
-        self.dt_calc_err.set('%.3f' % ddt)
-        self.dt_calc_chi.set('%.3f' % chi2)
-        
-        self.logger.info('Found calculated deadtime of %f ns', dt)
+        self.dt_inpt.set('%f' % self.dt)
+        self.c_inpt.set('%f' % self.c)
+        self.chi.set('Flattening χ2 = %.3f' % chi2)
         
         # set the value
-        if self.use_calc.get():
-            self.bfit.deadtime = dt*1e-9
-            self.logger.info('Set bfit.deadtime to %f s (calculated)', self.bfit.deadtime)
+        self.toggle_scope()    
         
         # activate deadtime usage
         self.bfit.deadtime_switch.set(True)
         
-        # change toggle strings
-        self.use_calc.set(True)
-        self.toggle_check_calc()
-        
     # ====================================================================== #
-    def find_over(self, *args):
+    def read_c(self, *args):
         """
-            Find chi2 for override deadtime of entered run
+            read float scaling factor values from text input
         """
         
-        # get data
         try:
-            data = bd.bdata(self.run.get(), self.year.get())
-        except Exception:
-            data = None
-
-        # find the correction and set the chi2 string
-        try:
-            dt = float(self.dt_over.get())*1e-9
+            self.c = float(self.c_inpt.get())
         except ValueError:
-            self.dt_over_chi.set('')
-            dt = -1
-        else:    
-            if data is not None:
-                chi2 = data.get_deadtime(dt=dt, search=False)            
-                self.dt_over_chi.set('%.3f' % chi2)
-            
-        # set the value
-        if dt >= 0:
-            self.use_calc.set(False)
-            self.bfit.deadtime = dt
-            self.logger.info('Set bfit.deadtime to %f s (override)', self.bfit.deadtime)
-        else:
-            self.bfit.deadtime = 0
-            self.logger.info('Set bfit.deadtime to %f s (override)', self.bfit.deadtime)
+            return
         
-        # activate deadtime usage
-        self.bfit.deadtime_switch.set(True)
-        
-        # change toggle strings
-        self.toggle_check_calc()
-        
-        if dt < 0:
-            self.bfit.deadtime_switch.set(False)
+        self.toggle_scope()
         
     # ====================================================================== #
-    def toggle_check_calc(self, *args):
+    def read_dt(self, *args):
         """
-            Change the deadtime from calculated to override and back
+            read float deadtime values from text input
         """
         
-        if self.use_calc.get():
-            
-            try:
-                self.bfit.deadtime = self.dt*1e-9
-                outstring = 'Using calculated value of %.3f ns' % self.dt
-                self.logger.info('Set bfit.deadtime to %f s (calculated)', self.bfit.deadtime)
-            except ValueError:
-                outstring = 'Using calculated value' % self.dt
-                
-            self.check_calc.config(text=outstring)
-            
-                
+        try:
+            self.dt = float(self.dt_inpt.get())
+        except ValueError:
+            return
+        
+        self.toggle_scope()
+    
+    # ====================================================================== #
+    def set_deadtime(self, *args):
+        """
+            Set the bfit deadtime value depending on the state of 
+            bfit.deadtime_global
+        """
+        
+        # set deadtime value for globally applied deadtime
+        if self.bfit.deadtime_global.get():
+            self.bfit.deadtime = self.dt*1e-9
+        
+        # set scaling factor for locally calculated deadtimes
         else:
-            try:
-                self.bfit.deadtime = float(self.dt_over.get())*1e-9
-                outstring = 'Using override value of %s ns' % self.dt_over.get()
-                self.logger.info('Set bfit.deadtime to %f s (override)', self.bfit.deadtime)
-            except ValueError:
-                outstring = 'Using override value'
+            self.bfit.deadtime = self.c
+            
+    # ====================================================================== #
+    def toggle_scope(self, *args):
+        """
+            Change the deadtime from globally applied to locally calculated for 
+            each run
+        """
         
-            self.check_calc.config(text=outstring)
+        self.set_deadtime()
+        
+        if self.bfit.deadtime_global.get():            
+            outstring = 'Using deadtime of %.3f ns\nglobally' % (self.bfit.deadtime*1e9)
+            self.logger.info('Set bfit.deadtime to global %f s', self.bfit.deadtime)
+        else:
+            outstring = 'Using scaling of %.3f to find\ndeadtimes for each run' % self.bfit.deadtime    
+            self.logger.info('Set bfit.deadtime to %f for local deadtime calculations', \
+                             self.bfit.deadtime)
+        
+        self.check_global.config(text=outstring)
         

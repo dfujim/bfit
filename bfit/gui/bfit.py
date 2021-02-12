@@ -99,7 +99,9 @@ class bfit(object):
         Data Fields:
             asym_dict_keys: asym calc and draw types
             data:           dict of fitdata objects for drawing/fitting, keyed by run #
+            deadtime:       float, value of deadtime in s or scaling for local calcs
             deadtime_switch:BooleanVar, if true, use deadtime correction
+            deadtime_global:BooleanVar, if true, deadtime value is dt, else is scaling
             draw_style:     StringVar, draw window types # stack, redraw, new
             draw_components:list of titles for labels, options to export, draw.
             draw_fit:       BooleanVar, if true draw fits after fitting
@@ -138,7 +140,6 @@ class bfit(object):
     norm_alph_diff_time = 0.1   # number of seconds to take average over when 
                                 # normalizing alpha diffusion runs
     legend_max_draw = 8 # max number of items to draw before removing the legend
-    deadtime = 0        # deadtime in s
     
     # track settings for use_nbm
     use_nbm_settings = {'default':False,
@@ -432,6 +433,15 @@ class bfit(object):
         self.nbm_dict[''].set(False)
         self.nbm_dict['1n'].set(True)
         
+        # deadtime switches
+        self.deadtime_switch = BooleanVar()
+        self.deadtime_switch.set(False)
+        self.deadtime_global = BooleanVar()
+        self.deadtime_global.set(True)
+        self.deadtime = 0 # deadtime in s, or neg asymmetry scaling for deadtime 
+                          # calculations, depending on the value of self.global_deadtime
+    
+        
         # Menu bar options ----------------------------------------------------
         root.option_add('*tearOff', FALSE)
         menubar = Menu(root)
@@ -529,8 +539,6 @@ class bfit(object):
         self.norm_with_param.set(True)
         self.draw_fit = BooleanVar()
         self.draw_fit.set(True)
-        self.deadtime_switch = BooleanVar()
-        self.deadtime_switch.set(False)
         
         menu_draw = Menu(menubar, title='Draw Mode')
         menubar.add_cascade(menu=menu_draw, label='Draw Mode')
