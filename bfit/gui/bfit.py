@@ -1610,7 +1610,7 @@ class bfit(object):
                                     probe_species = self.probe_species.get())
         self.fit_files.fit_routine_label['text'] = self.fit_files.fitter.__name__
         self.fit_files.populate()
-        self.logger.info('Success.')
+        self.logger.debug('Success.')
         
     # ======================================================================= #
     def set_fit_routine_with_popup(self):

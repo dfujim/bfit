@@ -371,8 +371,8 @@ def _fit_single_minuit(fn, x, y, dy, fixed, do_minos=True, **kwargs):
             m.minos()
             
             n = len(m.merrors)
-            lower = np.array([m.merrors[i].lower for i in range(n)])
-            upper = np.array([m.merrors[i].lower for i in range(n)])
+            lower = np.abs(np.array([m.merrors[i].lower for i in range(n)]))
+            upper = np.array([m.merrors[i].upper for i in range(n)])
         except RuntimeError as errmsg: # migrad did not converge
             print(errmsg)
             err = m.errors
