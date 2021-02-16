@@ -53,11 +53,29 @@ import sys
 # ~ bfit.do_close_all()
 
 # fetch tab
-import bfit.test.tab_fetch_files as tfetch
+# ~ import bfit.test.tab_fetch_files as tfetch
 # ~ tfetch.test_fetch()
 # ~ tfetch.test_remove()
-tfetch.test_checkbox()
+# ~ tfetch.test_checkbox()
 # ~ tfetch.test_draw()
+
+# fit tab
+import bfit.test.tab_fit_files as tfit
+# ~ tfit.test_populate()
+# ~ tfit.test_populate_param()
+# ~ tfit.test_fit(tfit.separate_curve_fit, 'curve_fit')
+# ~ tfit.test_fit(tfit.separate_migrad, 'migrad_hesse')
+# ~ tfit.test_fit(tfit.separate_minos, 'migrad_minos')
+# ~ tfit.test_fixed()
+# ~ tfit.test_shared()
+tfit.test_modify_for_all()
+tfit.test_rebin_data()
+tfit.test_p0_prior()
+tfit.test_result_as_p0()
+tfit.test_reset_p0()
+tfit.test_draw_fit_results()
+tfit.test_add_results_param()
+    
 
 # calculator nmr rf attenuation
 # ~ import bfit.test.calculator_nmr_atten as calc_nmr_atten
