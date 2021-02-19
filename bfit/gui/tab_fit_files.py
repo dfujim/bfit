@@ -1643,11 +1643,11 @@ class fit_files(object):
             val = self.pop_addpar.set_par[select]()
             err = np.full(len(val), np.nan)
 
-        # ~ try:
-        return (val, err)
-        # ~ except UnboundLocalError:
-            # ~ self.logger.warning('Parameter selection "%s" not found' % select)
-            # ~ raise AttributeError('Selection "%s" not found' % select) from None
+        try:
+            return (val, err)
+        except UnboundLocalError:
+            self.logger.warning('Parameter selection "%s" not found' % select)
+            raise AttributeError('Selection "%s" not found' % select) from None
 
     # ======================================================================= #
     def input_enable_disable(self, parent, state, first=True):
