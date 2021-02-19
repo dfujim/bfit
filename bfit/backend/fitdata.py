@@ -106,6 +106,21 @@ class fitdata(object):
         return self.bd.asym(*args, deadtime=deadtime, **kwargs)
 
     # ======================================================================= #
+    @property
+    def beam_kev(self): 
+        try:
+            return self.bd.beam_kev()
+        except AttributeError:
+            return np.nan
+    
+    @property
+    def beam_kev_err(self): 
+        try:
+            return self.bd.beam_kev(get_error=True)
+        except AttributeError:
+            return np.nan
+        
+    # ======================================================================= #
     def get_temperature(self, channel='A'):
         """
             Get the temperature of the run.
