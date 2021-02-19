@@ -19,6 +19,32 @@ class code_wrapper(object):
             return getattr(self.obj, name)
 
 # =========================================================================== #
+class decay_corrected_fn(object):
+    """
+        For applying the decay correction in the case of multiple daughters, 
+        for example, Mg31
+    """
+    def __init__(self, fn_decay, fn_polarization, beam_pulse, beam_rate=1e6):
+        
+        self.f1 = fn_decay
+        self.f2 = fn_polarization
+        self.beam_pulse = beam_pulse
+        self.beam_rate = beam_rate
+        
+    def __call__(self, x, *par):
+        return self.f1(x, beam_pulse=self.beam_pulse, beam_rate=self.beam_rate) \
+             * self.f2(x, *par)
+        
+    def __getattr__(self, name):
+        if name == '__code__':
+            return self.f2.__code__
+        else:
+            try:
+                return self.__dict__[name]
+            except KeyError as err:
+                raise AttributeError(err) from None
+
+# =========================================================================== #
 # TYPE 1 FUNCTIONS
 # =========================================================================== #
 def lorentzian(freq, peak, fwhm, amp):

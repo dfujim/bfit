@@ -8,6 +8,7 @@ from functools import partial
 import collections
 import numpy as np
 import bdata as bd
+import copy
 
 class fitter(object):
     """
@@ -171,15 +172,8 @@ class fitter(object):
             # get fitting function for 20 and 2h
             if dat.mode in ['20', '2h']: 
                 pulse = dat.get_pulse_s()
-                
-                # fit function
-                fn1 = self.get_fn(fn_name, ncomp, pulse, life)
-                
-                # add corrections for probe daughters
-                if self.probe_species == 'Mg31':
-                    fn.append(lambda x, *par : fa_31Mg(x, pulse)*fn1(x, *par))
-                else:
-                    fn.append(fn1)
+                fn.append(self.get_fn(fn_name=fn_name, ncomp=ncomp, 
+                          pulse_len=pulse, lifetime=life))                
                 
             # 1f functions
             else:                       
@@ -264,16 +258,8 @@ class fitter(object):
             
             # get fitting function for 20 and 2h
             if dat.mode in ['20', '2h']: 
-                pulse = dat.get_pulse_s()
-                
-                # fit function
-                fn1 = self.get_fn(fn_name, ncomp, pulse, life)
-                
-                # add corrections for probe daughters
-                if self.probe_species == 'Mg31':
-                    fn.append(lambda x, *par : fa_31Mg(x, pulse)*fn1(x, *par))
-                else:
-                    fn.append(fn1)
+                pulse = dat.get_pulse_s()                
+                fn.append(self.get_fn(fn_name, ncomp, pulse, life))
                 
             # 1f functions
             else:                       
@@ -502,16 +488,18 @@ class fitter(object):
         else:
             raise RuntimeError('Fitting function not found.')
         
+        # add corrections for probe daughters
+        if self.mode == 2 and self.probe_species == 'Mg31':
+            fn = fns.decay_corrected_fn(fa_31Mg, fn, beam_pulse=pulse_len)
+        
         # Make final function based on number of components
         fnlist = [fn]*ncomp
         
         if self.mode == 1:
             fnlist.append(lambda x, b: b)
+            
         fn = fns.get_fn_superpos(fnlist)
         
         return fn
         
-        
-        
-        
-        
+
