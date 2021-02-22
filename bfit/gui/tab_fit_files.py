@@ -20,6 +20,7 @@ from bfit.gui.popup_fit_constraints import popup_fit_constraints
 from bfit.gui.popup_add_param import popup_add_param
 from bfit.gui.popup_ongoing_process import popup_ongoing_process
 from bfit.fitting.decay_31mg import fa_31Mg
+from bfit.fitting.functions import decay_corrected_fn
 from bfit.backend.entry_color_set import on_focusout, on_entry_click
 from bfit.backend.raise_window import raise_window
 
@@ -1712,6 +1713,11 @@ class fit_files(object):
         fetch_tab = self.bfit.fetch_files
         fetch_tab.remove_all()
 
+        # set deadtime correction
+        self.bfit.deadtime = from_file['deadtime']
+        self.bfit.deadtime_switch.set(from_file['deadtime_switch'])
+        self.bfit.deadtime_global.set(from_file['deadtime_global'])
+         
         # load selected runs
         datalines = from_file['datalines']
         setyear = fetch_tab.year.get()
@@ -1737,7 +1743,7 @@ class fit_files(object):
         # reset year and run input info
         fetch_tab.year.set(setyear)
         fetch_tab.run.set(setrun)
-
+        
         # set the fitting function
         self.fit_function_title_box.set(from_file['fitfn'])
 
@@ -1780,7 +1786,10 @@ class fit_files(object):
                                                   from_file['ncomponents'])
             for k in keylist:
                 if 'chi' in parentry[k].keys():
-                    chi = float(parentry[k]['chi'])
+                    if parentry[k]['chi'] != '':
+                        chi = float(parentry[k]['chi'])
+                    else:
+                        chi = np.nan
                     break
 
             # get pulse length
@@ -1799,15 +1808,15 @@ class fit_files(object):
                                        lifetime)
 
             if '2' in d_actual.mode and from_file['probe_species'] == 'Mg31':
-                fitfn1 = lambda x, *par : fa_31Mg(x, pulse_len)*fitfn(x, *par)
+                fitfn1 = decay_corrected_fn(fa_31Mg, fitfn, pulse_len)
             else:
                 fitfn1 = fitfn
 
             # set fit results
             d_fitdata[id].set_fitresult([keylist,
-                              [float(parentry[p]['res']) for p in keylist],
-                              [float(parentry[p]['dres-']) for p in keylist],
-                              [float(parentry[p]['dres+']) for p in keylist],
+                              [float(parentry[p]['res']) if parentry[p]['res'] else np.nan for p in keylist],
+                              [float(parentry[p]['dres-']) if parentry[p]['dres-'] else np.nan for p in keylist],
+                              [float(parentry[p]['dres+']) if parentry[p]['dres+'] else np.nan for p in keylist],
                               chi,
                               fitfn1]
                             )
@@ -1928,6 +1937,9 @@ class fit_files(object):
         to_file['label_default'] = self.bfit.label_default.get()
         to_file['ppm_reference'] = self.bfit.ppm_reference
         to_file['update_period'] = self.bfit.update_period
+        to_file['deadtime'] = self.bfit.deadtime
+        to_file['deadtime_switch'] = self.bfit.deadtime_switch.get()
+        to_file['deadtime_global'] = self.bfit.deadtime_global.get()
 
         # get parameter values from fitlines
         fitlines = self.fit_lines
