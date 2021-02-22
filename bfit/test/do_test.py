@@ -10,8 +10,8 @@ import sys
 # ~ fn.test_pulsed_strexp()
 
 # numeric integration
-import bfit.test.numeric_integration as ni
-ni.test_numeric_integration()
+# ~ import bfit.test.numeric_integration as ni
+# ~ ni.test_numeric_integration()
 
 # least squares
 # ~ import bfit.test.leastsquares as ls
@@ -72,14 +72,11 @@ import bfit.test.tab_fit_files as tfit
 # ~ tfit.test_fit(tfit.separate_minos, 'migrad_minos')
 # ~ tfit.test_fixed()
 # ~ tfit.test_shared()
-tfit.test_modify_for_all()
-tfit.test_rebin_data()
-tfit.test_p0_prior()
+# ~ tfit.test_modify_for_all_reset_p0()
+# ~ tfit.test_fit_input()
+# ~ tfit.test_p0_prior()
 tfit.test_result_as_p0()
-tfit.test_reset_p0()
 tfit.test_draw_fit_results()
-tfit.test_add_results_param()
-    
 
 # calculator nmr rf attenuation
 # ~ import bfit.test.calculator_nmr_atten as calc_nmr_atten

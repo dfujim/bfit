@@ -281,7 +281,6 @@ class fit_files(object):
         model_fit_button = ttk.Button(button_frame, text='Fit a\nModel',
                                       command=self.do_fit_model)
 
-
         # menus for x and y values
         x_button = ttk.Button(results_frame, text="x axis:", command=self.do_add_param, pad=0)
         y_button = ttk.Button(results_frame, text="y axis:", command=self.do_add_param, pad=0)

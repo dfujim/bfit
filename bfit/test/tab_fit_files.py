@@ -162,6 +162,39 @@ def test_fit(separate_fit, minimizer):
     b.minimizer.set('bfit.fitting.fitter_curve_fit')
     b.set_fit_routine()
 
+def test_fit_input():
+        
+    # get data
+    get_data()
+    
+    # set rebin
+    tab2.data_lines['2020.40123'].rebin.set(10)
+    tab2.data_lines['2020.40127'].rebin.set(2)
+    tab.use_rebin.set(True)
+    
+    # set function
+    tab.fit_function_title.set('Bi Exp')
+    
+    # set ncomp
+    tab.n_component.set(2)
+    
+    # fit
+    tab.populate()    
+    tab.do_fit()
+    
+    # fit input: fn_name, ncomp, data_list
+    # data_list: [bdfit, pdict, doptions]
+    
+    # check function
+    test_perfect(tab.fit_input[0], 'Bi Exp', "Function name passing to fitter")
+    
+    # check ncomp
+    test_perfect(tab.fit_input[1], 2, "Number of components passing to fitter")
+    
+    # check
+    test_perfect(tab.fit_input[2][0][2]['rebin'], 10, "Rebin passing for file 1")
+    test_perfect(tab.fit_input[2][1][2]['rebin'], 2, "Rebin passing for file 2")
+
 def test_fixed():
     
     # get data
@@ -233,7 +266,7 @@ def test_shared():
     # unshare
     entry['1_T1']['shared'][0].set(False)
     
-def test_modify_for_all():
+def test_modify_for_all_reset_p0():
     
     # get data
     get_data()
@@ -244,20 +277,71 @@ def test_modify_for_all():
     entry2 = line2.parentry
     
     # modify
+    tab.set_as_group.set(True)
     
+    initial = {}
+    for k in entry.keys():    
+        initial[k] = {}
+        for c in ('p0', 'blo', 'bhi'):
+            
+            initial[k][c] = entry[k][c][0].get()
+            entry[k][c][0].set(c)
+            test_perfect(entry2[k][c][0].get(), c, "Modify all for %s (%s)" % (k,c))
+     
+    # reset
+    tab.do_reset_initial()
     
-def test_rebin_data():
-    pass
-    
+    for k in entry.keys():    
+        for c in ('p0', 'blo', 'bhi'):
+            test_perfect(entry[k][c][0].get(), initial[k][c], "Reset p0 for %s (%s)" % (k,c))
+                
 def test_p0_prior():
-    pass
+    
+    # get data
+    get_data()
+    tab.populate()
+    
+    # fit
+    tab.do_fit()
+    b.do_close_all()
+    
+    # set next p0
+    tab.set_prior_p0.set(True)
+    
+    # get more data
+    tab2.run.set('40124')
+    tab2.get_data()
+    tab.populate()
+    
+    # get results and compare
+    result = tab.fit_lines['2020.40127'].parentry
+    p0 = tab.fit_lines['2020.40124'].parentry
+    
+    for k in result.keys():
+        test(float(result[k]['res'][0].get()), float(p0[k]['p0'][0].get()), 
+             'Set last result as p0 for new run for %s'%k, tol=1e-5)
     
 def test_result_as_p0():
-    pass
     
-def test_reset_p0():
-    pass
+    # get data
+    get_data()
+    tab.populate()
     
+    # fit
+    tab.do_fit()
+    b.do_close_all()
+    
+    # set result as P0
+    tab.do_set_result_as_initial()
+    
+    # check
+    for run_id in tab.fit_lines.keys():
+        entry = tab.fit_lines[run_id].parentry
+    
+        for k in entry.keys():
+            test(float(entry[k]['res'][0].get()), float(entry[k]['p0'][0].get()), 
+                'Set result as p0 for %s'%k, tol=1e-5)
+        
 def test_draw_fit_results():
     pass
 
