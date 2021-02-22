@@ -9,6 +9,10 @@ import sys
 # ~ fn.test_pulsed_exp()
 # ~ fn.test_pulsed_strexp()
 
+# numeric integration
+import bfit.test.numeric_integration as ni
+ni.test_numeric_integration()
+
 # least squares
 # ~ import bfit.test.leastsquares as ls
 # ~ ls.test_no_errors()
