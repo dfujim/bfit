@@ -54,7 +54,7 @@ import sys
 # ~ tfview.test_draw(40326, 2019, '2e')
 # ~ tfview.test_autocomplete()
 # ~ tfview.test_draw_mode()
-# ~ bfit.do_close_all()
+# ~ b.do_close_all()
 
 # fetch tab
 # ~ import bfit.test.tab_fetch_files as tfetch
@@ -75,7 +75,7 @@ import bfit.test.tab_fit_files as tfit
 # ~ tfit.test_modify_for_all_reset_p0()
 # ~ tfit.test_fit_input()
 # ~ tfit.test_p0_prior()
-tfit.test_result_as_p0()
+# ~ tfit.test_result_as_p0()
 tfit.test_draw_fit_results()
 
 # calculator nmr rf attenuation

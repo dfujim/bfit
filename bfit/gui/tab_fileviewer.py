@@ -601,8 +601,8 @@ class fileviewer(object):
         
         # Get final beam energy
         try: 
-            val = np.around(data.beam_kev(), 3)
-            std = np.around(data.beam_kev(get_error=True), 3)
+            val = np.around(data.beam_kev, 3)
+            std = np.around(data.beam_kev_err, 3)
             data_se['Implantation Energy'] = "%.3f +/- %.3f keV" % (val, std)
             key_order_se.append('Implantation Energy')
         except AttributeError:
