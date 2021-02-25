@@ -15,9 +15,10 @@ import numpy as np
 # GLOBAL CONSTANTS ===========================================================
 
 # half-lives (s)
-T_12_31Mg = 0.235
+# see: https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html
+T_12_31Mg = 0.236
 T_12_31Al = 0.644
-T_12_31Si = 2.632*3600  # seconds
+T_12_31Si = 157.36 * 60 # seconds
 T_12_31P = np.inf
 T_12_30Al = 3.62
 T_12_30Si = np.inf
