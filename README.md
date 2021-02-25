@@ -7,6 +7,7 @@
 <img src="https://img.shields.io/github/languages/code-size/dfujim/bfit"/>
 <img src="https://img.shields.io/tokei/lines/github/dfujim/bfit"/>
 <img src="https://img.shields.io/pypi/l/bfit"/>
+
 <a href="https://github.com/dfujim/bfit/commits/master" alt="Commits">
 <img src="https://img.shields.io/github/commits-since/dfujim/bfit/latest/master"/>
 </a>
@@ -64,8 +65,8 @@ If you use [mudpy], [bdata], or [bfit] in your work, please cite:
   * [Pull Requests]
   * [Wiki]
     * [API Reference]
+    * [API Tutorial]
     * [GUI Tutorial]
-    * [Example Usage]
 * [mudpy]
 * [bdata]
 
@@ -121,11 +122,15 @@ heirarchy:
 
 Here, the folders `/path/bnmr/` and `/path/bnqr/` both contain runs
 (i.e., `.msr` files) organized into subdirectories by year of aquasition.
-In this case,
-you would set `BNMR_ARCHIVE=/path/bnmr/` and `BNQR_ARCHIVE=/path/bnqr/`.
+In this case, you would set (in your `.bashrc`):
 
-If [bfit] cannot find the data, it will attempt to download the `.msr` files
-from <https://cmms.triumf.ca/mud/runSel.html>.
+```bash
+export BNMR_ARCHIVE=/path/bnmr/
+export BNQR_ARCHIVE=/path/bnqr/
+```
+
+If [bfit] cannot find the data, it will attempt to download the relavent [MUD]
+(i.e., `.msr`) files from <https://cmms.triumf.ca/mud/runSel.html>.
 This is the default behaviour for [bfit] installed from [PyPI].
 
 ### First Startup 
@@ -162,13 +167,13 @@ number of independently developed applications:
   (written by R. M. L. McFadden).
 * [bnmrfit] : A collection of [PHYSICA] scripts for inspecting all types of
   β-NMR data (written by Z. Salman). The scripts have been well-tested through
-  over a decade of use, though maintenance of [PHYSICA] has long-since ceased.
+  over a decade of use, though maintenance of [PHYSICA] has long since ceased.
   Ironically, the fitting capabalities are somewhat minimal.
 * [bnmroffice] : A GUI analysis tool for inspecting most types of β-NMR data,
   similar to bfit (written by H. Saadaoui). While used for many years, it is
   currently out-of-date with regards to recent run modes. Similarly, it is no
   longer actively maintained.
-* [musrfit] : A popular and powerful analysis tool for time-differential μSR
+* [musrfit] : A popular and powerful analysis tool for time-differential [μSR]
   data. An add-on library for analyzing β-NMR SLR data (written by Z. Salman) is
   available (see the [musrfit documentation]).
 
@@ -183,8 +188,6 @@ Note that the run header information can be checked against the API provided by
 the [TRIUMF] [CMMS] group's online muon data ([MUD]) file "[archive]".
 For example, have a look at the header information for [`data/BNMR/2020/040123.msr`].
 
-All users are encouraged to follow the [Example Usage] instructions to confirm
-that their installation is behaving as intended.
 
 [Python]: https://www.python.org/
 [SciPy]: https://www.scipy.org/
@@ -219,8 +222,8 @@ that their installation is behaving as intended.
 [Issues]: https://github.com/dfujim/bfit/issues
 [PyPI]: https://pypi.org/project/bfit/
 [API Reference]: https://github.com/dfujim/bfit/wiki/API-Reference
+[API Tutorial]: https://github.com/dfujim/bfit/wiki/API-Tutorial
 [GUI Tutorial]: https://github.com/dfujim/bfit/wiki/GUI-Tutorial
-[Example Usage]: https://github.com/dfujim/bfit/wiki/Example-Usage
 [Wiki]: https://github.com/dfujim/bfit/wiki
 
 [ROOT]: https://github.com/root-project/root
