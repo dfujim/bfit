@@ -77,43 +77,33 @@ If you use [mudpy], [bdata], or [bfit] in your work, please cite:
 
 ### Dependencies
 
-The following packages/applications are needed to install [bfit].
-For convenience, a one-liner discription of each is given below:
+The following packages/applications are needed prior to [bfit] installation:
+- [Python] 3.6 or higher: a dynamically typed programming language. [[install](https://wiki.python.org/moin/BeginnersGuide/Download)]
+- [Tkinter] : [Python]'s de-factor standard GUI package. [[install](https://tkdocs.com/tutorial/install.html)]
+- [Cython] : [C]-language extensions for [Python]. [[install](https://cython.readthedocs.io/en/latest/src/quickstart/install.html)]
+- [NumPy] : array programming library for [Python]. [[install](https://numpy.org/install/)]
 
-- [Tkinter] : [Python]'s de-factor standard GUI package.
-- [Cython] : [C]-language extensions for [Python].
-- [NumPy] : array programming library for [Python].
-- [SciPy] : fundamental algorithms for scientific computing in [Python].
+and the following are handelled automatically when retrieving [bfit] from the [PyPI]:
+
+- [argparse] : a parser for command-line options, arguments and sub-commands.
+- [bdata] : data structures and algorithms for retrieving/processing [TRIUMF] β-NMR/β-NQR data.
+- [iminuit] : a [Jupyter]-friendly [Python] interface for the [MINUIT2] library.
 - [Matplotlib] : comprehensive library for creating static, animated, and
   interactive visualizations in [Python].
-- [pandas] : a fast, powerful, flexible and easy to use data
-  analysis/manipulation tool.
+- [pandas] : a fast, powerful, flexible and easy to use data analysis/manipulation tool.
 - [PyYAML] : a next generation [YAML] parser and emitter for [Python].
 - [requests] : an elegant and simple [HTTP] library for [Python],
   built for human beings.
-- [argparse] : a parser for command-line options, arguments and sub-commands.
+- [SciPy] : fundamental algorithms for scientific computing in [Python].
 - [tqdm] : a fast, extensible progress bar for [Python].
-- [bdata] : data structures and algorithms for retrieving/processing [TRIUMF]
-  β-NMR/β-NQR data.
-- [iminuit] : a [Jupyter]-friendly [Python] interface for the [MINUIT2] library.
-
-Note that when retrieving [bfit] from the [PyPI],
-most dependencies can be handelled automatically;
-however, some <i>must</i> already be present on your system:
-
-| Package | Install Instruction |
-|:-- | :--|
-| [Python] (version 3.6 or higher) | [Directions](https://www.python.org/downloads/) |
-| [Tkinter] for [Python] | [Directions](https://tkdocs.com/tutorial/install.html) |
-| [Cython] | `pip3 install --user Cython` |
-| [NumPy] | `pip3 install --user numpy` |
 
 ### Install Instructions
 
 |  | Command |
 |:-- | :--|
-Install as user (recommended) | `pip install --user bfit` |
-Install as root | `pip install bfit` |
+From the [PyPI] as user (recommended) | `pip install --user bfit` |
+From the [PyPI] as root | `pip install bfit` |
+From source | `python3 setup.py install` |
 
 Note that `pip` should point to a (version 3) [Python] executable
 (e.g., `python3`, `python3.8`, etc.).
