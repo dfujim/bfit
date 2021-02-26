@@ -66,10 +66,11 @@ def test_populate_param():
                  'Two term function parameters populated')
     
 # do the fit separately
-def separate_curve_fit(entry, **kwargs):
+def separate_curve_fit(entry, run, **kwargs):
     
     # data
-    dat = bd.bdata(40123, 2020)
+    year, run = tuple(map(int, run.split('.')))
+    dat = bd.bdata(run, year)
     
     # fit function
     pexp = pulsed_exp(lifetime = bd.life.Li8, pulse_len = dat.get_pulse_s())
@@ -89,10 +90,11 @@ def separate_curve_fit(entry, **kwargs):
     
     return (par, std, std, chi)
 
-def separate_migrad(entry, do_minos=False, **kwargs):
+def separate_migrad(entry, run, do_minos=False, **kwargs):
     
     # data
-    dat = bd.bdata(40123, 2020)
+    year, run = tuple(map(int, run.split('.')))
+    dat = bd.bdata(run, year)
     
     # fit function
     pexp = pulsed_exp(lifetime = bd.life.Li8, pulse_len = dat.get_pulse_s())
@@ -123,13 +125,60 @@ def separate_migrad(entry, do_minos=False, **kwargs):
         
     return (par, lower, upper, chi)
 
-def separate_minos(entry, **kwargs):
-    return separate_migrad(entry, do_minos=True, **kwargs)
+def separate_minos(entry, run, **kwargs):
+    return separate_migrad(entry, run, do_minos=True, **kwargs)
     
 def test_fit(separate_fit, minimizer):
     
     # get data
     get_data()
+    tab.populate()
+    
+    # set minimizer
+    b.minimizer.set('bfit.fitting.fitter_%s' % minimizer)
+    b.set_fit_routine()
+    
+    # do fit in bfit
+    tab.do_fit()
+    
+    # check return values -----------------------------------------------------
+    
+    for k, line in tab.fit_lines.items():
+    
+        entry = line.parentry
+        
+        # get results separately
+        par, lower, upper, chi2 = separate_fit(entry, k)    
+        
+        # get results displayed
+        res = [float(entry[k]['res'][1].get()) for k in entry.keys()]
+        low = [float(entry[k]['dres-'][1].get()) for k in entry.keys()]
+        upp = [float(entry[k]['dres+'][1].get()) for k in entry.keys()]
+        
+        # check
+        test_arr(par, res, 'Copying %s minimizer results for %s' % (minimizer, k), tol=1e-3)
+        test_arr(lower, low, 'Copying %s minimizer lower errors for %s' % (minimizer, k), tol=1e-3)
+        test_arr(upper, upp, 'Copying %s minimizer upper errors for %s' % (minimizer, k), tol=1e-3)
+        
+        # check chi2
+        chi = float(entry['1_T1']['chi'][1].get())
+        test(chi, chi2, 'Copying chi2 for %s minimizer for %s' % (minimizer, k), tol=1e-2)
+    
+    # reset minimizer
+    b.minimizer.set('bfit.fitting.fitter_curve_fit')
+    b.set_fit_routine()
+
+def test_fit_single(separate_fit, minimizer):
+    
+    # clear setup
+    b.do_close_all()
+    tab2.remove_all()
+    
+    # fetch
+    tab2.year.set(2020)
+    tab2.run.set('40123')
+    tab2.get_data()
+
     tab.populate()
     line = tab.fit_lines['2020.40123']
     entry = line.parentry
@@ -141,7 +190,7 @@ def test_fit(separate_fit, minimizer):
     # check return value ------------------------------------------------------
     
     # get results separately
-    par, lower, upper, chi2 = separate_fit(entry)    
+    par, lower, upper, chi2 = separate_fit(entry, '2020.40123')    
     tab.do_fit()
     
     # get results displayed
@@ -150,13 +199,13 @@ def test_fit(separate_fit, minimizer):
     upp = [float(entry[k]['dres+'][1].get()) for k in entry.keys()]
     
     # check
-    test_arr(par, res, 'Copying %s minimizer results' % minimizer, tol=1e-3)
-    test_arr(lower, low, 'Copying %s minimizer lower errors' % minimizer, tol=1e-3)
-    test_arr(upper, upp, 'Copying %s minimizer upper errors' % minimizer, tol=1e-3)
+    test_arr(par, res, 'Copying %s minimizer results for single run' % minimizer, tol=1e-3)
+    test_arr(lower, low, 'Copying %s minimizer lower errors for single run' % minimizer, tol=1e-3)
+    test_arr(upper, upp, 'Copying %s minimizer upper errors for single run' % minimizer, tol=1e-3)
     
     # check chi2
     chi = float(entry['1_T1']['chi'][1].get())
-    test(chi, chi2, 'Copying chi2 for %s minimizer' % minimizer, tol=1e-2)
+    test(chi, chi2, 'Copying chi2 for %s minimizer for single run' % minimizer, tol=1e-2)
     
     # reset minimizer
     b.minimizer.set('bfit.fitting.fitter_curve_fit')
