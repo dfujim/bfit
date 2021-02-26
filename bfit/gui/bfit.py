@@ -252,8 +252,8 @@ class bfit(object):
     thermo_keys = ('A', 'B', '(A+B)/2')
     
     # draw axis labels
-    xlabel_dict={'20':"Time (s)", 
-                 '2h':"Time (s)", 
+    xlabel_dict={'20':"Time (%s)", 
+                 '2h':"Time (%s)", 
                  '2e':'Frequency (%s)', 
                  '1f':'Frequency (%s)', 
                  '1w':'x Parameter (%s)', 
@@ -283,7 +283,10 @@ class bfit(object):
     units = {'1f':[1e-6, 'MHz'], 
              '2e':[1e-6, 'MHz'], 
              '1w':[1, 'Hz'], 
-             '1n':[1e-3, 'V']}
+             '1n':[1e-3, 'V'],
+             '20':[1, 's'],
+             '2h':[1, 's'],
+             }
     
     # minimizers
     minimizers = {'curve_fit (trf)':'bfit.fitting.fitter_curve_fit', 
@@ -881,11 +884,15 @@ class bfit(object):
             x = a[self.x_tag[data.mode]]
             xlabel = self.xlabel_dict[data.mode]
             
+            if data.mode in self.units.keys():
+                unit = self.units[data.mode]
+                xlabel = xlabel % unit[1]
+            
             # unit conversions
             if data.mode in ('1n', '1w'): 
                 unit = self.units[data.mode]
                 x *= unit[0]
-                xlabel = xlabel % unit[1]
+                
             elif data.mode == '1f': 
                 if self.draw_ppm.get():
                     self.logger.info('Drawing as PPM shift with reference %s Hz', 
@@ -895,7 +902,6 @@ class bfit(object):
                 else: 
                     unit = self.units[data.mode]
                     x *= unit[0]
-                    xlabel = xlabel % unit[1]
             
             # plot split helicities
             if asym_type == 'h':

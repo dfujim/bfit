@@ -1996,7 +1996,7 @@ class fit_files(object):
         current_ylab = self.yaxis.get()
 
         # get current unit
-        unit = self.bfit.units[self.mode][1]
+        unit = self.bfit.units[self.mode]
 
         for fig_num in figlist:
 
