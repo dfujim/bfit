@@ -98,7 +98,7 @@ For convenience, a one-liner discription of each is given below:
 - [iminuit] : a [Jupyter]-friendly [Python] interface for the [MINUIT2] library.
 
 Note that when retrieving [bfit] from the [PyPI],
-most dependencies can be handeled automatically;
+most dependencies can be handelled automatically;
 however, some <i>must</i> already be present on your system:
 
 | Package | Install Instruction |
