@@ -2463,7 +2463,7 @@ class fitline(object):
 
             plist: Dictionary of initial parameters {par_name:par_value}
         """
-
+        
         run = self.dataline.id
 
         # get pointer to fit files object
@@ -2479,32 +2479,29 @@ class fitline(object):
         # check if we are using the fit results of the prior fit
         values = None
         res = self.bfit.data[run].fitpar['res']
-        isfitted = any([res[k] for k in res]) # is this run fitted?
-
+        
+        isfitted = any(res.values) # is this run fitted?
+        
         if fit_files.set_prior_p0.get() and not isfitted:
             r = 0
             for rkey in self.bfit.data:
                 data = self.bfit.data[rkey]
-                res = data.fitpar['res']
-
-                isfitted = any([res[k] for k in res]) # is the latest run fitted?
+                
+                isfitted = any(data.fitpar['res'].values) # is the latest run fitted?
                 if isfitted and data.run > r:
                     r = data.run
                     values = data.fitpar
-                    # ~ values = {k:(res[k],
-                                 # ~ data.fitpar.loc[k, 'blo'],
-                                 # ~ data.fitpar['bhi'],
-                                 # ~ data.fitpar['fixed'][k]) for k in res}
                     parentry = self.bfit.fit_files.fit_lines[rkey].parentry
-
+        
         # get calcuated initial values
         if values is None:
             values = fitter.gen_init_par(fn_title, ncomp, self.bfit.data[run].bd,
                                      self.bfit.get_asym_mode(fit_files))
 
         # set to data
+        
         self.bfit.data[run].set_fitpar(values)
-
+        
         return tuple(plist)
 
     # ======================================================================= #
