@@ -176,7 +176,7 @@ These works, as well as number of unpublished ones
 When fitting data, most of these codes rely on the [MINUIT2] minimizer
 (based on the "classic" [MINUIT] code) provided within the [ROOT] framework.
 In this case, the `migrad` minimizer option in [bfit]
-(made available through [imimuit]) should be used for the best comparison.
+(made available through [iminuit]) should be used for the best comparison.
 
 Note that the run header information can be checked against the API provided by
 the [TRIUMF] [CMMS] group's online muon data ([MUD]) file "[archive]".
