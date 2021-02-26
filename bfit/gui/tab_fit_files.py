@@ -706,18 +706,18 @@ class fit_files(object):
         def run_fit():
             try:
                 # fit_output keyed as {run:[key/par/cov/chi/fnpointer]}
-                fit_output, gchi = fitter(fn_name=fn_name,
-                                          ncomp=ncomp,
-                                          data_list=data_list,
-                                          hist_select=self.bfit.hist_select,
-                                          asym_mode=self.bfit.get_asym_mode(self),
-                                          xlims=xlims)
+                fit_output = fitter(fn_name=fn_name,
+                                    ncomp=ncomp,
+                                    data_list=data_list,
+                                    hist_select=self.bfit.hist_select,
+                                    asym_mode=self.bfit.get_asym_mode(self),
+                                    xlims=xlims)
             except Exception as errmsg:
                 self.logger.exception('Fitting error')
                 que.put(str(errmsg))
                 raise errmsg from None
 
-            que.put((fit_output, gchi))
+            que.put(fit_output)
 
         # log fitting
         for d in data_list:
@@ -734,7 +734,7 @@ class fit_files(object):
         output = popup.run()
 
         # fit success
-        if type(output) is tuple:
+        if type(output) is tuple: 
             fit_output, gchi = output
 
         # error message
@@ -748,13 +748,27 @@ class fit_files(object):
 
         # get fit functions
         fns = fitter.get_fit_fn(fn_name, ncomp, data_list)
-
-        for k in fit_output.keys():
-            fit_output[k].append(fns[k])
-
+        
         # set output results
-        for key in fit_output.keys():
-            self.bfit.data[key].set_fitresult(fit_output[key])
+        for key, df in fit_output.items(): # iterate run ids
+            
+            # get fixed and shared
+            parentry = self.fit_lines[key].parentry
+            keylist = tuple(parentry.keys())
+            fs = {'fixed':[], 'shared':[], 'parnames':keylist}
+            
+            for kk in keylist:  # iterate parameters
+                fs['fixed'].append(parentry[kk]['fixed'][0].get())
+                fs['shared'].append(parentry[kk]['shared'][0].get())
+            
+            df2 = pd.concat((df, pd.DataFrame(fs).set_index('parnames')), axis='columns')
+            
+            # make output
+            new_output = {'results': df2, 
+                          'fn': fns[key],
+                          'gchi': gchi}
+                          
+            self.bfit.data[key].set_fitresult(new_output)
             self.bfit.data[key].fit_title = self.fit_function_title.get()
             self.bfit.data[key].ncomp = self.n_component.get()
 
@@ -917,7 +931,7 @@ class fit_files(object):
 
         # get data and fit results
         data = self.bfit.data[id]
-        fit_par = [data.fitpar['res'][p] for p in data.parnames]
+        fit_par = data.fitpar.loc[data.parnames, 'res'].values
         fn = data.fitfn
         data = data.bd
 
@@ -1005,7 +1019,7 @@ class fit_files(object):
 
         # get data and fit results
         data = self.bfit.data[id]
-        fit_par = [data.fitpar['res'][p] for p in data.parnames]
+        fit_par = data.fitpar.loc[data.parnames, 'res'].values
         fn = data.fitfn
 
         # get draw style
@@ -1059,18 +1073,18 @@ class fit_files(object):
         draw_mode = self.bfit.asym_dict[self.bfit.fetch_files.asym_type.get()]
         if draw_mode == 'cn1':
             draw_mode += 'f'
-            fity /= data.fitpar['res']['baseline']
+            fity /= data.fitpar.loc['baseline','res']
 
         elif draw_mode == 'cn2':
             draw_mode += 'f'
-            if 'amp' in data.fitpar['res'].keys():
-                fity /= data.fitpar['res']['amp']
+            if 'amp' in data.fitpar.index:
+                fity /= data.fitpar.loc['amp','res']
             else:
                 fity /= fn(t[0], *par)
 
         elif draw_mode == 'cs':
             draw_mode += 'f'
-            fity -= data.fitpar['res']['baseline']
+            fity -= data.fitpar.loc['baseline', 'res']
 
         self.plt.plot(figstyle, draw_id, fitxx, fity, zorder=10,
                       unique=unique, **drawargs)
@@ -1323,6 +1337,23 @@ class fit_files(object):
                 else:
                     val['Error '+v] = v2[1]
 
+        # get fixed and shared
+        keylist = []
+        for k, line in self.fit_lines.items():
+            keylist.append(k)
+            data = line.dataline.bdfit
+            
+            for kk in data.fitpar.index:
+                
+                name = 'fixed '+kk
+                if name not in val.keys(): val[name] = []
+                val[name].append(data.fitpar.loc[kk, 'fixed'])
+                
+                name = 'shared '+kk
+                if name not in val.keys(): val[name] = []
+                val[name].append(data.fitpar.loc[kk, 'shared'])
+
+        # get shared and fixed parameters
         # make data frame for output
         df = pd.DataFrame(val)
         df.set_index('Run Number', inplace=True)
@@ -1397,11 +1428,11 @@ class fit_files(object):
             fitx = np.linspace(min(t), max(t), self.n_fitx_pts)
 
             try:
-                fit_par = [data.fitpar['res'][p] for p in data.parnames]
+                fit_par = data.fitpar.loc[data.parnames, 'res']
             except AttributeError:
                 continue
-            dfit_par_l = [data.fitpar['dres-'][p] for p in data.parnames]
-            dfit_par_h = [data.fitpar['dres+'][p] for p in data.parnames]
+            dfit_par_l = data.fitpar.loc[data.parnames, 'dres-']
+            dfit_par_h = data.fitpar.loc[data.parnames, 'dres+']
             fity = data.fitfn(fitx, *fit_par)
 
             if data.mode in self.bfit.units:
@@ -1551,16 +1582,16 @@ class fit_files(object):
 
             # get T1 and beta from that component average
             for r in runs:
-                T1i = data[r].fitpar['res']['1_T1'+comp_num]
+                T1i = data[r].fitpar.loc['1_T1'+comp_num, 'res']
                 T1 = 1/T1i
-                dT1_l = data[r].fitpar['dres-']['1_T1'+comp_num]/(T1i**2)
-                dT1_u = data[r].fitpar['dres+']['1_T1'+comp_num]/(T1i**2)
+                dT1_l = data[r].fitpar.loc['1_T1'+comp_num, 'dres-']/(T1i**2)
+                dT1_u = data[r].fitpar.loc['1_T1'+comp_num, 'dres+']/(T1i**2)
 
                 dT1 = np.sqrt(np.square(dT1_l) + np.square(dT1_u))
 
-                beta = data[r].fitpar['res']['beta'+comp_num]
-                dbeta_l = data[r].fitpar['dres-']['beta'+comp_num]
-                dbeta_u = data[r].fitpar['dres+']['beta'+comp_num]
+                beta = data[r].fitpar.loc['beta'+comp_num, 'res']
+                dbeta_l = data[r].fitpar.loc['beta'+comp_num, 'dres-']
+                dbeta_u = data[r].fitpar.loc['beta'+comp_num, 'dres+']
 
                 dbeta = np.sqrt(np.square(dbeta_l) + np.square(dbeta_u))
 
@@ -1629,9 +1660,9 @@ class fit_files(object):
 
             for r in runs:
                 try:
-                    val.append(data[r].fitpar['res'][select])
-                    err_l.append(data[r].fitpar['dres-'][select])
-                    err_u.append(data[r].fitpar['dres+'][select])
+                    val.append(data[r].fitpar.loc[select, 'res'])
+                    err_l.append(data[r].fitpar.loc[select, 'dres-'])
+                    err_u.append(data[r].fitpar.loc[select, 'dres+'])
                 except KeyError:
                     val.append(np.nan)
                     err_l.append(np.nan)
@@ -1776,10 +1807,14 @@ class fit_files(object):
             fetch_tab.data_lines[id].draw_res_checkbox['state'] = 'normal'
 
             # set fit inputs
-            d_fitdata[id].set_fitpar({p:[parentry[p]['p0'],
-                                         parentry[p]['blo'],
-                                         parentry[p]['bhi'],
-                                         parentry[p]['fixed']] for p in parentry})
+            df = pd.DataFrame([], columns=['p0', 'blo', 'bhi', 'fixed'])
+            for p, par in parentry.items(): 
+                s = pd.Series([par['p0'], par['blo'], par['bhi'], par['fixed']], 
+                              index=['p0', 'blo', 'bhi', 'fixed'],
+                              name=p)
+                df = df.append(s)
+            
+            d_fitdata[id].set_fitpar(df)
 
             # get chisq
             keylist = self.fitter.gen_param_names(from_file['fitfn'],
@@ -1813,13 +1848,15 @@ class fit_files(object):
                 fitfn1 = fitfn
 
             # set fit results
-            d_fitdata[id].set_fitresult([keylist,
-                              [float(parentry[p]['res']) if parentry[p]['res'] else np.nan for p in keylist],
-                              [float(parentry[p]['dres-']) if parentry[p]['dres-'] else np.nan for p in keylist],
-                              [float(parentry[p]['dres+']) if parentry[p]['dres+'] else np.nan for p in keylist],
-                              chi,
-                              fitfn1]
-                            )
+            df = pd.DataFrame({ 'res':[float(parentry[p]['res']) 
+                                        if parentry[p]['res'] else np.nan for p in keylist],
+                                'dres-':[float(parentry[p]['dres-']) 
+                                        if parentry[p]['dres-'] else np.nan for p in keylist],
+                                'dres+':[float(parentry[p]['dres+']) 
+                                        if parentry[p]['dres+'] else np.nan for p in keylist],  
+                                'chi':np.full(len(keylist), chi)})  
+            
+            d_fitdata[id].set_fitresult({'fn': fitfn1, 'results': df})
 
         # xlims
         self.xlo.set(from_file['xlo'])
@@ -2236,10 +2273,13 @@ class fitline(object):
 
                 if force_modify:
                     entry.delete(0, 'end')
-                    self.parentry[p]['fixed'][0].set(fitdat.fitpar['fixed'][p])
+                    self.parentry[p]['fixed'][0].set(fitdat.fitpar.loc[p, 'fixed'])
 
                 if not entry.get():
-                    entry.insert(0, str(fitdat.fitpar[col][p]))
+                    try:
+                        entry.insert(0, str(fitdat.fitpar.loc[p, col]))
+                    except KeyError:
+                        pass
 
                 entry.grid(column=c, row=r, padx=5, sticky=E); c += 1
 
@@ -2259,7 +2299,11 @@ class fitline(object):
                 c += 1
                 value = StringVar()
                 entry = Entry(fitframe, textvariable=value, width=13)
-                entry.insert(0, str(fitdat.fitpar[col][p]))
+                
+                try:
+                    entry.insert(0, str(fitdat.fitpar.loc[p, col]))
+                except KeyError:
+                    entry.insert(0, '')
                 entry.grid(column=c, row=r, padx=5, sticky=E)
                 self.parentry[p][col] = (value, entry)
 
@@ -2338,7 +2382,10 @@ class fitline(object):
                                      variable=value, onvalue=True, offvalue=False)
             entry.grid(column=c, row=r, padx=5, sticky=E); c += 1
             self.parentry[p]['fixed'] = (value, entry)
-            value.set(fitdat.fitpar['fixed'][p])
+            try:
+                value.set(fitdat.fitpar.loc[p, 'fixed'])
+            except KeyError:
+                pass
 
             # do shared box
             entry = ttk.Checkbutton(fitframe, text='', onvalue=True, offvalue=False)
@@ -2359,7 +2406,7 @@ class fitline(object):
             # set bdfit p0 values
             if col != 'fixed':
                 try:
-                    self.dataline.bdfit.fitpar[col][parname] = \
+                    self.dataline.bdfit.fitpar.loc[parname, col] = \
                             float(self.parentry[parname][col][0].get())
                 # failure cases:
                 #   KeyError on ncomp change
@@ -2443,10 +2490,11 @@ class fitline(object):
                 isfitted = any([res[k] for k in res]) # is the latest run fitted?
                 if isfitted and data.run > r:
                     r = data.run
-                    values = {k:(res[k],
-                                 data.fitpar['blo'][k],
-                                 data.fitpar['bhi'][k],
-                                 data.fitpar['fixed'][k]) for k in res}
+                    values = data.fitpar
+                    # ~ values = {k:(res[k],
+                                 # ~ data.fitpar.loc[k, 'blo'],
+                                 # ~ data.fitpar['bhi'],
+                                 # ~ data.fitpar['fixed'][k]) for k in res}
                     parentry = self.bfit.fit_files.fit_lines[rkey].parentry
 
         # get calcuated initial values
@@ -2520,7 +2568,7 @@ class fitline(object):
             data = self.dataline.bdfit
         except KeyError:
             return
-
+        
         try:
             chi = data.chi
         except AttributeError:
@@ -2530,9 +2578,9 @@ class fitline(object):
         for parname in displays.keys():
             disp = displays[parname]
             showstr = "%"+".%df" % self.bfit.rounding
-            disp['res'][0].set(showstr % data.fitpar['res'][parname])
-            disp['dres-'][0].set(showstr % data.fitpar['dres-'][parname])
-            disp['dres+'][0].set(showstr % data.fitpar['dres+'][parname])
+            disp['res'][0].set(showstr % data.fitpar.loc[parname, 'res'])
+            disp['dres-'][0].set(showstr % data.fitpar.loc[parname, 'dres-'])
+            disp['dres+'][0].set(showstr % data.fitpar.loc[parname, 'dres+'])
 
             if 'chi' in disp.keys():
                 disp['chi'][0].set('%.2f' % chi)
@@ -2588,7 +2636,7 @@ class fitline(object):
                     option=omit, figstyle='fit', color='k')
 
         # get the fit results
-        results = {par:bdfit.fitpar['res'][par] for par in pnames_combined}
+        results = {par:bdfit.fitpar.loc[par, 'res'] for par in pnames_combined}
 
         # draw if ncomp is 1
         if ncomp == 1:

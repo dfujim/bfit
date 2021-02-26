@@ -8,6 +8,7 @@ from functools import partial
 import collections
 import numpy as np
 import bdata as bd
+import pandas as pd
 import copy
 
 class fitter(object):
@@ -233,14 +234,25 @@ class fitter(object):
                                         parnames=keylist, 
                                         **kwargs)
         
-        # collect results
+        # set up output dataframe
         if not isinstance(chis, collections.Iterable):   # single run
-            d = bdata_list[0]
-            return ({self.keyfn(d):[keylist, pars, stds_l, stds_h, chis]}, gchi)
-        else:                                           # multiple runs    
-            return ({self.keyfn(d):[keylist, p, sl, sh, c] 
-                for d, p, sl, sh, c in zip(bdata_list, pars, stds_l, stds_h, chis)}, gchi)
-
+            pars = [pars]
+            stds_l = [stds_l]
+            stds_h = [stds_h]
+            chis = [chis]
+            
+        output = {}
+        for i,d in enumerate(bdata_list):
+            key = self.keyfn(d)
+            output[key] = pd.DataFrame({'parname':keylist,
+                                        'res': pars[i],
+                                        'dres+': stds_h[i],
+                                        'dres-': stds_l[i],
+                                        'chi': chis[i],
+                                        })
+            output[key].set_index('parname', inplace=True)
+        return (output, gchi)
+        
     # ======================================================================= #
     def get_fit_fn(self, fn_name, ncomp, data_list):
         
@@ -306,8 +318,9 @@ class fitter(object):
             bdataobj: a bdata object representative of the fitting group. 
             asym_mode: what kind of asymmetry to fit
             
-            Set and return dictionary of initial parameters. 
-                {par_name:par_value}
+            Set and return pd.DataFrame of initial parameters. 
+                col: p0, blo, bhi, fixed
+                index: parameter name
         """
         
         # asym_mode un-used types 
@@ -442,8 +455,8 @@ class fitter(object):
                         par_values2[n] = par_values[n]
         else:
             par_values2 = par_values
-            
-        return par_values2
+        
+        return pd.DataFrame(par_values2, index=['p0', 'blo', 'bhi', 'fixed']).transpose()
         
     # ======================================================================= #
     def get_fn(self, fn_name, ncomp=1, pulse_len=-1, lifetime=-1):

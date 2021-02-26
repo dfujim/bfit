@@ -9,6 +9,7 @@ from bfit.gui.calculator_nqr_B0 import current2field
 from bfit import logger_name
 
 import numpy as np
+import pandas as pd
 
 import bfit
 import logging
@@ -69,16 +70,12 @@ class fitdata(object):
         
         self.check_state.set(False)
         
-        # fit parameters dictionary
-        self.fitpar = {}
-        
         # key for IDing file 
         self.id = self.bfit.get_run_key(data=bd)
         
         # initialize fitpar with fitinputtab.collist
-        for k in ['p0', 'blo', 'bhi', 'res', 'dres+', 'dres-', 'chi', 'fixed', 'shared']:
-            self.fitpar[k] = {}
-        
+        self.fitpar = pd.DataFrame([], columns=['p0', 'blo', 'bhi', 'res', 
+                                    'dres+', 'dres-', 'chi', 'fixed', 'shared'])
         self.read()
 
     # ======================================================================= #
@@ -202,38 +199,49 @@ class fitdata(object):
     # ======================================================================= #
     def set_fitpar(self, values):
         """Set fitting initial parameters
-        values: output of routine gen_init_par: 
-                {par_name:(par, lobnd, hibnd)}
+        values: output of routine gen_init_par: DataFrame:            
+                columns: [p0, blo, bhi, fixed]
+                index: parameter names
         """
     
-        self.parnames = tuple(values.keys())
+        self.parnames = values.index.values
     
-        for v in values.keys():
-            self.fitpar['p0'][v] = values[v][0]
-            self.fitpar['blo'][v] = values[v][1]
-            self.fitpar['bhi'][v] = values[v][2]
-            self.fitpar['fixed'][v] = values[v][3]
-        
-        self.logger.debug('Fit parameters set to %s', self.fitpar)
+        for v in self.parnames:
+            for c in values.columns:
+                self.fitpar.loc[v, c] = values.loc[v, c]
+    
+        self.logger.debug('Fit initial parameters set to %s', self.fitpar)
 
     # ======================================================================= #
     def set_fitresult(self, values):
         """
-            Set fit results. Values is output of fitting routine. It is a list 
-            of tuples
-            [(parname), (par), (err-), (err+), chi, fnpointer]
+            Set fit results. Values is output of fitting routine. 
+            
+            values: {fn: function handle, 
+                     'results': DataFrame of fit results,
+                     'gchi': global chi2}
+                     
+            values['results']: 
+                columns: [res, dres+, dres-, chi, fixed, shared]
+                index: parameter names
         """
-        self.parnames = values[0]
         
-        for i in range(len(self.parnames)):
-            key = values[0][i]
-            self.fitpar['res'][key] = values[1][i]
-            self.fitpar['dres-'][key] = values[2][i]
-            self.fitpar['dres+'][key] = values[3][i]
-            self.fitpar['chi'][key] = values[4]
-        self.chi = values[4]
-        self.fitfn = values[5]
+        # set function
+        self.fitfn = values['fn']
         
+        # get data frame
+        df = values['results']
+        
+        # set parameter names
+        self.parnames = df.index.values
+        
+        # set chi
+        self.chi = df['chi'].values[0]
+        
+        # set parameters
+        for v in self.parnames:
+            for c in df.columns:
+                self.fitpar.loc[v, c] = df.loc[v, c]
         self.logger.debug('Setting fit results to %s', self.fitpar)
     
 # ========================================================================== #
