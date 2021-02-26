@@ -218,6 +218,7 @@ For example, have a look at the header information for [`data/BNMR/2020/040123.m
 [tqdm]: https://github.com/tqdm/tqdm
 [requests]: https://requests.readthedocs.io/en/master/
 [Jupyter]: https://jupyter.org/
+[argparse]: https://docs.python.org/3/library/argparse.html
 
 [YAML]: https://yaml.org/
 [C]: https://en.wikipedia.org/wiki/C_(programming_language)
