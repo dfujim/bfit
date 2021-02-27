@@ -54,9 +54,6 @@ If you use [mudpy], [bdata], or [bfit] in your work, please cite:
 ## Useful Links
 
 * [bfit]
-  * [PyPI]
-  * [Issues]
-  * [Pull Requests]
   * [Wiki]
     * [API Reference]
     * [API Tutorial]
