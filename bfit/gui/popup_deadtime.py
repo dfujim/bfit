@@ -35,8 +35,14 @@ class popup_deadtime(object):
     # ====================================================================== #
     def __init__(self, bfit):
         self.bfit = bfit
-        self.dt = 0
-        self.c = 1
+        
+        # set default deadtimes
+        if bfit.deadtime_global.get():
+            self.dt = bfit.deadtime*1e9
+            self.c = 1
+        else:
+            self.dt = 0
+            self.c = bfit.deadtime
         
         # get logger
         self.logger = logging.getLogger(logger_name)
@@ -96,8 +102,8 @@ class popup_deadtime(object):
         self.dt_inpt = StringVar()
         self.c_inpt = StringVar()
         
-        self.dt_inpt.set(str(self.dt))
-        self.c_inpt.set(str(self.c))
+        self.dt_inpt.set('%g' % self.dt)
+        self.c_inpt.set('%g' % self.c)
         
         entry_dt = Entry(frame_input, textvariable=self.dt_inpt, width=10, justify=RIGHT)
         entry_c =  Entry(frame_input, textvariable=self.c_inpt,  width=10, justify=RIGHT)
