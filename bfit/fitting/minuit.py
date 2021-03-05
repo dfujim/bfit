@@ -9,7 +9,7 @@ from bfit.fitting.leastsquares import LeastSquares
 
 class minuit(Minuit):
     """
-        Chi squared minimization for function of best fit using the minuit code
+        Chi squared minimization for function of best fit using iminuit
     """
     
     # ====================================================================== #
@@ -148,7 +148,6 @@ class minuit(Minuit):
         # set print level
         self.print_level = print_level
         
-        
     # ====================================================================== #
     def chi2(self):
         nfixed = sum(self.fixed)
@@ -159,6 +158,70 @@ class minuit(Minuit):
             return np.nan
         else:
             return self.fval/dof
+    
+    # ====================================================================== #
+    def get_merrors(self, attribute):
+        """
+            Get attributes from self.merrors as an array
+            
+            Valid attributes:
+                at_lower_limit
+                at_lower_max_fcn
+                at upper_limit
+                at_upper_max_fcn
+                is_valid
+                lower
+                lower_new_min
+                lower_valid
+                min
+                name
+                nfcn
+                number
+                upper
+                upper_new_min
+                upper_valid
+        """
+        
+        keylist = tuple(self.merrors.keys())
+        
+        # check attribute
+        if attribute not in self.merrors[keylist[0]].__slots__:
+            raise AttributeError('Attribute "%s" not found. Must be one of %s.'%\
+                    (attribute, self.merrors[keylist[0]].__slots__))
+        
+        # get
+        return np.array([getattr(self.merrors[k], attribute) for k in keylist])
+        
+    @property
+    def mat_lower_limit(self): return self.get_merrors('at_lower_limit')
+    @property
+    def mat_lower_max_fcn(self): return self.get_merrors('at_lower_max_fcn')
+    @property
+    def mat_upper_limit(self): return self.get_merrors('at_upper_limit')
+    @property
+    def mat_upper_max_fcn(self): return self.get_merrors('at_upper_max_fcn')
+    @property
+    def mis_valid(self): return self.get_merrors('is_valid')
+    @property
+    def mlower(self): return self.get_merrors('lower')
+    @property
+    def mlower_new_min(self): return self.get_merrors('lower_new_min')
+    @property
+    def mlower_valid(self): return self.get_merrors('lower_valid')
+    @property
+    def mmin(self): return self.get_merrors('min')
+    @property
+    def mname(self): return self.get_merrors('name')
+    @property
+    def mnfcn(self): return self.get_merrors('nfcn')
+    @property
+    def mnumber(self): return self.get_merrors('number')
+    @property
+    def mupper(self): return self.get_merrors('upper')
+    @property
+    def mupper_new_min(self): return self.get_merrors('upper_new_min')
+    @property
+    def mupper_valid(self): return self.get_merrors('upper_valid')
         
 def get_depth(lst, depth=0):
     try: 
