@@ -149,6 +149,7 @@ class minuit(Minuit):
         self.print_level = print_level
         
     # ====================================================================== #
+    @property
     def chi2(self):
         nfixed = sum(self.fixed)
         narg = len(self.values)
