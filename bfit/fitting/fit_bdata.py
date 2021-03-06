@@ -79,6 +79,8 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
     # get fn
     if not isinstance(fn, collections.Iterable):
         fn = [fn]
+    else:
+        fn = list(fn)
     fn.extend([fn[-1] for i in range(ndata-len(fn))])
     
     # get number of parameters
@@ -135,6 +137,11 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
         if 'bounds' in kwargs.keys():
             bounds = kwargs['bounds']
             del kwargs['bounds']
+            
+            # expand bounds if not one for every list value
+            if len(bounds) != ndata:
+                bounds = [bounds]*ndata
+            
         else:
             bounds = [(-np.inf, np.inf)]*ndata 
             
