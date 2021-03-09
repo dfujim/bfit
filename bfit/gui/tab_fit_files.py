@@ -823,9 +823,6 @@ class fit_files(object):
             self.bfit.draw_style.set(style)
             self.bfit.fetch_files.asym_type.set(asym_mode_fetch)
 
-        else:
-            messagebox.showinfo("Fitting completed", "Fitting completed")
-
     # ======================================================================= #
     def do_fit_constraints(self):
 
