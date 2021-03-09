@@ -267,6 +267,7 @@ class popup_fit_constraints(template_fit_popup):
         # fit success
         if type(output) is tuple:
             par, std_l, std_u, cov, chi, gchi = output
+            std_l = np.abs(std_l)
         
         # error
         elif type(output) is str:
@@ -280,24 +281,21 @@ class popup_fit_constraints(template_fit_popup):
         # calculate original parameter equivalents
         for i, k in enumerate(keylist):
             data = fetch_files.data_lines[k].bdfit
-            
-            # calculate
+
+            # calculate parameter values and estimate errors
             old_par = [cfn(*par[i]) for cfn in constr_fns[i]]
-            old_std_l = [st if adef not in defined else np.nan for st, adef in zip(std_l[i], alldef)] 
-            old_std_l += [np.nan]*(len(alldef)-len(old_std_l))
-            
-            old_std_u = [st if adef not in defined else np.nan for st, adef in zip(std_u[i], alldef)]
-            old_std_u += [np.nan]*(len(alldef)-len(old_std_u))
+            old_std_l = [abs(p-cfn(*(par[i]-std_l[i]))) for p, cfn in zip(old_par, constr_fns[i])]
+            old_std_u = [abs(p-cfn(*(par[i]+std_u[i]))) for p, cfn in zip(old_par, constr_fns[i])]
             
             old_chi = chi[i]
             
-            # sort by original parameter name order
-            old_std_l = [old_std_l[alldef.index(n)] for n in cgen.oldpar]
-            old_std_u = [old_std_u[alldef.index(n)] for n in cgen.oldpar]
-            
             # set to fitdata containers
-            # [(parname), (par), (err-), (err+), chi, fnpointer]
-            data.set_fitresult([cgen.oldpar, old_par, old_std_l, old_std_u, old_chi, fnptrs[i]])
+            results = pd.DataFrame({'res': old_par, 
+                                    'dres+': old_std_u,
+                                    'dres-': old_std_l,
+                                    'chi': old_chi,
+                                    }, index=cgen.oldpar)
+            data.set_fitresult({'fn': fnptrs[i], 'results': results, 'gchi': gchi})
             
         # display in fit_files tab
         for key in fit_files.fit_lines:
