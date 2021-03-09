@@ -172,7 +172,7 @@ class fitter(object):
             
             # get fitting function for 20 and 2h
             if dat.mode in ['20', '2h']: 
-                pulse = dat.get_pulse_s()
+                pulse = dat.pulse_s
                 fn.append(self.get_fn(fn_name=fn_name, ncomp=ncomp, 
                           pulse_len=pulse, lifetime=life))                
                 
@@ -270,7 +270,7 @@ class fitter(object):
             
             # get fitting function for 20 and 2h
             if dat.mode in ['20', '2h']: 
-                pulse = dat.get_pulse_s()                
+                pulse = dat.pulse_s                
                 fn.append(self.get_fn(fn_name, ncomp, pulse, life))
                 
             # 1f functions

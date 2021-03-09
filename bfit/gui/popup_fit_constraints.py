@@ -164,7 +164,7 @@ class popup_fit_constraints(template_fit_popup):
             # get pulse length
             pulse_len = -1
             try:
-                pulse_len = data.bd.get_pulse_s()
+                pulse_len = data.bd.pulse_s
             except KeyError:
                 pass
             

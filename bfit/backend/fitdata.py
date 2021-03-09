@@ -106,14 +106,14 @@ class fitdata(object):
     @property
     def beam_kev(self): 
         try:
-            return self.bd.beam_kev()
+            return self.bd.beam_keV
         except AttributeError:
             return np.nan
     
     @property
     def beam_kev_err(self): 
         try:
-            return self.bd.beam_kev(get_error=True)
+            return self.bd.beam_keV_err
         except AttributeError:
             return np.nan
         

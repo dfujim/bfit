@@ -989,7 +989,7 @@ class fit_files(object):
 
         # draw pulse marker
         if '2' in data.mode:
-            self.plt.axvline(figstyle, 'line', data.get_pulse_s(), ls='--', color='k')
+            self.plt.axvline(figstyle, 'line', data.pulse_s, ls='--', color='k')
             unq = False
         else:
             unq = True
@@ -1831,7 +1831,7 @@ class fit_files(object):
             d_actual = fetch_tab.data_lines[id]
             pulse_len = 0
             if d_actual.mode in ('20', '2h'):
-                pulse_len = d_actual.bdfit.get_pulse_s()
+                pulse_len = d_actual.bdfit.pulse_s
 
             # get probe lifetime
             lifetime = bd.life[from_file['probe_species']]
@@ -2611,10 +2611,10 @@ class fitline(object):
 
         if '2' in bdfit.mode:
             fn_single = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=1,
-                            pulse_len=bdfit.get_pulse_s(),
+                            pulse_len=bdfit.pulse_s,
                             lifetime=bd.life[bfit.probe_species.get()])
             fn_combined = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=ncomp,
-                            pulse_len=bdfit.get_pulse_s(),
+                            pulse_len=bdfit.pulse_s,
                             lifetime=bd.life[bfit.probe_species.get()])
         else:
             fn_single = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=1)

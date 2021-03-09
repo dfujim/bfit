@@ -204,7 +204,7 @@ class popup_param(object):
         elif self.fname in ('Exp', 'Str Exp'):
             
             # get function
-            pulse = self.data.get_pulse_s()
+            pulse = self.data.pulse_s
             lifetime = bd.life[self.bfit.probe_species.get()]
         
             if self.fname == 'Exp':
