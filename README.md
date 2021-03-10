@@ -140,19 +140,7 @@ This is the default behaviour for [bfit] installed from [PyPI].
 
 ### First Startup 
 
-To launch the GUI, from a terminal simply call:
-
-```bash
-bfit
-```
-
-If this fails, one can also use the alternative syntax:
-
-```bash
-python3 -m bfit
-```
-
-where `python3` may be replaced with any (version 3) [Python] executable.
+To launch the GUI from a terminal simply call `bfit`, if this fails, one can also use the alternative syntax `python3 -m bfit`, where `python3` may be replaced with any (version 3) [Python] executable.
 
 ### Testing
 
