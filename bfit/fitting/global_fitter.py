@@ -58,8 +58,8 @@ class global_fitter(object):
         
         Instance Variables: 
             
-            chi_glbl                global chisqured
-            chi                     list of chisquared values for each data set
+            chi_glbl                global chisqured, also accessible through gchi2
+            chi                     list of chisquared values for each data set, also accessible through chi2
             
             fn                      list of fitting function handles
             fixed                   list of fixed variables (corresponds to input)
@@ -75,11 +75,11 @@ class global_fitter(object):
             nsets                   number of data sets
             
             par                     fit results with unnecessary variables stripped 
-            par_runwise             fit results run-by-run with all needed inputs
+            par_runwise             fit results run-by-run with all needed inputs, also accessible via values
             std_l, std_u            lower/upper errors with unnecessary variables stripped 
-            std_l_runwise           lower errors run-by-run with all needed inputs
-            std_u_runwise           upper errors run-by-run with all needed inputs
-            cov                     fit covarince matrix with unnecessary variables stripped
+            std_l_runwise           lower errors run-by-run with all needed inputs, also accessible via lower
+            std_u_runwise           upper errors run-by-run with all needed inputs, also accessible via upper
+            cov                     fit covarince matrix with unnecessary variables stripped, , also accessible via covariance
             cov_runwise             fit covarince matrix run-by-run with all needed inputs
             
             shared                  array of bool of len = nparameters, share parameter if true. 
@@ -528,7 +528,7 @@ class global_fitter(object):
         
         # set default p0
         if 'p0' in fitargs:
-            p0 = np.asarray(fitargs['p0'])
+            p0 = np.array(list(fitargs['p0']))
             del fitargs['p0']
             
             # expand p0
@@ -717,8 +717,13 @@ class global_fitter(object):
             
             return (global chi, list of chi for each fn)
         """
+        return (self.gchi2, self.chi2)
 
-        # global
+    @property
+    def gchi2(self):
+        """
+            Get global chisquared / DOF
+        """
         dof = len(self.xcat)-len(self.par)
         if dof <= 0:
             raise DivisionByZero("Zero degrees of freedom")
@@ -735,8 +740,13 @@ class global_fitter(object):
                             fn_prime = self.master_fnprime)
             
             self.chi_glbl = ls(*self.par) / dof
-            
-        # single fn chisq
+        return self.chi_glbl
+        
+    @property
+    def chi2(self):
+        """
+            Get chisquared / DOF for each fit function
+        """
         self.chi = []
         for i in range(self.nsets):
             
@@ -767,9 +777,10 @@ class global_fitter(object):
                 dof = len(x)
             
             self.chi.append(ls(*np.concatenate((p, m))) / dof)
+            self.chi = np.array(self.chi)
+            
+        return self.chi
         
-        return (self.chi_glbl, self.chi)
-
     # ======================================================================= #
     def get_par(self):
         """
@@ -786,6 +797,18 @@ class global_fitter(object):
                 self.std_l_runwise, 
                 self.std_u_runwise, 
                 self.cov_runwise)
+    
+    @property
+    def values(self):       return self.par_runwise
+    
+    @property
+    def lower(self):        return self.std_l_runwise
+    
+    @property
+    def upper(self):        return self.std_u_runwise
+    
+    @property
+    def covariance(self):   return self.cov_runwise
     
     # ======================================================================= #
     def _expand_bound_lim(self, lim):
