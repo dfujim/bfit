@@ -777,7 +777,8 @@ class global_fitter(object):
                 dof = len(x)
             
             self.chi.append(ls(*np.concatenate((p, m))) / dof)
-            self.chi = np.array(self.chi)
+        
+        self.chi = np.array(self.chi)
             
         return self.chi
         
