@@ -2,20 +2,43 @@
 # Derek Fujimoto
 # Feb 2021
 
-from bfit.test.testing import *
+from numpy.testing import *
 import numpy as np
 import matplotlib.pyplot as plt
+from bfit.gui.bfit import bfit
+
+# make gui
+b = bfit(None, True)
 
 # get bfit object and tab
 tab = b.fileviewer
 
-def test_fetch(r, y, mode):    
+def test_fetch_20():    fetch(40123, 2020, '20')
+def test_fetch_1f():    fetch(40033, 2020, '1f')
+def test_fetch_1w():    fetch(40037, 2020, '1w')
+def test_fetch_1n():    fetch(40011, 2020, '1n')
+def test_fetch_2h():    fetch(45539, 2019, '2h')
+def test_fetch_2e():    fetch(40326, 2019, '2e')
+def test_draw_20():     draw(40123, 2020, '20')
+def test_draw_1f():     draw(40033, 2020, '1f')
+def test_draw_1w():     draw(40037, 2020, '1w')
+def test_draw_1n():     draw(40011, 2020, '1n')
+def test_draw_2h():     draw(45539, 2019, '2h')
+def test_draw_2e():     draw(40326, 2019, '2e')
+
+def fetch(r, y, mode):    
     tab.year.set(y)
     tab.runn.set(r)
-    test_action(tab.get_data, "fileviewer fetch %s (%d.%d) data" % (mode, y, r))
-    test_perfect(tab.data.run, r, "fileviewer fetch %s (%d.%d) data accuracy" % (mode, y, r))
     
-def test_draw(r, y, mode):
+    try:
+        tab.get_data()
+    except Exception as err: 
+        print(err)
+        raise AssertionError("fileviewer fetch %s (%d.%d) data" % (mode, y, r))
+    
+    assert_equal(tab.data.run, r, "fileviewer fetch %s (%d.%d) data accuracy" % (mode, y, r))
+    
+def draw(r, y, mode):
     
     # get data
     tab.year.set(y)
@@ -32,7 +55,11 @@ def test_draw(r, y, mode):
         draw_type = tab.asym_type.get()
         
         # draw
-        test_action(tab.draw, "fileviewer draw %s in mode %s" % (mode, draw_type), 'inspect')
+        try:
+            tab.draw(figstyle = 'inspect')
+        except Exception as err: 
+            print(err)
+            raise AssertionError("fileviewer draw %s in mode %s" % (mode, draw_type), 'inspect')
         
         if mode == '2e':
             b.do_close_all()
@@ -55,7 +82,7 @@ def test_draw_mode():
     tab.draw('inspect')
     
     ax = plt.gca()
-    test_perfect(len(ax.draw_objs), 2, 'fileviewer stack')
+    assert_equal(len(ax.draw_objs), 2, 'fileviewer stack')
     
     # test redraw
     b.draw_style.set('redraw')
@@ -71,7 +98,7 @@ def test_draw_mode():
     tab.draw('inspect')
     
     ax = plt.gca()
-    test_perfect(len(ax.draw_objs), 1, 'fileviewer redraw')
+    assert_equal(len(ax.draw_objs), 1, 'fileviewer redraw')
     
     # test new
     b.draw_style.set('new')
@@ -83,7 +110,7 @@ def test_draw_mode():
     tab.draw('inspect')
     tab.draw('inspect')
     
-    test_perfect(len(b.plt.plots['inspect']), 3, 'fileviewer draw new')
+    assert_equal(len(b.plt.plots['inspect']), 3, 'fileviewer draw new')
     
     b.do_close_all()
     
@@ -91,6 +118,6 @@ def test_autocomplete():
     tab.year.set(2020)
     tab.runn.set(402)
     tab.get_data()
-    test_perfect(tab.data.run, 40299, 'fileviewer autocomplete fetch')
+    assert_equal(tab.data.run, 40299, 'fileviewer autocomplete fetch')
     
 
