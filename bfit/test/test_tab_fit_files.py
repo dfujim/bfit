@@ -2,13 +2,17 @@
 # Derek Fujimoto
 # Feb 2021
 
-from bfit.test.testing import *
+from numpy.testing import *
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import bdata as bd
 from bfit import pulsed_exp, minuit
 from bfit.fitting.leastsquares import LeastSquares
+from bfit.gui.bfit import bfit
+
+# make gui
+b = bfit(None, True)
 
 # get bfit object and tab
 tab = b.fit_files
@@ -32,18 +36,18 @@ def test_populate():
     
     # check populate
     tab.populate()
-    test_misc('2020.40123' in tab.fit_lines.keys(), 'First fetched run populated')
-    test_misc('2020.40127' in tab.fit_lines.keys(), 'Second fetched run populated')
+    assert('2020.40123' in tab.fit_lines.keys()), 'First fetched run populated'
+    assert('2020.40127' in tab.fit_lines.keys()), 'Second fetched run populated'
     
     # remove
     tab2.data_lines['2020.40123'].degrid()
     tab.populate()
-    test_misc('2020.40123' not in tab.fit_lines.keys(), 'First fetched run removed')
+    assert('2020.40123' not in tab.fit_lines.keys()), 'First fetched run removed'
     
     # fetch again
     tab2.get_data()
     tab.populate()
-    test_misc('2020.40123' in tab.fit_lines.keys(), 'Re-populated after run removal and refetch')
+    assert('2020.40123' in tab.fit_lines.keys()), 'Re-populated after run removal and refetch'
     
 def test_populate_param():
         
@@ -56,16 +60,24 @@ def test_populate_param():
     # set fit fn
     tab.fit_function_title.set('Str Exp')
     tab.populate_param()
-    test_perfect(line.get_new_parameters(), ('1_T1', 'amp', 'beta'), 'Single function parameters populated')
+    assert_equal(line.get_new_parameters(), ('1_T1', 'amp', 'beta'), 'Single function parameters populated')
     
     # multiple terms
     tab.fit_function_title.set('Exp')
     tab.n_component.set(2)
     tab.populate_param()
-    test_perfect(line.get_new_parameters(), ('1_T1_0', '1_T1_1', 'amp_0', 'amp_1'), 
+    assert_equal(line.get_new_parameters(), ('1_T1_0', '1_T1_1', 'amp_0', 'amp_1'), 
                  'Two term function parameters populated')
     
 # do the fit separately
+def test_fit_curve_fit():       fit(separate_curve_fit, 'curve_fit')
+def test_fit_migrad():          fit(separate_migrad, 'migrad_hesse')
+def test_fit_minos():           fit(separate_minos, 'migrad_minos')
+def test_fit_single_curve_fit():fit_single(separate_curve_fit, 'curve_fit')
+def test_fit_single_migrad():   fit_single(separate_migrad, 'migrad_hesse')
+def test_fit_single_minos():    fit_single(separate_minos, 'migrad_minos')
+
+
 def separate_curve_fit(entry, run, **kwargs):
     
     # data
@@ -128,7 +140,7 @@ def separate_migrad(entry, run, do_minos=False, **kwargs):
 def separate_minos(entry, run, **kwargs):
     return separate_migrad(entry, run, do_minos=True, **kwargs)
     
-def test_fit(separate_fit, minimizer):
+def fit(separate_fit, minimizer):
     
     # get data
     get_data()
@@ -156,19 +168,21 @@ def test_fit(separate_fit, minimizer):
         upp = [float(entry[k]['dres+'][1].get()) for k in entry.keys()]
         
         # check
-        test_arr(par, res, 'Copying %s minimizer results for %s' % (minimizer, k), tol=1e-3)
-        test_arr(lower, low, 'Copying %s minimizer lower errors for %s' % (minimizer, k), tol=1e-3)
-        test_arr(upper, upp, 'Copying %s minimizer upper errors for %s' % (minimizer, k), tol=1e-3)
+        assert_array_almost_equal(par, res, err_msg = 'Copying %s minimizer results for %s' % (minimizer, k), decimal=3)
+        assert_array_almost_equal(lower, low, err_msg = 'Copying %s minimizer lower errors for %s' % (minimizer, k), decimal=3)
+        assert_array_almost_equal(upper, upp, err_msg = 'Copying %s minimizer upper errors for %s' % (minimizer, k), decimal=3)
         
         # check chi2
         chi = float(entry['1_T1']['chi'][1].get())
-        test(chi, chi2, 'Copying chi2 for %s minimizer for %s' % (minimizer, k), tol=1e-2)
+        assert_almost_equal(chi, chi2, 
+                        err_msg = 'Copying chi2 for %s minimizer for %s' % (minimizer, k), 
+                        decimal=2)
     
     # reset minimizer
     b.minimizer.set('bfit.fitting.fitter_curve_fit')
     b.set_fit_routine()
 
-def test_fit_single(separate_fit, minimizer):
+def fit_single(separate_fit, minimizer):
     
     # clear setup
     b.do_close_all()
@@ -199,13 +213,16 @@ def test_fit_single(separate_fit, minimizer):
     upp = [float(entry[k]['dres+'][1].get()) for k in entry.keys()]
     
     # check
-    test_arr(par, res, 'Copying %s minimizer results for single run' % minimizer, tol=1e-3)
-    test_arr(lower, low, 'Copying %s minimizer lower errors for single run' % minimizer, tol=1e-3)
-    test_arr(upper, upp, 'Copying %s minimizer upper errors for single run' % minimizer, tol=1e-3)
+    assert_array_almost_equal(par, res, 
+                err_msg = 'Copying %s minimizer results for single run' % minimizer, decimal=3)
+    assert_array_almost_equal(lower, low, 
+                err_msg = 'Copying %s minimizer lower errors for single run' % minimizer, decimal=3)
+    assert_array_almost_equal(upper, upp, 
+                err_msg = 'Copying %s minimizer upper errors for single run' % minimizer, decimal=3)
     
     # check chi2
     chi = float(entry['1_T1']['chi'][1].get())
-    test(chi, chi2, 'Copying chi2 for %s minimizer for single run' % minimizer, tol=1e-2)
+    test(chi, chi2, 'Copying chi2 for %s minimizer for single run' % minimizer, decimal=2)
     
     # reset minimizer
     b.minimizer.set('bfit.fitting.fitter_curve_fit')
@@ -235,14 +252,14 @@ def test_fit_input():
     # data_list: [bdfit, pdict, doptions]
     
     # check function
-    test_perfect(tab.fit_input[0], 'Bi Exp', "Function name passing to fitter")
+    assert_equal(tab.fit_input[0], 'Bi Exp', "Function name passing to fitter")
     
     # check ncomp
-    test_perfect(tab.fit_input[1], 2, "Number of components passing to fitter")
+    assert_equal(tab.fit_input[1], 2, "Number of components passing to fitter")
     
     # check
-    test_perfect(tab.fit_input[2][0][2]['rebin'], 10, "Rebin passing for file 1")
-    test_perfect(tab.fit_input[2][1][2]['rebin'], 2, "Rebin passing for file 2")
+    assert_equal(tab.fit_input[2][0][2]['rebin'], 10, "Rebin passing for file 1")
+    assert_equal(tab.fit_input[2][1][2]['rebin'], 2, "Rebin passing for file 2")
 
 def test_fixed():
     
@@ -284,17 +301,17 @@ def test_shared():
     T11 = float(entry['1_T1']['res'][1].get())
     T12 = float(entry2['1_T1']['res'][1].get())
     
-    test(T11, T12, 'Shared result equal')
+    assert_almost_equal(T11, T12, err_msg = 'Shared result equal')
     
     T11 = float(entry['1_T1']['dres-'][1].get())
     T12 = float(entry2['1_T1']['dres-'][1].get())
     
-    test(T11, T12, 'Shared lower error equal')
+    assert_almost_equal(T11, T12, err_msg = 'Shared lower error equal')
     
     T11 = float(entry['1_T1']['dres+'][1].get())
     T12 = float(entry2['1_T1']['dres+'][1].get())
     
-    test(T11, T12, 'Shared upper error equal')
+    assert_almost_equal(T11, T12, err_msg = 'Shared upper error equal')
     
     # check the unshared result
     amp1 = float(entry['amp']['res'][1].get())
@@ -335,14 +352,14 @@ def test_modify_for_all_reset_p0():
             
             initial[k][c] = entry[k][c][0].get()
             entry[k][c][0].set(c)
-            test_perfect(entry2[k][c][0].get(), c, "Modify all for %s (%s)" % (k,c))
+            assert_equal(entry2[k][c][0].get(), c, err_msg = "Modify all for %s (%s)" % (k,c))
      
     # reset
     tab.do_reset_initial()
     
     for k in entry.keys():    
         for c in ('p0', 'blo', 'bhi'):
-            test_perfect(entry[k][c][0].get(), initial[k][c], "Reset p0 for %s (%s)" % (k,c))
+            assert_equal(entry[k][c][0].get(), initial[k][c], err_msg = "Reset p0 for %s (%s)" % (k,c))
                 
 def test_p0_prior():
     
@@ -367,8 +384,8 @@ def test_p0_prior():
     p0 = tab.fit_lines['2020.40124'].parentry
     
     for k in result.keys():
-        test(float(result[k]['res'][0].get()), float(p0[k]['p0'][0].get()), 
-             'Set last result as p0 for new run for %s'%k, tol=1e-5)
+        assert_almost_equal(float(result[k]['res'][0].get()), float(p0[k]['p0'][0].get()), 
+             err_msg = 'Set last result as p0 for new run for %s'%k, decimal=5)
     
 def test_result_as_p0():
     
@@ -388,8 +405,8 @@ def test_result_as_p0():
         entry = tab.fit_lines[run_id].parentry
     
         for k in entry.keys():
-            test(float(entry[k]['res'][0].get()), float(entry[k]['p0'][0].get()), 
-                'Set result as p0 for %s'%k, tol=1e-5)
+            assert_almost_equal(float(entry[k]['res'][0].get()), float(entry[k]['p0'][0].get()), 
+                err_msg = 'Set result as p0 for %s'%k, decimal=5)
         
 def test_draw_fit_results():
     pass
