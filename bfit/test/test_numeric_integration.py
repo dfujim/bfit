@@ -7,7 +7,7 @@
 # Ryan M. L. McFadden
 # 2021-02-22
 
-
+from numpy.testing import *
 import numpy as np
 import pandas as pd
 import bdata as bd
