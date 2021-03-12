@@ -68,11 +68,6 @@ class fitter(object):
                     'B0 Field (T)':     r'$B_0$ Field (T)', 
                     }
 
-    # dictionary of initial parameters
-    par_values = {}
-    fn_list = {}
-    epsilon = 1e-9  # for fixing parameters
-
     # define list of ok run modes 
     valid_asym_modes = ('c', 'p', 'n', 'sl_c', 'dif_c', )
     
@@ -255,8 +250,10 @@ class fitter(object):
         
     # ======================================================================= #
     def get_fit_fn(self, fn_name, ncomp, data_list):
-        
-        fn = []
+        """
+            Get dictionary of function handles keyed by run id. 
+        """
+        output = {}
         
         for data in data_list:
             
@@ -269,15 +266,18 @@ class fitter(object):
             life = bd.life[self.probe_species]
             
             # get fitting function for 20 and 2h
-            if dat.mode in ['20', '2h']: 
+            if dat.mode in ('20', '2h'): 
                 pulse = dat.pulse_s                
-                fn.append(self.get_fn(fn_name, ncomp, pulse, life))
+                fn = self.get_fn(fn_name, ncomp, pulse, life)
                 
             # 1f functions
             else:                       
-                fn.append(self.get_fn(fn_name, ncomp, -1, life))
+                fn = self.get_fn(fn_name, ncomp, -1, life)
 
-        return ({self.keyfn(d[0]):f for d, f in zip(data_list, fn)})
+            # make output
+            output[self.keyfn(dat)] = fn
+        
+        return output
 
     # ======================================================================= #
     def gen_param_names(self, fn_name, ncomp):
