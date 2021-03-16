@@ -794,16 +794,16 @@ class global_fitter(object):
              [data1:[std_u1, std_u2, ...], data2:[], ...], 
              [data1:[cov1, cov2, ...], data2:[], ...])
         """
-        return (self.par_runwise, 
-                self.std_l_runwise, 
-                self.std_u_runwise, 
-                self.cov_runwise)
+        return (self.values, 
+                self.lower, 
+                self.upper, 
+                self.covariance)
     
     @property
     def values(self):       return self.par_runwise
     
     @property
-    def lower(self):        return self.std_l_runwise
+    def lower(self):        return np.abs(self.std_l_runwise)
     
     @property
     def upper(self):        return self.std_u_runwise
