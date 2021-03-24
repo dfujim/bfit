@@ -8,7 +8,12 @@ assignees: ''
 ---
 
 **Describe the bug**
-A clear and concise description of what the bug is. Please include the output to terminal encased in monospaced font (encase in ```)
+A clear and concise description of what the bug is. 
+
+```
+Please paste terminal output within these quotes 
+
+```
 
 **To Reproduce**
 Steps to reproduce the behaviour:
@@ -16,11 +21,8 @@ Steps to reproduce the behaviour:
 2. Click on '....'
 3. See error
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
-
 **Desktop (please complete the following information):**
- - OS: [e.g. OpenSUSE]
+ - Machine or OS: [e.g. isdaq01 or OpenSUSE]
  - Version [e.g. 4.2.5]
 
 **Additional context**
