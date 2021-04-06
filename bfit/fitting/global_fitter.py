@@ -365,9 +365,8 @@ class global_fitter(object):
             except UnicodeEncodeError:  # can't print on older machines
                 pass
                 
-            n = len(m.merrors)
-            lower = np.array([m.merrors[i].lower for i in range(n)])
-            upper = np.array([m.merrors[i].upper for i in range(n)])
+            lower = np.abs(m.mlower)
+            upper = m.mupper
         else:
             try:
                 m.hesse()
