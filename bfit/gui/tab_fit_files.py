@@ -2380,7 +2380,7 @@ class fitline(object):
             entry.grid(column=c, row=r, padx=5, sticky=E); c += 1
             self.parentry[p]['fixed'] = (value, entry)
             try:
-                value.set(fitdat.fitpar.loc[p, 'fixed'])
+                value.set(bool(fitdat.fitpar.loc[p, 'fixed']))
             except KeyError:
                 pass
 
@@ -2474,12 +2474,13 @@ class fitline(object):
         plist.sort()
 
         # check if we are using the fit results of the prior fit
-        values = None
+        values_res = None
         res = self.bfit.data[run].fitpar['res']
         
         isfitted = any(res.values) # is this run fitted?
         
         if fit_files.set_prior_p0.get() and not isfitted:
+            
             r = 0
             for rkey in self.bfit.data:
                 data = self.bfit.data[rkey]
@@ -2487,16 +2488,17 @@ class fitline(object):
                 isfitted = any(data.fitpar['res'].values) # is the latest run fitted?
                 if isfitted and data.run > r:
                     r = data.run
-                    values = data.fitpar
-                    parentry = self.bfit.fit_files.fit_lines[rkey].parentry
+                    values_res = data.fitpar
         
         # get calcuated initial values
-        if values is None:
-            values = fitter.gen_init_par(fn_title, ncomp, self.bfit.data[run].bd,
-                                     self.bfit.get_asym_mode(fit_files))
-
+        values = fitter.gen_init_par(fn_title, ncomp, self.bfit.data[run].bd,
+                                    self.bfit.get_asym_mode(fit_files))
+              
+        # set p0 from old
+        if values_res is not None:
+            values['p0'] = values_res['res']
+                                     
         # set to data
-        
         self.bfit.data[run].set_fitpar(values)
         
         return tuple(plist)
