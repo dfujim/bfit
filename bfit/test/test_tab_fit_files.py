@@ -72,6 +72,9 @@ def test_populate_param():
     tab.populate_param()
     assert_equal(line.get_new_parameters(), ('1_T1_0', '1_T1_1', 'amp_0', 'amp_1'), 
                  'Two term function parameters populated')
+                 
+    # undo changes
+    tab.n_component.set(1)
     
 # do the fit separately
 def test_fit_curve_fit():       fit(separate_curve_fit, 'curve_fit')
@@ -136,7 +139,7 @@ def separate_migrad(entry, run, do_minos=False, **kwargs):
         lower = m.errors
         upper = lower
         
-    chi = m.fval
+    chi = m.chi2
         
     return (par, lower, upper, chi)
 
@@ -225,7 +228,7 @@ def fit_single(separate_fit, minimizer):
     
     # check chi2
     chi = float(entry['1_T1']['chi'][1].get())
-    test(chi, chi2, 'Copying chi2 for %s minimizer for single run' % minimizer, decimal=2)
+    assert_almost_equal(chi, chi2, err_msg='Copying chi2 for %s minimizer for single run' % minimizer, decimal=2)
     
     # reset minimizer
     b.minimizer.set('bfit.fitting.fitter_curve_fit')
@@ -263,6 +266,11 @@ def test_fit_input():
     # check
     assert_equal(tab.fit_input[2][0][2]['rebin'], 10, "Rebin passing for file 1")
     assert_equal(tab.fit_input[2][1][2]['rebin'], 2, "Rebin passing for file 2")
+    
+    # undo changes
+    tab.use_rebin.set(False)
+    tab.fit_function_title.set('Exp')
+    tab.n_component.set(1)
 
 def test_fixed():
     
@@ -277,12 +285,12 @@ def test_fixed():
     entry['1_T1']['fixed'][0].set(True)
     tab.do_fit()
     
-    test(float(entry['1_T1']['res'][1].get()), 1, 'Fixed result')
-    test_misc(np.isnan(float(entry['1_T1']['dres-'][1].get())), 'Fixed lower error')
-    test_misc(np.isnan(float(entry['1_T1']['dres+'][1].get())), 'Fixed upper error')
-    test_misc(float(entry['amp']['res'][1].get()) != 1, 'Unfixed result')
-    test_misc(not np.isnan(float(entry['amp']['dres-'][1].get())), 'Unfixed lower error')
-    test_misc(not np.isnan(float(entry['amp']['dres+'][1].get())), 'Unfixed upper error')
+    assert_equal(float(entry['1_T1']['res'][1].get()), 1, 'Fixed result')
+    assert np.isnan(float(entry['1_T1']['dres-'][1].get())), 'Fixed lower error'
+    assert np.isnan(float(entry['1_T1']['dres+'][1].get())), 'Fixed upper error'
+    assert float(entry['amp']['res'][1].get()) != 1, 'Unfixed result'
+    assert not np.isnan(float(entry['amp']['dres-'][1].get())), 'Unfixed lower error'
+    assert not np.isnan(float(entry['amp']['dres+'][1].get())), 'Unfixed upper error'
     
     # unfix
     entry['1_T1']['fixed'][0].set(False)
@@ -304,33 +312,33 @@ def test_shared():
     T11 = float(entry['1_T1']['res'][1].get())
     T12 = float(entry2['1_T1']['res'][1].get())
     
-    assert_almost_equal(T11, T12, err_msg = 'Shared result equal')
+    assert_almost_equal(T11, T12, err_msg = 'Shared result not equal')
     
     T11 = float(entry['1_T1']['dres-'][1].get())
     T12 = float(entry2['1_T1']['dres-'][1].get())
     
-    assert_almost_equal(T11, T12, err_msg = 'Shared lower error equal')
+    assert_almost_equal(T11, T12, err_msg = 'Shared lower error not equal')
     
     T11 = float(entry['1_T1']['dres+'][1].get())
     T12 = float(entry2['1_T1']['dres+'][1].get())
     
-    assert_almost_equal(T11, T12, err_msg = 'Shared upper error equal')
+    assert_almost_equal(T11, T12, err_msg = 'Shared upper error not equal')
     
     # check the unshared result
     amp1 = float(entry['amp']['res'][1].get())
     amp2 = float(entry2['amp']['res'][1].get())
     
-    test_misc(amp1 != amp2, 'Unshared result not equal')
+    assert amp1 != amp2, 'Unshared result is equal'
     
     amp1 = float(entry['amp']['dres-'][1].get())
     amp2 = float(entry2['amp']['dres-'][1].get())
     
-    test_misc(amp1 != amp2, 'Unshared lower error not equal')
+    assert amp1 != amp2, 'Unshared lower error not equal'
     
     amp1 = float(entry['amp']['dres+'][1].get())
     amp2 = float(entry2['amp']['dres+'][1].get())
     
-    test_misc(amp1 != amp2, 'Unshared upper error not equal')
+    assert amp1 != amp2, 'Unshared upper error not equal'
     
     # unshare
     entry['1_T1']['shared'][0].set(False)
@@ -353,16 +361,20 @@ def test_modify_for_all_reset_p0():
         initial[k] = {}
         for c in ('p0', 'blo', 'bhi'):
             
-            initial[k][c] = entry[k][c][0].get()
-            entry[k][c][0].set(c)
-            assert_equal(entry2[k][c][0].get(), c, err_msg = "Modify all for %s (%s)" % (k,c))
-     
+            # get initial state
+            initial[k][c] = float(entry[k][c][0].get())
+            
+            # modify all
+            entry[k][c][0].set('25')
+            assert_equal(entry2[k][c][0].get(), '25', err_msg = "Modify all for %s (%s)" % (k, '25'))
+            
     # reset
+    tab.set_as_group.set(False)
     tab.do_reset_initial()
-    
     for k in entry.keys():    
         for c in ('p0', 'blo', 'bhi'):
-            assert_equal(entry[k][c][0].get(), initial[k][c], err_msg = "Reset p0 for %s (%s)" % (k,c))
+            assert_equal(float(entry[k][c][0].get()), initial[k][c], 
+                        err_msg = "Reset p0 for %s (%s)" % (k, c))
                 
 def test_p0_prior():
     
@@ -412,6 +424,6 @@ def test_result_as_p0():
                 err_msg = 'Set result as p0 for %s'%k, decimal=5)
         
 def test_draw_fit_results():
-    pass
+    raise Exception("Not implemented!")
 
 
