@@ -7,6 +7,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from bfit.gui.bfit import bfit
 
+# filter unneeded warnings
+import pytest
+pytestmark = pytest.mark.filterwarnings('ignore:2020')
+
 # make gui
 b = bfit(None, True)
 

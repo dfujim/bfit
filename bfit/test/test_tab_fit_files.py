@@ -11,6 +11,10 @@ from bfit import pulsed_exp, minuit
 from bfit.fitting.leastsquares import LeastSquares
 from bfit.gui.bfit import bfit
 
+# filter unneeded warnings
+import pytest
+pytestmark = pytest.mark.filterwarnings('ignore:2020')
+
 # make gui
 b = bfit(None, True)
 
@@ -77,7 +81,6 @@ def test_fit_single_curve_fit():fit_single(separate_curve_fit, 'curve_fit')
 def test_fit_single_migrad():   fit_single(separate_migrad, 'migrad_hesse')
 def test_fit_single_minos():    fit_single(separate_minos, 'migrad_minos')
 
-
 def separate_curve_fit(entry, run, **kwargs):
     
     # data
@@ -85,7 +88,7 @@ def separate_curve_fit(entry, run, **kwargs):
     dat = bd.bdata(run, year)
     
     # fit function
-    pexp = pulsed_exp(lifetime = bd.life.Li8, pulse_len = dat.get_pulse_s())
+    pexp = pulsed_exp(lifetime = bd.life.Li8, pulse_len = dat.pulse_s)
 
     p0 = [float(entry[k]['p0'][1].get()) for k in entry.keys()]
     blo = [float(entry[k]['blo'][1].get()) for k in entry.keys()]
@@ -109,7 +112,7 @@ def separate_migrad(entry, run, do_minos=False, **kwargs):
     dat = bd.bdata(run, year)
     
     # fit function
-    pexp = pulsed_exp(lifetime = bd.life.Li8, pulse_len = dat.get_pulse_s())
+    pexp = pulsed_exp(lifetime = bd.life.Li8, pulse_len = dat.pulse_s)
 
     # get p0, bounds
     p0 = {k.replace('1_T1','lambda_s'):float(entry[k]['p0'][1].get()) for k in entry.keys()}
