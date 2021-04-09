@@ -27,7 +27,13 @@ def test_draw_20():     draw(40123, 2020, '20')
 def test_draw_1f():     draw(40033, 2020, '1f')
 def test_draw_1w():     draw(40037, 2020, '1w')
 def test_draw_1n():     draw(40011, 2020, '1n')
+
+@pytest.mark.filterwarnings('ignore:2019')
+@pytest.mark.filterwarnings('ignore:divide by zero')
+@pytest.mark.filterwarnings('ignore:Warning')
+@pytest.mark.filterwarnings('ignore:invalid value')
 def test_draw_2h():     draw(45539, 2019, '2h')
+
 def test_draw_2e():     draw(40326, 2019, '2e')
 
 def fetch(r, y, mode):    
@@ -64,6 +70,8 @@ def draw(r, y, mode):
         except Exception as err: 
             print(err)
             raise AssertionError("fileviewer draw %s in mode %s" % (mode, draw_type), 'inspect')
+        
+        b.plt.clf('inspect')
         
         if mode == '2e':
             b.do_close_all()

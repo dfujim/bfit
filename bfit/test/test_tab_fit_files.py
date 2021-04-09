@@ -241,7 +241,7 @@ def test_fit_input():
     
     # set rebin
     tab2.data_lines['2020.40123'].rebin.set(10)
-    tab2.data_lines['2020.40127'].rebin.set(2)
+    tab2.data_lines['2020.40127'].rebin.set(20)
     tab.use_rebin.set(True)
     
     # set function
@@ -265,36 +265,13 @@ def test_fit_input():
     
     # check
     assert_equal(tab.fit_input[2][0][2]['rebin'], 10, "Rebin passing for file 1")
-    assert_equal(tab.fit_input[2][1][2]['rebin'], 2, "Rebin passing for file 2")
+    assert_equal(tab.fit_input[2][1][2]['rebin'], 20, "Rebin passing for file 2")
     
     # undo changes
     tab.use_rebin.set(False)
     tab.fit_function_title.set('Exp')
     tab.n_component.set(1)
 
-def test_fixed():
-    
-    # get data
-    get_data()
-    tab.populate()
-    line = tab.fit_lines['2020.40123']
-    entry = line.parentry
-    
-    # fixed input -----------------------------------------------------------
-    entry['1_T1']['p0'][0].set('1')
-    entry['1_T1']['fixed'][0].set(True)
-    tab.do_fit()
-    
-    assert_equal(float(entry['1_T1']['res'][1].get()), 1, 'Fixed result')
-    assert np.isnan(float(entry['1_T1']['dres-'][1].get())), 'Fixed lower error'
-    assert np.isnan(float(entry['1_T1']['dres+'][1].get())), 'Fixed upper error'
-    assert float(entry['amp']['res'][1].get()) != 1, 'Unfixed result'
-    assert not np.isnan(float(entry['amp']['dres-'][1].get())), 'Unfixed lower error'
-    assert not np.isnan(float(entry['amp']['dres+'][1].get())), 'Unfixed upper error'
-    
-    # unfix
-    entry['1_T1']['fixed'][0].set(False)
-   
 def test_shared():
     
     # get data
@@ -376,6 +353,29 @@ def test_modify_for_all_reset_p0():
             assert_equal(float(entry[k][c][0].get()), initial[k][c], 
                         err_msg = "Reset p0 for %s (%s)" % (k, c))
                 
+def test_fixed():
+    
+    # get data
+    get_data()
+    tab.populate()
+    line = tab.fit_lines['2020.40123']
+    entry = line.parentry
+    
+    # fixed input -----------------------------------------------------------
+    entry['1_T1']['p0'][0].set('1')
+    entry['1_T1']['fixed'][0].set(True)
+    tab.do_fit()
+    
+    assert_equal(float(entry['1_T1']['res'][1].get()), 1, 'Fixed result')
+    assert np.isnan(float(entry['1_T1']['dres-'][1].get())), 'Fixed lower error'
+    assert np.isnan(float(entry['1_T1']['dres+'][1].get())), 'Fixed upper error'
+    assert float(entry['amp']['res'][1].get()) != 1, 'Unfixed result'
+    assert not np.isnan(float(entry['amp']['dres-'][1].get())), 'Unfixed lower error'
+    assert not np.isnan(float(entry['amp']['dres+'][1].get())), 'Unfixed upper error'
+    
+    # unfix
+    entry['1_T1']['fixed'][0].set(False)
+
 def test_p0_prior():
     
     # get data
@@ -423,7 +423,33 @@ def test_result_as_p0():
             assert_almost_equal(float(entry[k]['res'][0].get()), float(entry[k]['p0'][0].get()), 
                 err_msg = 'Set result as p0 for %s'%k, decimal=5)
         
+@pytest.mark.filterwarnings('ignore:Tight layout')
+@pytest.mark.filterwarnings('ignore:Warning')
 def test_draw_fit_results():
-    raise Exception("Not implemented!")
-
+    
+    # get data
+    get_data()
+    tab.populate()
+    
+    # fit
+    tab.do_fit()
+    b.do_close_all()
+    
+    # get list of draw-able parameters
+    values = tab.xaxis_combobox['values'][1:]
+    
+    # draw 
+    tab.xaxis.set(values[0])
+    for v in values[1:]:
+        tab.yaxis.set(v)
+        tab.draw_param()
+        b.plt.clf('param')
+    
+    # annotation
+    tab.annotation.set(values[1])
+    tab.draw_param()
+    b.do_close_all()
+    
+    # if nothing failed then we're ok!
+    
 

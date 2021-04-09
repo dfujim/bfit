@@ -87,9 +87,16 @@ def test_checkbox():
     assert_equal(tab.data_lines['2020.40123'].check_state.get(), True, 'fetch tab toggle check False -> True')
     assert_equal(tab.data_lines['2020.40124'].check_state.get(), False, 'fetch tab toggle check True -> False')
     
+    # reset
+    tab.check_state.set(True)
+    tab.check_state_data.set(True)
+    tab.check_all()
+    tab.check_all_data()
     tab.remove_all()
     
 def test_draw():
+    
+    
     
     # get some data
     tab.year.set(2020)
@@ -99,8 +106,7 @@ def test_draw():
     # draw stack
     b.draw_style.set('stack')
     tab.draw_all('data')
-    plt.show()
-    ax = plt.gca()
+    ax = b.plt.gca('data')
     assert_equal(len(ax.draw_objs), 4, 'fetch tab draw all stack')
     
     tab.run.set('40127-40128')
