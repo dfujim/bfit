@@ -15,29 +15,29 @@ from bfit.gui.bfit import bfit
 import pytest
 pytestmark = pytest.mark.filterwarnings('ignore:2020')
 
-# make gui
-b = bfit(None, True)
-
-# get bfit object and tab
-tab = b.fit_files
-tab2 = b.fetch_files
-b.notebook.select(2)
-
-def get_data():
+def with_bfit(function):
     
-    # clear setup
-    b.do_close_all()
-    tab2.remove_all()
-    
-    # fetch
-    tab2.year.set(2020)
-    tab2.run.set('40123 40127')
-    tab2.get_data()
+    def wrapper(*args, **kwargs):
+        # make gui
+        b = bfit(None, True)
+        tab = b.fit_files
+        tab2 = b.fetch_files
+        b.notebook.select(2)
+        
+        tab2.year.set(2020)
+        tab2.run.set('40123 40127')
+        tab2.get_data()
+        
+        try:
+            function(*args, **kwargs, tab=tab, b=b, tab2=tab2)
+        finally:
+            b.on_closing()
+            
+    return wrapper
 
-def test_populate():
+@with_bfit
+def test_populate(b=None, tab=None, tab2=None):
 
-    get_data()
-    
     # check populate
     tab.populate()
     assert('2020.40123' in tab.fit_lines.keys()), 'First fetched run populated'
@@ -52,10 +52,10 @@ def test_populate():
     tab2.get_data()
     tab.populate()
     assert('2020.40123' in tab.fit_lines.keys()), 'Re-populated after run removal and refetch'
-    
-def test_populate_param():
+
+@with_bfit    
+def test_populate_param(b=None, tab=None, tab2=None):
         
-    get_data()
     tab.populate()
         
     # get fit line
@@ -145,11 +145,11 @@ def separate_migrad(entry, run, do_minos=False, **kwargs):
 
 def separate_minos(entry, run, **kwargs):
     return separate_migrad(entry, run, do_minos=True, **kwargs)
-    
-def fit(separate_fit, minimizer):
+
+@with_bfit    
+def fit(separate_fit, minimizer, b=None, tab=None, tab2=None):
     
     # get data
-    get_data()
     tab.populate()
     
     # set minimizer
@@ -188,10 +188,10 @@ def fit(separate_fit, minimizer):
     b.minimizer.set('bfit.fitting.fitter_curve_fit')
     b.set_fit_routine()
 
-def fit_single(separate_fit, minimizer):
+@with_bfit
+def fit_single(separate_fit, minimizer, b=None, tab=None, tab2=None):
     
     # clear setup
-    b.do_close_all()
     tab2.remove_all()
     
     # fetch
@@ -234,18 +234,50 @@ def fit_single(separate_fit, minimizer):
     b.minimizer.set('bfit.fitting.fitter_curve_fit')
     b.set_fit_routine()
 
-def test_fit_input():
-        
-    # get data
-    get_data()
+@with_bfit
+def test_fit_fn_name(b=None, tab=None, tab2=None):
+    
+    # set rebin
+    tab2.data_lines['2020.40123'].degrid()
+    
+    # set function
+    tab.fit_function_title.set('Bi Exp')
+    
+    # fit
+    tab.populate()    
+    tab.do_fit()
+    
+    # fit input: fn_name, ncomp, data_list
+    # data_list: [bdfit, pdict, doptions]
+    
+    # check function
+    assert_equal(tab.fit_input[0], 'Bi Exp', "Function name passing to fitter")
+
+@with_bfit
+def test_fit_rebin(b=None, tab=None, tab2=None):
     
     # set rebin
     tab2.data_lines['2020.40123'].rebin.set(10)
     tab2.data_lines['2020.40127'].rebin.set(20)
     tab.use_rebin.set(True)
     
-    # set function
-    tab.fit_function_title.set('Bi Exp')
+    # fit
+    tab.populate()    
+    tab.do_fit()
+    
+    # fit input: fn_name, ncomp, data_list
+    # data_list: [bdfit, pdict, doptions]
+    
+    # check
+    assert_equal(tab.fit_input[2][0][2]['rebin'], 10, "Rebin passing for file 1")
+    assert_equal(tab.fit_input[2][1][2]['rebin'], 20, "Rebin passing for file 2")
+
+@with_bfit
+def test_fit_ncomp(b=None, tab=None, tab2=None):
+    
+    # set rebin
+    tab2.data_lines['2020.40123'].rebin.set(10)
+    tab2.data_lines['2020.40127'].rebin.set(20)
     
     # set ncomp
     tab.n_component.set(2)
@@ -257,25 +289,14 @@ def test_fit_input():
     # fit input: fn_name, ncomp, data_list
     # data_list: [bdfit, pdict, doptions]
     
-    # check function
-    assert_equal(tab.fit_input[0], 'Bi Exp', "Function name passing to fitter")
-    
     # check ncomp
     assert_equal(tab.fit_input[1], 2, "Number of components passing to fitter")
-    
-    # check
-    assert_equal(tab.fit_input[2][0][2]['rebin'], 10, "Rebin passing for file 1")
-    assert_equal(tab.fit_input[2][1][2]['rebin'], 20, "Rebin passing for file 2")
-    
-    # undo changes
-    tab.use_rebin.set(False)
-    tab.fit_function_title.set('Exp')
-    tab.n_component.set(1)
 
-def test_shared():
+    
+@with_bfit
+def test_shared(b=None, tab=None, tab2=None):
     
     # get data
-    get_data()
     tab.populate()
     line = tab.fit_lines['2020.40123']
     line2 = tab.fit_lines['2020.40127']
@@ -320,10 +341,10 @@ def test_shared():
     # unshare
     entry['1_T1']['shared'][0].set(False)
     
-def test_modify_for_all_reset_p0():
+@with_bfit
+def test_modify_for_all_reset_p0(b=None, tab=None, tab2=None):
     
     # get data
-    get_data()
     tab.populate()
     line = tab.fit_lines['2020.40123']
     line2 = tab.fit_lines['2020.40127']
@@ -353,10 +374,10 @@ def test_modify_for_all_reset_p0():
             assert_equal(float(entry[k][c][0].get()), initial[k][c], 
                         err_msg = "Reset p0 for %s (%s)" % (k, c))
                 
-def test_fixed():
+@with_bfit
+def test_fixed(b=None, tab=None, tab2=None):
     
     # get data
-    get_data()
     tab.populate()
     line = tab.fit_lines['2020.40123']
     entry = line.parentry
@@ -376,10 +397,10 @@ def test_fixed():
     # unfix
     entry['1_T1']['fixed'][0].set(False)
 
-def test_p0_prior():
+@with_bfit
+def test_p0_prior(b=None, tab=None, tab2=None):
     
     # get data
-    get_data()
     tab.populate()
     
     # fit
@@ -402,10 +423,10 @@ def test_p0_prior():
         assert_almost_equal(float(result[k]['res'][0].get()), float(p0[k]['p0'][0].get()), 
              err_msg = 'Set last result as p0 for new run for %s'%k, decimal=5)
     
-def test_result_as_p0():
+@with_bfit
+def test_result_as_p0(b=None, tab=None, tab2=None):
     
     # get data
-    get_data()
     tab.populate()
     
     # fit
@@ -425,10 +446,10 @@ def test_result_as_p0():
         
 @pytest.mark.filterwarnings('ignore:Tight layout')
 @pytest.mark.filterwarnings('ignore:Warning')
-def test_draw_fit_results():
+@with_bfit
+def test_draw_fit_results(b=None, tab=None, tab2=None):
     
     # get data
-    get_data()
     tab.populate()
     
     # fit

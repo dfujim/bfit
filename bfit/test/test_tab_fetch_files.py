@@ -11,14 +11,23 @@ from bfit.gui.bfit import bfit
 import pytest
 pytestmark = pytest.mark.filterwarnings('ignore:2020')
 
-# make gui
-b = bfit(None, True)
+def with_bfit(function):
+    
+    def wrapper(*args, **kwargs):
+        # make gui
+        b = bfit(None, True)
+        tab = b.fetch_files
+        b.notebook.select(1)
+        
+        try:
+            function(*args, **kwargs, tab=tab, b=b)
+        finally:
+            b.on_closing()
+            
+    return wrapper
 
-# get bfit object and tab
-tab = b.fetch_files
-b.notebook.select(1)
-
-def test_fetch():
+@with_bfit
+def test_fetch(tab=None, b=None):
     
     # set year
     tab.year.set(2020)
@@ -41,8 +50,9 @@ def test_fetch():
     tab.run.set('40127-40129')
     tab.get_data()
     assert_equal(len(list(tab.data_lines.keys())), 7, 'fetch tab fetch run range')
-    
-def test_remove():
+
+@with_bfit    
+def test_remove(tab=None, b=None):
     
     # get some data
     tab.year.set(2020)
@@ -56,8 +66,9 @@ def test_remove():
     # remove all
     tab.remove_all()
     assert_equal(len(list(tab.data_lines.keys())), 0, 'fetch tab remove all')
-    
-def test_checkbox():
+
+@with_bfit    
+def test_checkbox(tab=None, b=None):
     
     # get some data
     tab.year.set(2020)
@@ -86,18 +97,9 @@ def test_checkbox():
     tab.toggle_all()
     assert_equal(tab.data_lines['2020.40123'].check_state.get(), True, 'fetch tab toggle check False -> True')
     assert_equal(tab.data_lines['2020.40124'].check_state.get(), False, 'fetch tab toggle check True -> False')
-    
-    # reset
-    tab.check_state.set(True)
-    tab.check_state_data.set(True)
-    tab.check_all()
-    tab.check_all_data()
-    tab.remove_all()
-    
-def test_draw():
-    
-    
-    
+
+@with_bfit    
+def test_draw(tab=None, b=None):
     # get some data
     tab.year.set(2020)
     tab.run.set('40123-40126')
@@ -126,6 +128,3 @@ def test_draw():
     tab.get_data()
     tab.draw_all('data')
     assert_equal(len(plt.gca().draw_objs), 2, 'fetch tab draw all redraw')
-
-    tab.remove_all()
-    b.do_close_all()

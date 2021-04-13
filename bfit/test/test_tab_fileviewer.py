@@ -11,11 +11,21 @@ from bfit.gui.bfit import bfit
 import pytest
 pytestmark = pytest.mark.filterwarnings('ignore:2020')
 
-# make gui
-b = bfit(None, True)
-
-# get bfit object and tab
-tab = b.fileviewer
+def with_bfit(function):
+    
+    def wrapper(*args, **kwargs):
+        # make gui
+        b = bfit(None, True)
+        tab = b.fileviewer
+        
+        try:
+            function(*args, **kwargs, tab=tab, b=b)
+        finally:
+            
+            # close gui
+            b.on_closing()
+            
+    return wrapper
 
 def test_fetch_20():    fetch(40123, 2020, '20')
 def test_fetch_1f():    fetch(40033, 2020, '1f')
@@ -36,7 +46,9 @@ def test_draw_2h():     draw(45539, 2019, '2h')
 
 def test_draw_2e():     draw(40326, 2019, '2e')
 
-def fetch(r, y, mode):    
+@with_bfit
+def fetch(r, y, mode, tab=None, b=None):    
+    
     tab.year.set(y)
     tab.runn.set(r)
     
@@ -48,8 +60,9 @@ def fetch(r, y, mode):
     
     assert_equal(tab.data.run, r, "fileviewer fetch %s (%d.%d) data accuracy" % (mode, y, r))
     
-def draw(r, y, mode):
-    
+@with_bfit
+def draw(r, y, mode, tab=None, b=None):
+
     # get data
     tab.year.set(y)
     tab.runn.set(r)
@@ -76,7 +89,8 @@ def draw(r, y, mode):
         if mode == '2e':
             b.do_close_all()
     
-def test_draw_mode():
+@with_bfit
+def test_draw_mode(tab=None, b=None):
     
     tab.year.set(2020)
     
@@ -125,8 +139,10 @@ def test_draw_mode():
     assert_equal(len(b.plt.plots['inspect']), 3, 'fileviewer draw new')
     
     b.do_close_all()
-    
-def test_autocomplete():
+
+@with_bfit    
+def test_autocomplete(tab=None, b=None):
+  
     tab.year.set(2020)
     tab.runn.set(402)
     tab.get_data()
