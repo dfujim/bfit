@@ -618,9 +618,9 @@ class bfit(object):
         noteframe.rowconfigure(0, weight=1)
         
         # Notetabs
-        self.fileviewer = fileviewer(file_viewer_tab, wref.proxy(self))
-        self.fetch_files = fetch_files(fetch_files_tab, wref.proxy(self))
-        self.fit_files = fit_files(fit_files_tab, wref.proxy(self))
+        self.fileviewer = fileviewer(file_viewer_tab, self)
+        self.fetch_files = fetch_files(fetch_files_tab, self)
+        self.fit_files = fit_files(fit_files_tab, self)
         
         # set instance variables ---------------------------------------------
         self.mainframe = mainframe
