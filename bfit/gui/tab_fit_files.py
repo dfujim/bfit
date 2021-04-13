@@ -664,6 +664,7 @@ class fit_files(object):
                         except ValueError as errmsg:
                             self.logger.exception("Bad input.")
                             messagebox.showerror("Error", str(errmsg))
+                            raise errmsg
 
                     # get "Fixed" entry
                     elif col in ['fixed']:
