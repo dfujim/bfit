@@ -99,40 +99,24 @@ class minuit(Minuit):
                         raise RuntimeError("If array input must define name or start")
                   
         # set starting values, limits, fixed, errors
-        items = list(kwargs.items())
-        for key, value in items:
-            
-            if 'error_' in key:
-                idx = list(name).index(key.split('_')[1])
-                if error is None:   
-                    error = np.ones(len(name))
-                error[idx] = value
-                
-                del kwargs[key]
-            
-            elif 'limit_' in key:
-                idx = list(name).index(key.split('_')[1])
-                if limit is None:   
-                    limit = [[-np.inf, np.inf]]*len(name)
-                limit[idx] = value
-                
-                del kwargs[key]
-                
-            elif 'fix_' in key:
-                idx = list(name).index(key.split('_')[1])
-                if fix is None:     
-                    fix = np.zeros(len(name), dtype=bool)
-                fix[idx] = value
-                del kwargs[key]
-            
-            # ~ elif key in name:
-                # ~ idx = list(name).index(key)
-                
-                # ~ if start is None:     
-                    # ~ start = np.ones(len(name))
-                # ~ start[idx] = value
-            
-                    
+        error, kwargs = self._set_start(array=error, 
+                                        namestr='error_', 
+                                        name=name, 
+                                        kwargs=kwargs, 
+                                        default=1)
+                                        
+        limit, kwargs = self._set_start(array=limit, 
+                                        namestr='limit_', 
+                                        name=name, 
+                                        kwargs=kwargs, 
+                                        default=[-np.inf, np.inf])
+        
+        fix, kwargs = self._set_start(  array=fix, 
+                                        namestr='fix_', 
+                                        name=name, 
+                                        kwargs=kwargs, 
+                                        default=False)
+        
         # are there starting values, limits, fixed, errors?
         is_start = start is not None
         is_error = error is not None
@@ -142,10 +126,8 @@ class minuit(Minuit):
         keys = kwargs.keys()
         
         # check limit depth 
-        if is_start:    broadcast_start = get_depth(start) < 1
-        if is_error:    broadcast_error = get_depth(error) < 1
-        if is_limit:    broadcast_limit = get_depth(limit) < 2
-        if is_fix:      broadcast_fix   = get_depth(fix)   < 1
+        if is_start:    
+            broadcast_start = get_depth(start) < 1
         
         # iterate parameter names
         for n in name:
@@ -184,8 +166,40 @@ class minuit(Minuit):
         self.print_level = print_level
         
     # ====================================================================== #
+    def _set_start(self, array, namestr, name, kwargs, default):
+        """
+            Set starting values, or broadcast if needed
+        """
+        
+        depth = np.array(default).size
+        
+        # check kwargs for needed values
+        items = list(kwargs.items())
+        for key, value in items:
+            if namestr in key:
+                
+                idx = list(name).index(key.split('_')[1])
+                
+                # make new array
+                if array is None:   
+                    array = [default]*len(name)
+                    
+                # try to assign if not list, broadcast
+                if get_depth(array) < depth:
+                    array = [array]*len(name)
+                array[idx] = value
+                    
+                # remove value from kwargs
+                del kwargs[key]
+                
+        return (array, kwargs)
+        
+    # ====================================================================== #
     @property
     def chi2(self):
+        """
+            Get the chi2 value
+        """
         nfixed = sum(self.fixed)
         narg = len(self.values)
         dof = self.npts - narg + nfixed
