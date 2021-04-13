@@ -144,12 +144,7 @@ To launch the GUI from a terminal simply call `bfit`, if this fails, one can als
 
 ### Testing
 
-Testing your installation of [bfit] is most easily accomplished throught the
-collection of functions available within:
-
-```python
-from bfit import test
-```
+Testing your installation of [bfit] is accomplished by running `pytest` within the installation folder.
 
 Additionally, results from [bfit] may be compared directly against those from a
 number of independently developed applications:
