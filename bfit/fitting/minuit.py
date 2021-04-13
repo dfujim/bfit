@@ -97,8 +97,43 @@ class minuit(Minuit):
                 for n in name:
                     if '*' in n:
                         raise RuntimeError("If array input must define name or start")
+                  
+        # set starting values, limits, fixed, errors
+        items = list(kwargs.items())
+        for key, value in items:
+            
+            if 'error_' in key:
+                idx = list(name).index(key.split('_')[1])
+                if error is None:   
+                    error = np.ones(len(name))
+                error[idx] = value
+                
+                del kwargs[key]
+            
+            elif 'limit_' in key:
+                idx = list(name).index(key.split('_')[1])
+                if limit is None:   
+                    limit = [[-np.inf, np.inf]]*len(name)
+                limit[idx] = value
+                
+                del kwargs[key]
+                
+            elif 'fix_' in key:
+                idx = list(name).index(key.split('_')[1])
+                if fix is None:     
+                    fix = np.zeros(len(name), dtype=bool)
+                fix[idx] = value
+                del kwargs[key]
+            
+            # ~ elif key in name:
+                # ~ idx = list(name).index(key)
+                
+                # ~ if start is None:     
+                    # ~ start = np.ones(len(name))
+                # ~ start[idx] = value
+            
                     
-        # set starting values, limits, fixed
+        # are there starting values, limits, fixed, errors?
         is_start = start is not None
         is_error = error is not None
         is_limit = limit is not None
