@@ -259,10 +259,10 @@ def test_fit_rebin(b=None, tab=None, tab2=None):
     # set rebin
     tab2.data_lines['2020.40123'].rebin.set(10)
     tab2.data_lines['2020.40127'].rebin.set(20)
-    tab.use_rebin.set(True)
     
     # fit
     tab.populate()    
+    tab.use_rebin.set(True)
     tab.do_fit()
     
     # fit input: fn_name, ncomp, data_list
