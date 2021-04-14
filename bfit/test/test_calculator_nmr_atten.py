@@ -21,9 +21,9 @@ def test_calc_power():
     calc.calculate()
     assert_almost_equal(float(calc.dac.get()), 2047, 
                         err_msg = "calculator nmr atten set power = 0%")
-
-def test_calc_dac():
+    calc.root.destroy()
     
+def test_calc_dac():
     calc = calculator_nmr_atten(True)
     
     # dac
@@ -38,3 +38,5 @@ def test_calc_dac():
     calc.calculate()
     assert_almost_equal(float(calc.power.get()), 0, 
                         err_msg = "calculator nmr atten set dac = 2047")
+    calc.root.destroy()
+    

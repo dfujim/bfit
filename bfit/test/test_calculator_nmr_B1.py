@@ -7,7 +7,6 @@ import numpy as np
 from bfit.gui.calculator_nmr_B1 import calculator_nmr_B1
 
 def test_calculate_field():
-    
     calc = calculator_nmr_B1(True)
     
     # voltage
@@ -16,9 +15,9 @@ def test_calculate_field():
     calc.calculate()
     assert_almost_equal(float(calc.field.get()), 0.000960, 
                         err_msg = "calculator nmr B1 set volt = 1")
+    calc.root.destroy()
 
 def test_calculate_voltage():
-    
     calc = calculator_nmr_B1(True)
     
     # field
@@ -27,3 +26,4 @@ def test_calculate_voltage():
     calc.calculate()
     assert_almost_equal(float(calc.volt.get()), 1042.171717, 
                         err_msg = "calculator nmr B1 set field = 1")
+    calc.root.destroy()

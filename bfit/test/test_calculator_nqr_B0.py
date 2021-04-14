@@ -15,7 +15,7 @@ def test_calculate_voltage():
     calc.calculate()
     assert_almost_equal(float(calc.field.get()), 2.3878, 
         err_msg = "calculator nqr B0 set current = 1, compared to online calculator")
-    
+    calc.root.destroy()
     
 def test_calculate_field():
     calc = calculator_nqr_B0(True)
@@ -26,3 +26,4 @@ def test_calculate_field():
     calc.calculate()
     assert_almost_equal(float(calc.current.get()), 0.3729, 
                         err_msg = "calculator nqr B0 set field = 1, compared to online calculator")
+    calc.root.destroy()
