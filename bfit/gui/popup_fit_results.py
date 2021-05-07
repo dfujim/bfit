@@ -179,7 +179,7 @@ class popup_fit_results(template_fit_popup):
             std_h = np.array([m.merrors[i].upper for i in range(n)])
             
         # chi2
-        chi = m.chi2()
+        chi = m.chi2
         self.chi_label['text'] = 'ChiSq: %.2f' % np.around(chi, 2)
         self.chi = chi
         
