@@ -96,6 +96,7 @@ def test_columns_no_fit(b=None):
                      'Chi-Squared',
                      ]:
             new_columns.append('Error '+c)
+        
     columns = new_columns
         
     # add missing columns: run number, shared, fixed
