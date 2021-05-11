@@ -138,7 +138,7 @@ def get_fn_superpos(fn_handles):
 
     # make function
     def fn(x, *pars):
-        return np.sum(f(x, *pars[l:h]) for f, l, h in zip(fn_handles, npars[:-1], npars[1:]))
+        return sum(f(x, *pars[l:h]) for f, l, h in zip(fn_handles, npars[:-1], npars[1:]))
     return fn
 
 # ----------------------------------------------------------------------------

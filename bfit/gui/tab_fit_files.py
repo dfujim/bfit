@@ -1399,17 +1399,18 @@ class fit_files(object):
             return df
 
     # ======================================================================= #
-    def export_fit(self, savetofile=True):
+    def export_fit(self, savetofile=True, directory=None):
         """Export the fit lines as csv files"""
 
         # filename
         filename = self.bfit.fileviewer.default_export_filename
         filename = '_fit'.join(os.path.splitext(filename))
 
-        directory = filedialog.askdirectory()
-        if not directory:
-            return
-
+        if directory is None:
+            directory = filedialog.askdirectory()
+            if not directory:
+                return
+        
         filename = os.path.join(directory, filename)
 
         # asymmetry type
