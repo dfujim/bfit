@@ -282,7 +282,7 @@ class fileviewer(object):
             raise RuntimeError('Unknown mode type')
     
     # ======================================================================= #
-    def export(self):
+    def export(self, filename=None):
         """Export data as csv"""
         
         self.logger.info('Export button pressed')
@@ -293,7 +293,8 @@ class fileviewer(object):
         data = self.data
         
         # get filename 
-        filename = filedialog.asksaveasfilename(
+        if filename is None:
+            filename = filedialog.asksaveasfilename(
                 initialfile=self.default_export_filename%(data.year, data.run), 
                 filetypes=[('csv', '*.csv'), 
                            ('allfiles', '*')], 

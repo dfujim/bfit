@@ -407,17 +407,21 @@ class fetch_files(object):
                 self.bfit.plt.tight_layout(figstyle)
         
     # ======================================================================= #
-    def export(self):
+    def export(self, directory=None):
         """Export all data files as csv"""
         
         # filename
         filename = self.bfit.fileviewer.default_export_filename
         if not filename: return
         self.logger.info('Exporting to file %s', filename)
-        try:
-            filename = filedialog.askdirectory()+'/'+filename
-        except TypeError:
-            pass
+        
+        if directory is None:
+            try:
+                filename = os.path.join(filedialog.askdirectory(), filename)
+            except TypeError:
+                pass
+        else:
+            filename = os.path.join(directory, filename)
         
         # get data and write
         for k in self.bfit.data.keys():
