@@ -1308,7 +1308,7 @@ class fit_files(object):
         raise_window()
 
     # ======================================================================= #
-    def export(self, savetofile=True):
+    def export(self, savetofile=True, filename=None):
         """Export the fit parameter and file headers"""
         # get values and errors
         val = {}
@@ -1364,10 +1364,12 @@ class fit_files(object):
         if savetofile:
 
             # get file name
-            filename = filedialog.asksaveasfilename(filetypes=[('csv', '*.csv'),
-                                                               ('allfiles', '*')],
-                                                defaultextension='.csv')
-            if not filename:    return
+            if filename is None:
+                filename = filedialog.asksaveasfilename(filetypes=[('csv', '*.csv'),
+                                                                   ('allfiles', '*')],
+                                                    defaultextension='.csv')
+                if not filename:    
+                    return
             self.logger.info('Exporting parameters to "%s"', filename)
 
             # check extension
