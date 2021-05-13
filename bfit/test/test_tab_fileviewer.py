@@ -21,9 +21,8 @@ def with_bfit(function):
         try:
             function(*args, **kwargs, tab=tab, b=b)
         finally:
-            
-            # close gui
             b.on_closing()
+            del b
             
     return wrapper
 

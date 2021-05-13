@@ -177,6 +177,7 @@ def save():
     # save and clean ---------------------------------------------------------
     b.fit_files.save_state(filename)
     b.on_closing()
+    del b
 
 def test_load():
     
@@ -213,5 +214,6 @@ def test_load():
     
     # save and clean ---------------------------------------------------------
     b.on_closing()    
+    del b
     os.remove(filename)
     

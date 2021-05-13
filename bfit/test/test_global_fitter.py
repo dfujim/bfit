@@ -50,10 +50,10 @@ def test_fitting_migrad():
     gf.fit(minimiser='migrad')
     par, std_l, std_h, cov = gf.get_par()
     
-    assert_almost_equal(par[0, 0], par[1, 0], err_msg = "global fitter migrad shared parameter equal")
-    assert_almost_equal(par[0, 0], 5, err_msg = "global fitter migrad parameter 0 result")
-    assert_almost_equal(par[0, 1], 1, err_msg = "global fitter migrad parameter 1 result")
-    assert_almost_equal(par[1, 1], 8, err_msg = "global fitter migrad parameter 2 result")
+    assert_almost_equal(abs(par[0, 0] - par[1, 0]), 0, err_msg = "global fitter migrad shared parameter equal")
+    assert_almost_equal(abs(par[0, 0] - 5), 0, err_msg = "global fitter migrad parameter 0 result")
+    assert_almost_equal(abs(par[0, 1] - 1), 0, err_msg = "global fitter migrad parameter 1 result")
+    assert_almost_equal(abs(par[1, 1] - 8), 0, err_msg = "global fitter migrad parameter 2 result")
     
 def test_fitting_minos():
     
@@ -61,10 +61,10 @@ def test_fitting_minos():
     gf.fit(minimiser='minos')
     par, std_l, std_h, cov = gf.get_par()
     
-    assert_almost_equal(par[0, 0], par[1, 0], err_msg = "global fitter minos shared parameter equal")
-    assert_almost_equal(par[0, 0], 5, err_msg = "global fitter minos parameter 0 result")
-    assert_almost_equal(par[0, 1], 1, err_msg = "global fitter minos parameter 1 result")
-    assert_almost_equal(par[1, 1], 8, err_msg = "global fitter minos parameter 2 result")
+    assert_almost_equal(abs(par[0, 0] - par[1, 0]), 0, err_msg = "global fitter minos shared parameter equal")
+    assert_almost_equal(abs(par[0, 0] - 5), 0, err_msg = "global fitter minos parameter 0 result")
+    assert_almost_equal(abs(par[0, 1] - 1), 0, err_msg = "global fitter minos parameter 1 result")
+    assert_almost_equal(abs(par[1, 1] - 8), 0, err_msg = "global fitter minos parameter 2 result")
     
     assert_equal(len(gf.par), 3, "global fitter internal flattened parameter array length")
     
@@ -74,8 +74,8 @@ def test_fitting_fixed_trf():
     gf.fit(minimiser='trf')
     par, std_l, std_h, cov = gf.get_par()
     
-    assert_almost_equal(par[0, 0], par[1, 0], err_msg = "global fitter curve_fit shared parameter equal")
-    assert_almost_equal(par[1, 1], 1, err_msg = "global fitter curve_fit parameter fixed result")
+    assert_almost_equal(abs(par[0, 0] - par[1, 0]), 0, err_msg = "global fitter curve_fit shared parameter equal")
+    assert_almost_equal(abs(par[1, 1] - 1), 0, err_msg = "global fitter curve_fit parameter fixed result")
 
 def test_fitting_fixed_migrad():
     
@@ -83,8 +83,8 @@ def test_fitting_fixed_migrad():
     gf.fit(minimiser='migrad')
     par, std_l, std_h, cov = gf.get_par()
     
-    assert_almost_equal(par[0, 0], par[1, 0], err_msg = "global fitter migrad shared parameter equal")
-    assert_almost_equal(par[1, 1], 1, err_msg = "global fitter migrad parameter fixed result")
+    assert_almost_equal(abs(par[0, 0] - par[1, 0]), 0, err_msg = "global fitter migrad shared parameter equal")
+    assert_almost_equal(abs(par[1, 1] - 1), 0, err_msg = "global fitter migrad parameter fixed result")
     
 def test_fitting_fixed_minos():
     
@@ -92,8 +92,8 @@ def test_fitting_fixed_minos():
     gf.fit(minimiser='minos')
     par, std_l, std_h, cov = gf.get_par()
     
-    assert_almost_equal(par[0, 0], par[1, 0], err_msg = "global fitter minos shared parameter equal")
-    assert_almost_equal(par[1, 1], 1, err_msg = "global fitter minos parameter fixed result")
+    assert_almost_equal(abs(par[0, 0] - par[1, 0]), 0, err_msg = "global fitter minos shared parameter equal")
+    assert_almost_equal(abs(par[1, 1] - 1), 0, err_msg = "global fitter minos parameter fixed result")
     
     assert_equal(len(gf.par), 1, "global fitter internal flattened parameter array length with fixed values")
     

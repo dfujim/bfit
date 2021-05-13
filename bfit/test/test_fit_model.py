@@ -27,6 +27,7 @@ def with_bfit(function):
             return function(*args, **kwargs, b=b, fittab=tab, fetchtab=tab2)
         finally:
             b.on_closing()
+            del b
             
     return wrapper
 

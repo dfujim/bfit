@@ -34,6 +34,7 @@ def with_bfit(function):
             return function(*args, **kwargs, b=b)
         finally:
             b.on_closing()
+            del b
             
     return wrapper
 

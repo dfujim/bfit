@@ -23,6 +23,7 @@ def with_bfit(function):
             function(*args, **kwargs, tab=tab, b=b)
         finally:
             b.on_closing()
+            del b
             
     return wrapper
 
@@ -100,6 +101,7 @@ def test_checkbox(tab=None, b=None):
 
 @with_bfit    
 def test_draw(tab=None, b=None):
+    
     # get some data
     tab.year.set(2020)
     tab.run.set('40123-40126')
