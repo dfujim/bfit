@@ -98,6 +98,8 @@ class bfit(object):
         
         Data Fields:
             asym_dict_keys: asym calc and draw types
+            bnmr_data_dir:  string, directory for bnmr data
+            bnqr_data_dir:  string, directory for bnqr data
             data:           dict of fitdata objects for drawing/fitting, keyed by run #
             deadtime:       float, value of deadtime in s or scaling for local calcs
             deadtime_switch:BooleanVar, if true, use deadtime correction
@@ -125,6 +127,7 @@ class bfit(object):
             root:           tkinter root instance
             rounding:       number of decimal places to round results to in display
             routine_mod:    module with fitting routines
+            style:          dict, drawing styles
             thermo_channel: StringVar for tracking how temperature is calculated
             units:          dict:(float, str). conversion rate from original to display units
             update_period:  int, update spacing in s. 

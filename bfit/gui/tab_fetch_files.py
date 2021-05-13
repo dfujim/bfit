@@ -24,7 +24,7 @@ class fetch_files(object):
     """
         Data fields:
             
-            asym_type: drawing style
+            asym_type: StringVar, drawing style
             bfit: pointer to parent class
             canvas_frame_id: id number of frame in canvas
             check_rebin: IntVar for handling rebin aspect of checkall

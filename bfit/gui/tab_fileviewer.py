@@ -27,12 +27,12 @@ __doc__ = """
 class fileviewer(object):
     """
         Data fields:
-            asym_type: drawing style
+            asym_type: StringVar, drawing style
             bfit: bfit object
             data: bdata object for drawing
             entry_asym_type: combobox for asym calculations
-            fig_list: list of figures
-            is_updating: True if update draw
+            is_updating: BooleanVar, True if update draw
+            rebin: IntVar() rebin value
             runn: IntVar() run number
             text: Text widget for displaying run information
             update_id: string, run id for the currently updating run
