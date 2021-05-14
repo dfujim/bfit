@@ -67,6 +67,40 @@ def test_remove(tab=None, b=None):
     # remove all
     tab.remove_all()
     assert_equal(len(list(tab.data_lines.keys())), 0, 'fetch tab remove all')
+    
+@with_bfit    
+def test_draw(tab=None, b=None):
+    
+    b.do_close_all()
+    
+    # get some data
+    tab.year.set(2020)
+    tab.run.set('40123-40126')
+    tab.get_data()
+    
+    # draw stack
+    b.draw_style.set('stack')
+    tab.draw_all('data')
+    ax = b.plt.gca('data')
+    assert_equal(len(ax.draw_objs), 4, 'fetch tab draw all stack')
+    
+    tab.run.set('40127-40128')
+    tab.get_data()
+    tab.draw_all('data')
+    assert_equal(len(ax.draw_objs), 6, 'fetch tab draw all stack with more data')
+    
+    # draw new
+    b.draw_style.set('new')
+    tab.draw_all('data')
+    assert_equal(len(b.plt.plots['data']), 2, 'fetch tab draw all new')
+    
+    # draw redraw
+    b.draw_style.set('redraw')
+    tab.remove_all()
+    tab.run.set('40127-40128')
+    tab.get_data()
+    tab.draw_all('data')
+    assert_equal(len(plt.gca().draw_objs), 2, 'fetch tab draw all redraw')
 
 @with_bfit    
 def test_checkbox(tab=None, b=None):
@@ -99,34 +133,3 @@ def test_checkbox(tab=None, b=None):
     assert_equal(tab.data_lines['2020.40123'].check_state.get(), True, 'fetch tab toggle check False -> True')
     assert_equal(tab.data_lines['2020.40124'].check_state.get(), False, 'fetch tab toggle check True -> False')
 
-@with_bfit    
-def test_draw(tab=None, b=None):
-    
-    # get some data
-    tab.year.set(2020)
-    tab.run.set('40123-40126')
-    tab.get_data()
-    
-    # draw stack
-    b.draw_style.set('stack')
-    tab.draw_all('data')
-    ax = b.plt.gca('data')
-    assert_equal(len(ax.draw_objs), 4, 'fetch tab draw all stack')
-    
-    tab.run.set('40127-40128')
-    tab.get_data()
-    tab.draw_all('data')
-    assert_equal(len(ax.draw_objs), 6, 'fetch tab draw all stack with more data')
-    
-    # draw new
-    b.draw_style.set('new')
-    tab.draw_all('data')
-    assert_equal(len(b.plt.plots['data']), 2, 'fetch tab draw all new')
-    
-    # draw redraw
-    b.draw_style.set('redraw')
-    tab.remove_all()
-    tab.run.set('40127-40128')
-    tab.get_data()
-    tab.draw_all('data')
-    assert_equal(len(plt.gca().draw_objs), 2, 'fetch tab draw all redraw')
