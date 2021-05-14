@@ -89,56 +89,46 @@ def draw(r, y, mode, tab=None, b=None):
             b.do_close_all()
     
 @with_bfit
-def test_draw_mode(tab=None, b=None):
+def test_draw_new(tab=None, b=None):    
     
     tab.year.set(2020)
-    
-    # test stack
-    b.draw_style.set('stack')
-    
-    tab.runn.set(40123)
-    tab.get_data()
-    tab.entry_asym_type.current(0) # set combined asym mode
-    
-    tab.draw('inspect')
-    
-    tab.runn.set(40127)
-    tab.get_data()
-    tab.draw('inspect')
-    
-    ax = plt.gca()
-    assert_equal(len(ax.draw_objs), 2, 'fileviewer stack')
-    
-    # test redraw
-    b.draw_style.set('redraw')
-    
-    tab.runn.set(40123)
-    tab.get_data()
-    tab.entry_asym_type.current(0) # set combined asym mode
-    
-    tab.draw('inspect')
-    
-    tab.runn.set(40127)
-    tab.get_data()
-    tab.draw('inspect')
-    
-    ax = plt.gca()
-    assert_equal(len(ax.draw_objs), 1, 'fileviewer redraw')
-    
-    # test new
     b.draw_style.set('new')
-    
     tab.runn.set(40123)
-    tab.get_data()
-    tab.entry_asym_type.current(0) # set combined asym mode
     
-    tab.draw('inspect')
-    tab.draw('inspect')
+    for r in range(3):
+        tab.get_data()
+        tab.draw('inspect')
     
     assert_equal(len(b.plt.plots['inspect']), 3, 'fileviewer draw new')
-    
-    b.do_close_all()
 
+@with_bfit
+def test_draw_stack(tab=None, b=None):
+    
+    tab.year.set(2020)
+    b.draw_style.set('stack')
+    
+    for r in (40123, 40127):
+        tab.runn.set(r)
+        tab.get_data()
+        tab.draw('inspect')
+    
+    ax = b.plt.gca('inspect')
+    assert_equal(len(ax.draw_objs), 2, 'fileviewer stack')
+    
+@with_bfit
+def test_draw_redraw(tab=None, b=None):
+
+    tab.year.set(2020)
+    b.draw_style.set('redraw')
+        
+    for r in (40123, 40127):
+        tab.runn.set(r)
+        tab.get_data()
+        tab.draw('inspect')
+    
+    ax = b.plt.gca('inspect')
+    assert_equal(len(ax.draw_objs), 1, 'fileviewer redraw')
+    
 @with_bfit    
 def test_autocomplete(tab=None, b=None):
   
