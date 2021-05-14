@@ -54,7 +54,7 @@ import bfit.backend.colors as colors
 plt.ion()
 
 # filter warnings related to new dkeys on read
-warnings.simplefilter('ignore', RuntimeWarning)
+warnings.simplefilter('ignore', bd.exceptions.DkeyWarning)
     
 
 __doc__="""
@@ -1278,6 +1278,9 @@ class bfit(object):
         if figstyle != 'periodic':
             raise_window()   
             
+        
+        
+        
         self.logger.debug('Drawing success.')
     
     # ======================================================================= #

@@ -59,7 +59,11 @@ class PltTracker(object):
         
         # switch 
         fig = plt.figure(self.active[style])
-        ax = plt.gca()
+        
+        if len(fig.axes) == 0:
+            ax = fig.add_subplot()
+        else:
+            ax = fig.axes[0]
             
         # clear old objects
         if unique and id is not None:
@@ -246,7 +250,7 @@ class PltTracker(object):
             label = ''
         
         # draw in active style 
-        obj = plt.errorbar(x, y, yerr=yerr, xerr=xerr, fmt=fmt, ecolor=ecolor, 
+        obj = ax.errorbar(x, y, yerr=yerr, xerr=xerr, fmt=fmt, ecolor=ecolor, 
                      elinewidth=elinewidth, capsize=capsize, 
                      barsabove=barsabove, lolims=lolims, uplims=uplims, 
                      xlolims=xlolims, xuplims=xuplims, errorevery=errorevery, 
@@ -290,8 +294,13 @@ class PltTracker(object):
         self.plots[style].append(fig.number)
         self.active[style] = fig.number
         
-        # track drawn objects
-        ax = plt.gca()
+        # get axes
+        if len(fig.axes) == 0:
+            ax = fig.add_subplot()
+        else:
+            ax = fig.axes[0]
+        
+        # track drawn objects    
         if not hasattr(ax, 'draw_objs'):
             ax.draw_objs = {}
         
@@ -338,7 +347,7 @@ class PltTracker(object):
         if unique:  self._remove_drawn_object(ax, id)
         self._remove_drawn_object(ax, 'line')
         
-        obj = plt.plot(*args, scalex=scalex, scaley=scaley, data=data, **kwargs)
+        obj = ax.plot(*args, scalex=scalex, scaley=scaley, data=data, **kwargs)
         ax.draw_objs.setdefault(id, []).append(obj)
         
         return obj

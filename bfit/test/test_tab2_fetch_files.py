@@ -71,7 +71,11 @@ def test_remove(tab=None, b=None):
 @with_bfit    
 def test_draw(tab=None, b=None):
     
-    b.do_close_all()
+    # get some data - bad passing of ax.draw_objs on first obj otherwise??
+    tab.year.set(2020)
+    tab.run.set('40123')
+    tab.get_data()
+    tab.draw_all('data', ignore_check=True)
     
     # get some data
     tab.year.set(2020)
@@ -80,18 +84,19 @@ def test_draw(tab=None, b=None):
     
     # draw stack
     b.draw_style.set('stack')
-    tab.draw_all('data')
-    ax = b.plt.gca('data')
+    tab.draw_all('data', ignore_check=True)
+    ax = b.plt.gcf('data').axes[0]
+
     assert_equal(len(ax.draw_objs), 4, 'fetch tab draw all stack')
     
     tab.run.set('40127-40128')
     tab.get_data()
-    tab.draw_all('data')
+    tab.draw_all('data', ignore_check=True)
     assert_equal(len(ax.draw_objs), 6, 'fetch tab draw all stack with more data')
     
     # draw new
     b.draw_style.set('new')
-    tab.draw_all('data')
+    tab.draw_all('data', ignore_check=True)
     assert_equal(len(b.plt.plots['data']), 2, 'fetch tab draw all new')
     
     # draw redraw
@@ -99,7 +104,7 @@ def test_draw(tab=None, b=None):
     tab.remove_all()
     tab.run.set('40127-40128')
     tab.get_data()
-    tab.draw_all('data')
+    tab.draw_all('data', ignore_check=True)
     assert_equal(len(plt.gca().draw_objs), 2, 'fetch tab draw all redraw')
 
 @with_bfit    

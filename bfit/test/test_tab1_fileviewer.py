@@ -1,7 +1,6 @@
 # test inspect tab
 # Derek Fujimoto
 # Feb 2021
-
 from numpy.testing import *
 import numpy as np
 import matplotlib.pyplot as plt
@@ -99,6 +98,8 @@ def test_draw_new(tab=None, b=None):
         tab.get_data()
         tab.draw('inspect')
     
+    print(plt.get_fignums())
+    print(b.plt.plots['inspect'])
     assert_equal(len(b.plt.plots['inspect']), 3, 'fileviewer draw new')
 
 @with_bfit
@@ -112,7 +113,7 @@ def test_draw_stack(tab=None, b=None):
         tab.get_data()
         tab.draw('inspect')
     
-    ax = b.plt.gca('inspect')
+    ax = b.plt.gcf('inspect').axes[0]
     assert_equal(len(ax.draw_objs), 2, 'fileviewer stack')
     
 @with_bfit
@@ -126,7 +127,7 @@ def test_draw_redraw(tab=None, b=None):
         tab.get_data()
         tab.draw('inspect')
     
-    ax = b.plt.gca('inspect')
+    ax = b.plt.gcf('inspect').axes[0]
     assert_equal(len(ax.draw_objs), 1, 'fileviewer redraw')
     
 @with_bfit    
