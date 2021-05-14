@@ -27,12 +27,12 @@ __doc__ = """
 class fileviewer(object):
     """
         Data fields:
-            asym_type: drawing style
+            asym_type: StringVar, drawing style
             bfit: bfit object
             data: bdata object for drawing
             entry_asym_type: combobox for asym calculations
-            fig_list: list of figures
-            is_updating: True if update draw
+            is_updating: BooleanVar, True if update draw
+            rebin: IntVar() rebin value
             runn: IntVar() run number
             text: Text widget for displaying run information
             update_id: string, run id for the currently updating run
@@ -282,7 +282,7 @@ class fileviewer(object):
             raise RuntimeError('Unknown mode type')
     
     # ======================================================================= #
-    def export(self):
+    def export(self, filename=None):
         """Export data as csv"""
         
         self.logger.info('Export button pressed')
@@ -293,7 +293,8 @@ class fileviewer(object):
         data = self.data
         
         # get filename 
-        filename = filedialog.asksaveasfilename(
+        if filename is None:
+            filename = filedialog.asksaveasfilename(
                 initialfile=self.default_export_filename%(data.year, data.run), 
                 filetypes=[('csv', '*.csv'), 
                            ('allfiles', '*')], 

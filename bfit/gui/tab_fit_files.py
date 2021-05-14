@@ -664,6 +664,7 @@ class fit_files(object):
                         except ValueError as errmsg:
                             self.logger.exception("Bad input.")
                             messagebox.showerror("Error", str(errmsg))
+                            raise errmsg
 
                     # get "Fixed" entry
                     elif col in ['fixed']:
@@ -797,6 +798,7 @@ class fit_files(object):
         inv_map = {v: k for k, v in self.bfit.asym_dict.items()}
         asym_mode_fit = inv_map[self.bfit.get_asym_mode(self)]
         asym_mode_fetch = inv_map[self.bfit.get_asym_mode(self.bfit.fetch_files)]
+        
         self.bfit.fetch_files.asym_type.set(asym_mode_fit)
 
         # draw fit results
@@ -819,9 +821,11 @@ class fit_files(object):
                 else:
                     self.plt.tight_layout('fit')
 
-            # reset style and asym mode
+            # reset style
             self.bfit.draw_style.set(style)
-            self.bfit.fetch_files.asym_type.set(asym_mode_fetch)
+            
+        # reset asym mode
+        self.bfit.fetch_files.asym_type.set(asym_mode_fetch)
 
     # ======================================================================= #
     def do_fit_constraints(self):
@@ -1307,7 +1311,7 @@ class fit_files(object):
         raise_window()
 
     # ======================================================================= #
-    def export(self, savetofile=True):
+    def export(self, savetofile=True, filename=None):
         """Export the fit parameter and file headers"""
         # get values and errors
         val = {}
@@ -1363,10 +1367,12 @@ class fit_files(object):
         if savetofile:
 
             # get file name
-            filename = filedialog.asksaveasfilename(filetypes=[('csv', '*.csv'),
-                                                               ('allfiles', '*')],
-                                                defaultextension='.csv')
-            if not filename:    return
+            if filename is None:
+                filename = filedialog.asksaveasfilename(filetypes=[('csv', '*.csv'),
+                                                                   ('allfiles', '*')],
+                                                    defaultextension='.csv')
+                if not filename:    
+                    return
             self.logger.info('Exporting parameters to "%s"', filename)
 
             # check extension
@@ -1398,17 +1404,18 @@ class fit_files(object):
             return df
 
     # ======================================================================= #
-    def export_fit(self, savetofile=True):
+    def export_fit(self, savetofile=True, directory=None):
         """Export the fit lines as csv files"""
 
         # filename
         filename = self.bfit.fileviewer.default_export_filename
         filename = '_fit'.join(os.path.splitext(filename))
 
-        directory = filedialog.askdirectory()
-        if not directory:
-            return
-
+        if directory is None:
+            directory = filedialog.askdirectory()
+            if not directory:
+                return
+        
         filename = os.path.join(directory, filename)
 
         # asymmetry type
@@ -1720,16 +1727,17 @@ class fit_files(object):
             self.input_enable_disable(child, state=state, first=False)
 
     # ======================================================================= #
-    def load_state(self):
+    def load_state(self, filename=None):
         """
             Load the state of the gui
         """
 
         # get the filename
-        filename = filedialog.askopenfilename(filetypes=[('yaml', '*.yaml'),
-                                                         ('allfiles', '*')])
-        if not filename:
-            return
+        if filename is None:
+            filename = filedialog.askopenfilename(filetypes=[('yaml', '*.yaml'),
+                                                             ('allfiles', '*')])
+            if not filename:
+                return
 
         self.logger.info('Loading program state from %s', filename)
 
@@ -1741,10 +1749,55 @@ class fit_files(object):
         fetch_tab = self.bfit.fetch_files
         fetch_tab.remove_all()
 
+        # bfit parameters
+        self.bfit.style = from_file['style']
+        self.bfit.hist_select = from_file['hist_select']
+        self.bfit.draw_style.set(from_file['draw_style'])
+        self.bfit.draw_fit.set(from_file['draw_fit'])
+        
+        self.bfit.probe_species.set(from_file['probe_species'])
+        self.bfit.set_probe_species()
+        
+        self.bfit.minimizer.set(from_file['minimizer'])
+        self.bfit.set_fit_routine()
+        
+        self.bfit.norm_with_param.set(from_file['norm_with_param'])
+        self.bfit.draw_standardized_res.set(from_file['draw_standardized_res'])
+        self.bfit.use_nbm.set(from_file['use_nbm'])
+        self.bfit.draw_ppm.set(from_file['draw_ppm'])
+        self.bfit.thermo_channel.set(from_file['thermo_channel'])
+        self.bfit.units = from_file['units']
+        self.bfit.label_default.set(from_file['label_default'])
+        self.bfit.ppm_reference = from_file['ppm_reference']
+        self.bfit.update_period = from_file['update_period']
+        self.bfit.bnmr_data_dir = from_file['bnmr_data_dir']
+        self.bfit.bnqr_data_dir = from_file['bnqr_data_dir']
+        
         # set deadtime correction
         self.bfit.deadtime = from_file['deadtime']
         self.bfit.deadtime_switch.set(from_file['deadtime_switch'])
         self.bfit.deadtime_global.set(from_file['deadtime_global'])
+        
+        # fileviewer
+        fileviewer_tab = self.bfit.fileviewer
+        fileviewer_tab.year.set(from_file['fileview_year'])
+        fileviewer_tab.runn.set(from_file['fileview_run'])
+        fileviewer_tab.get_data()
+        fileviewer_tab.asym_type.set(from_file['fileview_asym_type'])
+        fileviewer_tab.rebin.set(from_file['fileview_rebin'])
+        fileviewer_tab.is_updating.set(from_file['fileview_is_updating'])
+
+        # fetch files
+        fetch_files = self.bfit.fetch_files
+        fetch_files.year.set(from_file['fetch_year'])
+        fetch_files.run.set(from_file['fetch_run'])
+        fetch_files.check_state.set(from_file['fetch_check_state'])
+        fetch_files.check_state_data.set(from_file['fetch_check_state_data'])
+        fetch_files.check_state_fit.set(from_file['fetch_check_state_fit'])
+        fetch_files.check_state_res.set(from_file['fetch_check_state_res'])
+        fetch_files.check_rebin.set(from_file['fetch_check_rebin'])
+        fetch_files.check_bin_remove.set(from_file['fetch_check_bin_remove'])
+        fetch_files.asym_type.set(from_file['fetch_asym_type'])
          
         # load selected runs
         datalines = from_file['datalines']
@@ -1772,19 +1825,21 @@ class fit_files(object):
         fetch_tab.year.set(setyear)
         fetch_tab.run.set(setrun)
         
-        # set the fitting function
-        self.fit_function_title_box.set(from_file['fitfn'])
-
-        # set the number of components
-        self.n_component.set(from_file['ncomponents'])
-
-        # set the global chisquared
+        # fit files
+        self.annotation.set(from_file['fit_annotation'])
+        self.asym_type.set(from_file['fit_asym_type'])
+        self.fit_function_title.set(from_file['fit_fit_function_title'])
+        self.n_component.set(from_file['fit_n_component'])
+        self.par_label.set(from_file['fit_par_label'])
+        self.set_as_group.set(from_file['fit_set_as_group'])
+        self.set_prior_p0.set(from_file['fit_set_prior_p0'])
+        self.use_rebin.set(from_file['fit_use_rebin'])
+        self.xaxis.set(from_file['fit_xaxis'])
+        self.yaxis.set(from_file['fit_yaxis'])
+        self.xlo.set(from_file['fit_xlo'])
+        self.xhi.set(from_file['fit_xhi'])
         self.gchi_label['text'] = from_file['gchi']
-
-        # set probe
-        self.bfit.probe_species.set(from_file['probe_species'])
-        self.bfit.set_probe_species()
-
+        
         # get parameters in fitting page
         self.populate()
 
@@ -1814,8 +1869,8 @@ class fit_files(object):
             d_fitdata[id].set_fitpar(df)
 
             # get chisq
-            keylist = self.fitter.gen_param_names(from_file['fitfn'],
-                                                  from_file['ncomponents'])
+            keylist = self.fitter.gen_param_names(from_file['fit_fit_function_title'],
+                                                  from_file['fit_n_component'])
             for k in keylist:
                 if 'chi' in parentry[k].keys():
                     if parentry[k]['chi'] != '':
@@ -1834,8 +1889,8 @@ class fit_files(object):
             lifetime = bd.life[from_file['probe_species']]
 
             # get fit function
-            fitfn = self.fitter.get_fn(from_file['fitfn'],
-                                       from_file['ncomponents'],
+            fitfn = self.fitter.get_fn(from_file['fit_fit_function_title'],
+                                       from_file['fit_n_component'],
                                        pulse_len,
                                        lifetime)
 
@@ -1854,25 +1909,6 @@ class fit_files(object):
                                 'chi':np.full(len(keylist), chi)})  
             
             d_fitdata[id].set_fitresult({'fn': fitfn1, 'results': df})
-
-        # xlims
-        self.xlo.set(from_file['xlo'])
-        self.xhi.set(from_file['xhi'])
-
-        # set minimizer
-        self.bfit.minimizer.set(from_file['minimizer'])
-        self.bfit.set_fit_routine()
-
-        # set menu options
-        self.bfit.norm_with_param.set(from_file['norm_with_param'])
-        self.bfit.draw_standardized_res.set(from_file['draw_standardized_res'])
-        self.bfit.use_nbm.set(from_file['use_nbm'])
-        self.bfit.draw_ppm.set(from_file['draw_ppm'])
-        self.bfit.thermo_channel.set(from_file['thermo_channel'])
-        self.bfit.units = from_file['units']
-        self.bfit.label_default.set(from_file['label_default'])
-        self.bfit.ppm_reference = from_file['ppm_reference']
-        self.bfit.update_period = from_file['update_period']
 
     # ======================================================================= #
     def modify_all(self, *args, source=None, par='', column=''):
@@ -1923,7 +1959,7 @@ class fit_files(object):
             self.do_fit()
 
     # ======================================================================= #
-    def save_state(self):
+    def save_state(self, filename=None):
         """
             Save the state of the gui:
 
@@ -1937,8 +1973,50 @@ class fit_files(object):
         # final output
         to_file = {}
 
+        # bfit menu options
+        to_file['probe_species'] = self.bfit.probe_species.get()
+        to_file['minimizer'] = self.bfit.minimizer.get()
+        to_file['norm_with_param'] = self.bfit.norm_with_param.get()
+        to_file['draw_standardized_res'] = self.bfit.draw_standardized_res.get()
+        to_file['use_nbm'] = self.bfit.use_nbm.get()
+        to_file['draw_ppm'] = self.bfit.draw_ppm.get()
+        to_file['thermo_channel'] = self.bfit.thermo_channel.get()
+        to_file['units'] = self.bfit.units
+        to_file['label_default'] = self.bfit.label_default.get()
+        to_file['ppm_reference'] = self.bfit.ppm_reference
+        to_file['update_period'] = self.bfit.update_period
+        to_file['deadtime'] = self.bfit.deadtime
+        to_file['deadtime_switch'] = self.bfit.deadtime_switch.get()
+        to_file['deadtime_global'] = self.bfit.deadtime_global.get()
+        to_file['style'] = self.bfit.style
+        to_file['hist_select'] = self.bfit.hist_select
+        to_file['draw_style'] = self.bfit.draw_style.get()
+        to_file['draw_fit'] = self.bfit.draw_fit.get()
+        to_file['bnmr_data_dir'] = self.bfit.bnmr_data_dir
+        to_file['bnqr_data_dir'] = self.bfit.bnqr_data_dir
+
+        # fileviewer
+        fileviewer_tab = self.bfit.fileviewer
+        to_file['fileview_year'] = fileviewer_tab.year.get()
+        to_file['fileview_run'] = fileviewer_tab.runn.get()
+        to_file['fileview_asym_type'] = fileviewer_tab.asym_type.get()
+        to_file['fileview_rebin'] = fileviewer_tab.rebin.get()
+        to_file['fileview_is_updating'] = fileviewer_tab.is_updating.get()
+
+        # fetch files
+        fetch_files = self.bfit.fetch_files
+        to_file['fetch_year'] = fetch_files.year.get()
+        to_file['fetch_run'] = fetch_files.run.get()
+        to_file['fetch_check_state'] = fetch_files.check_state.get()
+        to_file['fetch_check_state_data'] = fetch_files.check_state_data.get()
+        to_file['fetch_check_state_fit'] = fetch_files.check_state_fit.get()
+        to_file['fetch_check_state_res'] = fetch_files.check_state_res.get()
+        to_file['fetch_check_rebin'] = fetch_files.check_rebin.get()
+        to_file['fetch_check_bin_remove'] = fetch_files.check_bin_remove.get()
+        to_file['fetch_asym_type'] = fetch_files.asym_type.get()
+
         # get state from datalines
-        datalines = self.bfit.fetch_files.data_lines
+        datalines = fetch_files.data_lines
         dlines = {}
         for id in datalines:
             d = datalines[id]
@@ -1956,25 +2034,21 @@ class fit_files(object):
                     }
         to_file['datalines'] = dlines
 
-        # get state of fitting info from fit page
-        to_file['fitfn'] = self.fit_function_title.get()
-        to_file['ncomponents'] = self.n_component.get()
+        # fit files
         to_file['gchi'] = self.gchi_label['text']
-        to_file['probe_species'] = self.bfit.probe_species.get()
-        to_file['minimizer'] = self.bfit.minimizer.get()
-        to_file['norm_with_param'] = self.bfit.norm_with_param.get()
-        to_file['draw_standardized_res'] = self.bfit.draw_standardized_res.get()
-        to_file['use_nbm'] = self.bfit.use_nbm.get()
-        to_file['draw_ppm'] = self.bfit.draw_ppm.get()
-        to_file['thermo_channel'] = self.bfit.thermo_channel.get()
-        to_file['units'] = self.bfit.units
-        to_file['label_default'] = self.bfit.label_default.get()
-        to_file['ppm_reference'] = self.bfit.ppm_reference
-        to_file['update_period'] = self.bfit.update_period
-        to_file['deadtime'] = self.bfit.deadtime
-        to_file['deadtime_switch'] = self.bfit.deadtime_switch.get()
-        to_file['deadtime_global'] = self.bfit.deadtime_global.get()
-
+        to_file['fit_annotation'] = self.annotation.get()
+        to_file['fit_asym_type'] = self.asym_type.get()
+        to_file['fit_fit_function_title'] = self.fit_function_title.get()
+        to_file['fit_n_component'] = self.n_component.get()
+        to_file['fit_par_label'] = self.par_label.get()
+        to_file['fit_set_as_group'] = self.set_as_group.get()
+        to_file['fit_set_prior_p0'] = self.set_prior_p0.get()
+        to_file['fit_use_rebin'] = self.use_rebin.get()
+        to_file['fit_xaxis'] = self.xaxis.get()
+        to_file['fit_yaxis'] = self.yaxis.get()
+        to_file['fit_xlo'] = self.xlo.get()
+        to_file['fit_xhi'] = self.xhi.get()
+        
         # get parameter values from fitlines
         fitlines = self.fit_lines
         flines = {}
@@ -1992,9 +2066,13 @@ class fit_files(object):
         to_file['xhi'] = self.xhi.get()
 
         # save file ----------------------------------------------------------
-        fid = filedialog.asksaveasfile(mode='w', filetypes=[('yaml', '*.yaml'),
+        if filename is None:
+            fid = filedialog.asksaveasfile(mode='w', filetypes=[('yaml', '*.yaml'),
                                                            ('allfiles', '*')],
-                                       defaultextension='.yaml')
+                                           defaultextension='.yaml')
+        else:
+            fid = open(filename, 'w')
+            
         if fid:
             yaml.dump(to_file, fid)
             fid.close()
@@ -2380,7 +2458,7 @@ class fitline(object):
             entry.grid(column=c, row=r, padx=5, sticky=E); c += 1
             self.parentry[p]['fixed'] = (value, entry)
             try:
-                value.set(fitdat.fitpar.loc[p, 'fixed'])
+                value.set(bool(fitdat.fitpar.loc[p, 'fixed']))
             except KeyError:
                 pass
 
@@ -2474,12 +2552,13 @@ class fitline(object):
         plist.sort()
 
         # check if we are using the fit results of the prior fit
-        values = None
+        values_res = None
         res = self.bfit.data[run].fitpar['res']
         
         isfitted = any(res.values) # is this run fitted?
         
         if fit_files.set_prior_p0.get() and not isfitted:
+            
             r = 0
             for rkey in self.bfit.data:
                 data = self.bfit.data[rkey]
@@ -2487,16 +2566,17 @@ class fitline(object):
                 isfitted = any(data.fitpar['res'].values) # is the latest run fitted?
                 if isfitted and data.run > r:
                     r = data.run
-                    values = data.fitpar
-                    parentry = self.bfit.fit_files.fit_lines[rkey].parentry
+                    values_res = data.fitpar
         
         # get calcuated initial values
-        if values is None:
-            values = fitter.gen_init_par(fn_title, ncomp, self.bfit.data[run].bd,
-                                     self.bfit.get_asym_mode(fit_files))
-
+        values = fitter.gen_init_par(fn_title, ncomp, self.bfit.data[run].bd,
+                                    self.bfit.get_asym_mode(fit_files))
+              
+        # set p0 from old
+        if values_res is not None:
+            values['p0'] = values_res['res']
+                                     
         # set to data
-        
         self.bfit.data[run].set_fitpar(values)
         
         return tuple(plist)

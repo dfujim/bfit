@@ -22,7 +22,9 @@ class calculator_nqr_B0(object):
         self.logger.info('Initializing')
         
         # root 
-        root = Toplevel()
+        if commandline: root = Tk()
+        else:           root = Toplevel()
+        
         root.title("Zaher's Caculator")
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)

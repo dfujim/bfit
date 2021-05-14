@@ -63,8 +63,6 @@ class popup_set_histograms(object):
                       TL is the left  counter tagged with alphas, 
                      nTR is the right counter tagged with !alphas (absence of), 
                      nLR is the right counter tagged with !alphas
-                     
-            (note the lack of spaces in each list)
             """), \
             pad=5, justify=LEFT, font=('Courier'))
         

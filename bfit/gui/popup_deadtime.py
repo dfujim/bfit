@@ -18,15 +18,12 @@ class popup_deadtime(object):
         Attributes: 
         
         bfit:       bfit object
+        c:          Float, calculated helicity output
+        chi:        StringVar, display chi2
         dt:         Float, calculated deadtime output
-        dt_calc:    StringVar for calculated deadtime output
-        dt_calc_err:StringVar for calculated deadtime error output
-        dt_calc_chi:StringVar for calculated deadtime chi2 output
-        dt_over:    StringVar for deadtime override input
-        dt_over_chi:StringVar for deadtime override chi2 output
         logger:     logger 
         run:        IntVar, run number of run to fetch
-        use_calc:   BooleanVar, if true use calculated dt value
+        bfit.deadtime_switch:   BooleanVar, if true use calculated dt value
         win:        root Tk object
         year:       IntVar, year of run to fetch
         

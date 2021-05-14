@@ -30,7 +30,6 @@ class fitdata(object):
             bias_std:   platform bias in kV (float)
             check_state:(BooleanVar)  
             chi:        chisquared from fit (float)
-            deadtime:   deadtime value
             drawarg:    drawing arguments for errorbars (dict)
             field:      magnetic field in T (float)
             field_std:  magnetic field standard deviation in T (float)

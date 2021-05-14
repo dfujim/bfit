@@ -54,7 +54,7 @@ import bfit.backend.colors as colors
 plt.ion()
 
 # filter warnings related to new dkeys on read
-warnings.simplefilter('ignore', RuntimeWarning)
+warnings.simplefilter('ignore', bd.exceptions.DkeyWarning)
     
 
 __doc__="""
@@ -98,6 +98,8 @@ class bfit(object):
         
         Data Fields:
             asym_dict_keys: asym calc and draw types
+            bnmr_data_dir:  string, directory for bnmr data
+            bnqr_data_dir:  string, directory for bnqr data
             data:           dict of fitdata objects for drawing/fitting, keyed by run #
             deadtime:       float, value of deadtime in s or scaling for local calcs
             deadtime_switch:BooleanVar, if true, use deadtime correction
@@ -125,6 +127,7 @@ class bfit(object):
             root:           tkinter root instance
             rounding:       number of decimal places to round results to in display
             routine_mod:    module with fitting routines
+            style:          dict, drawing styles
             thermo_channel: StringVar for tracking how temperature is calculated
             units:          dict:(float, str). conversion rate from original to display units
             update_period:  int, update spacing in s. 
@@ -133,17 +136,10 @@ class bfit(object):
     """
     bnmr_archive_label = "BNMR_ARCHIVE"
     bnqr_archive_label = "BNQR_ARCHIVE"
-    update_period = 10  # s
-    ppm_reference = 41270000 # Hz
     rounding = 5       # number of decimal places to round results to in display
-    hist_select = ''    # histogram selection for asym calculations
     norm_alph_diff_time = 0.1   # number of seconds to take average over when 
                                 # normalizing alpha diffusion runs
     legend_max_draw = 8 # max number of items to draw before removing the legend
-    
-    # track settings for use_nbm
-    use_nbm_settings = {'default':False,
-                        '1n':True}
     
     # csymmetry calculation options
     asym_dict_keys = {'20':["Combined Helicity", 
@@ -279,22 +275,11 @@ class bfit(object):
            '1w':'xpar', 
            '1n':'mV'}
     
-    # units: mode:[conversion rate from original to display units, unit]
-    units = {'1f':[1e-6, 'MHz'], 
-             '2e':[1e-6, 'MHz'], 
-             '1w':[1, 'Hz'], 
-             '1n':[1e-3, 'V'],
-             '20':[1, 's'],
-             '2h':[1, 's'],
-             }
-    
     # minimizers
     minimizers = {'curve_fit (trf)':'bfit.fitting.fitter_curve_fit', 
                   'migrad (hesse)':'bfit.fitting.fitter_migrad_hesse', 
                   'migrad (minos)':'bfit.fitting.fitter_migrad_minos', 
                   }
-    
-    data = {}   # for fitdata objects
     
     # define draw componeents in draw_param and labels
     draw_components = ('Temperature (K)', '1000/T (1/K)', 'Impl. Energy (keV)', 
@@ -305,12 +290,6 @@ class bfit(object):
                        'He Mass Flow', 'CryoEx Mass Flow', 'Needle Set (turns)', 
                        'Needle Read (turns)', 'Laser Power', 'Target Bias (kV)', 
                        'NBM Rate (count/s)', 'Sample Rate (count/s)')
-    try: 
-        bnmr_data_dir = os.environ[bnmr_archive_label]
-        bnqr_data_dir = os.environ[bnqr_archive_label]
-    except(AttributeError, KeyError):
-        bnmr_data_dir = os.getcwd()
-        bnqr_data_dir = os.getcwd()
         
     # ======================================================================= #
     def __init__(self, testfn=None, commandline=False):
@@ -324,6 +303,41 @@ class bfit(object):
         self.logger = logging.getLogger(logger_name)
         self.logger.info('Initializing v%s' % __version__ + '-'*50)
         self.logger.info('bdata: v%s' % bd.__version__)
+        
+        # default settings
+        self.update_period = 10  # s
+        self.ppm_reference = 41270000 # Hz
+        self.hist_select = ''    # histogram selection for asym calculations
+        self.use_nbm_settings = {'default':False,
+                                 '1n':True}
+        self.style = {'linestyle':'None', 
+                      'linewidth':mpl.rcParams['lines.linewidth'], 
+                      'marker':'.', 
+                      'markersize':mpl.rcParams['lines.markersize'], 
+                      'capsize':0., 
+                      'elinewidth':mpl.rcParams['lines.linewidth'], 
+                      'alpha':1., 
+                      'fillstyle':'full'}
+        
+        # units: mode:[conversion rate from original to display units, unit]
+        self.units = {  '1f':[1e-6, 'MHz'], 
+                        '2e':[1e-6, 'MHz'], 
+                        '1w':[1, 'Hz'], 
+                        '1n':[1e-3, 'V'],
+                        '20':[1, 's'],
+                        '2h':[1, 's'],
+                        }
+        
+        # for fitdata objects        
+        self.data = {}   
+
+        # set data directories
+        try: 
+            self.bnmr_data_dir = os.environ[self.bnmr_archive_label]
+            self.bnqr_data_dir = os.environ[self.bnqr_archive_label]
+        except(AttributeError, KeyError):
+            self.bnmr_data_dir = os.getcwd()
+            self.bnqr_data_dir = os.getcwd()
         
         # plot tracker 
         self.plt = PltTracker()
@@ -412,17 +426,7 @@ class bfit(object):
         
         # event bindings
         root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        
-        # drawing styles
-        self.style = {'linestyle':'None', 
-                      'linewidth':mpl.rcParams['lines.linewidth'], 
-                      'marker':'.', 
-                      'markersize':mpl.rcParams['lines.markersize'], 
-                      'capsize':0., 
-                      'elinewidth':mpl.rcParams['lines.linewidth'], 
-                      'alpha':1., 
-                      'fillstyle':'full'}
-                                                
+                                                        
         # main frame
         mainframe = ttk.Frame(root, pad=5)
         mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -618,9 +622,9 @@ class bfit(object):
         noteframe.rowconfigure(0, weight=1)
         
         # Notetabs
-        self.fileviewer = fileviewer(file_viewer_tab, wref.proxy(self))
-        self.fetch_files = fetch_files(fetch_files_tab, wref.proxy(self))
-        self.fit_files = fit_files(fit_files_tab, wref.proxy(self))
+        self.fileviewer = fileviewer(file_viewer_tab, self)
+        self.fetch_files = fetch_files(fetch_files_tab, self)
+        self.fit_files = fit_files(fit_files_tab, self)
         
         # set instance variables ---------------------------------------------
         self.mainframe = mainframe
@@ -1274,6 +1278,9 @@ class bfit(object):
         if figstyle != 'periodic':
             raise_window()   
             
+        
+        
+        
         self.logger.debug('Drawing success.')
     
     # ======================================================================= #

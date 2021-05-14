@@ -2,7 +2,7 @@
 # Derek Fujimoto
 # Feb 2021
 
-from bfit.test.testing import *
+from numpy.testing import *
 from bfit.fitting.functions import *
 import numpy as np
 
@@ -19,11 +19,11 @@ def test_lorentzian():
     # check amplitude
     x = np.linspace(peak-dx/2, peak+dx/2, 10000)
     y = gety(x)
-    test(max(y), 1, "lorentzian amplitude")
+    assert_almost_equal(max(y), 1, err_msg = "lorentzian amplitude")
     
     # check peak location
     xmax = x[y == max(y)][0]
-    test(xmax, peak, "lorentzian peak")
+    assert_almost_equal(xmax, peak, err_msg = "lorentzian peak")
     
     # check FWHM
     xleft = np.linspace(peak-fwhm/2-dx, peak-fwhm/2+dx, 10000)
@@ -36,7 +36,7 @@ def test_lorentzian():
     x2 = min(xright[yright < 0])
     
     width = x2 - x1
-    test(width, fwhm, "lorentzian fwhm")
+    assert_almost_equal(width, fwhm, err_msg = "lorentzian fwhm")
     
 def test_bilorentzian():
     
@@ -51,8 +51,8 @@ def test_bilorentzian():
     bi1 = bilorentzian(x, peak, fwhm, amp, 0, 0)
     bi2 = bilorentzian(x, peak, 0, 0, fwhm, amp)
     
-    test_arr(lor, bi1, "bilorenzian component 1")
-    test_arr(lor, bi2, "bilorenzian component 2")
+    assert_array_almost_equal(lor, bi1, err_msg = "bilorenzian component 1")
+    assert_array_almost_equal(lor, bi2, err_msg = "bilorenzian component 2")
     
 def test_gaussian():
     
@@ -65,11 +65,11 @@ def test_gaussian():
     y = -gaussian(x, mean, sigma, amp)
     
     # test amp
-    test(max(y), amp, "gaussian amp")
+    assert_almost_equal(max(y), amp, err_msg = "gaussian amp")
     
     # test mean 
     avg = np.average(x, weights=y)
-    test(avg, mean, "gaussian mean")
+    assert_almost_equal(avg, mean, err_msg = "gaussian mean")
     
     # test stdev
     mean = 5
@@ -78,7 +78,7 @@ def test_gaussian():
     
     wsum = np.sum(np.square(mean - x) * y)
     sig = np.sqrt( wsum / np.sum(y) )
-    test(sig, sigma, "gaussian sigma")
+    assert_almost_equal(sig, sigma, err_msg = "gaussian sigma")
     
 def test_quadlorentzian():
     
@@ -92,14 +92,16 @@ def test_quadlorentzian():
     I = 2
     peaks = np.array([qp_1st_order(nu_q, eta, theta, phi, m) for m in np.arange(-(I-1), I+1, 1)])
     
-    test(len(peaks), 4, "quadlorentzian number of first order peaks for I=2")
-    test_arr(peaks, np.array([nu_q*3, nu_q, -nu_q, -3*nu_q]), "quadlorentzian first order shifts for I=2")
+    assert_almost_equal(len(peaks), 4, err_msg = "quadlorentzian number of first order peaks for I=2")
+    assert_array_almost_equal(peaks, np.array([nu_q*3, nu_q, -nu_q, -3*nu_q]), 
+                            err_msg = "quadlorentzian first order shifts for I=2")
     
     # test first order peak locations for I = 3/2
     I = 3/2
     peaks = np.array([qp_1st_order(nu_q, eta, theta, phi, m) for m in np.arange(-(I-1), I+1, 1)])
-    test(len(peaks), 3, "quadlorentzian number of first order peaks for I=3/2")
-    test_arr(peaks, np.array([nu_q*2, 0, -2*nu_q]), "quadlorentzian first order shifts for I=3/2")
+    assert_almost_equal(len(peaks), 3, err_msg = "quadlorentzian number of first order peaks for I=3/2")
+    assert_array_almost_equal(peaks, np.array([nu_q*2, 0, -2*nu_q]), 
+                                err_msg = "quadlorentzian first order shifts for I=3/2")
     
 def test_pulsed_exp():
     
@@ -113,15 +115,15 @@ def test_pulsed_exp():
     
     # test amp
     y = pexp(x, 1, amp)
-    test(amp, y[0], "pulsed exp amp")
+    assert_almost_equal(amp, y[0], err_msg = "pulsed exp amp")
     
     # test non-relaxing
     y = pexp(x, 0, amp)
-    test(y[-1], amp, "pulsed exp non-relaxing behaviour")
+    assert_almost_equal(y[-1], amp, err_msg = "pulsed exp non-relaxing behaviour")
     
     # test inf relaxing
     y = pexp(x, np.inf, amp)
-    test(y[0], 0, "pulsed exp infinitly fast relaxing behaviour")
+    assert_almost_equal(y[0], 0, err_msg = "pulsed exp infinitly fast relaxing behaviour")
     
     # test beam off position
     x = np.linspace(pulse_len-1e-6, pulse_len+1e-6, 10000)
@@ -130,7 +132,7 @@ def test_pulsed_exp():
     ddy = np.diff(np.diff(y))
     idx = ddy == min(ddy)
     
-    test((x[:-2])[idx], pulse_len, "pulsed exp beam off position")
+    assert_almost_equal((x[:-2])[idx], pulse_len, err_msg = "pulsed exp beam off position")
     
 def test_pulsed_strexp():
     
@@ -147,20 +149,20 @@ def test_pulsed_strexp():
     y1 = pexp(x, 1, amp)
     y2 = psexp(x, 1, 1, amp)
     # 1e-6 is the error in the integration
-    test_arr(y1, y2, tol=1e-6, msg='pulsed str exp comparison to pulsed single exp when beta = 1')
+    assert_array_almost_equal(y1, y2, decimal=6, err_msg = 'pulsed str exp comparison to pulsed single exp when beta = 1')
     
     # test amp
     x = np.linspace(1e-15, 1, 10)
     y = psexp(x, 1, 0.5, amp)
-    test(amp, y[0], tol=1e-3, msg='pulsed str exp amp')
+    assert_almost_equal(amp, y[0], decimal=3, err_msg = 'pulsed str exp amp')
     
     # test non-relaxing
     y = psexp(x, 0, 0.5, amp)
-    test(y[0], y[-1], tol=1e-3, msg='pulsed str exp non-relaxing behaviour')
+    assert_almost_equal(y[0], y[-1], decimal=3, err_msg = 'pulsed str exp non-relaxing behaviour')
     
     # test inf relaxing
     y = psexp(x, np.inf, 0.5, amp)
-    test(y[0], 0, msg='pulsed str exp infinitly fast relaxing behaviour')
+    assert_almost_equal(y[0], 0, err_msg = 'pulsed str exp infinitly fast relaxing behaviour')
     
     # test beam off position
     x = np.linspace(pulse_len-1e-6, pulse_len+1e-6, 10000)
@@ -169,4 +171,4 @@ def test_pulsed_strexp():
     ddy = np.diff(np.diff(y))
     idx = ddy == min(ddy)
     
-    test((x[:-2])[idx], pulse_len, 'pulsed str exp beam off position')
+    assert_almost_equal((x[:-2])[idx], pulse_len, err_msg = 'pulsed str exp beam off position')

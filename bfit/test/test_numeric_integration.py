@@ -7,7 +7,7 @@
 # Ryan M. L. McFadden
 # 2021-02-22
 
-
+from numpy.testing import *
 import numpy as np
 import pandas as pd
 import bdata as bd
@@ -17,7 +17,7 @@ from bfit.fitting.functions import pulsed_strexp, pulsed_exp
 # tolerance = upper limit for an acceptable absolute deviation between results
 # n_samples = number of points to use in each array in the simulation
 # print_summary = print a summary of simulation results to stdout
-def test_numeric_integration(tolerance=1e-5, n_samples=100, print_summary=False):
+def test_numeric_integration(tolerance=1e-5, n_samples=50, print_summary=False):
 
     # constants appropriate for most β-NMR data taken at TRIUMF
     nuclear_lifetime = bd.life["Li8"]

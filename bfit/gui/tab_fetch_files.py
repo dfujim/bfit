@@ -24,7 +24,7 @@ class fetch_files(object):
     """
         Data fields:
             
-            asym_type: drawing style
+            asym_type: StringVar, drawing style
             bfit: pointer to parent class
             canvas_frame_id: id number of frame in canvas
             check_rebin: IntVar for handling rebin aspect of checkall
@@ -361,9 +361,9 @@ class fetch_files(object):
         
         # condense drawing into a funtion
         def draw_lines():
-            for i, r in enumerate(self.data_lines.keys()):
-                if self.data_lines[r].check_state.get() or ignore_check:
-                    self.data_lines[r].draw(figstyle)
+            for k, line in self.data_lines.items():
+                if line.check_state.get() or ignore_check:
+                    line.draw(figstyle)
                 
         # get draw style
         style = self.bfit.draw_style.get()
@@ -407,17 +407,21 @@ class fetch_files(object):
                 self.bfit.plt.tight_layout(figstyle)
         
     # ======================================================================= #
-    def export(self):
+    def export(self, directory=None):
         """Export all data files as csv"""
         
         # filename
         filename = self.bfit.fileviewer.default_export_filename
         if not filename: return
         self.logger.info('Exporting to file %s', filename)
-        try:
-            filename = filedialog.askdirectory()+'/'+filename
-        except TypeError:
-            pass
+        
+        if directory is None:
+            try:
+                filename = os.path.join(filedialog.askdirectory(), filename)
+            except TypeError:
+                pass
+        else:
+            filename = os.path.join(directory, filename)
         
         # get data and write
         for k in self.bfit.data.keys():
@@ -581,7 +585,7 @@ class fetch_files(object):
         """
         
         # find plus locations
-        idx_plus = [m.start() for m in re.finditer('\+', string)]
+        idx_plus = [m.start() for m in re.finditer(r'\+', string)]
 
         # remove spaces around plus
         for i in idx_plus[::-1]:
@@ -597,18 +601,18 @@ class fetch_files(object):
         string = ' '.join(['[%s]' % s if '+' in s else s for s in string.split()])
 
         # remove plusses
-        string = re.sub('\+', ' ', string)
+        string = re.sub(r'\+', ' ', string)
 
         # get strings for merging
-        merge_strings = [*re.findall('\[(.*?)\]', string), 
-                         *re.findall('\((.*?)\)', string), 
-                         *re.findall('\{(.*?)\}', string)]
+        merge_strings = [*re.findall(r'\[(.*?)\]', string), 
+                         *re.findall(r'\((.*?)\)', string), 
+                         *re.findall(r'\{(.*?)\}', string)]
 
         
         # split up the input string by brackets
-        merge_strings = [*re.findall('\[(.*?)\]', string), 
-                         *re.findall('\((.*?)\)', string), 
-                         *re.findall('\{(.*?)\}', string)]
+        merge_strings = [*re.findall(r'\[(.*?)\]', string), 
+                         *re.findall(r'\((.*?)\)', string), 
+                         *re.findall(r'\{(.*?)\}', string)]
 
         # get the run numbers in each of the merged string inputs
         merge_runs = [self.string2run(s) for s in merge_strings]
@@ -757,7 +761,7 @@ class fetch_files(object):
         """Parse string, return list of run numbers"""
         
         # standardize deliminators
-        full_string = re.sub('[, ;+\[\]\(\)\{\}]', ' ', string)
+        full_string = re.sub(r'[, ;+\[\]\(\)\{\}]', ' ', string)
         full_string = full_string.replace(':', '-')
         part_string = full_string.split()
         

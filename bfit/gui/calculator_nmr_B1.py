@@ -22,7 +22,9 @@ class calculator_nmr_B1(object):
         self.logger.info('Initializing')
         
         # root 
-        root = Toplevel()
+        if commandline: root = Tk()
+        else:           root = Toplevel()
+        
         root.title("Gerald's Caculator")
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
