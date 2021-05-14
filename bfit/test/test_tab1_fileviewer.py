@@ -97,9 +97,6 @@ def test_draw_new(tab=None, b=None):
     for r in range(3):
         tab.get_data()
         tab.draw('inspect')
-    
-    print(plt.get_fignums())
-    print(b.plt.plots['inspect'])
     assert_equal(len(b.plt.plots['inspect']), 3, 'fileviewer draw new')
 
 @with_bfit
