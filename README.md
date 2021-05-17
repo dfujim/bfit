@@ -144,38 +144,7 @@ To launch the GUI from a terminal simply call `bfit`, if this fails, one can als
 
 ### Testing
 
-Testing your installation of [bfit] is accomplished by running `pytest` within the installation folder. Some tests, particularly those involving drawing, fail when run as group in this environment, but they should pass on individual re-running: `pytest --lf`.
-
-Additionally, results from [bfit] may be compared directly against those from a
-number of independently developed applications:
-
-* [bnmr_1f] : A command line tool to analyze CW resonance (1f) measurements
-  (written by R. M. L. McFadden).
-* [bnmr_2e] : A command line tool to analyze pulsed resonance (2e) measurements
-  (written by R. M. L. McFadden).
-* [bnmrfit] : A collection of [PHYSICA] scripts for inspecting all types of
-  β-NMR data (written by Z. Salman). The scripts have been well-tested through
-  over a decade of use, though maintenance of [PHYSICA] has long since ceased.
-  Ironically, the fitting capabalities are somewhat minimal.
-* [bnmroffice] : A GUI analysis tool for inspecting most types of β-NMR data,
-  similar to bfit (written by H. Saadaoui). While used for many years, it is
-  currently out-of-date with regards to recent run modes. Similarly, it is no
-  longer actively maintained.
-* [musrfit] : A popular and powerful analysis tool for time-differential [μSR]
-  data. An add-on library for analyzing β-NMR SLR data (written by Z. Salman) is
-  available (see the [musrfit documentation]).
-
-These works, as well as number of unpublished ones
-(mostly by R. M. L. McFadden and W. A. MacFarlane), were used to test bfit.
-When fitting data, most of these codes rely on the [MINUIT2] minimizer
-(based on the "classic" [MINUIT] code) provided within the [ROOT] framework.
-In this case, the `migrad` minimizer option in [bfit]
-(made available through [iminuit]) should be used for the best comparison.
-
-Note that the run header information can be checked against the API provided by
-the [TRIUMF] [CMMS] group's online muon data ([MUD]) file "[archive]".
-For example, have a look at the header information for [`data/BNMR/2020/040123.msr`].
-
+Testing your installation of [bfit] is accomplished by running `pytest` within the installation folder. Note that some tests, particularly those involving drawing, fail when run as group in this environment, but they should pass on a second attempt: `pytest --lf`. Further testing information can be found [here](https://github.com/dfujim/bfit/wiki/Installation-and-first-startup).
 
 [Python]: https://www.python.org/
 [SciPy]: https://www.scipy.org/
