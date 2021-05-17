@@ -20,7 +20,7 @@ authors:
 affiliations:
  - name: Stewart Blusson Quantum Matter Institute, University of British Columbia, Vancouver, BC V6T 1Z4, Canada
    index: 1
- - name: Department of Physics and Astronomy, University of BritishColumbia, Vancouver, BC V6T 1Z1, Canada
+ - name: Department of Physics and Astronomy, University of British Columbia, Vancouver, BC V6T 1Z1, Canada
    index: 2
 date: 17 May 2021
 bibliography: paper.bib
@@ -29,19 +29,19 @@ bibliography: paper.bib
 # Summary
 
 <!---A summary describing the high-level functionality and purpose of the software for a diverse, non-specialist audience.--->
-Beta-detected nuclear magnetic resonance ($\beta$-NMR) measures the beta-decay of radioactive nuclei to infer the electromagnetic character of the probe's local environment, in a manner similar to the technqiue of muon spin rotation ($\mu$SR). The package [`bfit`](https://github.com/dfujim/bfit) provides a graphical user interface (GUI) and application programming interface (API) to facilitate the analysis of $\beta$-NMR measurements taken using the TRIUMF cyclotron. 
+Beta-detected nuclear magnetic resonance ($\beta$-NMR) measures the beta-decay of radioactive nuclei to infer the electromagnetic character of the probe's local environment, in a manner similar to the technique of muon spin rotation ($\mu$SR). The package [`bfit`](https://github.com/dfujim/bfit) provides a graphical user interface (GUI) and application programming interface (API) to facilitate the analysis of $\beta$-NMR measurements taken using the TRIUMF cyclotron.
 
 # Background
 
-The first $\mu$SR measurements were recorded in 1957[@Garwin1957a,@Garwin2003]. This technique leverages the parity-violating nuclear weak interaction to measure the spin precession of the muon after implantation in a target, providing a means of examining the properties of the target material. It was not long before these physical principles were applied to a population of probes composed of radioacitive nuclei, insead of muons. This new variant of the technique is known as $\beta$-NMR. 
+The first $\mu$SR measurements were recorded in 1957 [@Garwin1957a]. This technique leverages the parity-violating nuclear weak interaction to measure the spin precession of the muon after implantation in a target, providing a means of examining the properties of the target material. It was not long before these physical principles were applied to a population of probes composed of radioactive nuclei, instead of muons. This new variant of the technique is known as $\beta$-NMR.
 
-The particle beams needed to conduct both $\mu$SR and $\beta$-NMR restrict these techniques to large nationally-supported facilities. Even today, there are only a handful of locations capable of producing the particle beams needed to conduct $\mu$SR and $\beta$-NMR. One such facility is TRIUMF, Canada. Instrumental in the early development of $\mu$SR[@Brewer2012], this facility developed the Muon Data (MUD) file format as a means of storing $\mu$SR data[@Whidden1994]. Given the similarities between the two techniques, this file format was naturally employed in service of $\beta$-NMR measurements at TRIUMF. 
+The particle beams needed to conduct both $\mu$SR and $\beta$-NMR restrict these techniques to large nationally-supported facilities. Even today, there are only a handful of locations capable of producing the particle beams needed to conduct $\mu$SR and $\beta$-NMR. One such facility is TRIUMF, Canada. Instrumental in the early development of $\mu$SR [@Brewer2012], this facility developed the Muon Data (MUD) file format as a means of storing $\mu$SR data [@Whidden1994]. Given the similarities between the two techniques, this file format was naturally employed in service of $\beta$-NMR measurements at TRIUMF.
 
 # Statement of need
 
-As with many older science applications, the MUD file API is written in C and FORTRAN. These statically-typed and compiled languages are known for their computational efficiency, but can be difficult to work with. This is perhaps one of the reasons why scientific computing has, in many communities, shifted to more modern languages such as Python: a dynamically-typed and interpreted language. As a result, Python has amassed a massive library of data analysis tools.[@Virtanen2020,@McKinney2010] The primary advantage of Python is the short development time of programs written in the language. This is particularly important in the context of scientific analysis, which are typically run only a few times by select individuals. As a result, the time taken to write the analysis code is a large part of the program's effective run time. The aim of this work is to bring this rapid prototyping style of analysis to $\beta$-NMR. 
+As with many older science applications, the MUD file API is written in C and FORTRAN. These statically-typed and compiled languages are known for their computational efficiency, but can be difficult to work with. This is perhaps one of the reasons why scientific computing has, in many communities, shifted to more modern languages such as Python: a dynamically-typed and interpreted language. As a result, Python has amassed a massive library of data analysis tools.[@Virtanen2020,@McKinney2010] The primary advantage of Python is the short development time of programs written in the language. This is particularly important in the context of scientific analysis, which are typically run only a few times by select individuals. As a result, the time taken to write the analysis code is a large part of the program's effective run time. The aim of this work is to bring this rapid prototyping style of analysis to $\beta$-NMR.
 
-It should be acknowledged that, while a large body of analysis software exists to support $\mu$SR workers (such as WIMDA [@Pratt2000], MANTID [@Arnold2014], and Musrfit [@Suter2012]), $\beta$-NMR does not have an extensive suite of maintained analysis programs. While there have been some recent improvements to this situation [@Saadaoui2018] the analysis required for any non-trivial $\beta$-NMR experiment necessitates the development of new code to meet the individual requirements of each experiment. Such code may employ Musrfit, which is compatible with the MUD file format, but may be cumbersome and presents a high entry barrier for students and visiting scientists. The package introduced here is very lightweight, providing a simple interface to other Python packages, allowing for a great deal of flexibility and sophistication. This trivializes installation and maintenance by installing missing dependencies, updating packages, and providing a consistent method of version tracking. This is in stark contrast to another popularly used framework, ROOT [@Brun1997a] which serves as the basis for Musrfit, and whose set up process can be quite involved. 
+It should be acknowledged that, while a large body of analysis software exists to support $\mu$SR workers (such as WIMDA [@Pratt2000], MANTID [@Arnold2014], and Musrfit [@Suter2012]), $\beta$-NMR does not have an extensive suite of maintained analysis programs. While there have been some recent improvements to this situation [@Saadaoui2018] the analysis required for any non-trivial $\beta$-NMR experiment necessitates the development of new code to meet the individual requirements of each experiment. Such code may employ Musrfit, which is compatible with the MUD file format, but may be cumbersome and presents a high entry barrier for students and visiting scientists. The package introduced here is very lightweight, providing a simple interface to other Python packages, allowing for a great deal of flexibility and sophistication. This trivializes installation and maintenance by installing missing dependencies, updating packages, and providing a consistent method of version tracking. This is in stark contrast to another popularly used framework, ROOT [@Brun1997a] which serves as the basis for Musrfit, and whose set up process can be quite involved.
 
 # Usage
 
@@ -49,10 +49,10 @@ It should be acknowledged that, while a large body of analysis software exists t
 <p style="text-align: center;">
 	![The inspection tab of the `bfit` GUI.\label{fig:inspect}](inspect_tab.png){ width=80% }
 </p>
-The _Fetch_ tab has been designed to prepare the data for analysis, loading runs in batch and allowing the user to draw and compare each run. The _Fit_ tab provides the tools needed to fit a model to the data, and view and analyze the result. 
+The _Fetch_ tab has been designed to prepare the data for analysis, loading runs in batch and allowing the user to draw and compare each run. The _Fit_ tab provides the tools needed to fit a model to the data, and view and analyze the result.
 
 # Acknowledgements
 
-The author acknowledges the support of a SBQMI QuEST fellowship. 
+The author acknowledges the support of a SBQMI QuEST fellowship.
 
 # References
