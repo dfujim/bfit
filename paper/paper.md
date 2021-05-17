@@ -28,19 +28,30 @@ bibliography: paper.bib
 
 # Summary
 
-<!---A summary describing the high-level functionality and purpose of the software for a diverse, non-specialist audience.
-MAKE IT SPECIFIC TO BNMR
---->
-The first muon spin rotation ($\mu$SR) measurements were recorded in 1957, at the Nevis cyclotron in the United States of America.[@Garwin1957a,@Garwin2003] While the field has thrived over its long history, the technique remains restricted to large nationally-supported facilities.[@Brewer2012] Today, there are only a handful of locations capable of producing the particle beam needed to conduct $\mu$SR, including: TRIUMF, Canada; ISIS, located in the United Kingdom; PSI in Switzerland; and the Japanese facility J-PARC. The MUD file format is used to store $\mu$SR data taken at TRIUMF. [@Whidden1994] This is a self-describing binary format (i.e., not ASCII), containing the measurement data, device settings, experimental conditions such as the temperature or the magnetic field, and some metadata. 
+<!---A summary describing the high-level functionality and purpose of the software for a diverse, non-specialist audience.--->
+Beta-detected nuclear magnetic resonance ($\beta$-NMR) measures the beta-decay of radioactive nuclei to infer the electromagnetic character of the probe's local environment, in a manner similar to the technqiue of muon spin rotation ($\mu$SR). The package [`bfit`](https://github.com/dfujim/bfit) provides a graphical user interface (GUI) and application programming interface (API) to facilitate the analysis of $\beta$-NMR measurements taken using the TRIUMF cyclotron. 
 
-As with many older science applications, the MUD file API is written in C and FORTRAN. These statically-typed and compiled languages are known for their computational efficiency, but can be difficult to work with. This is perhaps one of the reasons why scientific computing has, in many communities, shifted to more modern languages such as Python: a dynamically-typed and interpreted language. As a result, Python has amassed a massive library of data analysis tools.[@Virtanen2020,@McKinney2010] The primary advantage of Python is the short development time of programs written in the language. This is particularly important in the context of scientific analysis, which are typically run only a few times by select individuals. As a result, the time taken to write the analysis code is a large part of the program's effective run time. The aim of this work is to bring this rapid prototyping style of analysis to the $\mu$SR and beta-detected NMR ($\beta$-NMR) communities. 
+# Background
 
+The first $\mu$SR measurements were recorded in 1957[@Garwin1957a,@Garwin2003]. This technique leverages the parity-violating nuclear weak interaction to measure the spin precession of the muon after implantation in a target, providing a means of examining the properties of the target material. It was not long before these physical principles were applied to a population of probes composed of radioacitive nuclei, insead of muons. This new variant of the technique is known as $\beta$-NMR. 
+
+The particle beams needed to conduct both $\mu$SR and $\beta$-NMR restrict these techniques to large nationally-supported facilities. Even today, there are only a handful of locations capable of producing the particle beams needed to conduct $\mu$SR and $\beta$-NMR. One such facility is TRIUMF, Canada. Instrumental in the early development of $\mu$SR[@Brewer2012], this facility developed the Muon Data (MUD) file format as a means of storing $\mu$SR data[@Whidden1994]. Given the similarities between the two techniques, this file format was naturally employed in service of $\beta$-NMR measurements at TRIUMF. 
 
 # Statement of need
 
-A Statement of Need section that clearly illustrates the research purpose of the software.
-Cite like this: [@Fujimoto2019]
+As with many older science applications, the MUD file API is written in C and FORTRAN. These statically-typed and compiled languages are known for their computational efficiency, but can be difficult to work with. This is perhaps one of the reasons why scientific computing has, in many communities, shifted to more modern languages such as Python: a dynamically-typed and interpreted language. As a result, Python has amassed a massive library of data analysis tools.[@Virtanen2020,@McKinney2010] The primary advantage of Python is the short development time of programs written in the language. This is particularly important in the context of scientific analysis, which are typically run only a few times by select individuals. As a result, the time taken to write the analysis code is a large part of the program's effective run time. The aim of this work is to bring this rapid prototyping style of analysis to $\beta$-NMR. 
 
+It should be acknowledged that, while a large body of analysis software exists to support $\mu$SR workers (such as WIMDA [@Pratt2000], MANTID [@Arnold2014], and Musrfit [@Suter2012]), $\beta$-NMR does not have an extensive suite of maintained analysis programs. While there have been some recent improvements to this situation [@Saadaoui2018] the analysis required for any non-trivial $\beta$-NMR experiment necessitates the development of new code to meet the individual requirements of each experiment. Such code may employ Musrfit, which is compatible with the MUD file format, but may be cumbersome and presents a high entry barrier for students and visiting scientists. The package introduced here is very lightweight, providing a simple interface to other Python packages, allowing for a great deal of flexibility and sophistication. This trivializes installation and maintenance by installing missing dependencies, updating packages, and providing a consistent method of version tracking. This is in stark contrast to another popularly used framework, ROOT [@Brun1997a] which serves as the basis for Musrfit, and whose set up process can be quite involved. 
+
+# Usage
+
+`bfit` has three primary tabs
+<p style="text-align: center;">
+	![The inspection tab of the `bfit` GUI.\label{fig:inspect}](inspect_tab.png){ width=80% }
+</p>
+\autoref{fig:inspect}.
+
+<!---
 # Mathematics
 
 Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
@@ -57,21 +68,7 @@ You can also use plain \LaTeX for equations
 \hat f(\omega) = \int_{-\infty}^{\infty} f(x) e^{i\omega x} dx
 \end{equation}
 and refer to \autoref{eq:fourier} from text.
-
-# Citations
-
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-# Figures
-
-Figures can be included like this:
-![Caption for example figure.\label{fig:example}](inspect_tab.png)
-and referenced from text using \autoref{fig:example}.
-
-Figure sizes can be customized by adding an optional second parameter:
-![Caption for example figure.](inspect_tab.png){ width=20% }
+--->
 
 # Acknowledgements
 
