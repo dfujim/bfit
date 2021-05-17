@@ -9,13 +9,13 @@ Your paper should include:
 -->
 
 ---
-title: 'bfit: A Python Application For β-NMR Analysis'
+title: 'bfit: A Python Application For Beta-Detected NMR'
 tags:
   - Python
   - beta-detected NMR
 authors:
   - name: Derek Fujimoto
-    orcid: 0000-0003-0872-7098
+    orcid: 0000-0003-2847-2053
     affiliation: "1,2"
 affiliations:
  - name: Stewart Blusson Quantum Matter Institute, University of British Columbia, Vancouver, BC V6T 1Z4, Canada
@@ -28,7 +28,13 @@ bibliography: paper.bib
 
 # Summary
 
-A summary describing the high-level functionality and purpose of the software for a diverse, non-specialist audience.
+<!---A summary describing the high-level functionality and purpose of the software for a diverse, non-specialist audience.
+MAKE IT SPECIFIC TO BNMR
+--->
+The first muon spin rotation (μSR) measurements were recorded in 1957, at the Nevis cyclotron in the United States of America.[@Garwin1957a,@Garwin2003] While the field has thrived over its long history, the technique remains restricted to large nationally-supported facilities.[@Brewer2012] Today, there are only a handful of locations capable of producing the particle beam needed to conduct μSR, including: TRIUMF, Canada; ISIS, located in the United Kingdom; PSI in Switzerland; and the Japanese facility J-PARC. The MUD file format is used to store μSR data taken at TRIUMF. [@Whidden1994] This is a self-describing binary format (i.e., not ASCII), containing the measurement data, device settings, experimental conditions such as the temperature or the magnetic field, and some metadata. 
+
+As with many older science applications, the MUD file API is written in C and FORTRAN. These statically-typed and compiled languages are known for their computational efficiency, but can be difficult to work with. This is perhaps one of the reasons why scientific computing has, in many communities, shifted to more modern languages such as Python: a dynamically-typed and interpreted language. As a result, Python has amassed a massive library of data analysis tools.[@Virtanen2020,@McKinney2010,@scikit-learn] The primary advantage of Python is the short development time of programs written in the language. This is particularly important in the context of scientific analysis, which are typically run only a few times by select individuals. As a result, the time taken to write the analysis code is a large part of the program's effective run time. The aim of this work is to bring this rapid prototyping style of analysis to the μSR and beta-detected NMR (β-NMR) communities. 
+
 
 # Statement of need
 
