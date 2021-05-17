@@ -31,9 +31,9 @@ bibliography: paper.bib
 <!---A summary describing the high-level functionality and purpose of the software for a diverse, non-specialist audience.
 MAKE IT SPECIFIC TO BNMR
 --->
-The first muon spin rotation (μSR) measurements were recorded in 1957, at the Nevis cyclotron in the United States of America.[@Garwin1957a,@Garwin2003] While the field has thrived over its long history, the technique remains restricted to large nationally-supported facilities.[@Brewer2012] Today, there are only a handful of locations capable of producing the particle beam needed to conduct μSR, including: TRIUMF, Canada; ISIS, located in the United Kingdom; PSI in Switzerland; and the Japanese facility J-PARC. The MUD file format is used to store μSR data taken at TRIUMF. [@Whidden1994] This is a self-describing binary format (i.e., not ASCII), containing the measurement data, device settings, experimental conditions such as the temperature or the magnetic field, and some metadata. 
+The first muon spin rotation ($\mu$SR) measurements were recorded in 1957, at the Nevis cyclotron in the United States of America.[@Garwin1957a,@Garwin2003] While the field has thrived over its long history, the technique remains restricted to large nationally-supported facilities.[@Brewer2012] Today, there are only a handful of locations capable of producing the particle beam needed to conduct $\mu$SR, including: TRIUMF, Canada; ISIS, located in the United Kingdom; PSI in Switzerland; and the Japanese facility J-PARC. The MUD file format is used to store $\mu$SR data taken at TRIUMF. [@Whidden1994] This is a self-describing binary format (i.e., not ASCII), containing the measurement data, device settings, experimental conditions such as the temperature or the magnetic field, and some metadata. 
 
-As with many older science applications, the MUD file API is written in C and FORTRAN. These statically-typed and compiled languages are known for their computational efficiency, but can be difficult to work with. This is perhaps one of the reasons why scientific computing has, in many communities, shifted to more modern languages such as Python: a dynamically-typed and interpreted language. As a result, Python has amassed a massive library of data analysis tools.[@Virtanen2020,@McKinney2010,@scikit-learn] The primary advantage of Python is the short development time of programs written in the language. This is particularly important in the context of scientific analysis, which are typically run only a few times by select individuals. As a result, the time taken to write the analysis code is a large part of the program's effective run time. The aim of this work is to bring this rapid prototyping style of analysis to the μSR and beta-detected NMR (β-NMR) communities. 
+As with many older science applications, the MUD file API is written in C and FORTRAN. These statically-typed and compiled languages are known for their computational efficiency, but can be difficult to work with. This is perhaps one of the reasons why scientific computing has, in many communities, shifted to more modern languages such as Python: a dynamically-typed and interpreted language. As a result, Python has amassed a massive library of data analysis tools.[@Virtanen2020,@McKinney2010] The primary advantage of Python is the short development time of programs written in the language. This is particularly important in the context of scientific analysis, which are typically run only a few times by select individuals. As a result, the time taken to write the analysis code is a large part of the program's effective run time. The aim of this work is to bring this rapid prototyping style of analysis to the $\mu$SR and beta-detected NMR ($\beta$-NMR) communities. 
 
 
 # Statement of need
@@ -63,14 +63,6 @@ and refer to \autoref{eq:fourier} from text.
 Citations to entries in paper.bib should be in
 [rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
 format.
-
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
 
 # Figures
 
