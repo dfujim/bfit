@@ -45,7 +45,7 @@ It should be acknowledged that, while a large body of analysis software exists t
 
 # Usage
 
-[`bfit`] has three primary functions which are contained in the tab _Inspect_, _Fetch_, and _Fit_. The purpose of the _Inspect_ tab (shown below) may be used to quickly view the file headers and plot the data in order to detect and solve problems as they may arise during measurement. The _Fetch_ tab has been designed to prepare the data for analysis, loading runs in batch and allowing the user to draw and compare each run. The _Fit_ tab provides the tools needed to fit a model to the data, and view and analyze the result.
+[`bfit`] has three primary functions which are contained in the tab _Inspect_, _Fetch_, and _Fit_. The purpose of the _Inspect_ tab (shown below) may be used to quickly view the file headers and plot the data in order to detect and solve problems as they may arise during measurement. The _Fetch_ tab has been designed to prepare the data for analysis, loading runs in batch and allowing the user to draw and compare each run. The _Fit_ tab provides the tools needed to fit a model to the data, and to view and analyze the result.
 ![The inspection tab of the [`bfit`] GUI.\label{fig:inspect}](inspect_tab.png){ width=80% }
 
 # Acknowledgements
