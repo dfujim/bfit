@@ -35,7 +35,7 @@ Beta-detected nuclear magnetic resonance ($\beta$-NMR) measures the beta-decay o
 
 $\beta$-NMR leverages the parity-violating nuclear weak interaction to measure the spin precession of a radioactive probe nucleus [@MacFarlane2015]. These nuclei can either be activated by neutrons or implanted as a foreign species as a low-energy particle beam. Upon decay, the direction of the emitted electron is correlated with the nuclear spin orientation. As with many nuclear and particle physics experiments, the data collected is the counted number of electrons emitted in a given direction. These counts are then histogrammed and processed to yield a signal of interest.
 
-The activation or implantation of the probe nuclei require high-intensity particle beams, restricting the technique to large nationally-supported facilities. Even today, there are only a handful of locations capable of conducting $\beta$-NMR measurements, such as TRIUMF, situated in Vancouver, Canada. This facility has been running $\beta$-NMR experiments for the past 20 years, and has developed the Muon Data (MUD) file format [@Whidden1994] as a means of storing $\mu$SR and $beta$-NMR data.
+The activation or implantation of the probe nuclei require high-intensity particle beams, restricting the technique to large nationally-supported facilities. Even today, there are only a handful of locations capable of conducting $\beta$-NMR measurements, such as TRIUMF, situated in Vancouver, Canada. This facility has been running $\beta$-NMR experiments for the past 20 years, and has developed the Muon Data (MUD) file format [@Whidden1994] as a means of storing $\mu$SR and $\beta$-NMR data.
 
 # Statement of need
 
@@ -48,7 +48,8 @@ It should be acknowledged that, while a large body of analysis software exists t
 # Usage
 
 The [`bfit`] GUI has three primary functions which are contained in the _Inspect_, _Fetch_, and _Fit_ tabs. The purpose of the _Inspect_ tab (shown below) may be used to quickly view the file headers and plot the data in order to detect and solve problems as they may arise during measurement. The _Fetch_ tab has been designed to prepare the data for analysis, loading runs in batch and allowing the user to draw and compare each run. The _Fit_ tab provides the tools needed to fit a model to the data, and to view and analyze the result. These tools include global fitting (i.e., sharing fit parameters between data sets), constrained fitting (i.e., constraining a parameter to follow a specific model dependent on the experimental conditions, such as temperature), non-trivial fitting functions specific to pulsed-beam operation, multiple minimization routines, and more.
-![The inspection tab of the [`bfit`] GUI.](inspect_tab.png){ width=80% }
+
+ ![The inspection tab of the [`bfit`] GUI.](inspect_tab.png){ width=80% }
 
 While the GUI greatly facilitates rapid on-line analysis, the [`bfit`] API provides the flexibility needed for publishable analyses. The analysis tools and functions utilized in the GUI are readily accessible via the API, and documented in the [wiki].
 
