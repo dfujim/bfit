@@ -165,7 +165,7 @@ class popup_fit_constraints(template_fit_popup):
             pulse_len = -1
             try:
                 pulse_len = data.bd.pulse_s
-            except KeyError:
+            except (KeyError, AttributeError):
                 pass
             
             # get function
@@ -277,6 +277,16 @@ class popup_fit_constraints(template_fit_popup):
         # fit cancelled
         elif output is None:
             return
+
+
+        # check list depth
+        try:
+            par[0][0]
+        except IndexError:
+            par = np.array([par])
+            std_l = np.array([std_l])
+            std_u = np.array([std_u])
+            chi = np.array([chi])
             
         # calculate original parameter equivalents
         for i, k in enumerate(keylist):

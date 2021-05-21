@@ -109,3 +109,22 @@ def test_fit_copy(b=None, fittab=None, fetchtab=None):
     assert_almost_equal(out_c.loc['b','err-'], float(entry['amp']['dres-'][1].get()), 
                         err_msg = 'amp err- not equal', decimal=5)
     
+@with_bfit
+def test_1f_1run(b=None, fittab=None, fetchtab=None):
+    """
+        Test constraining two variables in a single 1f run to be equal
+    """
+    
+    # get 1f data
+    fetchtab.remove_all()
+    fetchtab.run.set('40037')
+    fetchtab.get_data()
+    fittab.n_component.set(2)
+    fittab.populate()
+
+    # get constrained functions
+    constr = popup_fit_constraints(b)
+    constr.entry.insert('1.0', 'fwhm_0 = a\nfwhm_1 = a')
+    constr.get_input()
+    constr.do_fit()
+    
