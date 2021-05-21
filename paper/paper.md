@@ -48,7 +48,6 @@ It should be acknowledged that, while a large body of analysis software exists t
 # Usage
 
 The [`bfit`] GUI has three primary functions which are contained in the _Inspect_, _Fetch_, and _Fit_ tabs. The purpose of the _Inspect_ tab (shown below) may be used to quickly view the file headers and plot the data in order to detect and solve problems as they may arise during measurement. The _Fetch_ tab has been designed to prepare the data for analysis, loading runs in batch and allowing the user to draw and compare each run. The _Fit_ tab provides the tools needed to fit a model to the data, and to view and analyze the result. These tools include global fitting (i.e., sharing fit parameters between data sets), constrained fitting (i.e., constraining a parameter to follow a specific model dependent on the experimental conditions, such as temperature), non-trivial fitting functions specific to pulsed-beam operation, multiple minimization routines, and more.
-
 ![The inspection tab of the [`bfit`] GUI.](inspect_tab.png){ width=80% }
 
 While the GUI greatly facilitates rapid on-line analysis, the [`bfit`] API provides the flexibility needed for publishable analyses. The analysis tools and functions utilized in the GUI are readily accessible via the API, and documented in the [wiki].
