@@ -98,8 +98,14 @@ class fitdata(object):
                 deadtime = self.bfit.deadtime
             else:
                 deadtime = self.bd.get_deadtime(c=self.bfit.deadtime, fixed='c')
-                
-        return self.bd.asym(*args, deadtime=deadtime, **kwargs)
+        
+        # check for errors
+        try:
+            return self.bd.asym(*args, deadtime=deadtime, **kwargs)
+        except Exception as err:
+            messagebox.showerror(title=type(err).__name__, message=str(err))
+            self.logger.exception(str(err))
+            raise err from None
 
     # ======================================================================= #
     @property
