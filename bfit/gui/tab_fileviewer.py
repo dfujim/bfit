@@ -29,8 +29,12 @@ class fileviewer(object):
         Data fields:
             asym_type: StringVar, drawing style
             bfit: bfit object
+            button_run_from_file: ttk.Button for load from run
             data: bdata object for drawing
             entry_asym_type: combobox for asym calculations
+            entry_runn: Spinbox
+            entry_year: Spinbox
+            filename: string, path to file to load, disabled if == ''
             is_updating: BooleanVar, True if update draw
             rebin: IntVar() rebin value
             runn: IntVar() run number
@@ -41,6 +45,14 @@ class fileviewer(object):
     
     default_export_filename = "%d_%d.csv" # year_run.csv
     update_id = ''
+    mode_dict = {"1f":"Frequency Scan", 
+                 "1w":"Frequency Comb", 
+                 "1n":"Rb Cell Scan", 
+                 "1e":"Field Scan", 
+                 "20":"SLR", 
+                 '2h':'SLR with Alpha Tracking', 
+                 '2s':'Spin Echo', 
+                 '2e':'Randomized Frequency Scan'}
     
     # ======================================================================= #
     def __init__(self, file_tab, bfit):
@@ -55,12 +67,13 @@ class fileviewer(object):
         self.year = IntVar()
         self.runn = IntVar()
         self.rebin = IntVar()
+        self.filename = ''
         self.bfit = bfit
         
         self.year.set(self.bfit.get_latest_year())
         self.rebin.set(1)
         
-        entry_year = Spinbox(entry_frame, \
+        self.entry_year = Spinbox(entry_frame, \
                 from_=2000, to=datetime.datetime.today().year, 
                 textvariable=self.year, width=5)
         self.entry_runn = Spinbox(entry_frame, \
@@ -75,14 +88,19 @@ class fileviewer(object):
         draw = ttk.Button(entry_frame, text='Draw', 
                           command=lambda:self.draw(figstyle='inspect'))
         
+        # get run from file
+        self.button_run_from_file = ttk.Button(file_tab, text='Load run from file', 
+                                                command=self.load_file)
+        
         # grid and labels
         entry_frame.grid(column=0, row=0, sticky=N)
         ttk.Label(entry_frame, text="Year:").grid(column=0, row=0, sticky=E)
-        entry_year.grid(column=1, row=0, sticky=E)
+        self.entry_year.grid(column=1, row=0, sticky=E)
         ttk.Label(entry_frame, text="Run Number:").grid(column=2, row=0, sticky=E)
         self.entry_runn.grid(column=3, row=0, sticky=E)
         fetch.grid(column=4, row=0, sticky=E)
         draw.grid(column=5, row=0, sticky=E)
+        self.button_run_from_file.grid(column=1, row=0, sticky=E, padx=5)
         
         # padding 
         for child in entry_frame.winfo_children(): 
@@ -163,188 +181,15 @@ class fileviewer(object):
         pass
         
     # ======================================================================= #
-    def _get_latest_run(self, year, run):
-        """
-            Get run number of latest run in local file system, given an initial 
-            part of the run number
-        """
-        
-        runlist = []
-            
-        # look for latest run by run number
-        for d in [self.bfit.bnmr_archive_label, self.bfit.bnqr_archive_label]:
-            dirloc = os.environ[d]
-            runlist.extend(glob.glob(os.path.join(dirloc, str(year), '0%d*.msr'%run)))
-        runlist = [int(os.path.splitext(os.path.basename(r))[0]) for r in runlist]
-        
-        # get latest run by max run number
-        try:
-            run = max(runlist)
-        except ValueError:
-            self.logger.exception('Run fetch failed')
-            for t in [self.text_nw, self.text_ne, self.text_sw, self.text_se]:
-                self.set_textbox_text(t, 'Run not found.')  
-            return False
-        else:
-            return run
-        
-    # ======================================================================= #
-    def draw(self, figstyle, quiet=False):
-        """Get data then draw."""
-        self.bfit.logger.info('Draw button pressed')
-        
-        if self.get_data(quiet=quiet):
-            self.bfit.draw(self.data, 
-                    self.bfit.asym_dict[self.asym_type.get()], rebin=self.rebin.get(), 
-                    label=self.bfit.get_label(self.data), 
-                    figstyle=figstyle)
-            
-    # ======================================================================= #
-    def draw_diagnostics(self): #incomplete
-        """
-            Get data then draw in debug mode.
-        """
-        
-        # isssue with data fetch
-        if not self.get_data(quiet=quiet):
-            return
-        
-        # get data
-        dat = self.data
-    
-        # make figure
-        fix, (ax1, ax2, ax3, ax4) = plt.subplots(nrows=2, ncols=2)
-    
-        # get asym
-        a = data.asym(hist_select=self.bit.hist_select)
-        x = a[self.x_tag[data.mode]]
-        xlabel = self.xlabel_dict[data.mode]
-            
-        # draw 2e mode 
-        if '2e' == dat.mode:
-            pass 
-            
-        # draw TD mode
-        elif '2' in dat.mode:
-            
-            # draw combined asym -------------------------
-            tag = a.c[0]!=0 # remove zero asym
-            ax1.errorbar(x[tag], a.c[0][tag], a.c[1][tag])
-            ax1.set_xlabel(xlabel)
-            ax1.set_ylabel(self.bfit.ylabel_dict['c'])
-            
-            # draw split asym ----------------------------
-            
-            # remove zero asym
-            ap = a.p[0]
-            an = a.n[0]
-            tag_p = ap!=0
-            tag_n = an!=0
-            tag_cmb = tag_p*tag_n
-            
-            # get average
-            avg = np.mean(ap[tag_cmb]+an[tag_cmb])/2
-            
-            # draw
-            ax2.errorbar(x[tag_p], ap[tag_p], a.p[1][tag_p], label='+')
-            ax2.errorbar(x[tag_n], an[tag_n], a.n[1][tag_n], label="-")
-            ax2.axhline(avg, color='k', linestyle='--')
-            ax2.set_xlabel(xlabel)
-            ax2.set_ylabel(self.bfit.ylabel_dict['h'])
-        
-            # draw histograms  --------------------------
-            hist = data.hist
-            
-            # draw
-            keylist = ('F+', 'F-', 'B+', 'B-', 'L+', 'R+', 'L-', 'R-', 
-                         'NBMF+', 'NBMF-', 'NBMB+', 'NBMB-', 'AL0+', 'AL0-')
-            for i, h in enumerate(keylist):
-                
-                # get bins
-                try:
-                    x = np.arange(len(hist[h].data))
-                except KeyError:
-                    continue
-                
-                # check for non-empty histograms, then draw
-                if np.mean(hist[h].data) > 0:                        
-                    ax3.plot(x, hist[h].data, label=h)
-                    
-            ax3.ylabel(self.bfit.ylabel_dict['rhist'])
-            ax3.xlabel('Bin')
-        
-        # draw TI mode
-        elif '1' in dat.mode:
-            pass
-        
-        # unknown mode
-        else:
-            raise RuntimeError('Unknown mode type')
-    
-    # ======================================================================= #
-    def export(self, filename=None):
-        """Export data as csv"""
-        
-        self.logger.info('Export button pressed')
-        
-        # get data
-        if not self.get_data():
-            return
-        data = self.data
-        
-        # get filename 
-        if filename is None:
-            filename = filedialog.asksaveasfilename(
-                initialfile=self.default_export_filename%(data.year, data.run), 
-                filetypes=[('csv', '*.csv'), 
-                           ('allfiles', '*')], 
-                defaultextension='.csv')
-        
-        # write to file
-        if filename:
-            self.bfit.export(data, filename, rebin=self.rebin.get())
-    
-    # ======================================================================= #
-    def get_data(self, quiet=False):
+    def _get_data(self, bdata_obj, quiet=False):
         """
             Display data and send bdata object to bfit draw list. 
             Return True on success, false on Failure
         """
         
-        # settings
-        mode_dict = {"1f":"Frequency Scan", 
-                     "1w":"Frequency Comb", 
-                     "1n":"Rb Cell Scan", 
-                     "1e":"Field Scan", 
-                     "20":"SLR", 
-                     '2h':'SLR with Alpha Tracking', 
-                     '2s':'Spin Echo', 
-                     '2e':'Randomized Frequency Scan'}
-        
-        # fetch year
-        try:
-            year = self.year.get()
-        except ValueError:
-            for t in [self.text_nw, self.text_ne, self.text_sw, self.text_se]:
-                self.set_textbox_text(t, 'Year input must be integer valued')  
-                self.logger.exception('Year input must be integer valued')
-            return False
-        
-        # fetch run number
-        run = self.runn.get()
-        
-        self.logger.debug('Parsing run input %s', run)
-        
-        if run < 40000:
-            run = self._get_latest_run(year, run)
-            if run is False:
-                return False
-        
-        self.logger.info('Fetching run %s from %s', run, year)
-        
         # get data
         try: 
-            data = fitdata(self.bfit, bdata(run, year=year))
+            data = fitdata(self.bfit, bdata_obj)
         except ValueError:
             self.logger.exception('File read failed.')
             for t in [self.text_nw, self.text_sw, self.text_se, self.text_ne]:
@@ -371,7 +216,7 @@ class fileviewer(object):
         # NE -----------------------------------------------------------------
         
         # get data: headers
-        mode = mode_dict[data.mode]
+        mode = self.mode_dict[data.mode]
         try:
             if data.ppg.rf_enable.mean and data.mode == '20' and \
                                                         data.ppg.rf_on.mean > 0:
@@ -1143,7 +988,219 @@ class fileviewer(object):
         set_str(data_se, key_order_se, self.text_se)
         
         return True
-   
+        
+    # ======================================================================= #
+    def _get_latest_run(self, year, run):
+        """
+            Get run number of latest run in local file system, given an initial 
+            part of the run number
+        """
+        
+        runlist = []
+            
+        # look for latest run by run number
+        for d in [self.bfit.bnmr_archive_label, self.bfit.bnqr_archive_label]:
+            dirloc = os.environ[d]
+            runlist.extend(glob.glob(os.path.join(dirloc, str(year), '0%d*.msr'%run)))
+        runlist = [int(os.path.splitext(os.path.basename(r))[0]) for r in runlist]
+        
+        # get latest run by max run number
+        try:
+            run = max(runlist)
+        except ValueError:
+            self.logger.exception('Run fetch failed')
+            for t in [self.text_nw, self.text_ne, self.text_sw, self.text_se]:
+                self.set_textbox_text(t, 'Run not found.')  
+            return False
+        else:
+            return run
+        
+    # ======================================================================= #
+    def draw(self, figstyle, quiet=False):
+        """Get data then draw."""
+        self.bfit.logger.info('Draw button pressed')
+        
+        if self.get_data(quiet=quiet):
+            self.bfit.draw(self.data, 
+                    self.bfit.asym_dict[self.asym_type.get()], rebin=self.rebin.get(), 
+                    label=self.bfit.get_label(self.data), 
+                    figstyle=figstyle)
+            
+    # ======================================================================= #
+    def draw_diagnostics(self): #incomplete
+        """
+            Get data then draw in debug mode.
+        """
+        
+        # isssue with data fetch
+        if not self.get_data(quiet=quiet):
+            return
+        
+        # get data
+        dat = self.data
+    
+        # make figure
+        fix, (ax1, ax2, ax3, ax4) = plt.subplots(nrows=2, ncols=2)
+    
+        # get asym
+        a = data.asym(hist_select=self.bit.hist_select)
+        x = a[self.x_tag[data.mode]]
+        xlabel = self.xlabel_dict[data.mode]
+            
+        # draw 2e mode 
+        if '2e' == dat.mode:
+            pass 
+            
+        # draw TD mode
+        elif '2' in dat.mode:
+            
+            # draw combined asym -------------------------
+            tag = a.c[0]!=0 # remove zero asym
+            ax1.errorbar(x[tag], a.c[0][tag], a.c[1][tag])
+            ax1.set_xlabel(xlabel)
+            ax1.set_ylabel(self.bfit.ylabel_dict['c'])
+            
+            # draw split asym ----------------------------
+            
+            # remove zero asym
+            ap = a.p[0]
+            an = a.n[0]
+            tag_p = ap!=0
+            tag_n = an!=0
+            tag_cmb = tag_p*tag_n
+            
+            # get average
+            avg = np.mean(ap[tag_cmb]+an[tag_cmb])/2
+            
+            # draw
+            ax2.errorbar(x[tag_p], ap[tag_p], a.p[1][tag_p], label='+')
+            ax2.errorbar(x[tag_n], an[tag_n], a.n[1][tag_n], label="-")
+            ax2.axhline(avg, color='k', linestyle='--')
+            ax2.set_xlabel(xlabel)
+            ax2.set_ylabel(self.bfit.ylabel_dict['h'])
+        
+            # draw histograms  --------------------------
+            hist = data.hist
+            
+            # draw
+            keylist = ('F+', 'F-', 'B+', 'B-', 'L+', 'R+', 'L-', 'R-', 
+                         'NBMF+', 'NBMF-', 'NBMB+', 'NBMB-', 'AL0+', 'AL0-')
+            for i, h in enumerate(keylist):
+                
+                # get bins
+                try:
+                    x = np.arange(len(hist[h].data))
+                except KeyError:
+                    continue
+                
+                # check for non-empty histograms, then draw
+                if np.mean(hist[h].data) > 0:                        
+                    ax3.plot(x, hist[h].data, label=h)
+                    
+            ax3.ylabel(self.bfit.ylabel_dict['rhist'])
+            ax3.xlabel('Bin')
+        
+        # draw TI mode
+        elif '1' in dat.mode:
+            pass
+        
+        # unknown mode
+        else:
+            raise RuntimeError('Unknown mode type')
+    
+    # ======================================================================= #
+    def export(self, filename=None):
+        """Export data as csv"""
+        
+        self.logger.info('Export button pressed')
+        
+        # get data
+        if not self.get_data():
+            return
+        data = self.data
+        
+        # get filename 
+        if filename is None:
+            filename = filedialog.asksaveasfilename(
+                initialfile=self.default_export_filename%(data.year, data.run), 
+                filetypes=[('csv', '*.csv'), 
+                           ('allfiles', '*')], 
+                defaultextension='.csv')
+        
+        # write to file
+        if filename:
+            self.bfit.export(data, filename, rebin=self.rebin.get())
+    
+    # ======================================================================= #
+    def get_data(self, quiet=False):
+        """
+            Display data and send bdata object to bfit draw list. 
+            Return True on success, false on Failure
+        """
+        
+        if self.filename != '':
+            return self._get_data(bdata(0, filename=self.filename))
+        
+        # fetch year
+        try:
+            year = self.year.get()
+        except ValueError:
+            for t in [self.text_nw, self.text_ne, self.text_sw, self.text_se]:
+                self.set_textbox_text(t, 'Year input must be integer valued')  
+                self.logger.exception('Year input must be integer valued')
+            return False
+        
+        # fetch run number
+        run = self.runn.get()
+        
+        self.logger.debug('Parsing run input %s', run)
+        
+        if run < 40000:
+            run = self._get_latest_run(year, run)
+            if run is False:
+                return False
+        
+        self.logger.info('Fetching run %s from %s', run, year)
+        
+        return self._get_data(bdata(run, year=year), quiet=quiet)
+        
+    # ======================================================================= #
+    def load_file(self, filename=None):
+        """
+            Read data based on filename rather than run number
+            
+            return True on success and False on failure
+        """
+        
+        # get filename
+        if filename is None:
+            
+            if self.filename == '':
+                filename = filedialog.askopenfilename(filetypes=[('msr', '*.msr'),
+                                                             ('allfiles', '*')])
+                if not filename:
+                    return False    
+            else:
+                filename = ''
+        
+        # set filename
+        self.logger.debug('self.filename = %s', filename)
+        self.filename = filename
+        
+        # get data
+        if filename != '':
+            self.logger.info('Fetching run %s', filename)
+            self.button_run_from_file['text'] = 'Stop loading run from file'
+            self.entry_year['state'] = 'disabled'
+            self.entry_runn['state'] = 'disabled'
+            return self._get_data(bdata(0, filename=filename))
+        else:
+            self.button_run_from_file['text'] = 'Load run from file'
+            self.entry_year['state'] = 'normal'
+            self.entry_runn['state'] = 'normal'
+            return True
+                    
+        
     # ======================================================================= #
     def set_nbm(self):
         """

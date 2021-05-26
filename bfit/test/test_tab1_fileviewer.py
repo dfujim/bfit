@@ -5,6 +5,8 @@ from numpy.testing import *
 import numpy as np
 import matplotlib.pyplot as plt
 from bfit.gui.bfit import bfit
+import bdata as bd
+import os
 
 # filter unneeded warnings
 import pytest
@@ -135,4 +137,42 @@ def test_autocomplete(tab=None, b=None):
     tab.get_data()
     assert_equal(tab.data.run, 40299, 'fileviewer autocomplete fetch')
     
+@with_bfit    
+def test_load_run_from_file(tab=None, b=None):
+    
+    # load a file
+    dat = bd.bdata(40123, 2020)
+    
+    # get file location
+    if 'BNMR_ARCHIVE' in os.environ:
+        path = os.path.join(os.environ['BNMR_ARCHIVE'],'2020','040123.msr')
+    else:
+        path = os.path.join(os.environ['HOME'],'.bdata','bnmr','2020','040123.msr')
+    
+    # load file
+    tab.load_file(filename=path)
+    
+    # check inputs disabled
+    assert tab.entry_year['state'] == 'disabled', 'year state == disabled'
+    assert tab.entry_runn['state'] == 'disabled', 'runn state == disabled'
+    
+    # check that run loaded
+    assert tab.data.title == dat.title, 'tab data loaded correctly'
+    
+    # check that fetch loads correct data
+    tab.get_data()
+    assert tab.data.title == dat.title, 'tab data loaded correctly'
+    
+    # turn off load file
+    tab.load_file(filename='')
+  
+    # check inputs enabled
+    assert tab.entry_year['state'] == 'normal', 'year state == normal'
+    assert tab.entry_runn['state'] == 'normal', 'runn state == normal'
 
+    # check that runs now fetch properly as normal
+    tab.runn.set(40127)
+    tab.year.set(2020)
+    tab.get_data()
+    assert tab.data.title == bd.bdata(40127, 2020).title, 'tab data loaded correctly'
+    
