@@ -93,7 +93,7 @@ class fileviewer(object):
                                                 command=self.load_file)
         
         # grid and labels
-        entry_frame.grid(column=0, row=0, sticky=N)
+        entry_frame.grid(column=0, row=0, sticky=N, columnspan=2)
         ttk.Label(entry_frame, text="Year:").grid(column=0, row=0, sticky=E)
         self.entry_year.grid(column=1, row=0, sticky=E)
         ttk.Label(entry_frame, text="Run Number:").grid(column=2, row=0, sticky=E)
@@ -124,7 +124,7 @@ class fileviewer(object):
         self.text_sw.grid(column=0, row=3, sticky=(N, W, E, S), padx=5)
         self.text_se.grid(column=1, row=3, sticky=(N, W, E, S), padx=5)
         
-        view_frame.grid(column=0, row=1, sticky=(N, E, W))
+        view_frame.grid(column=0, row=1, sticky=(N, E, W), columnspan=2)
         
         # details frame: stuff at the bottom ----------------------------------
         details_frame = ttk.Frame(file_tab)
@@ -150,7 +150,7 @@ class fileviewer(object):
         entry_rebin.grid(column=1, row=0, sticky=E)
         self.entry_asym_type.grid(column=2, row=0, sticky=E)
         update_box.grid(column=3, row=0, sticky=E)
-        details_frame.grid(column=0, row=2, sticky=S)
+        details_frame.grid(column=0, row=2, sticky=S, columnspan=2)
         
         # padding 
         for child in details_frame.winfo_children(): 
@@ -1200,7 +1200,6 @@ class fileviewer(object):
             self.entry_runn['state'] = 'normal'
             return True
                     
-        
     # ======================================================================= #
     def set_nbm(self):
         """
