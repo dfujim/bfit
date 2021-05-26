@@ -800,7 +800,7 @@ class fileviewer(object):
                 pass
             
         # get Rb Cell specific data
-        elif data.mode in ['1n']:
+        elif data.mode == '1n':
             
             try:
                 dwell = int(data.ppg.dwelltime.mean)
@@ -810,10 +810,11 @@ class fileviewer(object):
                 pass
             
             # get mode
-            try: 
-                custom_enable = bool(data.ppg.customv_enable.mean)
-            except AttributeError:
-                custom_enable = False
+            # ~ try: 
+                # ~ custom_enable = bool(data.ppg.customv_enable.mean)
+            # ~ except AttributeError:
+                # ~ custom_enable = False
+            custom_enable = False
             
             # custom varible scan
             if custom_enable:
@@ -856,21 +857,21 @@ class fileviewer(object):
             # normal Rb cell scan
             else:
                 try:
-                    val = int(data.ppg.volt_start.mean)
+                    val = int(data.ppg.scan_start.mean)
                     data_ne['Start Rb Scan'] = '%d Volts' % val
                     key_order_ne.append('Start Rb Scan')
                 except AttributeError:
                     pass
                 
                 try:    
-                    val = int(data.ppg.volt_stop.mean)
+                    val = int(data.ppg.scan_stop.mean)
                     data_ne['Stop Rb Scan'] = '%d Volts' % val
                     key_order_ne.append('Stop Rb Scan')
                 except AttributeError:
                     pass
                 
                 try:
-                    val = int(data.ppg.volt_incr.mean)
+                    val = int(np.round(data.ppg.scan_incr.mean))
                     data_ne['Scan Increment'] = '%d Volts' % val
                     key_order_ne.append('Scan Increment')
                 except AttributeError:
