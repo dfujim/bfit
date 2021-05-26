@@ -153,7 +153,15 @@ class fitdata(object):
         
         # bdata access
         if type(self.bd) is bdata:
-            self.bd = bdata(self.run, self.year)
+            
+            # load real run
+            try:
+                self.bd = bdata(self.run, self.year)
+                
+            # load test run
+            except ValueError:
+                self.bd = bdata(0, filename = self.bfit.fileviewer.filename)
+                
         elif type(self.bd) is bmerged:
             years = list(map(int, textwrap.wrap(str(self.year), 4)))
             runs = list(map(int, textwrap.wrap(str(self.run), 5)))

@@ -190,13 +190,16 @@ class fileviewer(object):
         # get data
         try: 
             data = fitdata(self.bfit, bdata_obj)
-        except ValueError:
+        except ValueError as err:
             self.logger.exception('File read failed.')
+            self.logger.debug(err)
+            raise err from None
             for t in [self.text_nw, self.text_sw, self.text_se, self.text_ne]:
                 self.set_textbox_text(t, 'File read failed.')
             return False
-        except RuntimeError:
+        except RuntimeError as err:
             self.logger.exception('File does not exist.')
+            self.logger.debug(err)
             for t in [self.text_nw, self.text_sw, self.text_se, self.text_ne]:
                 self.set_textbox_text(t, 'File does not exist.')
             return False
