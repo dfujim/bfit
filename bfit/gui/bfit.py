@@ -175,6 +175,20 @@ class bfit(object):
                             "Positive Helicity", 
                             "Negative Helicity", 
                             ], 
+                      '1d':["Combined Helicity", 
+                            "Split Helicity", 
+                            "Raw Scans", 
+                            "Histograms", 
+                            "Positive Helicity", 
+                            "Negative Helicity", 
+                            ], 
+                      '1c':["Combined Helicity", 
+                            "Split Helicity", 
+                            "Raw Scans", 
+                            "Histograms", 
+                            "Positive Helicity", 
+                            "Negative Helicity", 
+                            ], 
                       '1w':["Combined Helicity", 
                             "Split Helicity", 
                             "Raw Scans", 
@@ -254,6 +268,8 @@ class bfit(object):
                  '1f':'Frequency (%s)', 
                  '1w':'x Parameter (%s)', 
                  '1e':'Field (G)', 
+                 '1d':'Laser Power', 
+                 '1c':'Camp Variable', 
                  '1n':'Voltage (%s)'}
                  
     ylabel_dict={'ad':r'$N_\alpha~/~N_\beta$', # otherwise, label as Asymmetry
@@ -273,6 +289,9 @@ class bfit(object):
            '2e':"time", 
            '1f':'freq', 
            '1w':'xpar', 
+           '1d':'las', 
+           '1e':'mA', 
+           '1c':'camp', 
            '1n':'mV'}
     
     # minimizers
@@ -1278,9 +1297,6 @@ class bfit(object):
         if figstyle != 'periodic':
             raise_window()   
             
-        
-        
-        
         self.logger.debug('Drawing success.')
     
     # ======================================================================= #

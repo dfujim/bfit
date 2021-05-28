@@ -45,14 +45,22 @@ class fileviewer(object):
     
     default_export_filename = "%d_%d.csv" # year_run.csv
     update_id = ''
-    mode_dict = {"1f":"Frequency Scan", 
-                 "1w":"Frequency Comb", 
-                 "1n":"Rb Cell Scan", 
+    mode_dict = {"1c":"Camp Scan", 
+                 "1d":"Laser Scan", 
                  "1e":"Field Scan", 
+                 "1w":"Frequency Comb", 
+                 "1f":"Frequency Scan", 
+                 "1n":"Rb Cell Scan", 
                  "20":"SLR", 
+                 '2e':'Randomized Frequency Scan',
                  '2h':'SLR with Alpha Tracking', 
                  '2s':'Spin Echo', 
-                 '2e':'Randomized Frequency Scan'}
+                }
+    
+    mode_epics_var = {'1n':'ILE2:BIAS15:VOL',
+                      '1d':'ILE2:RING:FREQ:VOL',
+                      '1e':'ILE2A1:HH:CUR',
+                     }
     
     # ======================================================================= #
     def __init__(self, file_tab, bfit):
@@ -216,7 +224,7 @@ class fileviewer(object):
         # quiet mode: don't update text
         if quiet: return True
         
-        # NE -----------------------------------------------------------------
+        # NW -----------------------------------------------------------------
         
         # get data: headers
         mode = self.mode_dict[data.mode]
@@ -485,59 +493,64 @@ class fileviewer(object):
         
         # get data: SLR data
         if data.mode in ['20', '2h']:
+            
+            # PPG timing 
             try:
                 dwell = int(data.ppg.dwelltime.mean)
-                data_ne['Dwell Time'] = "%d ms" % dwell
-                key_order_ne.append('Dwell Time')
+                data_ne['Dwell time'] = "%d ms" % dwell
+                key_order_ne.append('Dwell time')
             except AttributeError:
                 pass
             
             try:    
                 beam = int(data.ppg.prebeam.mean)            
-                data_ne['Number of Prebeam Dwelltimes'] = "%d dwelltimes" % beam
-                key_order_ne.append('Number of Prebeam Dwelltimes')
+                data_ne['Number of prebeam dwelltimes'] = "%d dwelltimes" % beam
+                key_order_ne.append('Number of prebeam dwelltimes')
             except AttributeError:
                 pass
             
             try:    
                 beam = int(data.ppg.beam_on.mean)            
-                data_ne['Number of Beam On Dwelltimes'] = "%d dwelltimes" % beam
-                key_order_ne.append('Number of Beam On Dwelltimes')
+                data_ne['Number of beam-on dwelltimes'] = "%d dwelltimes" % beam
+                key_order_ne.append('Number of beam-on dwelltimes')
             except AttributeError:
                 pass
             
             try: 
                 beam = int(data.ppg.beam_off.mean)
-                data_ne['Number of Beam Off Dwelltimes'] = "%d dwelltimes" % beam
-                key_order_ne.append('Number of Beam Off Dwelltimes')
+                data_ne['Number of beam-off dwelltimes'] = "%d dwelltimes" % beam
+                key_order_ne.append('Number of beam-off dwelltimes')
             except AttributeError:
                 pass
             
             try:    
                 rf = int(data.ppg.rf_on_delay.mean)
-                data_ne['RF On Delay'] = "%d dwelltimes" % rf
-                key_order_ne.append('RF On Delay')
+                data_ne['RF on delay'] = "%d dwelltimes" % rf
+                key_order_ne.append('RF on delay')
             except AttributeError:
                 pass
             
             try:    
                 rf = int(data.ppg.rf_on.mean)
-                data_ne['RF On Duration'] = "%d dwelltimes" % rf
-                key_order_ne.append('RF On Duration')
+                data_ne['RF on duration'] = "%d dwelltimes" % rf
+                key_order_ne.append('RF on delay')
             except AttributeError:
                 pass
             
+            key_order_ne.append('')
+            
+            # Miscellaneous
             try:    
                 hel = bool(data.ppg.hel_enable.mean)
-                data_ne['Flip Helicity'] = str(hel)
-                key_order_ne.append('Flip Helicity')
+                data_ne['Flip helicity'] = str(hel)
+                key_order_ne.append('Flip helicity')
             except AttributeError:
                 pass
             
             try:    
                 hel = int(data.ppg.hel_sleep.mean)
-                data_ne['Helicity Flip Sleep'] = "%d ms" % hel
-                key_order_ne.append('Helicity Flip Sleep')
+                data_ne['Helicity sleep'] = "%d ms" % hel
+                key_order_ne.append('Helicity sleep')
             except AttributeError:
                 pass
         
@@ -545,8 +558,8 @@ class fileviewer(object):
             
             try:
                 rf = bool(data.ppg.rf_enable.mean)
-                data_ne['RF Enable'] = str(rf)
-                key_order_ne.append('RF Enable')
+                data_ne['RF enable'] = str(rf)
+                key_order_ne.append('RF enable')
                 
                 if rf:
                     freq = int(data.ppg.freq.mean)    
@@ -557,6 +570,8 @@ class fileviewer(object):
             
         # get 1F specific data
         elif data.mode == '1f':
+            
+            # ppg timing box
             try:
                 val = int(data.ppg.dwelltime.mean)
                 data_ne['Bin Width'] = "%d ms" % val
@@ -568,239 +583,217 @@ class fileviewer(object):
                 val = int(data.ppg.nbins.mean)
                 data_ne['Number of Bins'] = "%d" % val
                 key_order_ne.append('Number of Bins')
-            except AttributeError:
-                pass
-            
-            try:
-                val = bool(data.ppg.const_t_btwn_cycl.mean)
-                data_ne['Enable Const Time Between Cycles'] = str(val)
-                key_order_ne.append('Enable Const Time Between Cycles')
-            except AttributeError:
-                pass
-            
-            try:
-                val = int(data.ppg.freq_start.mean)
-                data_ne['Frequency Scan Start'] = '%d Hz' % val
-                key_order_ne.append('Frequency Scan Start')
-            except AttributeError:
-                pass
-            
-            try:
-                val = int(data.ppg.freq_stop.mean)
-                data_ne['Frequency Scan End'] = '%d Hz' % val
-                key_order_ne.append('Frequency Scan End')
-            except AttributeError:
-                pass
-            
-            try:
-                val = int(data.ppg.freq_incr.mean)
-                data_ne['Frequency Scan Increment'] = '%d Hz' % val
-                key_order_ne.append('Frequency Scan Increment')
-            except AttributeError:
-                pass
-            
-            try:
-                val = bool(data.ppg.hel_enable.mean)
-                data_ne['Flip Helicity'] = str(val)
-                key_order_ne.append('Flip Helicity')
-            except AttributeError:
-                pass
-            
-            try:
-                val = int(data.ppg.hel_sleep.mean)
-                data_ne['Helicity Flip Sleep'] = "%d ms" % val
-                key_order_ne.append('Helicity Flip Sleep')
-            except AttributeError:
-                pass
-            
-            try:
-                val = int(data.ppg.ncycles.mean)
-                data_ne['Number of Cycles per Scan Increment'] = '%d' % val
-                key_order_ne.append('Number of Cycles per Scan Increment')
-            except AttributeError:
-                pass
-                
-        # get 1E specific data
-        elif data.mode == '1e':
-            try:
-                val = int(data.ppg.dwelltime.mean)
-                data_ne['Bin Width'] = "%d ms" % val
-                key_order_ne.append('Bin Width')
-            except AttributeError:
-                pass
-            
-            try:    
-                val = int(data.ppg.nbins.mean)
-                data_ne['Number of Bins'] = "%d" % val
-                key_order_ne.append('Number of Bins')
-            except AttributeError:
-                pass
-            
-            try:
-                val = int(data.ppg.field_start.mean)
-                data_ne['Field Scan Start'] = '%d G' % val
-                key_order_ne.append('Field Scan Start')
-            except AttributeError:
-                pass
-            
-            try:
-                val = int(data.ppg.field_stop.mean)
-                data_ne['Field Scan End'] = '%d G' % val
-                key_order_ne.append('Field Scan End')
-            except AttributeError:
-                pass
-            
-            try:
-                val = int(data.ppg.field_incr.mean)
-                data_ne['Field Scan Increment'] = '%d G' % val
-                key_order_ne.append('Field Scan Increment')
-            except AttributeError:
-                pass
-            
-            try:
-                val = bool(data.ppg.hel_enable.mean)
-                data_ne['Flip Helicity'] = str(val)
-                key_order_ne.append('Flip Helicity')
-            except AttributeError:
-                pass
-            
-            try:
-                val = int(data.ppg.hel_sleep.mean)
-                data_ne['Helicity Flip Sleep'] = "%d ms" % val
-                key_order_ne.append('Helicity Flip Sleep')
-            except AttributeError:
-                pass
-            
-            try:
-                val = int(data.ppg.ncycles.mean)
-                data_ne['Number of Cycles per Scan Increment'] = '%d' % val
-                key_order_ne.append('Number of Cycles per Scan Increment')
-            except AttributeError:
-                pass
-                
-        # get 1W specific data
-        elif data.mode == '1w':
-            try:
-                val = int(data.ppg.dwelltime.mean)
-                data_ne['Bin Width'] = "%d ms" % val
-                key_order_ne.append('Bin Width')
-            except AttributeError:
-                pass
-            
-            try:    
-                val = int(data.ppg.nbins.mean)
-                data_ne['Number of Bins'] = "%d" % val
-                key_order_ne.append('Number of Bins')
-            except AttributeError:
-                pass
-            
-            try:
-                val = bool(data.ppg.const_t_btwn_cycl.mean)
-                data_ne['Enable Const Time Between Cycles'] = str(val)
-                key_order_ne.append('Enable Const Time Between Cycles')
             except AttributeError:
                 pass
             
             try:
                 val = int(data.ppg.service_t.mean)
-                data_ne['DAQ Service Time'] = "%d ms" % val
-                key_order_ne.append('DAQ Service Time')
+                data_ne['DAQ service time'] = "%d ms" % val
+                key_order_ne.append('DAQ service time')
             except AttributeError:
                 pass    
             
+            key_order_ne.append('')
+            
+            # PSM RF - Frequency
             try:
-                val = int(data.ppg.xstart.mean)
-                data_ne['Parameter x Start'] = '%d' % val
-                key_order_ne.append('Parameter x Start')
-            except AttributeError:
-                pass
-                
-            try:
-                val = int(data.ppg.xstop.mean)
-                data_ne['Parameter x Stop'] = '%d' % val
-                key_order_ne.append('Parameter x Stop')
-            except AttributeError:
-                pass
-                
-            try:
-                val = int(data.ppg.xincr.mean)
-                data_ne['Parameter x Increment'] = '%d' % val
-                key_order_ne.append('Parameter x Increment')
-            except AttributeError:
-                pass
-                
-            try:
-                val = int(data.ppg.yconst.mean)
-                data_ne['Parameter y (constant)'] = '%d' % val
-                key_order_ne.append('Parameter y (constant)')
-            except AttributeError:
-                pass
-                
-            try:
-                val = str(data.ppg.freqfn_f1.units)
-                data_ne['CH1 Frequency Function(x)'] = val
-                key_order_ne.append('CH1 Frequency Function(x)')
+                start = int(data.ppg.freq_start.mean)
+                data_ne['Start frequency'] = '%d Hz' % start
+                key_order_ne.append('Start frequency')
             except AttributeError:
                 pass
             
             try:
-                val = str(data.ppg.freqfn_f2.units)
-                data_ne['CH2 Frequency Function(x)'] = val
-                key_order_ne.append('CH2 Frequency Function(x)')
+                stop = int(data.ppg.freq_stop.mean)
+                data_ne['End frequency'] = '%d Hz' % stop
+                key_order_ne.append('End frequency')
             except AttributeError:
                 pass
             
             try:
-                val = str(data.ppg.freqfn_f3.units)
-                data_ne['CH3 Frequency Function(x)'] = val
-                key_order_ne.append('CH3 Frequency Function(x)')
+                incr = int(data.ppg.freq_incr.mean)
+                data_ne['Frequency scan gap'] = '%d Hz' % incr
+                key_order_ne.append('Frequency scan gap')
             except AttributeError:
                 pass
             
             try:
-                val = str(data.ppg.freqfn_f4.units)
-                data_ne['CH4 Frequency Function(x)'] = val
-                key_order_ne.append('CH4 Frequency Function(x)')
-            except AttributeError:
+                nsteps = int((stop-start)/incr)
+                data_ne['Num frequency steps'] = '%d (%d freqs in total)' % (nsteps, nsteps+1)
+                key_order_ne.append('Num frequency steps')
+            except NameError:
                 pass
-             
+            
+            try:
+                center = (stop-start)/2
+                data_ne['Center frequency'] = '%d Hz' % center
+                key_order_ne.append('Center frequency')
+            except NameError:
+                pass
+            
+            try:
+                width = stop-start
+                data_ne['Full scan width'] = '%d Hz' % width
+                key_order_ne.append('Full scan width')
+            except NameError:
+                pass
+            
+            key_order_ne.append('')
+            
+            # Miscellaneous
             try:
                 val = bool(data.ppg.hel_enable.mean)
-                data_ne['Flip Helicity'] = str(val)
-                key_order_ne.append('Flip Helicity')
+                data_ne['Flip helicity'] = str(val)
+                key_order_ne.append('Flip helicity')
             except AttributeError:
                 pass
             
             try:
                 val = int(data.ppg.hel_sleep.mean)
-                data_ne['Helicity Flip Sleep'] = "%d ms" % val
-                key_order_ne.append('Helicity Flip Sleep')
+                data_ne['Helicity sleep'] = "%d ms" % val
+                key_order_ne.append('Helicity sleep')
+            except AttributeError:
+                pass
+            
+            try:
+                val = bool(data.ppg.const_t_btwn_cycl.mean)
+                data_ne['Ensure constant time between cycles'] = str(val)
+                key_order_ne.append('Ensure constant time between cycles')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.ncycles.mean)
+                data_ne['Repeat N cycles per supercycle'] = '%d' % val
+                key_order_ne.append('Repeat N cycles per supercycle')
+            except AttributeError:
+                pass
+                
+        # get 1W specific data
+        elif data.mode == '1w':
+            
+            # ppg timing
+            try:
+                val = int(data.ppg.dwelltime.mean)
+                data_ne['Bin width'] = "%d ms" % val
+                key_order_ne.append('Bin width')
+            except AttributeError:
+                pass
+            
+            try:    
+                val = int(data.ppg.nbins.mean)
+                data_ne['Number of bins'] = "%d" % val
+                key_order_ne.append('Number of bins')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.service_t.mean)
+                data_ne['DAQ service time'] = "%d ms" % val
+                key_order_ne.append('DAQ service time')
+            except AttributeError:
+                pass    
+            
+            
+            key_order_ne.append('')
+            
+            # psm rf freq
+            try:
+                val = str(data.ppg.freqfn_f1.units)
+                data_ne['Parametric function for f0ch1'] = val
+                key_order_ne.append('Parametric function for f0ch1')
+            except AttributeError:
+                pass
+            
+            try:
+                val = str(data.ppg.freqfn_f2.units)
+                data_ne['Parametric function for f0ch2'] = val
+                key_order_ne.append('Parametric function for f0ch2')
+            except AttributeError:
+                pass
+            
+            try:
+                val = str(data.ppg.freqfn_f3.units)
+                data_ne['Parametric function for f0ch3'] = val
+                key_order_ne.append('Parametric function for f0ch3')
+            except AttributeError:
+                pass
+            
+            try:
+                val = str(data.ppg.freqfn_f4.units)
+                data_ne['Parametric function for f0ch4'] = val
+                key_order_ne.append('Parametric function for f0ch4')
+            except AttributeError:
+                pass
+             
+            try:
+                val = int(data.ppg.yconst.mean)
+                data_ne['Parametric Y constant'] = '%d Hz' % val
+                key_order_ne.append('Parametric Y constant')
+            except AttributeError:
+                pass
+                
+            try:
+                start = int(data.ppg.xstart.mean)
+                data_ne['Parametric X start'] = '%d Hz' % start
+                key_order_ne.append('Parametric X start')
+            except AttributeError:
+                pass
+                
+            try:
+                stop = int(data.ppg.xstop.mean)
+                data_ne['Parametric X end'] = '%d Hz' % stop
+                key_order_ne.append('Parametric X end')
+            except AttributeError:
+                pass
+                
+            try:
+                incr = int(data.ppg.xincr.mean)
+                data_ne['X scan gap'] = '%d Hz' % incr
+                key_order_ne.append('X scan gap')
+            except AttributeError:
+                pass
+                
+            try:
+                nsteps = int((stop-start)/incr)
+                data_ne['Num X steps'] = '%d (%d freqs total)' % (nsteps, nsteps+1)
+                key_order_ne.append('Num X steps')
+            except NameError:
+                pass
+
+            key_order_ne.append('')
+                
+            # Miscellaneous
+            try:
+                val = bool(data.ppg.hel_enable.mean)
+                data_ne['Flip helicity'] = str(val)
+                key_order_ne.append('Flip helicity')
+            except AttributeError:
+                pass
+            
+            try:
+                val = int(data.ppg.hel_sleep.mean)
+                data_ne['Helicity sleep'] = "%d ms" % val
+                key_order_ne.append('Helicity sleep')
             except AttributeError:
                 pass        
             
             try:
-                val = int(data.ppg.ncycles.mean)
-                data_ne['Number of Cycles per Scan Increment'] = '%d' % val
-                key_order_ne.append('Number of Cycles per Scan Increment')
+                val = bool(data.ppg.const_t_btwn_cycl.mean)
+                data_ne['Ensure constant time between cycles'] = str(val)
+                key_order_ne.append('Ensure constant time between cycles')
             except AttributeError:
                 pass
             
             try:
-                val = bool(data.ppg.fref_enable.mean)
-                data_ne['Freq Reference Enabled'] = str(val)
-                key_order_ne.append('Freq Reference Enabled')
-            except AttributeError:
-                pass
-         
-            try:
-                val = int(data.ppg.fref_scale.mean)
-                data_ne['Freq Reference Scale Factor'] = '%d' % val
-                key_order_ne.append('Freq Reference Scale Factor')
+                val = int(data.ppg.ncycles.mean)
+                data_ne['Repeat N cycles per supercycle'] = '%d' % val
+                key_order_ne.append('Repeat N cycles per supercycle')
             except AttributeError:
                 pass
             
         # get Rb Cell specific data
-        elif data.mode == '1n':
+        elif data.mode in ['1n', '1d', '1e', '1c']:
             
             try:
                 dwell = int(data.ppg.dwelltime.mean)
@@ -809,95 +802,111 @@ class fileviewer(object):
             except AttributeError:
                 pass
             
-            # get mode
-            # ~ try: 
-                # ~ custom_enable = bool(data.ppg.customv_enable.mean)
-            # ~ except AttributeError:
-                # ~ custom_enable = False
-            custom_enable = False
-            
-            # custom varible scan
-            if custom_enable:
-                
-                try:
-                    val = str(data.ppg.customv_name_write.units)
-                    data_ne['EPICS variable name (for writing)'] = '%s' % val
-                    key_order_ne.append('EPICS variable name (for writing)')
-                except AttributeError:
-                    pass
-            
-                try:
-                    val = str(data.ppg.customv_name_read.units)
-                    data_ne['EPICS variable name (for readback)'] = '%s' % val
-                    key_order_ne.append('EPICS variable name (for readback)')
-                except AttributeError:
-                    pass
-            
-                try:
-                    val = int(data.ppg.customv_scan_start.mean)
-                    data_ne['Scan start value'] = '%d' % val
-                    key_order_ne.append('Scan start value')
-                except AttributeError:
-                    pass
-            
-                try:
-                    val = int(data.ppg.customv_scan_stop.mean)
-                    data_ne['Scan stop value'] = '%d' % val
-                    key_order_ne.append('Scan stop value')
-                except AttributeError:
-                    pass
-            
-                try:
-                    val = int(data.ppg.customv_scan_incr.mean)
-                    data_ne['Scan increment'] = '%d' % val
-                    key_order_ne.append('Scan increment')
-                except AttributeError:
-                    pass
-            
-            # normal Rb cell scan
-            else:
-                try:
-                    val = int(data.ppg.scan_start.mean)
-                    data_ne['Start Rb Scan'] = '%d Volts' % val
-                    key_order_ne.append('Start Rb Scan')
-                except AttributeError:
-                    pass
-                
-                try:    
-                    val = int(data.ppg.scan_stop.mean)
-                    data_ne['Stop Rb Scan'] = '%d Volts' % val
-                    key_order_ne.append('Stop Rb Scan')
-                except AttributeError:
-                    pass
-                
-                try:
-                    val = int(np.round(data.ppg.scan_incr.mean))
-                    data_ne['Scan Increment'] = '%d Volts' % val
-                    key_order_ne.append('Scan Increment')
-                except AttributeError:
-                    pass
-                
             try:
                 val = int(data.ppg.nbins.mean)
                 data_ne['Number of Bins'] = '%d' % val
                 key_order_ne.append('Number of Bins')
             except AttributeError:
                 pass
-                
+            
+            try:
+                val = int(data.ppg.service_t.mean)
+                data_ne['DAQ service time'] = "%d ms" % val
+                key_order_ne.append('DAQ service time')
+            except AttributeError:
+                pass    
+            
+            data_ne[''] = ''
+            key_order_ne.append('')
+            
+             # common items
             try:
                 val = bool(data.ppg.hel_enable.mean)
-                data_ne['Flip Helicity'] = str(val)
-                key_order_ne.append('Flip Helicity')
+                data_ne['Flip helicity'] = str(val)
+                key_order_ne.append('Flip helicity')
             except AttributeError:
                 pass
             
             try:
                 val = int(data.ppg.hel_sleep.mean)
-                data_ne['Helicity Flip Sleep'] = "%d ms" % val
-                key_order_ne.append('Helicity Flip Sleep')
+                data_ne['Helicity sleep'] = "%d ms" % val
+                key_order_ne.append('Helicity sleep')
             except AttributeError:
                 pass
-        
+            
+            # custom varible scan check
+            try: 
+                custom_enable = bool(data.ppg.customv_enable.mean)
+            except AttributeError:
+                custom_enable = False
+            
+            # set scan variable name, ppg key
+            if data.mode == '1c':
+                prefix = ''
+                try:
+                    val = str(data.ppg.scan_device.units)
+                    data_ne['CAMP device'] = '%s' % val
+                    key_order_ne.append('CAMP device')
+                except AttributeError:
+                    pass                
+                
+            else:
+                if custom_enable:
+                    prefix = 'customv_'
+                    
+                    try:
+                        val = str(data.ppg.customv_name_write.units)
+                        data_ne['EPICS device'] = '%s' % val
+                        key_order_ne.append('EPICS device')
+                    except AttributeError:
+                        pass                
+                else:
+                    prefix = ''
+                    data_ne['EPICS device'] = '%s' % self.mode_epics_var[self.data.mode]
+                    key_order_ne.append('EPICS device')                
+                    
+            # scan ranges
+            try:
+                ppg = data.ppg[prefix+'scan_start']
+                start = int(ppg.mean)
+                unit = str(ppg.units).title()
+                data_ne['Scan start'] = '%d %s' % (start, unit)
+                key_order_ne.append('Scan start')
+            except AttributeError:
+                pass
+            
+            try:    
+                ppg = data.ppg[prefix+'scan_stop']
+                stop = int(ppg.mean)
+                unit = str(ppg.units).title()
+                data_ne['Scan stop'] = '%d %s' % (stop, unit)
+                key_order_ne.append('Scan stop')
+            except AttributeError:
+                pass
+            
+            try:
+                ppg = data.ppg[prefix+'scan_incr']
+                incr = int(np.round(ppg.mean))
+                unit = str(ppg.units).title()
+                data_ne['Scan gap'] = '%d %s' % (incr, unit)
+                key_order_ne.append('Scan gap')
+            except AttributeError:
+                pass
+            
+            try:
+                nsteps = int((stop-start)/incr)
+                data_ne['Number of scan steps'] = '%d (%d data points)' % (nsteps, nsteps+1)
+                key_order_ne.append('Number of scan steps')
+            except NameError:
+                pass
+                
+            try:
+                val = int(data.ppg.ncycles.mean)
+                data_ne['Repeat N cycles per supercycle'] = '%d' % val
+                key_order_ne.append('Repeat N cycles per supercycle')
+            except AttributeError:
+                pass
+            
         # get 2e mode specific data
         elif data.mode in ['2e']:
             
