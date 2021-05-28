@@ -637,7 +637,14 @@ class fileviewer(object):
                 key_order_ne.append('Full scan width')
             except NameError:
                 pass
-            
+                
+            try:
+                val = bool(data.ppg.rand_freq_val.mean)
+                data_ne['Randomize frequency order'] = str(val)
+                key_order_ne.append('Randomize frequency order')
+            except AttributeError:
+                pass
+                
             key_order_ne.append('')
             
             # Miscellaneous
@@ -761,6 +768,13 @@ class fileviewer(object):
             except NameError:
                 pass
 
+            try:
+                val = bool(data.ppg.rand_freq_val.mean)
+                data_ne['Randomize frequency order'] = str(val)
+                key_order_ne.append('Randomize frequency order')
+            except AttributeError:
+                pass
+                
             key_order_ne.append('')
                 
             # Miscellaneous
@@ -910,84 +924,117 @@ class fileviewer(object):
         # get 2e mode specific data
         elif data.mode in ['2e']:
             
+            # ppg timing
             try:
                 val = int(data.ppg.rf_on_ms.mean)
-                data_ne['RF On Time'] = "%d ms" % val
-                key_order_ne.append('RF On Time')
+                data_ne['RF on time (aka dwelltime)'] = "%d ms" % val
+                key_order_ne.append('RF on time (aka dwelltime)')
             except AttributeError:
                 pass
                 
             try:
                 val = int(data.ppg.rf_on_delay.mean)
-                data_ne['Number of RF On Delays'] = "%d" % val
-                key_order_ne.append('Number of RF On Delays')
+                data_ne['RF on delay'] = "%d dwelltimes" % val
+                key_order_ne.append('RF on delay')
             except AttributeError:
                 pass
                 
             try:
                 val = int(data.ppg.beam_off_ms.mean)
-                data_ne['Beam Off Time'] = "%d ms" % val
-                key_order_ne.append('Beam Off Time')
+                data_ne['Beam off time'] = "%d ms" % val
+                key_order_ne.append('Beam off time')
             except AttributeError:
                 pass
                 
             try:
                 val = int(data.ppg.ndwell_post_on.mean)
-                data_ne['Number of post RF BeamOn Dwelltimes'] = "%d" % val
-                key_order_ne.append('Number of post RF BeamOn Dwelltimes')
+                data_ne['Post-RF beam-on'] = "%d dwelltimes" % val
+                key_order_ne.append('Post-RF beam-on')
             except AttributeError:
                 pass
                 
             try:
                 val = int(data.ppg.ndwell_per_f.mean)
-                data_ne['Number of Dwelltimes per Frequency'] = "%d" % val
-                key_order_ne.append('Number of Dwelltimes per Frequency')
-            except AttributeError:
-                pass
-                
-            try:
-                val = int(data.ppg.freq_start.mean)
-                data_ne['Frequency Scan Start'] = "%d Hz" % val
-                key_order_ne.append('Frequency Scan Start')
-            except AttributeError:
-                pass
-                
-            try:
-                val = int(data.ppg.freq_stop.mean)
-                data_ne['Frequency Scan Stop'] = "%d Hz" % val
-                key_order_ne.append('Frequency Scan Stop')
-            except AttributeError:
-                pass
-                
-            try:
-                val = int(data.ppg.freq_incr.mean)
-                data_ne['Frequency Scan Increment'] = "%d Hz" % val
-                key_order_ne.append('Frequency Scan Increment')
-            except AttributeError:
-                pass
-                
-            try:
-                val = bool(data.ppg.rand_freq_val.mean)
-                data_ne['Randomize Frequency Scan Increments'] = str(val)
-                key_order_ne.append('Randomize Frequency Scan Increments')
-            except AttributeError:
-                pass
-                
-            try:
-                val = bool(data.ppg.hel_enable.mean)
-                data_ne['Flip Helicity'] = str(val)
-                key_order_ne.append('Flip Helicity')
-            except AttributeError:
-                pass
-                
-            try:
-                val = bool(data.ppg.hel_enable.mean)
-                data_ne['Helicity Flip Sleep'] = "%d ms" % val
-                key_order_ne.append('Helicity Flip Sleep')
+                data_ne['Number dwelltimes per freq'] = "%d" % val
+                key_order_ne.append('Number dwelltimes per freq')
             except AttributeError:
                 pass
                 
             key_order_ne.append('')
+            
+            # PSM RF Frequency   
+            try:
+                start = int(data.ppg.freq_start.mean)
+                data_ne['Start frequency'] = '%d Hz' % start
+                key_order_ne.append('Start frequency')
+            except AttributeError:
+                pass
+            
+            try:
+                stop = int(data.ppg.freq_stop.mean)
+                data_ne['End frequency'] = '%d Hz' % stop
+                key_order_ne.append('End frequency')
+            except AttributeError:
+                pass
+            
+            try:
+                incr = int(data.ppg.freq_incr.mean)
+                data_ne['Frequency scan gap'] = '%d Hz' % incr
+                key_order_ne.append('Frequency scan gap')
+            except AttributeError:
+                pass
+            
+            try:
+                nsteps = int((stop-start)/incr)
+                data_ne['Num frequency steps'] = '%d (%d freqs in total)' % (nsteps, nsteps+1)
+                key_order_ne.append('Num frequency steps')
+            except NameError:
+                pass
+            
+            try:
+                center = (stop-start)/2
+                data_ne['Center frequency'] = '%d Hz' % center
+                key_order_ne.append('Center frequency')
+            except NameError:
+                pass
+            
+            try:
+                width = stop-start
+                data_ne['Full scan width'] = '%d Hz' % width
+                key_order_ne.append('Full scan width')
+            except NameError:
+                pass
+                
+            try:
+                val = bool(data.ppg.rand_freq_val.mean)
+                data_ne['Randomize frequency order'] = str(val)
+                key_order_ne.append('Randomize frequency order')
+            except AttributeError:
+                pass
+                
+            key_order_ne.append('')
+            
+            # misc
+            try:
+                val = bool(data.ppg.hel_enable.mean)
+                data_ne['Flip helicity'] = str(val)
+                key_order_ne.append('Flip helicity')
+            except AttributeError:
+                pass
+                
+            try:
+                val = bool(data.ppg.hel_enable.mean)
+                data_ne['Helicity sleep'] = "%d ms" % val
+                key_order_ne.append('Helicity sleep')
+            except AttributeError:
+                pass
+                
+            try:
+                val = int(data.ppg.ncycles.mean)
+                data_ne['Repeat N cycles per supercycle'] = '%d' % val
+                key_order_ne.append('Repeat N cycles per supercycle')
+            except AttributeError:
+                pass
             
         # set viewer string
         def set_str(data_dict, key_order, txtbox):
