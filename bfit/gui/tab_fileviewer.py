@@ -239,7 +239,6 @@ class fileviewer(object):
         duration = "%dm %ds" % (mins, sec)
         
         # set dictionary
-        comment = data.comments['Comments during run'].body if hasattr(data, 'comments') else ''
         data_nw =  {"Run":'%d (%d)' % (data.run, data.year), 
                     "Area": data.area, 
                     "Run Mode": "%s (%s)" % (mode, data.mode), 
@@ -251,7 +250,6 @@ class fileviewer(object):
                     "Run Duration": duration, 
                     "Start": data.start_date, 
                     "End": data.end_date, 
-                    "Comment": comment, 
                     "":"", 
                     }
         
@@ -260,8 +258,12 @@ class fileviewer(object):
                         'Start', 'End', 'Run Duration', '', 
                         'Sample', 'Orientation', '', 
                         'Experiment', 'Area', 'Experimenters','',
-                        'Comment' 
                         ]
+        
+        # comments
+        if hasattr(data, 'comments'):
+            data_nw["Comment"] = data.comments['Comments during run'].body
+            key_order_nw.append('Comment')
         
         # SW -----------------------------------------------------------------
         data_sw = {'':''}
