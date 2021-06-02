@@ -342,7 +342,8 @@ class bfit(object):
         self.units = {  '1f':[1e-6, 'MHz'], 
                         '2e':[1e-6, 'MHz'], 
                         '1w':[1, 'Hz'], 
-                        '1n':[1e-3, 'V'],
+                        '1n':[1, 'V'],
+                        '1e':[1, 'A'],
                         '20':[1, 's'],
                         '2h':[1, 's'],
                         }
@@ -907,10 +908,29 @@ class bfit(object):
             x = a[self.x_tag[data.mode]]
             xlabel = self.xlabel_dict[data.mode]
             
-            if data.mode in self.units.keys():
+            # get bfit-defined units
+            if data.mode in self.units.keys() and self.units[data.mode][1].lower() \
+                                                  not in ('default', 'disable'):
                 unit = self.units[data.mode]
                 xlabel = xlabel % unit[1]
             
+            # get units for custom scans
+            elif 'scan_var_histo_factor' in data.ppg.keys():
+                unit = [1/data.ppg.scan_var_histo_factor.mean,
+                        data.ppg.scan_var_histo_factor.units
+                       ]     
+                   
+                # check custom name
+                if 'customv_enable' in data.ppg.keys() and bool(data.ppg.customv_enable.mean):
+                    xlabel =  '%s (%s)' % (data.ppg.customv_name_write.units, unit[1])
+                elif 'scan_device' in data.ppg.keys():
+                    xlabel =  '%s (%s)' % (data.ppg.scan_device.units, unit[1])
+                else:
+                    xlabel = xlabel % unit[1]
+                        
+            else:
+                unit = [1, 'default']
+                        
             # unit conversions
             if data.mode in ('1n', '1w'): 
                 unit = self.units[data.mode]
