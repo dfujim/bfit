@@ -59,19 +59,24 @@ class popup_units(object):
                 self.input[key][i].set(units[key][i])
                 
             entry_val = Entry(topframe, textvariable=self.input[key][0], width=10, justify=RIGHT)        
-            entry_uni = Entry(topframe, textvariable=self.input[key][1], width=5, justify=RIGHT)
+            entry_uni = Entry(topframe, textvariable=self.input[key][1], width=7, justify=RIGHT)
             
             l_val.grid(column=0, row=r)
             entry_val.grid(column=1, row=r, padx=5)
             entry_uni.grid(column=2, row=r, padx=5)
             r += 1
             
+        # instructions
+        insr = ttk.Label(topframe, text='Set unit as "default" to disable', pad=5, justify=LEFT)
+        
         # make objects: buttons
         set_button = ttk.Button(frame, text='Set', command=self.set)
         close_button = ttk.Button(frame, text='Cancel', command=self.cancel)
         
         # grid
         topframe.grid(column=0, row=0, columnspan=2, pady=10)
+        insr.grid(column=0, row=r, columnspan=4); r+= 1
+        
         set_button.grid(column=0, row=r, pady=10)
         close_button.grid(column=1, row=r, pady=10)
             
