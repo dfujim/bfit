@@ -910,30 +910,33 @@ class bfit(object):
             
             # get bfit-defined units
             if data.mode in self.units.keys() and self.units[data.mode][1].lower() \
-                                                  not in ('default', 'disable'):
+                                                  not in ('default', 'disable'):                                                     
                 unit = self.units[data.mode]
                 xlabel = xlabel % unit[1]
             
             # get units for custom scans
             elif 'scan_var_histo_factor' in data.ppg.keys():
-                unit = [1/data.ppg.scan_var_histo_factor.mean,
-                        data.ppg.scan_var_histo_factor.units
-                       ]     
+                unit = [data.ppg.scan_var_histo_factor.mean,
+                        data.ppg.scan_var_histo_factor.units]     
                    
                 # check custom name
                 if 'customv_enable' in data.ppg.keys() and bool(data.ppg.customv_enable.mean):
-                    xlabel =  '%s (%s)' % (data.ppg.customv_name_write.units, unit[1])
+                    xlabel = '%s (%s)' % (data.ppg.customv_name_write.units, unit[1])
+                    
+                # 1c runs custom name
                 elif 'scan_device' in data.ppg.keys():
-                    xlabel =  '%s (%s)' % (data.ppg.scan_device.units, unit[1])
+                    xlabel = '%s (%s)' % (data.ppg.scan_device.units, unit[1])
+                
+                # no name, use default
                 else:
                     xlabel = xlabel % unit[1]
                         
             else:
                 unit = [1, 'default']
+                xlabel = xlabel % unit[1]
                         
             # unit conversions
             if data.mode in ('1n', '1w'): 
-                unit = self.units[data.mode]
                 x *= unit[0]
                 
             elif data.mode == '1f': 
@@ -943,7 +946,6 @@ class bfit(object):
                     x = 1e6*(x-self.ppm_reference)/self.ppm_reference
                     xlabel = 'Frequency Shift (PPM)'
                 else: 
-                    unit = self.units[data.mode]
                     x *= unit[0]
             
             # plot split helicities
@@ -968,7 +970,7 @@ class bfit(object):
                 self.plt.axhline(figstyle, 'line', avg, color='k', linestyle='--')
                 
             # plot positive helicity
-            elif asym_type == 'p':
+            elif asym_type == 'sp':
                 
                 # remove zero asym
                 ap = a.p[0]
