@@ -74,26 +74,11 @@ If you use [mudpy], [bdata], or [bfit] in your work, please cite:
 
 ### Dependencies
 
-The following packages/applications are needed prior to [bfit] installation:
+The following packages/applications are needed _prior_ to [bfit] installation:
 - [Python] 3.6 or higher: a dynamically typed programming language. [[install](https://wiki.python.org/moin/BeginnersGuide/Download)]
 - [Tkinter] : [Python]'s de-factor standard GUI package. [[install](https://tkdocs.com/tutorial/install.html)]
 - [Cython] : [C]-language extensions for [Python]. [[install](https://cython.readthedocs.io/en/latest/src/quickstart/install.html)]
 - [NumPy] : array programming library for [Python]. [[install](https://numpy.org/install/)]
-
-and the following are handelled automatically when retrieving [bfit] from the [PyPI]:
-
-- [argparse] : a parser for command-line options, arguments and sub-commands.
-- [bdata] : data structures and algorithms for retrieving/processing [TRIUMF] β-NMR/β-NQR data.
-- [iminuit] : a [Jupyter]-friendly [Python] interface for the [MINUIT2] library.
-- [Matplotlib] : comprehensive library for creating static, animated, and
-  interactive visualizations in [Python].
-- [pandas] : a fast, powerful, flexible and easy to use data analysis/manipulation tool.
-- [pytest] : a mature full-featured Python testing tool that helps you write better programs.
-- [PyYAML] : a next generation [YAML] parser and emitter for [Python].
-- [requests] : an elegant and simple [HTTP] library for [Python],
-  built for human beings.
-- [SciPy] : fundamental algorithms for scientific computing in [Python].
-- [tqdm] : a fast, extensible progress bar for [Python].
 
 ### Install Instructions
 
