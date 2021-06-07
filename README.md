@@ -88,6 +88,7 @@ and the following are handelled automatically when retrieving [bfit] from the [P
 - [Matplotlib] : comprehensive library for creating static, animated, and
   interactive visualizations in [Python].
 - [pandas] : a fast, powerful, flexible and easy to use data analysis/manipulation tool.
+- [pytest] : a mature full-featured Python testing tool that helps you write better programs.
 - [PyYAML] : a next generation [YAML] parser and emitter for [Python].
 - [requests] : an elegant and simple [HTTP] library for [Python],
   built for human beings.
@@ -154,6 +155,7 @@ Testing your installation of [bfit] is accomplished by running `pytest` within t
 [Matplotlib]: https://matplotlib.org/
 [Tkinter]: https://wiki.python.org/moin/TkInter
 [PyYAML]: https://pyyaml.org/
+[pytest]: https://docs.pytest.org/en/6.2.x/
 [tqdm]: https://github.com/tqdm/tqdm
 [requests]: https://requests.readthedocs.io/en/master/
 [Jupyter]: https://jupyter.org/
