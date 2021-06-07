@@ -288,7 +288,7 @@ class PltTracker(object):
         fig.canvas.style = style
         
         # set window name 
-        fig.canvas.set_window_title('Figure %d (%s)' % (fig.number, style.title()))
+        fig.canvas.manager.set_window_title('Figure %d (%s)' % (fig.number, style.title()))
         
         # update lists
         self.plots[style].append(fig.number)
