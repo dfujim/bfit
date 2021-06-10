@@ -1812,7 +1812,12 @@ class bfit(object):
                          '"%s" and area "%s"', mode, area)
     
         # get list of possible run modes
-        modes = list(self.asym_dict_keys[mode])
+        try:
+            modes = list(self.asym_dict_keys[mode])
+        except KeyError as err:
+            messagebox.showerror('Error', 'Unknown mode %s' % mode)
+            self.logger.exception(str(err))
+            raise err from None
         
         # prune the list to match only ok files
         if parent == self.fit_files:
