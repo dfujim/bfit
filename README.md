@@ -47,7 +47,7 @@ More generally, [bfit] has been written to fulfill the following needs:
 If you use [mudpy], [bdata], or [bfit] in your work, please cite:
 
 - D. Fujimoto.
-  <i>Digging into MUD with Python: mudpy, bdata, and bfit</i>.
+  <i>bfit: A Python Application For Beta-Detected NMR</i>.
   <a href="https://arxiv.org/abs/2004.10395">
   arXiv:2004.10395 [physics.data-an]</a>.
 
