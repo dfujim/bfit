@@ -1,13 +1,3 @@
-<!--
-JOSS welcomes submissions from broadly diverse research areas. For this reason, we require that authors include in the paper some sentences that explain the software functionality and domain of use to a non-specialist reader. We also require that authors explain the research applications of the software. The paper should be between 250-1000 words.
-
-Your paper should include:
-
-    A list of the authors of the software and their affiliations, using the correct format (see the example below).
-    A list of key references, including to other software addressing related needs. Note that the references should include full names of venues, e.g., journals and conferences, not abbreviations only understood in the context of a specific discipline.
-    Mention (if applicable) a representative set of past or ongoing research projects using the software and recent scholarly publications enabled by it.
--->
-
 ---
 title: 'bfit: A Python Application For Beta-Detected NMR'
 tags:
@@ -28,7 +18,6 @@ bibliography: paper.bib
 
 # Summary
 
-<!---A summary describing the high-level functionality and purpose of the software for a diverse, non-specialist audience.--->
 Beta-detected nuclear magnetic resonance ($\beta$-NMR) measures the beta-decay of probe radioactive nuclei to infer the electromagnetic character of the probe's local environment. Similar to muon spin rotation ($\mu$SR), this technique allows for unique insight of material properties not easily measured by conventional NMR. The [`bfit`] package provides a graphical user interface (GUI) and application programming interface (API) to facilitate the analysis of implanted-ion $\beta$-NMR measurements taken at TRIUMF.
 
 # Background
