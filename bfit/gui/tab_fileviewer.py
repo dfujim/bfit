@@ -260,6 +260,15 @@ class fileviewer(object):
                         'Experiment', 'Area', 'Experimenters','',
                         ]
         
+        # get probe species
+        try:
+            probe = data.ppg.probe_species.units
+            data_nw["Probe"] = str(probe)
+            key_order_nw.append('Probe')
+            key_order_nw.append('')
+        except AttributeError:
+            pass
+        
         # comments
         if hasattr(data, 'comments'):
             data_nw["Comment"] = data.comments['Comments during run'].body
