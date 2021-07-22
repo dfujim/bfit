@@ -897,7 +897,7 @@ class fileviewer(object):
                 unit = str(ppg.units).title()
                 data_ne['Scan start'] = '%d %s' % (start, unit)
                 key_order_ne.append('Scan start')
-            except AttributeError:
+            except (AttributeError, KeyError):
                 pass
             
             try:    
@@ -906,7 +906,7 @@ class fileviewer(object):
                 unit = str(ppg.units).title()
                 data_ne['Scan stop'] = '%d %s' % (stop, unit)
                 key_order_ne.append('Scan stop')
-            except AttributeError:
+            except (AttributeError, KeyError):
                 pass
             
             try:
@@ -915,7 +915,7 @@ class fileviewer(object):
                 unit = str(ppg.units).title()
                 data_ne['Scan gap'] = '%d %s' % (incr, unit)
                 key_order_ne.append('Scan gap')
-            except AttributeError:
+            except (AttributeError, KeyError):
                 pass
             
             try:
