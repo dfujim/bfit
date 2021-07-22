@@ -451,6 +451,14 @@ class fileviewer(object):
         except AttributeError:
             pass
         
+        try:
+            data_se["Doppler Tube"] = "%.3f +/- %.3f V" % \
+                    (np.around(data.epics.dopplertube.mean, 3), 
+                     np.around(data.epics.dopplertube.std, 3))
+            key_order_se.append('Doppler Tube')
+        except AttributeError:
+            pass
+        
         # get data: beam energy
         try: 
             init_bias = data.epics.target_bias.mean
