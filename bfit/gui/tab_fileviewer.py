@@ -452,10 +452,26 @@ class fileviewer(object):
             pass
         
         try:
-            data_se["Doppler Tube"] = "%.3f +/- %.3f V" % \
-                    (np.around(data.epics.dopplertube.mean, 3), 
-                     np.around(data.epics.dopplertube.std, 3))
-            key_order_se.append('Doppler Tube')
+            data_se["Doppler Tube CH0"] = "%.3f +/- %.3f V" % \
+                    (np.around(data.epics.dopplertube_ch0.mean, 3), 
+                     np.around(data.epics.dopplertube_ch0.std, 3))
+            key_order_se.append('Doppler Tube CH0')
+        except AttributeError:
+            pass
+        
+        try:
+            data_se["Doppler Tube CH1"] = "%.3f +/- %.3f V" % \
+                    (np.around(data.epics.dopplertube_ch1.mean, 3), 
+                     np.around(data.epics.dopplertube_ch1.std, 3))
+            key_order_se.append('Doppler Tube CH1')
+        except AttributeError:
+            pass
+        
+        try:
+            data_se["Doppler Tube CH2"] = "%.3f +/- %.3f V" % \
+                    (np.around(data.epics.dopplertube_ch2.mean, 3), 
+                     np.around(data.epics.dopplertube_ch2.std, 3))
+            key_order_se.append('Doppler Tube CH2')
         except AttributeError:
             pass
         
