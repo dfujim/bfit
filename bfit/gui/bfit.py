@@ -767,7 +767,7 @@ class bfit(object):
             pass
         
         # get asymmetry: raw scans
-        if asym_type == 'r' and data.mode in ['1f', '1n', '1w']:
+        if asym_type == 'r' and data.mode in ['1f', '1n', '1w', '1c', '1d']:
             a = data.asym('raw', omit=option, hist_select=self.hist_select, 
                           nbm=self.use_nbm.get())
             x = np.arange(len(a.p[0]))
@@ -943,7 +943,7 @@ class bfit(object):
                 xlabel = xlabel % unit[1]
                         
             # unit conversions
-            if data.mode in ('1n', '1w'): 
+            if data.mode in ('1n', '1w', '1c', '1d'): 
                 x *= unit[0]
                 
             elif data.mode == '1f': 
