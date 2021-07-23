@@ -124,7 +124,7 @@ class fileviewer(object):
         
         ttk.Label(view_frame, text="Run Info").grid(column=0, row=0, sticky=N, pady=5)
         ttk.Label(view_frame, text="PPG Parameters").grid(column=1, row=0, sticky=N, pady=5)
-        ttk.Label(view_frame, text="Camp").grid(column=0, row=2, sticky=N, pady=5)
+        ttk.Label(view_frame, text="Camp and Stats").grid(column=0, row=2, sticky=N, pady=5)
         ttk.Label(view_frame, text="EPICS").grid(column=1, row=2, sticky=N, pady=5)
         
         self.text_nw.grid(column=0, row=1, sticky=(N, W, E, S), padx=5)
@@ -374,10 +374,25 @@ class fileviewer(object):
         except AttributeError:
             pass
     
+        # rf dac
+        if mode != 'SLR':
+            key_order_sw.append('')
+            try: 
+                data_sw['rf_dac'] = "%d" % int(data.camp.rf_dac.mean)
+                key_order_sw.append('rf_dac')
+            except AttributeError:
+                pass
+            
+            try: 
+                data_sw['RF Amplifier Gain'] = "%.2f" % data.camp.rfamp_rfgain.mean
+                key_order_sw.append('RF Amplifier Gain')
+            except AttributeError:
+                pass    
+        
         key_order_sw.append('')
         
         # rates and counts
-        hist = ('F+', 'F-', 'B-', 'B+') if data.area.upper() == 'BNMR' \
+        hist = ('F+', 'F-', 'B-', 'B+') if data.area == 'BNMR' \
                                      else ('L+', 'L-', 'R-', 'R+')
 
         try:     
@@ -397,8 +412,8 @@ class fileviewer(object):
             pass
         
         try: 
-            tag_F = 'F' if data.area.upper() == 'BNMR' else 'L'
-            tag_B = 'B' if data.area.upper() == 'BNMR' else 'R'
+            tag_F = 'F' if data.area == 'BNMR' else 'L'
+            tag_B = 'B' if data.area == 'BNMR' else 'R'
     
             F = np.sum([data.hist[h].data for h in hist if tag_F in h])/data.duration
             B = np.sum([data.hist[h].data for h in hist if tag_B in h])/data.duration
@@ -436,21 +451,6 @@ class fileviewer(object):
         except (AttributeError, KeyError):
             pass
             
-        # rf dac
-        if mode != 'SLR':
-            key_order_sw.append('')
-            try: 
-                data_sw['rf_dac'] = "%d" % int(data.camp.rf_dac.mean)
-                key_order_sw.append('rf_dac')
-            except AttributeError:
-                pass
-            
-            try: 
-                data_sw['RF Amplifier Gain'] = "%.2f" % data.camp.rfamp_rfgain.mean
-                key_order_sw.append('RF Amplifier Gain')
-            except AttributeError:
-                pass    
-        
         # SE -----------------------------------------------------------------
         data_se = {'':''}
         key_order_se = []

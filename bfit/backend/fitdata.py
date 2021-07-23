@@ -75,6 +75,10 @@ class fitdata(object):
         # initialize fitpar with fitinputtab.collist
         self.fitpar = pd.DataFrame([], columns=['p0', 'blo', 'bhi', 'res', 
                                     'dres+', 'dres-', 'chi', 'fixed', 'shared'])
+        
+        # set area as upper
+        self.area = self.area.upper()
+        
         self.read()
 
     # ======================================================================= #
@@ -209,6 +213,9 @@ class fitdata(object):
             self.logger.exception('Bias not found')
             self.bias = np.nan
             
+        # set area as upper
+        self.area = self.area.upper()
+        
     # ======================================================================= #
     def set_fitpar(self, values):
         """Set fitting initial parameters
