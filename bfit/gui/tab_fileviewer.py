@@ -377,12 +377,12 @@ class fileviewer(object):
         key_order_sw.append('')
         
         # rates and counts
-        hist = ('F+', 'F-', 'B-', 'B+') if data.area == 'BNMR' \
+        hist = ('F+', 'F-', 'B-', 'B+') if data.area.upper() == 'BNMR' \
                                      else ('L+', 'L-', 'R-', 'R+')
+
         try:     
             val = int(np.sum([data.hist[h].data for h in hist]))
             val, unit_val = num_prefix(val)
-            # ~ data_sw['Total Counts Sample'] = f'{val:,}'.replace(',', ' ')
             data_sw['Total Counts Sample'] = "%.3g%s" % (val, unit_val)
             key_order_sw.append('Total Counts Sample')
         except (AttributeError, KeyError):
@@ -397,8 +397,8 @@ class fileviewer(object):
             pass
         
         try: 
-            tag_F = 'F' if data.area == 'BNMR' else 'L'
-            tag_B = 'B' if data.area == 'BNMR' else 'R'
+            tag_F = 'F' if data.area.upper() == 'BNMR' else 'L'
+            tag_B = 'B' if data.area.upper() == 'BNMR' else 'R'
     
             F = np.sum([data.hist[h].data for h in hist if tag_F in h])/data.duration
             B = np.sum([data.hist[h].data for h in hist if tag_B in h])/data.duration
@@ -406,8 +406,13 @@ class fileviewer(object):
             F, unit_F = num_prefix(F)
             B, unit_B = num_prefix(B)
             
+            try:
+                ratio = F/B
+            except ZeroDivisionError:
+                ratio = np.nan
+            
             data_sw['Rate %s/%s' % (tag_F, tag_B)] = \
-                    '%.3g%s / %.3g%s (cps) [ratio: %.2f]' % (F, unit_F, B, unit_B, F/B)
+                    '%.3g%s / %.3g%s (cps) [ratio: %.2f]' % (F, unit_F, B, unit_B, ratio)
             key_order_sw.append('Rate %s/%s' % (tag_F, tag_B))
         except (AttributeError, KeyError):
             pass
@@ -418,7 +423,6 @@ class fileviewer(object):
         try: 
             val = int(np.sum([data.hist['NBM'+h].data for h in hist]))
             val, unit_val = num_prefix(val)
-            # ~ data_sw['Total Counts NBM'] = f'{val:,}'.replace(',', ' ')
             data_sw['Total Counts NBM'] = "%.3g%s" % (val, unit_val)
             key_order_sw.append('Total Counts NBM')
         except (AttributeError, KeyError):
@@ -428,7 +432,6 @@ class fileviewer(object):
             val = int(np.sum([data.hist['NBM'+h].data for h in hist])/data.duration)
             val, unit_val = num_prefix(val)
             data_sw['Total Rate NBM'] = "%.3g%s (cps)" % (val, unit_val)
-            # ~ data_sw['Total Rate NBM'] = f'{val:,} (1/s)'.replace(',', ' ')
             key_order_sw.append('Total Rate NBM')
         except (AttributeError, KeyError):
             pass
