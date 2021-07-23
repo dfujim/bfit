@@ -162,6 +162,7 @@ class bfit(object):
                             ], 
                       '1n':["Combined Helicity", 
                             "Split Helicity", 
+                            "Shifted Split", 
                             "Raw Scans", 
                             "Matched Peak Finding", 
                             "Histograms", 
@@ -905,7 +906,12 @@ class bfit(object):
                           rebin=rebin, 
                           hist_select=self.hist_select, 
                           nbm=self.use_nbm.get())
-            x = a[self.x_tag[data.mode]]
+            try:
+                x = a[self.x_tag[data.mode]]
+            except KeyError:
+                x = a['Custom EPICS scan']
+                print(x)
+                
             xlabel = self.xlabel_dict[data.mode]
             
             # get bfit-defined units
