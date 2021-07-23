@@ -381,30 +381,55 @@ class fileviewer(object):
                                      else ('L+', 'L-', 'R-', 'R+')
         try:     
             val = int(np.sum([data.hist[h].data for h in hist]))
-            data_sw['Total Counts Sample'] = f'{val:,}'.replace(',', ' ')
+            val, unit_val = num_prefix(val)
+            # ~ data_sw['Total Counts Sample'] = f'{val:,}'.replace(',', ' ')
+            data_sw['Total Counts Sample'] = "%.3g%s" % (val, unit_val)
             key_order_sw.append('Total Counts Sample')
         except (AttributeError, KeyError):
             pass
         
         try: 
             val = int(np.sum([data.hist[h].data for h in hist])/data.duration)
-            data_sw['Rate Sample'] =  f'{val:,} (1/s)'.replace(',', ' ')
-            key_order_sw.append('Rate Sample')
+            val, unit_val = num_prefix(val)
+            data_sw['Total Rate Sample'] =  "%.3g%s (cps)" % (val, unit_val)
+            key_order_sw.append('Total Rate Sample')
         except (AttributeError, KeyError):
             pass
+        
+        try: 
+            tag_F = 'F' if data.area == 'BNMR' else 'L'
+            tag_B = 'B' if data.area == 'BNMR' else 'R'
+    
+            F = np.sum([data.hist[h].data for h in hist if tag_F in h])/data.duration
+            B = np.sum([data.hist[h].data for h in hist if tag_B in h])/data.duration
+            
+            F, unit_F = num_prefix(F)
+            B, unit_B = num_prefix(B)
+            
+            data_sw['Rate %s/%s' % (tag_F, tag_B)] = \
+                    '%.3g%s / %.3g%s (cps) [ratio: %.2f]' % (F, unit_F, B, unit_B, F/B)
+            key_order_sw.append('Rate %s/%s' % (tag_F, tag_B))
+        except (AttributeError, KeyError):
+            pass
+        
+        key_order_sw.append('')
         
         hist = ('F+', 'F-', 'B-', 'B+')    
         try: 
             val = int(np.sum([data.hist['NBM'+h].data for h in hist]))
-            data_sw['Total Counts NBM'] = f'{val:,}'.replace(',', ' ')
+            val, unit_val = num_prefix(val)
+            # ~ data_sw['Total Counts NBM'] = f'{val:,}'.replace(',', ' ')
+            data_sw['Total Counts NBM'] = "%.3g%s" % (val, unit_val)
             key_order_sw.append('Total Counts NBM')
         except (AttributeError, KeyError):
             pass
         
         try: 
             val = int(np.sum([data.hist['NBM'+h].data for h in hist])/data.duration)
-            data_sw['Rate NBM'] = f'{val:,} (1/s)'.replace(',', ' ')
-            key_order_sw.append('Rate NBM')
+            val, unit_val = num_prefix(val)
+            data_sw['Total Rate NBM'] = "%.3g%s (cps)" % (val, unit_val)
+            # ~ data_sw['Total Rate NBM'] = f'{val:,} (1/s)'.replace(',', ' ')
+            key_order_sw.append('Total Rate NBM')
         except (AttributeError, KeyError):
             pass
             
@@ -508,7 +533,7 @@ class fileviewer(object):
         # laser stuff
         try: 
             val = data.epics.las_pwr
-            data_se['Laser Power'] = "%.3f +/- %.3f A" % (val.mean, val.std)
+            data_se['Laser Power'] = "%.3f +/- %.3f V" % (val.mean, val.std)
             key_order_se.append('Laser Power')
         except AttributeError:
             pass
@@ -1424,4 +1449,9 @@ class fileviewer(object):
                 self.bfit.plt.active['periodic'] = 0
             
 # =========================================================================== #
-
+def num_prefix(val):
+    if val > 1e9: return (val/1e9, 'G')
+    if val > 1e6: return (val/1e6, 'M')
+    if val > 1e3: return (val/1e3, 'k')
+    
+    return (val, '')
