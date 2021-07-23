@@ -905,12 +905,15 @@ class bfit(object):
                           rebin=rebin, 
                           hist_select=self.hist_select, 
                           nbm=self.use_nbm.get())
-            try:
-                x = a[self.x_tag[data.mode]]
-            except KeyError:
+            
+            # get x data
+            if 'Custom EPICS scan' in a.keys():
                 x = a['Custom EPICS scan']
-                
-            xlabel = self.xlabel_dict[data.mode]
+                unit = data.ppg.scan_var_histo_factor.units
+                self.units[data.mode][1] = 'disable'
+            else:
+                x = a[self.x_tag[data.mode]]
+                xlabel = self.xlabel_dict[data.mode]
             
             # get bfit-defined units
             if data.mode in self.units.keys() and self.units[data.mode][1].lower() \
