@@ -162,7 +162,6 @@ class bfit(object):
                             ], 
                       '1n':["Combined Helicity", 
                             "Split Helicity", 
-                            "Shifted Split", 
                             "Raw Scans", 
                             "Matched Peak Finding", 
                             "Histograms", 
@@ -910,7 +909,6 @@ class bfit(object):
                 x = a[self.x_tag[data.mode]]
             except KeyError:
                 x = a['Custom EPICS scan']
-                print(x)
                 
             xlabel = self.xlabel_dict[data.mode]
             
