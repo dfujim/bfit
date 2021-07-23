@@ -24,7 +24,6 @@ class fitter(object):
                         '2h':('Exp', 'Bi Exp', 'Str Exp'), 
                         '1f':('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz'), 
                         '1w':('Lorentzian', 'Gaussian', 'BiLorentzian', ), 
-                        '1n':('Lorentzian', 'Gaussian', 'BiLorentzian', ), 
                         '2e':('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz')}
      
     # Define names of fit parameters:
