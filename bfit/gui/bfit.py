@@ -907,8 +907,8 @@ class bfit(object):
                           nbm=self.use_nbm.get())
             
             # get x data
-            if 'Custom EPICS scan' in a.keys():
-                x = a['Custom EPICS scan']
+            if 'custom' in a.keys():
+                x = a.custom
                 unit = data.ppg.scan_var_histo_factor.units
                 self.units[data.mode][1] = 'disable'
             else:
