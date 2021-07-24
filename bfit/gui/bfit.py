@@ -307,8 +307,9 @@ class bfit(object):
                        'Run Duration (s)', 'Start Time', 'Title', 'Year', 
                        'Cryo Lift Set (mm)', 'Cryo Lift Read (mm)', 
                        'He Mass Flow', 'CryoEx Mass Flow', 'Needle Set (turns)', 
-                       'Needle Read (turns)', 'Laser Power', 'Target Bias (kV)', 
-                       'NBM Rate (count/s)', 'Sample Rate (count/s)')
+                       'Needle Read (turns)', 'Laser Power (V)', 'Laser Wavelength (nm)', 
+                       'Laser Wavenumber (1/cm)', 'Target Bias (kV)', 'NBM Rate (count/s)', 
+                       'Sample Rate (count/s)')
         
     # ======================================================================= #
     def __init__(self, testfn=None, commandline=False):
@@ -1496,8 +1497,14 @@ class bfit(object):
             elif 'Needle Read (turns)' in select:
                 label = '%3.2f turns' % np.around(data.bd.camp.needle_pos.mean, 2)
                 
-            elif 'Laser Power' in select:
+            elif 'Laser Power (V)' in select:
                 label = '%3.2f' % np.around(data.bd.epics.las_pwr.mean, 2)
+                
+            elif 'Laser Wavelength (nm)' in select:
+                label = '%3.2f' % np.around(data.bd.epics.las_lambda.mean, 2)
+                
+            elif 'Laser Wavenumber (1/cm)' in select:
+                label = '%3.5f' % np.around(data.bd.epics.las_wavenum.mean, 5)
                 
             elif 'Target Bias (kV)' in select:
                 label = '%3.2f kV' % np.around(data.bd.epics.target_bias.mean, 2)

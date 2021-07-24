@@ -1634,9 +1634,17 @@ class fit_files(object):
             val = [fetch(data[r], ['needle_pos', 'mean']) for r in runs]
             err = [fetch(data[r], ['needle_pos', 'std']) for r in runs]
 
-        elif 'Laser Power' in select:
+        elif 'Laser Power (V)' in select:
             val = [fetch(data[r], ['las_pwr', 'mean']) for r in runs]
             err = [fetch(data[r], ['las_pwr', 'std']) for r in runs]
+
+        elif 'Laser Wavelength (nm)' in select:
+            val = [fetch(data[r], ['las_lambda', 'mean']) for r in runs]
+            err = [fetch(data[r], ['las_lambda', 'std']) for r in runs]
+
+        elif 'Laser Wavenumber (1/cm)' in select:
+            val = [fetch(data[r], ['las_wavenum', 'mean']) for r in runs]
+            err = [fetch(data[r], ['las_wavenum', 'std']) for r in runs]
 
         elif 'Target Bias (kV)' in select:
             val = [fetch(data[r], ['target_bias', 'mean']) for r in runs]
