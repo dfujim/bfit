@@ -1436,7 +1436,12 @@ class fileviewer(object):
             # update only in stack mode
             draw_style = self.bfit.draw_style.get()
             self.bfit.draw_style.set('stack')
-            self.bfit.plt.autoscale('periodic', False)
+            
+            # don't update figure limits
+            if self.data.mode in ('20', '2h'):
+                self.bfit.plt.autoscale('periodic', False)
+                
+            # draw
             self.draw(figstyle='periodic', quiet=True)
             draw_style = self.bfit.draw_style.set(draw_style)
             
@@ -1463,6 +1468,8 @@ class fileviewer(object):
                 # remove window
                 fig = self.bfit.plt.gcf('periodic')
                 fig.canvas.manager.set_window_title('Figure %d (Inspect)'%fig.number)
+                
+                self.bfit.plt.autoscale('periodic', True)
                 del self.bfit.plt.plots['periodic'][0]
                 self.bfit.plt.active['periodic'] = 0
             
