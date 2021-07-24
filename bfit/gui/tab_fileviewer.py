@@ -1382,7 +1382,7 @@ class fileviewer(object):
             
             # set up updating canvas
             fig = self.bfit.plt.gcf('inspect')
-            fig.canvas.set_window_title('Figure %d (Inspect - Updating)'%fig.number)
+            fig.canvas.manager.set_window_title('Figure %d (Inspect - Updating)'%fig.number)
             self.bfit.plt.plots['periodic'] = [fig.number]
             self.bfit.plt.active['periodic'] = self.bfit.plt.active['inspect']
             
@@ -1408,7 +1408,7 @@ class fileviewer(object):
             
             # Get the updating figure
             fig = self.bfit.plt.gcf('periodic')
-            title = fig.canvas.get_window_title()
+            title = fig.canvas.manager.get_window_title()
 
             # Check that the figure is still updating
             if 'Updating' not in title:
@@ -1462,7 +1462,7 @@ class fileviewer(object):
                 
                 # remove window
                 fig = self.bfit.plt.gcf('periodic')
-                fig.canvas.set_window_title('Figure %d (Inspect)'%fig.number)
+                fig.canvas.manager.set_window_title('Figure %d (Inspect)'%fig.number)
                 del self.bfit.plt.plots['periodic'][0]
                 self.bfit.plt.active['periodic'] = 0
             
