@@ -190,7 +190,7 @@ class fitdata(object):
         
         # field
         try:
-            if self.bd.area == 'BNMR':
+            if self.area == 'BNMR':
                 self.field = self.bd.camp.b_field.mean
                 self.field_std = self.bd.camp.b_field.std
             else:
@@ -203,7 +203,7 @@ class fitdata(object):
             
         # bias
         try:
-            if self.bd.area == 'BNMR': 
+            if self.area == 'BNMR': 
                 self.bias = self.bd.epics.nmr_bias.mean
                 self.bias_std = self.bd.epics.nmr_bias.std
             else:
