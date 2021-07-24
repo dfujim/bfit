@@ -541,6 +541,21 @@ class fileviewer(object):
         except AttributeError:
             pass
         
+        try: 
+            val = data.epics.las_lambda
+            data_se['Laser Wavelength'] = "%.3f +/- %.3f nm" % (val.mean, val.std)
+            key_order_se.append('Laser Wavelength')
+        except AttributeError:
+            pass
+        
+        try: 
+            val = data.epics.las_wavenum
+            data_se['Laser Wavenumber'] = "%.5f +/- %.5f 1/cm" % (val.mean, val.std)
+            key_order_se.append('Laser Wavenumber')
+        except AttributeError:
+            pass
+        
+        
         # magnet stuff
         try: 
             val = data.epics.hh_current.mean
