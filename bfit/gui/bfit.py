@@ -108,6 +108,7 @@ class bfit(object):
             draw_components:list of titles for labels, options to export, draw.
             draw_fit:       BooleanVar, if true draw fits after fitting
             draw_ppm:       BoolVar for drawing as ppm shift
+            draw_rel_peak0: BoolVar for drawing frequencies relative to peak0
             draw_standardized_res: BoolVar for drawing residuals as standardized
             norm_with_param:BoolVar, if true estimate normalization from data only
             hist_select:    histogram selection for asym calcs (blank for defaults)
@@ -560,6 +561,8 @@ class bfit(object):
         self.draw_style.set("stack")
         self.draw_ppm = BooleanVar()
         self.draw_ppm.set(False)
+        self.draw_rel_peak0 = BooleanVar()
+        self.draw_rel_peak0.set(False)
         self.draw_standardized_res = BooleanVar()
         self.draw_standardized_res.set(True)
         self.use_nbm = self.nbm_dict['']
@@ -570,25 +573,29 @@ class bfit(object):
         
         menu_draw = Menu(menubar, title='Draw Mode')
         menubar.add_cascade(menu=menu_draw, label='Draw Mode')
-        menu_draw.add_radiobutton(label="Draw in new window", \
+        menu_draw.add_radiobutton(label="Draw in new window",
                 variable=self.draw_style, value='new', underline=8, 
                 selectcolor=colors.selected)
-        menu_draw.add_radiobutton(label="Stack in existing window", \
+        menu_draw.add_radiobutton(label="Stack in existing window",
                 variable=self.draw_style, value='stack', underline=0, 
                 selectcolor=colors.selected)
-        menu_draw.add_radiobutton(label="Redraw in existing window", \
+        menu_draw.add_radiobutton(label="Redraw in existing window",
                 variable=self.draw_style, value='redraw', underline=0, 
                 selectcolor=colors.selected)
         
         menu_draw.add_separator()
-        menu_draw.add_checkbutton(label="Draw after fitting", \
+        menu_draw.add_checkbutton(label="Draw after fitting",
                 variable=self.draw_fit, selectcolor=colors.selected)
-        menu_draw.add_checkbutton(label="Normalize with fit results", \
+        menu_draw.add_checkbutton(label="Normalize with fit results",
                 variable=self.norm_with_param, selectcolor=colors.selected)
-        menu_draw.add_checkbutton(label="Draw residuals as standardized", \
+        menu_draw.add_checkbutton(label="Draw residuals as standardized",
                 variable=self.draw_standardized_res, selectcolor=colors.selected)
-        menu_draw.add_checkbutton(label="Draw 1f as PPM shift", \
-                variable=self.draw_ppm, selectcolor=colors.selected)
+        menu_draw.add_checkbutton(label="Draw 1f as PPM shift",
+                variable=self.draw_ppm, selectcolor=colors.selected, 
+                command = lambda : self.set_1f_shift_style('ppm'))
+        menu_draw.add_checkbutton(label="Draw 1f relative to peak_0",
+                variable = self.draw_rel_peak0, selectcolor = colors.selected,
+                command = lambda : self.set_1f_shift_style('peak'))
         
         menu_draw.add_separator()
         menu_draw.add_checkbutton(label="Use NBM in asymmetry", \
@@ -948,11 +955,47 @@ class bfit(object):
                 x *= unit[0]
                 
             elif data.mode == '1f': 
-                if self.draw_ppm.get():
+                
+                # draw relative to peak 0
+                if self.draw_rel_peak0.get():
+                    
+                    # get reference
+                    par = data.fitpar
+                    
+                    if 'peak_0' in par.index:   index = 'peak_0'
+                    elif 'mean_0' in par.index: index = 'mean_0'
+                    elif 'peak' in par.index:   index = 'peak'
+                    elif 'mean' in par.index:   index = 'mean'
+                    else:
+                        msg = "No 'peak' or 'mean' fit parameter found. Fit with" +\
+                             " an appropriate function."
+                        self.logger.exception(msg)
+                        messagebox.error(msg)
+                        raise RuntimeError(msg)
+                    
+                    ref = par.loc[index, 'res']
+                    
+                    # do the shift
+                    x -= ref                    
+                    x *= unit[0]
+                    xlabel = 'Frequency Shift (%s)' % unit[1]
+                    self.logger.info('Drawing as freq shift from peak_0')
+                
+                # ppm shift
+                elif self.draw_ppm.get():
+                    
+                    # check div zero
+                    try:
+                        x = 1e6*(x-self.ppm_reference)/self.ppm_reference
+                    except ZeroDivisionError as err:
+                        self.logger.exception(str(msg))
+                        messagebox.error(str(msg))
+                        raise err
+                    
                     self.logger.info('Drawing as PPM shift with reference %s Hz', 
                                      self.ppm_reference)
-                    x = 1e6*(x-self.ppm_reference)/self.ppm_reference
                     xlabel = 'Frequency Shift (PPM)'
+                    
                 else: 
                     x *= unit[0]
             
@@ -1745,6 +1788,21 @@ class bfit(object):
         self.logger.debug('File found. Opening in external program.')
         subprocess.call(['xdg-open', os.path.join(location, filename)])
             
+    # ======================================================================= #
+    def set_1f_shift_style(self, clicked_style):
+        """
+            Ensure that ppm and peak shift modes are not both selected at the
+            same time. 
+            
+            clicked_style: string, one of 'ppm' or 'peak'
+        """
+        
+        if clicked_style == 'ppm':
+            self.draw_rel_peak0.set(False)
+            
+        elif clicked_style == 'peak':
+            self.draw_ppm.set(False)
+        
     # ======================================================================= #
     def set_all_labels(self, *a):    self.fetch_files.set_all_labels()
     def set_check_all(self, x):  

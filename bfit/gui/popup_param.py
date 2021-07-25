@@ -135,8 +135,8 @@ class popup_param(object):
         
         # plot elements - don't do tight_layout here - blocks matplotlib signals
         ax.set_ylabel('Asymmetry')
-        if self.mode == 2:     ax.set_xlabel('Time (s)')
-        elif self.mode == 1:   ax.set_xlabel('Frequency (MHz)')
+        if self.mode == 2:     ax.set_xlabel('Time')
+        elif self.mode == 1:   ax.set_xlabel('Frequency')
         self.fig.show()
         
         # get parameters list and run finder 

@@ -1061,14 +1061,55 @@ class fit_files(object):
 
         if self.mode in self.bfit.units:
             unit = self.bfit.units[self.mode]
-            fitxx = fitx*unit[0]
             xlabel = self.bfit.xlabel_dict[self.mode] % unit[1]
         else:
-            fitxx = fitx
             xlabel = self.bfit.xlabel_dict[self.mode]
 
         # get fity
         fity = fn(fitx, *fit_par)
+
+        # draw relative to peak 0
+        if self.bfit.draw_rel_peak0.get():
+            
+            # get reference
+            par = data.fitpar
+            
+            if 'peak_0' in par.index:   index = 'peak_0'
+            elif 'mean_0' in par.index: index = 'mean_0'
+            elif 'peak' in par.index:   index = 'peak'
+            elif 'mean' in par.index:   index = 'mean'
+            else:
+                msg = "No 'peak' or 'mean' fit parameter found. Fit with" +\
+                     " an appropriate function."
+                self.logger.exception(msg)
+                messagebox.error(msg)
+                raise RuntimeError(msg)
+            
+            ref = par.loc[index, 'res']
+            
+            # do the shift
+            fitx -= ref                    
+            fitx *= unit[0]
+            xlabel = 'Frequency Shift (%s)' % unit[1]
+            self.logger.info('Drawing as freq shift from peak_0')
+        
+        # ppm shift
+        elif self.bfit.draw_ppm.get():
+            
+            # check div zero
+            try:
+                fitx = 1e6*(fitx-self.bfit.ppm_reference)/self.bfit.ppm_reference
+            except ZeroDivisionError as err:
+                self.logger.exception(str(msg))
+                messagebox.error(str(msg))
+                raise err
+            
+            self.logger.info('Drawing as PPM shift with reference %s Hz', 
+                             self.bfit.ppm_reference)
+            xlabel = 'Frequency Shift (PPM)'
+            
+        else: 
+            fitx *= unit[0]
 
         # account for normalized draw modes
         draw_mode = self.bfit.asym_dict[self.bfit.fetch_files.asym_type.get()]
@@ -1087,7 +1128,7 @@ class fit_files(object):
             draw_mode += 'f'
             fity -= data.fitpar.loc['baseline', 'res']
 
-        self.plt.plot(figstyle, draw_id, fitxx, fity, zorder=10,
+        self.plt.plot(figstyle, draw_id, fitx, fity, zorder=10,
                       unique=unique, **drawargs)
 
         # plot elements
@@ -2738,9 +2779,51 @@ class fitline(object):
         # get x axis scaling
         if bdfit.mode in bfit.units:
             unit = bfit.units[bdfit.mode]
-            fitxx = fitx*unit[0]
         else:
             fitxx = fitx
+
+        # draw relative to peak 0
+        if self.bfit.draw_rel_peak0.get():
+            
+            # get reference
+            par = data.fitpar
+            
+            if 'peak_0' in par.index:   index = 'peak_0'
+            elif 'mean_0' in par.index: index = 'mean_0'
+            elif 'peak' in par.index:   index = 'peak'
+            elif 'mean' in par.index:   index = 'mean'
+            else:
+                msg = "No 'peak' or 'mean' fit parameter found. Fit with" +\
+                     " an appropriate function."
+                self.logger.exception(msg)
+                messagebox.error(msg)
+                raise RuntimeError(msg)
+            
+            ref = par.loc[index, 'res']
+            
+            # do the shift
+            fitxx = fitx-ref                    
+            fitxx *= unit[0]
+            xlabel = 'Frequency Shift (%s)' % unit[1]
+            self.logger.info('Drawing as freq shift from peak_0')
+        
+        # ppm shift
+        elif self.bfit.draw_ppm.get():
+            
+            # check div zero
+            try:
+                fitxx = 1e6*(fitx-self.bfit.ppm_reference)/self.bfit.ppm_reference
+            except ZeroDivisionError as err:
+                self.logger.exception(str(msg))
+                messagebox.error(str(msg))
+                raise err
+            
+            self.logger.info('Drawing as PPM shift with reference %s Hz', 
+                             self.bfit.ppm_reference)
+            xlabel = 'Frequency Shift (PPM)'
+            
+        else: 
+            fitxx = fitx*unit[0]
 
         # draw the combined
         params = [results[name] for name in pnames_combined]
