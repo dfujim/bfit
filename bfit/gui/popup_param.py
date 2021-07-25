@@ -19,6 +19,8 @@ class popup_param(object):
     """
         Popup window for graphically finding input parameters. 
         
+        bhi:            dictionary of StringVar objects to link parameters
+        blo:            dictionary of StringVar objects to link parameters
         data:           bdata object 
         fig:            maplotlib figure object
         fitter:         fit_tab.fitter obje (defined in default_routines.py)
@@ -148,10 +150,34 @@ class popup_param(object):
                                           ncomp=self.n_components)
         parentry = fit_tab.fit_lines[run_id].parentry
         
-        # make initial paramter list
+        # make initial parameter list
         self.p0 = {k:parentry[k]['p0'][0] for k in parentry.keys()}
+        self.blo = {k:parentry[k]['blo'][0] for k in parentry.keys()}
+        self.bhi = {k:parentry[k]['bhi'][0] for k in parentry.keys()}
         
         self.run()
+        
+    # ====================================================================== #
+    def split_components(self, mixed):
+        """
+            Split a dictionary of parameter components into lists of the base 
+            names to be used in invididual functions
+        """
+        
+        split = []
+        if self.n_components > 1:
+            for i in range(self.n_components):
+                element = {}
+                for k in mixed.keys():
+                    if 'base' in k:
+                        element[self.parmap[k]] = mixed[k] 
+                    elif str(i) in k:
+                        element[self.parmap['_'.join(k.split('_')[:-1])]] = mixed[k] 
+                split.append(element)
+        else:
+            split.append({self.parmap[k]:mixed[k] for k in mixed.keys()})
+        
+        return split
         
     # ====================================================================== #
     def run(self):
@@ -173,18 +199,9 @@ class popup_param(object):
         self.fig.tight_layout()
         
         # get paramters, translating the names
-        p0 = []
-        if self.n_components > 1:
-            for i in range(self.n_components):
-                p0_element = {}
-                for k in self.p0.keys():
-                    if 'base' in k:
-                        p0_element[self.parmap[k]] = self.p0[k] 
-                    elif str(i) in k:
-                        p0_element[self.parmap['_'.join(k.split('_')[:-1])]] = self.p0[k] 
-                p0.append(p0_element)
-        else:
-            p0.append({self.parmap[k]:self.p0[k] for k in self.p0.keys()})
+        p0 =  self.split_components(self.p0)
+        blo = self.split_components(self.blo)
+        bhi = self.split_components(self.bhi)
         
         # get fitting function 
         if self.fname == 'Lorentzian':
@@ -245,24 +262,44 @@ class popup_param(object):
     def endfn(self, p0, base):
         """Set output fields"""
         
-        # single component
-        if len(p0) == 1:
-            p0 = p0[0]
-            for k in self.p0.keys():
-                if 'base' not in k:
-                    self.p0[k].set(p0[self.parmap[k]])
-        # multi component
-        else:
-            for k in self.p0.keys():
-                if 'base' not in k:
-                    s = k.split('_')
-                    key = '_'.join(s[:-1])
-                    i = s[-1]
-                    self.p0[k].set(p0[int(i)][self.parmap[key]])
+        for k in self.p0.keys():
+            
+            # skip baseline
+            if 'base' in k:
+                continue
+            
+            # single component
+            if len(p0) == 1:
+                i = 0
+                key = k
+        
+            # multi component
+            else:
+                s = k.split('_')
+                key = '_'.join(s[:-1])
+                i = int(s[-1])                
+                        
+            # set p0     
+            val = p0[i][self.parmap[key]]
+            self.p0[k].set(val)
+                    
+            # check bounds are ok
+            blo = float(self.blo[k].get())
+            bhi = float(self.bhi[k].get())
+            
+            if val < blo:   self.blo[k].set('-inf')
+            elif val < bhi: self.bhi[k].set('inf')
         
         # baseline
         if 'baseline' in self.p0.keys():
             self.p0['baseline'].set(base)
+            
+            # check bounds are ok
+            blo = float(self.blo['baseline'].get())
+            bhi = float(self.bhi['baseline'].get())
+            
+            if base < blo:   self.blo['baseline'].set('-inf')
+            elif base < bhi: self.bhi['baseline'].set('inf')
         
     # ====================================================================== #
     def cancel(self, *args):
