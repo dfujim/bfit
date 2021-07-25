@@ -612,6 +612,51 @@ class fit_files(object):
             self.pop_addpar = popup_add_param(self.bfit)
 
     # ======================================================================= #
+    def do_end_of_fit(self):
+        """Things to do after fitting: draw, set checkbox status"""
+
+        # enable fit checkboxes on fetch files tab
+        for k in self.bfit.fetch_files.data_lines.keys():
+            dline = self.bfit.fetch_files.data_lines[k]
+            dline.draw_fit_checkbox['state'] = 'normal'
+            dline.draw_res_checkbox['state'] = 'normal'
+            dline.check_fit.set(True)
+        self.bfit.fetch_files.check_state_fit.set(True)
+
+        # change fetch asymmetry mode to match fit tab
+        inv_map = {v: k for k, v in self.bfit.asym_dict.items()}
+        asym_mode_fit = inv_map[self.bfit.get_asym_mode(self)]
+        asym_mode_fetch = inv_map[self.bfit.get_asym_mode(self.bfit.fetch_files)]
+        
+        self.bfit.fetch_files.asym_type.set(asym_mode_fit)
+
+        # draw fit results
+        if self.bfit.draw_fit.get():
+            style = self.bfit.draw_style.get()
+
+            if style in ['redraw', 'new']:
+                self.bfit.draw_style.set('stack')
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self.bfit.fetch_files.draw_all(figstyle='fit', ignore_check=False)
+
+            if len(self.fit_lines.keys()) > self.bfit.legend_max_draw:
+
+                try:
+                    self.plt.gca('fit').get_legend().remove()
+                except AttributeError:
+                    pass
+                else:
+                    self.plt.tight_layout('fit')
+
+            # reset style
+            self.bfit.draw_style.set(style)
+            
+        # reset asym mode
+        self.bfit.fetch_files.asym_type.set(asym_mode_fetch)
+    
+    # ======================================================================= #
     def do_fit(self, *args):
         # fitter
         fitter = self.fitter
@@ -781,51 +826,6 @@ class fit_files(object):
         self.gchi_label['text'] = str(np.around(gchi, 2))
 
         self.do_end_of_fit()
-
-    # ======================================================================= #
-    def do_end_of_fit(self):
-        """Things to do after fitting: draw, set checkbox status"""
-
-        # enable fit checkboxes on fetch files tab
-        for k in self.bfit.fetch_files.data_lines.keys():
-            dline = self.bfit.fetch_files.data_lines[k]
-            dline.draw_fit_checkbox['state'] = 'normal'
-            dline.draw_res_checkbox['state'] = 'normal'
-            dline.check_fit.set(True)
-        self.bfit.fetch_files.check_state_fit.set(True)
-
-        # change fetch asymmetry mode to match fit tab
-        inv_map = {v: k for k, v in self.bfit.asym_dict.items()}
-        asym_mode_fit = inv_map[self.bfit.get_asym_mode(self)]
-        asym_mode_fetch = inv_map[self.bfit.get_asym_mode(self.bfit.fetch_files)]
-        
-        self.bfit.fetch_files.asym_type.set(asym_mode_fit)
-
-        # draw fit results
-        if self.bfit.draw_fit.get():
-            style = self.bfit.draw_style.get()
-
-            if style in ['redraw', 'new']:
-                self.bfit.draw_style.set('stack')
-
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                self.bfit.fetch_files.draw_all(figstyle='fit', ignore_check=False)
-
-            if len(self.fit_lines.keys()) > self.bfit.legend_max_draw:
-
-                try:
-                    self.plt.gca('fit').get_legend().remove()
-                except AttributeError:
-                    pass
-                else:
-                    self.plt.tight_layout('fit')
-
-            # reset style
-            self.bfit.draw_style.set(style)
-            
-        # reset asym mode
-        self.bfit.fetch_files.asym_type.set(asym_mode_fetch)
 
     # ======================================================================= #
     def do_fit_constraints(self):
