@@ -970,7 +970,7 @@ class bfit(object):
                         msg = "No 'peak' or 'mean' fit parameter found. Fit with" +\
                              " an appropriate function."
                         self.logger.exception(msg)
-                        messagebox.error(msg)
+                        messagebox.showerror(msg)
                         raise RuntimeError(msg)
                     
                     ref = par.loc[index, 'res']
@@ -989,7 +989,7 @@ class bfit(object):
                         x = 1e6*(x-self.ppm_reference)/self.ppm_reference
                     except ZeroDivisionError as err:
                         self.logger.exception(str(msg))
-                        messagebox.error(str(msg))
+                        messagebox.showerror(str(msg))
                         raise err
                     
                     self.logger.info('Drawing as PPM shift with reference %s Hz', 

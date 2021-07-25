@@ -127,6 +127,14 @@ class fitdata(object):
             return np.nan
         
     # ======================================================================= #
+    def drop_unused_param(self, parnames):
+        """
+            Check self.fitpar for parameters not in list of parnames. Drop them.
+        """
+        unused = [p for p in self.fitpar.index if p not in parnames]
+        self.fitpar = self.fitpar.drop(unused, axis='index')
+    
+    # ======================================================================= #
     def get_temperature(self, channel='A'):
         """
             Get the temperature of the run.
@@ -229,7 +237,7 @@ class fitdata(object):
         for v in self.parnames:
             for c in values.columns:
                 self.fitpar.loc[v, c] = values.loc[v, c]
-    
+                
         self.logger.debug('Fit initial parameters set to %s', self.fitpar)
 
     # ======================================================================= #

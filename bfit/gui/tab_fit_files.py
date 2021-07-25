@@ -2582,6 +2582,9 @@ class fitline(object):
             share.trace_id = share.trace("w", partial(callback2, parname=p))
             share.trace_callback = partial(callback2, parname=p)
 
+        # drop old parameters
+        fitdat.drop_unused_param(self.parentry.keys())
+
     # ======================================================================= #
     def get_new_parameters(self):
         """
