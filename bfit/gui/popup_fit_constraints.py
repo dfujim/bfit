@@ -277,8 +277,7 @@ class popup_fit_constraints(template_fit_popup):
         # fit cancelled
         elif output is None:
             return
-
-
+            
         # check list depth
         try:
             par[0][0]

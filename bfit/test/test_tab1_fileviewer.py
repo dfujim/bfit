@@ -11,6 +11,7 @@ import os
 # filter unneeded warnings
 import pytest
 pytestmark = pytest.mark.filterwarnings('ignore:2020')
+plt.ion()
 
 def with_bfit(function):
     
@@ -79,7 +80,7 @@ def draw(r, y, mode, tab=None, b=None):
         
         # draw
         try:
-            tab.draw(figstyle = 'inspect')
+            tab.draw(figstyle='inspect')
         except Exception as err: 
             print(err)
             raise AssertionError("fileviewer draw %s in mode %s" % (mode, draw_type), 'inspect')

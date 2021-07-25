@@ -25,8 +25,8 @@ def with_bfit(function):
         b.draw_fit.set(False)
         
         # get data
-        tab.year.set(2020)
-        tab.run.set('40123 40127')
+        tab.year.set(2021)
+        tab.run.set('40063 40054')
         tab.get_data()
         
         # fit
@@ -70,13 +70,6 @@ def test_columns_no_fit(b=None):
                  'Cryo Lift Read (mm)']:
             continue
             
-        # values not logged in this case
-        if c in ['He Mass Flow',
-                 'Needle Set (turns)',
-                 'Needle Read (turns)',
-                 ]:
-            continue
-            
         # no fit values
         if c in ['Chi-Squared',]:
             continue
@@ -101,7 +94,7 @@ def test_columns_no_fit(b=None):
     columns = new_columns
         
     # add missing columns: run number, shared, fixed
-    for name in b.data['2020.40123'].parnames:
+    for name in b.data['2021.40063'].parnames:
         columns.append('fixed '+name)
     
     check_columns(filename, columns)
@@ -125,13 +118,6 @@ def test_columns_with_fit(b=None):
         # nmr values only
         if c in ['Cryo Lift Set (mm)',
                  'Cryo Lift Read (mm)']:
-            continue
-            
-        # values not logged in this case
-        if c in ['He Mass Flow',
-                 'Needle Set (turns)',
-                 'Needle Read (turns)',
-                 ]:
             continue
             
         # copy values
@@ -159,7 +145,7 @@ def test_columns_with_fit(b=None):
     columns = new_columns
         
     # add missing columns: run number, shared, fixed
-    for name in b.data['2020.40123'].parnames:
+    for name in b.data['2021.40063'].parnames:
         columns.append('fixed '+name)
         columns.append('shared '+name)
     
@@ -224,8 +210,14 @@ def test_content(b=None):
     chk('CryoEx Mass Flow', data.cryo_read.mean)
     chk('Error CryoEx Mass Flow', data.cryo_read.std)
     
-    chk('Laser Power', data.las_pwr.mean)
-    chk('Error Laser Power', data.las_pwr.std)
+    chk('Laser Power (V)', data.las_pwr.mean)
+    chk('Error Laser Power (V)', data.las_pwr.std)
+    
+    chk('Laser Wavelength (nm)', data.las_lambda.mean)
+    chk('Error Laser Wavelength (nm)', data.las_lambda.std)
+    
+    chk('Laser Wavenumber (1/cm)', data.las_wavenum.mean)
+    chk('Error Laser Wavenumber (1/cm)', data.las_wavenum.std)
     
     chk('Target Bias (kV)', data.target_bias.mean)
     chk('Error Target Bias (kV)', data.target_bias.std)

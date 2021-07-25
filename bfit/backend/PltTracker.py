@@ -86,6 +86,11 @@ class PltTracker(object):
         """
         color=None
         
+        # check that objects exist
+        if not hasattr(ax, 'draw_objs'):
+            ax.draw_objs = {}
+            return
+        
         # check if id is present in drawn data
         if draw_id in ax.draw_objs.keys():
 
@@ -237,7 +242,15 @@ class PltTracker(object):
             self.figure(style)
             active_style = self.active[style]
         fig = plt.figure(active_style)
-        ax = fig.axes[0]
+        
+        try:
+            ax = fig.axes[0]
+        except IndexError:
+            ax = fig.add_subplot()
+        
+        # track drawn objects    
+        if not hasattr(ax, 'draw_objs'):
+            ax.draw_objs = {}
         
         # redraw old objects and lines
         if unique:  self._remove_drawn_object(ax, id)
@@ -341,7 +354,15 @@ class PltTracker(object):
         
         # draw in active style 
         fig = plt.figure(active_style)
-        ax = fig.axes[0]
+        
+        try:
+            ax = fig.axes[0]
+        except IndexError:
+            ax = fig.add_subplot()
+        
+        # track drawn objects    
+        if not hasattr(ax, 'draw_objs'):
+            ax.draw_objs = {}
         
         # redraw old objects and lines
         if unique:  self._remove_drawn_object(ax, id)

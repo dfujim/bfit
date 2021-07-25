@@ -1814,6 +1814,7 @@ class fit_files(object):
         self.bfit.draw_standardized_res.set(from_file['draw_standardized_res'])
         self.bfit.use_nbm.set(from_file['use_nbm'])
         self.bfit.draw_ppm.set(from_file['draw_ppm'])
+        self.bfit.draw_rel_peak0.set(from_file['draw_rel_peak0'])
         self.bfit.thermo_channel.set(from_file['thermo_channel'])
         self.bfit.units = from_file['units']
         self.bfit.label_default.set(from_file['label_default'])
@@ -2029,6 +2030,7 @@ class fit_files(object):
         to_file['draw_standardized_res'] = self.bfit.draw_standardized_res.get()
         to_file['use_nbm'] = self.bfit.use_nbm.get()
         to_file['draw_ppm'] = self.bfit.draw_ppm.get()
+        to_file['draw_rel_peak0'] = self.bfit.draw_rel_peak0.get()
         to_file['thermo_channel'] = self.bfit.thermo_channel.get()
         to_file['units'] = self.bfit.units
         to_file['label_default'] = self.bfit.label_default.get()

@@ -1021,7 +1021,7 @@ class bfit(object):
                 self.plt.axhline(figstyle, 'line', avg, color='k', linestyle='--')
                 
             # plot positive helicity
-            elif asym_type == 'sp':
+            elif asym_type == 'p':
                 
                 # remove zero asym
                 ap = a.p[0]

@@ -22,6 +22,7 @@ menu     = (('style', 'alpha', 0.1),
             ('draw_standardized_res', False),
             ('norm_with_param', False),
             ('use_nbm', True),
+            ('draw_rel_peak0', False),
             ('minimizer', 'bfit.fitting.fitter_migrad_minos'),
             )
             
