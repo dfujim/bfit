@@ -72,7 +72,7 @@ class FunctionPlacer(object):
         if self.fname in ('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz'):
             self.base = float(p0[0]['base'].get())
             y = np.ones(len(self.x))*self.base
-            self.baseline = self.ax.plot(self.x, y, zorder=20, ls='--')[0]
+            self.baseline = self.ax.plot(self.x, y, zorder=20, ls='--', label='Baseline')[0]
         else:
             self.base = 0
             self.baseline = dummybaseline()
@@ -80,17 +80,20 @@ class FunctionPlacer(object):
         # draw each line with initial parameters
         self.lines = [self.ax.plot(self.x, 
                                    fn_single(self.x, **self.p0[i])+self.base, 
-                                   zorder=20, ls='--')[0] for i in range(ncomp)]
+                                   zorder=20, ls='--', 
+                                   label='Component %d' % i)[0] for i in range(ncomp)]
         
         # make and draw function for the sum 
         self.sumfn = lambda x: np.sum([fn_single(x, **p) for p in self.p0], axis=0)+self.base
-        self.sumline = self.ax.plot(self.x, self.sumfn(self.x), zorder=21, ls='-')[0]
+        self.sumline = self.ax.plot(self.x, self.sumfn(self.x), zorder=21, ls='-',
+                                    label='Sum')[0]
         
         # reset ylims
         self.ax.set_ylim(ylims)
         
         # make title 
         self.ax.set_title('Press enter to save parameters', fontsize='small')
+        self.ax.legend(fontsize='x-small')
         self.fig.tight_layout()
         
         # connect enter key
