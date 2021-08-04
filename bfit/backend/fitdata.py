@@ -202,8 +202,15 @@ class fitdata(object):
                 self.field = self.bd.camp.b_field.mean
                 self.field_std = self.bd.camp.b_field.std
             else:
-                self.field = current2field(self.bd.epics.hh_current.mean)*1e-4
-                self.field_std = current2field(self.bd.epics.hh_current.std)*1e-4
+                
+                if hasattr(self.bd.epics, 'hh6_current'):
+                    self.field = current2field(self.bd.epics.hh6_current.mean)*1e-4
+                    self.field_std = current2field(self.bd.epics.hh6_current.std)*1e-4
+                else:
+                    self.field = current2field(self.bd.epics.hh_current.mean)*1e-4
+                    self.field_std = current2field(self.bd.epics.hh_current.std)*1e-4
+                    
+                    
         except AttributeError:
             self.logger.exception('Field not found')
             self.field = np.nan

@@ -577,6 +577,14 @@ class fileviewer(object):
         except AttributeError:
             pass
         
+        try: 
+            val = data.epics.hh6_current.mean
+            std = data.epics.hh6_current.std
+            data_se['High Field Magnet Current'] = "%.3f +/- %.3f A" % (val, std)
+            key_order_se.append('High Field Magnet Current')            
+        except AttributeError:
+            pass
+        
         # NE -----------------------------------------------------------------
         data_ne = {'':''}
         key_order_ne = []
