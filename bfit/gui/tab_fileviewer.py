@@ -325,7 +325,8 @@ class fileviewer(object):
         except AttributeError:
             pass
             
-        key_order_sw.append('')
+        if key_order_sw[-1] != '':
+            key_order_sw.append('')
                 
         # cryo options
         try: 
@@ -377,7 +378,9 @@ class fileviewer(object):
     
         # rf dac
         if mode != 'SLR':
-            key_order_sw.append('')
+            if key_order_sw[-1] != '':
+                key_order_sw.append('')
+            
             try: 
                 data_sw['rf_dac'] = "%d" % int(data.camp.rf_dac.mean)
                 key_order_sw.append('rf_dac')
@@ -390,7 +393,8 @@ class fileviewer(object):
             except AttributeError:
                 pass    
         
-        key_order_sw.append('')
+        if key_order_sw[-1] != '':
+            key_order_sw.append('')
         
         # rates and counts
         hist = ('F+', 'F-', 'B-', 'B+') if data.area == 'BNMR' \
@@ -433,7 +437,8 @@ class fileviewer(object):
         except (AttributeError, KeyError):
             pass
         
-        key_order_sw.append('')
+        if key_order_sw[-1] != '':
+            key_order_sw.append('')
         
         hist = ('F+', 'F-', 'B-', 'B+')    
         try: 
@@ -532,7 +537,8 @@ class fileviewer(object):
         except AttributeError:
             pass
         
-        key_order_se.append('')
+        if key_order_se[-1] != '':
+            key_order_se.append('')
         
         # laser stuff
         try: 
