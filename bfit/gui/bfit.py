@@ -161,6 +161,16 @@ class bfit(object):
                             "Positive Helicity", 
                             "Negative Helicity", 
                             ], 
+                      '1x':["Combined Helicity", 
+                            "Split Helicity", 
+                            "Raw Scans", 
+                            "Shifted Split", 
+                            "Shifted Combined", 
+                            "Normalized Combined", 
+                            "Histograms", 
+                            "Positive Helicity", 
+                            "Negative Helicity", 
+                            ], 
                       '1n':["Combined Helicity", 
                             "Split Helicity", 
                             "Raw Scans", 
@@ -267,6 +277,7 @@ class bfit(object):
                  '2h':"Time (%s)", 
                  '2e':'Frequency (%s)', 
                  '1f':'Frequency (%s)', 
+                 '1x':'Frequency (%s)', 
                  '1w':'x Parameter (%s)', 
                  '1e':'Field (G)', 
                  '1d':'Laser Power', 
@@ -289,6 +300,7 @@ class bfit(object):
            '2h':"time_s", 
            '2e':"time", 
            '1f':'freq', 
+           '1x':'freq', 
            '1w':'xpar', 
            '1d':'las', 
            '1e':'mA', 
@@ -342,6 +354,7 @@ class bfit(object):
         
         # units: mode:[conversion rate from original to display units, unit]
         self.units = {  '1f':[1e-6, 'MHz'], 
+                        '1x':[1e-6, 'MHz'], 
                         '2e':[1e-6, 'MHz'], 
                         '1w':[1, 'Hz'], 
                         '1n':[0.001, 'V'],
@@ -590,10 +603,10 @@ class bfit(object):
                 variable=self.norm_with_param, selectcolor=colors.selected)
         menu_draw.add_checkbutton(label="Draw residuals as standardized",
                 variable=self.draw_standardized_res, selectcolor=colors.selected)
-        menu_draw.add_checkbutton(label="Draw 1f as PPM shift",
+        menu_draw.add_checkbutton(label="Draw 1f/1x as PPM shift",
                 variable=self.draw_ppm, selectcolor=colors.selected, 
                 command = lambda : self.set_1f_shift_style('ppm'))
-        menu_draw.add_checkbutton(label="Draw 1f relative to peak_0",
+        menu_draw.add_checkbutton(label="Draw 1f/1x relative to peak_0",
                 variable = self.draw_rel_peak0, selectcolor = colors.selected,
                 command = lambda : self.set_1f_shift_style('peak'))
         
@@ -775,7 +788,7 @@ class bfit(object):
             pass
         
         # get asymmetry: raw scans
-        if asym_type == 'r' and data.mode in ['1f', '1n', '1w', '1c', '1d']:
+        if asym_type == 'r' and data.mode in ['1f', '1n', '1w', '1c', '1d', '1x']:
             a = data.asym('raw', omit=option, hist_select=self.hist_select, 
                           nbm=self.use_nbm.get())
             x = np.arange(len(a.p[0]))
@@ -954,7 +967,7 @@ class bfit(object):
             if data.mode in ('1n', '1w', '1c', '1d'): 
                 x *= unit[0]
                 
-            elif data.mode == '1f': 
+            elif data.mode in ('1f', '1x'): 
                 
                 # draw relative to peak 0
                 if self.draw_rel_peak0.get():

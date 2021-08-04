@@ -50,6 +50,7 @@ class fileviewer(object):
                  "1e":"Field Scan", 
                  "1w":"Frequency Comb", 
                  "1f":"Frequency Scan", 
+                 "1x":"Frequency Scan", 
                  "1n":"Rb Cell Scan", 
                  "20":"SLR", 
                  '2e':'Randomized Frequency Scan',
@@ -647,7 +648,7 @@ class fileviewer(object):
                 pass
             
         # get 1F specific data
-        elif data.mode == '1f':
+        elif data.mode in ('1f', '1x'):
             
             # ppg timing box
             try:
@@ -672,6 +673,18 @@ class fileviewer(object):
                 pass    
             
             key_order_ne.append('')
+            
+            # titles for frequencies
+            if data.mode == '1x':
+                nregions = len([k for k in data.ppg.keys() if 'fine freq start' in k])
+                
+                titles = ['Main scan']
+                for i in range(nregions):
+                    titles.append('Fine region %d' % (i+1))
+                titles = [titles[i].ljust(14) for i in range(len(titles))]
+                
+                data_ne['Scan region'] = ''.join(titles)
+                key_order_ne.append('Scan region')
             
             # PSM RF - Frequency
             try:
@@ -703,7 +716,7 @@ class fileviewer(object):
                 pass
             
             try:
-                center = (stop-start)/2
+                center = (stop+start)/2
                 data_ne['Center frequency'] = '%d Hz' % center
                 key_order_ne.append('Center frequency')
             except NameError:
@@ -753,6 +766,45 @@ class fileviewer(object):
                 key_order_ne.append('Repeat N cycles per supercycle')
             except AttributeError:
                 pass
+                
+            i = 1
+            while True: 
+                
+                string_len = 14 * i
+                
+                try:
+                    
+                    start = int(data.ppg['fine freq start %d (hz)' % i].mean)
+                    string = data_ne['Start frequency'].ljust(string_len)
+                    data_ne['Start frequency'] = string + '%d Hz' % start
+                    
+                    stop = int(data.ppg['fine freq end %d (hz)' % i].mean)
+                    string = data_ne['End frequency'].ljust(string_len)
+                    data_ne['End frequency'] = string + '%d Hz' % stop
+                    
+                    gap = int(data.ppg['fine freq increment %d (hz)' % i].mean)
+                    string = data_ne['Frequency scan gap'].ljust(string_len) 
+                    data_ne['Frequency scan gap'] = string + '%d Hz' % gap
+                    
+                    center = (start+stop)/2
+                    string = data_ne['Center frequency'].ljust(string_len)
+                    data_ne['Center frequency'] = string + '%d Hz' % center
+                    
+                    width = (stop-start)
+                    string = data_ne['Full scan width'].ljust(string_len)
+                    data_ne['Full scan width'] = string + '%d Hz' % width
+                    
+                    nsteps = int((stop-start)/gap)
+                    string = data_ne['Num frequency steps'].split('(')[0]
+                    string = string.ljust(string_len)
+                    data_ne['Num frequency steps'] = string + '%d' % nsteps
+                    
+                except KeyError:
+                    break
+                except NameError:
+                    pass
+                
+                i += 1
                 
         # get 1W specific data
         elif data.mode == '1w':

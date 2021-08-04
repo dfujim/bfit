@@ -51,6 +51,7 @@ class fetch_files(object):
     
     runmode_relabel = {'20':'SLR (20)', 
                        '1f':'Frequency Scan (1f)', 
+                       '1x':'Frequency Scan (1x)', 
                        '1w':'Frequency Comb (1w)', 
                        '2e':'Random Freq. (2e)', 
                        '1n':'Rb Cell Scan (1n)', 
@@ -966,7 +967,7 @@ class dataline(object):
         # grid
         c = 1
         self.check.grid(column=c, row=0, sticky=E); c+=1
-        if self.mode in ['1f', '1n', '1w']: 
+        if self.mode in ['1f', '1n', '1w', '1x']: 
             bin_remove_entry.grid(column=c, row=0, sticky=E); c+=1
         rebin_label.grid(column=c, row=0, sticky=E); c+=1
         rebin_box.grid(column=c, row=0, sticky=E); c+=1

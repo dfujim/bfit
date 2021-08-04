@@ -89,6 +89,7 @@ class fit_files(object):
             '20':('Exp', 'Str Exp'),
             '2h':('Exp', 'Str Exp'),
             '1f':('Lorentzian', 'Gaussian'),
+            '1x':('Lorentzian', 'Gaussian'),
             '1w':('Lorentzian', 'Gaussian'),
             '1n':('Lorentzian', 'Gaussian')}
     mode = ""
@@ -728,7 +729,7 @@ class fit_files(object):
             if self.use_rebin.get():
                 doptions['rebin'] = bdfit.rebin.get()
 
-            if self.mode in ('1f', '1w'):
+            if self.mode in ('1f', '1w', '1x'):
                 dline = self.bfit.fetch_files.data_lines[key]
                 doptions['omit'] = dline.bin_remove.get()
                 if doptions['omit'] == dline.bin_remove_starter_line:
@@ -1759,7 +1760,7 @@ class fit_files(object):
 
             draw_mode = self.bfit.menus['Draw Mode']
             draw_mode.entryconfig("Use NBM in asymmetry", state=state)
-            draw_mode.entryconfig("Draw 1f as PPM shift", state=state)
+            draw_mode.entryconfig("Draw 1f/1x as PPM shift", state=state)
 
             self.bfit.menus['menubar'].entryconfig("Minimizer", state=state)
 
