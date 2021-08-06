@@ -155,6 +155,11 @@ class popup_param(object):
         self.blo = {k:parentry[k]['blo'][0] for k in parentry.keys()}
         self.bhi = {k:parentry[k]['bhi'][0] for k in parentry.keys()}
         
+        # check for zero width
+        for k in self.p0.keys():
+            if 'fwhm' in k or 'sigma' in k:
+                if float(self.p0[k].get()) == 0:
+                     self.p0[k].set('1e-9')                
         self.run()
         
     # ====================================================================== #
