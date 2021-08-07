@@ -18,7 +18,7 @@ ext = Extension("bfit.fitting.integrator",
 
 setuptools.setup(
     name="bfit",
-    version="4.11.1",
+    version="4.11.2",
     author="Derek Fujimoto",
     author_email="fujimoto@phas.ubc.ca",
     description="β-NMR and β-NQR Data Analysis",
@@ -37,7 +37,7 @@ setuptools.setup(
         "Development Status :: 5 - Production/Stable",
     ],
     install_requires=['cython>=0.28', 'numpy>=1.14', 'tqdm>=4.25.0',
-                      'bdata>=6.6.0', 'matplotlib>=2.2.4', 'pandas>=0.23.0',
+                      'bdata>=6.6.1', 'matplotlib>=2.2.4', 'pandas>=0.23.0',
                       'pyyaml>=5.1', 'scipy>=1.2.0', 'iminuit>=2.6.1', 
                       'requests>=2.25.0', 'argparse>=1.4.0', 'pytest>=4.5.0'],
     package_data={'': ['./data']},
