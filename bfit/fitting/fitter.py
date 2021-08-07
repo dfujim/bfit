@@ -389,19 +389,33 @@ class fitter(object):
         # set time integrated fit initial parameters
         elif fn_name in ('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz'):
             
-            # get peak asym value
-            amin = min(a[a!=0])
-            
-            peak = x[np.where(a==amin)[0][0]]
+            # get baseline
             base = np.mean(a[:5])
-            height = abs(base-amin)
+            
+            # check for upside down helicities (peak going up)
+            avg = np.mean(a)
+            if base < avg: 
+                amin = max(a[a!=0])
+            else:
+                amin = min(a[a!=0])
+            
+            # get peak asym value
+            peak = x[np.where(a==amin)[0][0]]
+            height = base-amin
             width = 2*abs(peak-x[np.where(a<amin+height/2)[0][0]])
             
             # bounds
             if asym_mode == 'n':
-                height_bounds = (-np.inf, 0)
+                height_bounds = [-np.inf, 0]
             else:
-                height_bounds = (0, np.inf)
+                height_bounds = [0, np.inf]
+            
+            # check bounds validity
+            if height < height_bounds[0]:
+                height_bounds[0] = -np.inf
+            
+            if height > height_bounds[1]:
+                height_bounds[1] = np.inf
             
             # set values (value, low bnd, high bnd, fixed)
             if fn_name == 'Lorentzian':	
