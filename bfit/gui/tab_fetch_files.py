@@ -676,6 +676,7 @@ class fetch_files(object):
         for r in self.data_lines.keys():
             if self.data_lines[r].check_state.get():
                 del_list.append(self.data_lines[r])
+        
         for d in del_list:
             d.degrid()
     

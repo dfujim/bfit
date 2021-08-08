@@ -2624,8 +2624,14 @@ class fitline(object):
                     values_res = data.fitpar
         
         # get calcuated initial values
-        values = fitter.gen_init_par(fn_title, ncomp, self.bfit.data[run].bd,
+        try:
+            values = fitter.gen_init_par(fn_title, ncomp, self.bfit.data[run].bd,
                                     self.bfit.get_asym_mode(fit_files))
+        except Exception as err:
+            print(err)
+            self.logger.exception(err)
+            return tuple()
+            # ~ raise err from None
               
         # set p0 from old
         if values_res is not None:
