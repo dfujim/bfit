@@ -23,6 +23,7 @@ class fitter(object):
     function_names = {  '20':('Exp', 'Bi Exp', 'Str Exp'), 
                         '2h':('Exp', 'Bi Exp', 'Str Exp'), 
                         '1f':('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz'), 
+                        '1x':('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz'), 
                         '1w':('Lorentzian', 'Gaussian', 'BiLorentzian', ), 
                         '2e':('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz')}
      
