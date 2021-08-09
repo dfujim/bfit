@@ -52,6 +52,17 @@ def test_fetch(tab=None, b=None):
     tab.get_data()
     assert_equal(len(list(tab.data_lines.keys())), 7, 'fetch tab fetch run range')
 
+@with_bfit
+def test_fetch_multi_mode(tab=None, b=None):
+
+    # set year
+    tab.year.set(2021)
+    
+    # get runs
+    tab.run.set('40124 40131')
+    tab.get_data()
+    assert_equal(len(list(tab.data_lines.keys())), 2, 'fetch tab fetch 1f and 1x')
+
 @with_bfit    
 def test_remove(tab=None, b=None):
     

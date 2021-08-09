@@ -45,18 +45,21 @@ class fetch_files(object):
             max_number_fetched: max number of files you can fetch
             run: StringVar input to fetch runs.
             runmode_label: display run mode
-            runmode: display run mode string
+            runmode: display run mode list of strings
             year: IntVar of year to fetch runs from 
     """
     
     runmode_relabel = {'20':'SLR (20)', 
-                       '1f':'Frequency Scan (1f)', 
-                       '1x':'Frequency Scan (1x)', 
+                       '1f':'Frequency Scan (1f/1x)', 
+                       '1x':'Frequency Scan (1f/1x)', 
                        '1w':'Frequency Comb (1w)', 
                        '2e':'Random Freq. (2e)', 
                        '1n':'Rb Cell Scan (1n)', 
                        '1e':'Field Scan (1e)', 
                        '2h':'Alpha Tagged (2h)'}
+                       
+    equivalent_modes = [['1f', '1x'], ['20', '2h']]
+                       
     run_number_starter_line = '40001 40002+40003 40005-40010 (run numbers)'
     bin_remove_starter_line = '24 100-200 (bins)'
     max_number_fetched = 500
@@ -503,45 +506,50 @@ class fetch_files(object):
         run_types = [d.mode for d in self.bfit.data.values()]
         run_types = run_types + [d.mode for d in data.values()]
         
+        # check for equivalent run modes
+        selected_mode = [run_types[0]]
+        for equiv in self.equivalent_modes:
+            if selected_mode[0] in equiv:
+                selected_mode = equiv
+                break
+        
         # different run types: select all runs of same type
-        if not all([r==run_types[0] for r in run_types]):
+        if not all([r in selected_mode for r in run_types]):
             
             # unique run modes
             run_type_unique = np.unique(run_types)
             
-            # message
+            # message for multiple run modes
             message = "Multiple run types detected:\n("
-            for m in run_type_unique: 
-                message += m+', '
-            message = message[:-2]
-            message += ')\n\nSelecting ' + run_types[0] + ' runs.'
+            message += ', '.join(run_type_unique)
+            message += ')\n\nSelecting ' + ' and '.join(selected_mode) + ' runs.'
             messagebox.showinfo(message=message)
             
         # get only run_types[0]
-        self.logger.debug('Fetching runs of mode %s', run_types[0])
+        self.logger.debug('Fetching runs of mode %s', selected_mode)
         for k in tuple(data.keys()):
-            if data[k].mode == run_types[0]:
+            if data[k].mode in selected_mode:
                 self.bfit.data[k] = data[k]
             else:
                 del data[k]
         
         # get runmode
         try:
-            self.runmode = run_types[0]
+            self.runmode = selected_mode
         except IndexError:
             s = 'No valid runs detected.'
             messagebox.showerror(message=s)
             self.logger.warning(s)
             raise RuntimeError(s)
-        self.runmode_label['text'] = self.runmode_relabel[self.runmode]
+        self.runmode_label['text'] = self.runmode_relabel[self.runmode[0]]
         
         # get area
         area = [d.area for d in self.bfit.data.values()]
         area = ''.join(np.unique(area))
         
         # set asym type comboboxes
-        self.bfit.set_asym_calc_mode_box(self.runmode, self, area)
-        self.bfit.set_asym_calc_mode_box(self.runmode, self.bfit.fit_files, area)
+        self.bfit.set_asym_calc_mode_box(self.runmode[0], self, area)
+        self.bfit.set_asym_calc_mode_box(self.runmode[0], self.bfit.fit_files, area)
         
         keys_list = list(self.bfit.data.keys())
         keys_list.sort()
@@ -570,7 +578,7 @@ class fetch_files(object):
             
         # remove old runs, modes not selected
         for r in tuple(self.data_lines.keys()):
-            if self.data_lines[r].bdfit.mode != self.runmode:
+            if self.data_lines[r].bdfit.mode not in self.runmode:
                 self.data_lines[r].degrid()
             
         # set nbm variable
@@ -754,7 +762,7 @@ class fetch_files(object):
             return
         
         # check run mode
-        mode = self.runmode
+        mode = self.runmode[0]
         
         self.bfit.set_nbm(mode)
     
