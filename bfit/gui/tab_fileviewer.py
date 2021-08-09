@@ -695,7 +695,7 @@ class fileviewer(object):
             
             # titles for frequencies
             if data.mode == '1x':
-                nregions = len([k for k in data.ppg.keys() if 'fine freq start' in k])
+                nregions = len([k for k in data.ppg.keys() if 'fine_freq_start' in k])
                 
                 titles = ['Main scan']
                 for i in range(nregions):
@@ -793,15 +793,15 @@ class fileviewer(object):
                 
                 try:
                     
-                    start = int(data.ppg['fine freq start %d (hz)' % i].mean)
+                    start = int(data.ppg['fine_freq_start_%d' % i].mean)
                     string = data_ne['Start frequency'].ljust(string_len)
                     data_ne['Start frequency'] = string + '%d Hz' % start
                     
-                    stop = int(data.ppg['fine freq end %d (hz)' % i].mean)
+                    stop = int(data.ppg['fine_freq_end_%d' % i].mean)
                     string = data_ne['End frequency'].ljust(string_len)
                     data_ne['End frequency'] = string + '%d Hz' % stop
                     
-                    gap = int(data.ppg['fine freq increment %d (hz)' % i].mean)
+                    gap = int(data.ppg['fine_freq_increment_%d' % i].mean)
                     string = data_ne['Frequency scan gap'].ljust(string_len) 
                     data_ne['Frequency scan gap'] = string + '%d Hz' % gap
                     

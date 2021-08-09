@@ -541,6 +541,7 @@ class fetch_files(object):
             messagebox.showerror(message=s)
             self.logger.warning(s)
             raise RuntimeError(s)
+            
         self.runmode_label['text'] = self.runmode_relabel[self.runmode[0]]
         
         # get area
