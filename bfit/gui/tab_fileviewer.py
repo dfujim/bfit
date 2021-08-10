@@ -6,6 +6,7 @@ from tkinter import *
 from tkinter import ttk
 from multiprocessing import Process, Pipe
 from bfit.gui.calculator_nqr_B0 import current2field
+from bfit.gui.calculator_nqr_B0_hh6 import current2field as current2field_hh6
 from bfit.backend.fitdata import fitdata
 from bdata import bdata
 from bfit import logger_name
@@ -567,21 +568,23 @@ class fileviewer(object):
         except AttributeError:
             pass
         
-        
         # magnet stuff
         try: 
             val = data.epics.hh_current.mean
             std = data.epics.hh_current.std
-            data_se['Magnet Current'] = "%.3f +/- %.3f A" % (val, std)
-            key_order_se.append('Magnet Current')            
+            field = current2field(val)
+            data_se['HH3 Magnet Current'] = "%.3f +/- %.3f A (%.2f G)" % (val, std, field)
+            key_order_se.append('HH3 Magnet Current')            
         except AttributeError:
             pass
         
         try: 
             val = data.epics.hh6_current.mean
             std = data.epics.hh6_current.std
-            data_se['High Field Magnet Current'] = "%.3f +/- %.3f A" % (val, std)
-            key_order_se.append('High Field Magnet Current')            
+            field = current2field_hh6(val)
+            data_se['HH6 Magnet Current'] = "%.3f +/- %.3f A (%.2f G)" % \
+                                                    (val, std, field)
+            key_order_se.append('HH6 Magnet Current')            
         except AttributeError:
             pass
         
