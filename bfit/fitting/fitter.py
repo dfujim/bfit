@@ -41,9 +41,11 @@ class fitter(object):
 
     # nice parameter names for labels - must be one to one unique for later inversion
     pretty_param = {'1_T1':             r'$1 / T_1$ (s$^{-1}$)', 
+                    'T1':               r'$T_1$ (s)', 
                     'amp':              'Amplitude', 
                     'fraction_b':       r'Fraction of $T_1^{(b)}$', 
                     '1_T1b':            r'$1/T_1^{(b)}$ (s$^{-1}$)', 
+                    'T1b':              r'$T_1^{(b)}$ (s)', 
                     'beta':             r'$\beta$', 
                     'fwhm':             'FWHM (%s)', 
                     'height':           'Height', 

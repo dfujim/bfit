@@ -563,7 +563,7 @@ class fit_files(object):
         # Sort the parameters
         parlst.sort()
 
-        # beta averaged T1
+        # add parameter beta averaged T1
         if self.fit_function_title.get() == 'Str Exp':
             ncomp = self.n_component.get()
 
@@ -572,6 +572,23 @@ class fit_files(object):
                     parlst.append('Beta-Avg 1/<T1>_%d' % i)
             else:
                 parlst.append('Beta-Avg 1/<T1>')
+
+        # add parameter T1 not 1/T1
+        if 'Exp' in self.fit_function_title.get():
+            ncomp = self.n_component.get()
+
+            if ncomp > 1:
+                for i in range(ncomp):
+                    parlst.append('T1_%d' % i)
+                    
+                    if self.fit_function_title.get() == 'Bi Exp':
+                        parlst.append('T1b_%d' % i)
+                    
+            else:
+                parlst.append('T1')
+                
+                if self.fit_function_title.get() == 'Bi Exp':
+                    parlst.append('T1b')
 
         self.xaxis_combobox['values'] = [''] + parlst + lst
         self.yaxis_combobox['values'] = [''] + parlst + lst
@@ -1280,13 +1297,13 @@ class fit_files(object):
         if ncomp > 1:
 
             fn_params = self.fitter.gen_param_names(self.fit_function_title.get(), ncomp)
-
-            if xdraw in fn_params or 'Beta-Avg 1/<T1>' in xdraw:
+                        
+            if xdraw in fn_params or 'Beta-Avg 1/<T1>' in xdraw or 'T1' in xdraw:
                 spl = xdraw.split('_')
                 xdraw = '_'.join(spl[:-1])
                 xsuffix = ' [%s]' % spl[-1]
 
-            if ydraw in fn_params or 'Beta-Avg 1/<T1>' in ydraw:
+            if ydraw in fn_params or 'Beta-Avg 1/<T1>' in ydraw or 'T1' in xdraw:
                 spl = ydraw.split('_')
                 ydraw = '_'.join(spl[:-1])
                 ysuffix = ' [%s]' % spl[-1]
@@ -1633,13 +1650,13 @@ class fit_files(object):
                 dT1_l = data[r].fitpar.loc['1_T1'+comp_num, 'dres-']/(T1i**2)
                 dT1_u = data[r].fitpar.loc['1_T1'+comp_num, 'dres+']/(T1i**2)
 
-                dT1 = np.sqrt(np.square(dT1_l) + np.square(dT1_u))
+                dT1 = (dT1_l + dT1_u)/2
 
                 beta = data[r].fitpar.loc['beta'+comp_num, 'res']
                 dbeta_l = data[r].fitpar.loc['beta'+comp_num, 'dres-']
                 dbeta_u = data[r].fitpar.loc['beta'+comp_num, 'dres+']
 
-                dbeta = np.sqrt(np.square(dbeta_l) + np.square(dbeta_u))
+                dbeta = (dbeta_l + dbeta_u)/2
 
                 # take average
                 betai = 1./beta
@@ -1706,6 +1723,30 @@ class fit_files(object):
             val = [rate(data[r].bd) for r in runs]
             err = np.full(len(val), np.nan)
 
+        elif 'T1' in select and '1_T1' not in select:
+            
+            
+            # get component
+            idx = select.find('_')
+            if idx < 0:     comp_num = ''
+            else:           comp_num = select[idx:]
+
+            # initialize
+            val = []
+            err = []
+
+            # get T1 and beta from that component average
+            for r in runs:
+                T1i = data[r].fitpar.loc['1_T1'+comp_num, 'res']
+                T1 = 1/T1i
+                dT1_l = data[r].fitpar.loc['1_T1'+comp_num, 'dres-']/(T1i**2)
+                dT1_u = data[r].fitpar.loc['1_T1'+comp_num, 'dres+']/(T1i**2)
+
+                dT1 = (dT1_l + dT1_u)/2
+
+                val.append(T1)
+                err.append(dT1)
+            
         # fitted parameter options
         elif select in parnames:
             val = []
