@@ -6,6 +6,7 @@
 from tkinter import *
 from bdata import bdata, bmerged
 from bfit.gui.calculator_nqr_B0 import current2field
+from bfit.gui.calculator_nqr_B0_hh6 import current2field as current2field_hh6
 from bfit import logger_name
 
 import numpy as np
@@ -204,12 +205,11 @@ class fitdata(object):
             else:
                 
                 if hasattr(self.bd.epics, 'hh6_current'):
-                    self.field = current2field(self.bd.epics.hh6_current.mean)*1e-4
-                    self.field_std = current2field(self.bd.epics.hh6_current.std)*1e-4
+                    self.field = current2field_hh6(self.bd.epics.hh6_current.mean)*1e-4
+                    self.field_std = current2field_hh6(self.bd.epics.hh6_current.std)*1e-4
                 else:
                     self.field = current2field(self.bd.epics.hh_current.mean)*1e-4
                     self.field_std = current2field(self.bd.epics.hh_current.std)*1e-4
-                    
                     
         except AttributeError:
             self.logger.exception('Field not found')

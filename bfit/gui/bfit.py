@@ -35,6 +35,7 @@ from bfit.gui.tab_fileviewer import fileviewer
 from bfit.gui.tab_fetch_files import fetch_files
 from bfit.gui.tab_fit_files import fit_files
 from bfit.gui.calculator_nqr_B0 import calculator_nqr_B0
+from bfit.gui.calculator_nqr_B0_hh6 import calculator_nqr_B0_hh6
 from bfit.gui.calculator_nmr_B1 import calculator_nmr_B1
 from bfit.gui.calculator_nmr_atten import calculator_nmr_atten
 from bfit.gui.popup_drawstyle import popup_drawstyle
@@ -565,7 +566,8 @@ class bfit(object):
         menubar.add_cascade(menu=menu_calculate, label='Calculate')
         menu_calculate.add_command(label='Deadtime correction', 
                 command=self.set_deadtime)
-        menu_calculate.add_command(label='NQR B0', command=calculator_nqr_B0)
+        menu_calculate.add_command(label='NQR B0 (HH3)', command=calculator_nqr_B0)
+        menu_calculate.add_command(label='NQR B0 (HH6)', command=calculator_nqr_B0_hh6)
         menu_calculate.add_command(label='NMR B1', command=calculator_nmr_B1)
         menu_calculate.add_command(label='NMR B1 Attenuation', command=calculator_nmr_atten)
         
