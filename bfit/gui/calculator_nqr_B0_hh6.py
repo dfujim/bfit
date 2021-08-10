@@ -61,9 +61,8 @@ class calculator_nqr_B0_hh6(object):
         amperes = ttk.Label(mainframe, text='Amperes')
                 
         notes_line = ttk.Label(mainframe,   
-                            text='Inferred from runs 45019 and 45020 (2021) '+\
-                                 '\nwith NMR at 2.2 T\nA better calibration is '+\
-                                 'likely warrented',
+                            text='Inferred from 2021 runs \n45019, 45020, and 45041'+\
+                                 '\nwith NMR at 2.2 T',
                             justify=CENTER)
         
         # Gridding
@@ -118,6 +117,6 @@ class calculator_nqr_B0_hh6(object):
                 self.field.set('debug')
             
 # ======================================================================= #
-def current2field(current):    return current*3.561175+1.555087
-def field2current(field):      return (field-1.555087)/3.561175
+def current2field(current):    return current*3.561129+1.574797
+def field2current(field):      return (field-1.574797)/3.561129
 
