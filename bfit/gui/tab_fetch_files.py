@@ -103,9 +103,10 @@ class fetch_files(object):
                             entry=entry_run)
         entry_run.bind('<FocusIn>', entry_fn)
         entry_run.bind('<FocusOut>', on_focusout_fn)
+        entry_run.bind('<Leave>', lambda event: self.history_hide(event, 'entry'))
         
         entry_run.bind('<Enter>', self.history_show)
-        self.listbox_history.bind('<Leave>', self.history_hide)
+        self.listbox_history.bind('<Leave>', lambda event: self.history_hide(event, 'history'))
         self.listbox_history.bind("<<ListboxSelect>>", self.history_set)
         
         # fetch button
@@ -662,10 +663,16 @@ class fetch_files(object):
             self.listbox_history.lift()
             
     # ======================================================================= #
-    def history_hide(self, x=None):
+    def history_hide(self, event=None, obj=None):
         """
             Hide list widget with input history
         """
+
+        # don't hide if mousing over history
+        if obj == 'entry' and 0 < event.x < 800 and event.y > 0:
+            return  
+        
+        # hide the history box    
         self.listbox_history.place_forget()
         string = self.run.get() 
         
