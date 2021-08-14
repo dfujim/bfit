@@ -1294,6 +1294,7 @@ class fit_files(object):
         ncomp = self.n_component.get()
         xsuffix = ''
         ysuffix = ''
+        
         if ncomp > 1:
 
             fn_params = self.fitter.gen_param_names(self.fit_function_title.get(), ncomp)
@@ -1303,12 +1304,11 @@ class fit_files(object):
                 xdraw = '_'.join(spl[:-1])
                 xsuffix = ' [%s]' % spl[-1]
 
-            if ydraw in fn_params or 'Beta-Avg 1/<T1>' in ydraw or 'T1' in xdraw:
+            if ydraw in fn_params or 'Beta-Avg 1/<T1>' in ydraw or 'T1' in ydraw:
                 spl = ydraw.split('_')
                 ydraw = '_'.join(spl[:-1])
                 ysuffix = ' [%s]' % spl[-1]
-
-
+             
         # pretty labels
         xdraw = self.fitter.pretty_param.get(xdraw, xdraw)
         ydraw = self.fitter.pretty_param.get(ydraw, ydraw)
@@ -1319,7 +1319,6 @@ class fit_files(object):
 
         # attempt to insert units and scale
         unit_scale, unit = self.bfit.units.get(self.mode, [1, ''])
-
         if '%s' in xdraw:
             xdraw = xdraw % unit
             xvals *= unit_scale
@@ -1356,8 +1355,7 @@ class fit_files(object):
 
         # format date x axis
         if xerrs is None:   self.plt.gcf(figstyle).autofmt_xdate()
-
-
+        
         # plot elements
         self.plt.xlabel(figstyle, xdraw)
         self.plt.ylabel(figstyle, ydraw)
@@ -2203,39 +2201,55 @@ class fit_files(object):
         # get current unit
         unit = self.bfit.units[self.mode]
 
+        # back-translate pretty labels to originals
+        ivd = {}
+        for  k, v in self.fitter.pretty_param.items():
+            
+            try:
+                v = v % unit
+            except TypeError:
+                pass    
+            ivd[v] = k     
+
         for fig_num in figlist:
 
             # get figure and drawn axes
             ax = plt.figure(fig_num).axes[0]
             xlab = ax.get_xlabel()
             ylab = ax.get_ylabel()
-            xscale = ax.get_xscale()
-            yscale = ax.get_yscale()
+            
+            # remove multi-compoent extension
+            try:
+                ext_x = xlab.split('[')[1]
+            except IndexError:
+                ext_x = ''
+            else:
+                ext_x = ext_x.split(']')[0]
+            xlab = xlab.split('[')[0].strip()
+            
+            try:
+                ext_y = ylab.split('[')[1]
+            except IndexError:
+                ext_y = ''
+            else:
+                ext_y = ext_y.split(']')[0]
+            ylab = ylab.split('[')[0].strip()
 
-            # back-translate pretty labels to originals
-            ivd = {}
-            for  k, v in self.fitter.pretty_param.items():
-                try:
-                    v = v % unit
-                except TypeError:
-                    pass
-                ivd[v] = k
-
+            # convert from fancy label to simple label
             xlab = ivd.get(xlab, xlab)
             ylab = ivd.get(ylab, ylab)
-
-            # set new labels
+            
+            # add multi-componet stuff
+            if ext_x: xlab += '_%s' % ext_x
+            if ext_y: ylab += '_%s' % ext_y
+                        
+            # set new labels for drawing
             self.xaxis.set(xlab)
             self.yaxis.set(ylab)
 
             # draw new labels
             self.plt.active['param'] = fig_num
             self.draw_param()
-
-            # scale the plot
-            ax = plt.figure(fig_num).axes[0]
-            ax.set_xscale(xscale)
-            ax.set_yscale(yscale)
 
             self.logger.debug('Updated figure %d (%s vs %s)', fig_num, ylab, xlab)
 
