@@ -73,7 +73,7 @@ def main():
     # make handler
     handler = RotatingFileHandler(filename, 
                                   mode='a', 
-                                  maxBytes=100*1000, # 100 kB max
+                                  maxBytes=500*1000, # 500 kB max
                                   backupCount=1)
 
     # get level and format for output string
