@@ -545,7 +545,6 @@ class fileviewer(object):
         if key_order_se[-1] != '':
             key_order_se.append('')
         
-        
         # laser stuff
         try: 
             val = data.epics.las_pwr
@@ -585,6 +584,18 @@ class fileviewer(object):
             data_se['HH6 Magnet Current'] = "%.3f +/- %.3f A (%.2f G)" % \
                                                     (val, std, field)
             key_order_se.append('HH6 Magnet Current')            
+        except AttributeError:
+            pass
+        
+        if key_order_se[-1] != '':
+            key_order_se.append('')
+        
+        # EL3
+        try: 
+            val = data.epics.el3.mean
+            std = data.epics.el3.std
+            data_se['Einzel Lens 3'] = "%.3f +/- %.3f V" % (val, std)
+            key_order_se.append('Einzel Lens 3')
         except AttributeError:
             pass
         
