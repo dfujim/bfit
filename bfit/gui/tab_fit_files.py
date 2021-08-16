@@ -2206,9 +2206,10 @@ class fit_files(object):
         for  k, v in self.fitter.pretty_param.items():
             
             try:
-                v = v % unit
+                v = v % unit[1]
             except TypeError:
                 pass    
+             
             ivd[v] = k     
 
         for fig_num in figlist:
