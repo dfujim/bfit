@@ -118,7 +118,7 @@ class popup_param(object):
         
         # mode switching
         if mode in ('20', '2h'):         self.mode = 2
-        elif mode in ('1f', '2e', '1w'):  self.mode = 1
+        elif mode in ('1f', '2e', '1w', '1x'):  self.mode = 1
         else:
             self.logger.warning('P0 Finder not configured for run mode %s', mode)
             print('P0 Finder not configured for run mode %s'%mode)
