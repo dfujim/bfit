@@ -33,6 +33,7 @@ class fileviewer(object):
             button_run_from_file: ttk.Button for load from run
             data: bdata object for drawing
             entry_asym_type: combobox for asym calculations
+            entry_rebin: Spinbox
             entry_runn: Spinbox
             entry_year: Spinbox
             filename: string, path to file to load, disabled if == ''
@@ -138,7 +139,7 @@ class fileviewer(object):
         
         # details frame: stuff at the bottom ----------------------------------
         details_frame = ttk.Frame(file_tab)
-        entry_rebin = Spinbox(details_frame, from_=1, to=100, width=3, \
+        self.entry_rebin = Spinbox(details_frame, from_=1, to=100, width=3, \
                 textvariable=self.rebin)
         
         # update check box
@@ -157,7 +158,7 @@ class fileviewer(object):
                 
         # gridding
         ttk.Label(details_frame, text="Rebin:").grid(column=0, row=0, sticky=E)
-        entry_rebin.grid(column=1, row=0, sticky=E)
+        self.entry_rebin.grid(column=1, row=0, sticky=E)
         self.entry_asym_type.grid(column=2, row=0, sticky=E)
         update_box.grid(column=3, row=0, sticky=E)
         details_frame.grid(column=0, row=2, sticky=S, columnspan=2)
@@ -222,6 +223,9 @@ class fileviewer(object):
         
         # set nbm variable
         self.set_nbm()
+        
+        # set rebin
+        self.set_rebin(self.data)
         
         # quiet mode: don't update text
         if quiet: return True
@@ -1247,10 +1251,9 @@ class fileviewer(object):
         self.bfit.logger.info('Draw button pressed')
         
         if self.get_data(quiet=quiet):
-            self.bfit.draw(self.data, 
-                    self.bfit.asym_dict[self.asym_type.get()], rebin=self.rebin.get(), 
-                    label=self.bfit.get_label(self.data), 
-                    figstyle=figstyle)
+            self.data.draw(self.asym_type.get(), 
+                           label=self.bfit.get_label(self.data), 
+                           figstyle=figstyle)
             
     # ======================================================================= #
     def draw_diagnostics(self): #incomplete
@@ -1426,6 +1429,17 @@ class fileviewer(object):
             self.entry_runn['state'] = 'normal'
             return True
                     
+    # ======================================================================= #
+    def set_rebin(self, data):
+        """
+            Link rebin intvar to that of data object
+            data: fitdata obj
+        """
+        value = self.rebin.get()
+        self.rebin = data.rebin
+        self.rebin.set(value)
+        self.entry_rebin.configure(textvariable = data.rebin)
+        
     # ======================================================================= #
     def set_nbm(self):
         """

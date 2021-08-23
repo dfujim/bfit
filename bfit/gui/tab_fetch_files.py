@@ -1106,22 +1106,21 @@ class dataline(object):
             d = self.bfit.fetch_files.asym_type.get()
             d = self.bfit.asym_dict[d]
             
-            if self.bin_remove.get() == self.bin_remove_starter_line:
-                self.bfit.draw(data, d, self.rebin.get(), figstyle=figstyle, 
-                    label=self.label.get())
-            else:
-                self.bfit.draw(data, d, self.rebin.get(), figstyle=figstyle, \
-                    option=self.bin_remove.get(), label=self.label.get())
-
+            # draw
+            data.draw(d, figstyle=figstyle, label=self.label.get())
+            
         # draw fit
         if self.check_fit.get():
             if self.check_data.get():
                 mode = self.bfit.draw_style.get()
                 self.bfit.draw_style.set('stack')
-                self.bfit.fit_files.draw_fit(id=self.id, unique=False, figstyle=figstyle)
+                self.bfit.fit_files.draw_fit(id=self.id, unique=False, 
+                                             asym_mode=self.bfit.get_asym_mode(self.bfit.fetch_files), 
+                                             figstyle=figstyle)
                 self.bfit.draw_style.set(mode)
             else:
-                self.bfit.fit_files.draw_fit(id=self.id, figstyle=figstyle)
+                self.bfit.fit_files.draw_fit(id=self.id, figstyle=figstyle, 
+                                             asym_mode=self.bfit.get_asym_mode(self.bfit.fetch_files))
                 
         # draw residual
         if self.check_res.get():

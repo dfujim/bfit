@@ -652,8 +652,8 @@ class fit_files(object):
         if self.bfit.draw_fit.get():
             style = self.bfit.draw_style.get()
 
-            if style in ['redraw', 'new']:
-                self.bfit.draw_style.set('stack')
+            if style in ['stack', 'new']:
+                self.bfit.draw_style.set('redraw')
 
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
@@ -1025,14 +1025,15 @@ class fit_files(object):
         raise_window()
 
     # ======================================================================= #
-    def draw_fit(self, id, figstyle, unique=True, **drawargs):
+    def draw_fit(self, id, figstyle, unique=True, asym_mode=None, **drawargs):
         """
             Draw fit for a single run
 
             id: id of run to draw fit of
             figstyle: one of "data", "fit", or "param" to choose which figure
                     to draw in
-        """
+            mode: from bfit.get_asym_mode, string of mode to draw
+         """
 
         self.logger.info('Drawing fit for run %s. %s', id, drawargs)
 
@@ -1072,7 +1073,6 @@ class fit_files(object):
             drawargs['linestyle'] = '-'
 
         # draw
-        asym_mode = self.bfit.get_asym_mode(self)
         t, a, da = data.asym(asym_mode)
 
         fitx = np.linspace(min(t), max(t), self.n_fitx_pts)
@@ -1130,19 +1130,18 @@ class fit_files(object):
             fitx *= unit[0]
 
         # account for normalized draw modes
-        draw_mode = self.bfit.asym_dict[self.bfit.fetch_files.asym_type.get()]
-        if draw_mode == 'cn1':
+        if asym_mode == 'cn1':
             draw_mode += 'f'
             fity /= data.fitpar.loc['baseline','res']
 
-        elif draw_mode == 'cn2':
+        elif asym_mode == 'cn2':
             draw_mode += 'f'
             if 'amp' in data.fitpar.index:
                 fity /= data.fitpar.loc['amp','res']
             else:
                 fity /= fn(t[0], *par)
 
-        elif draw_mode == 'cs':
+        elif asym_mode == 'cs':
             draw_mode += 'f'
             fity -= data.fitpar.loc['baseline', 'res']
 
@@ -1150,7 +1149,7 @@ class fit_files(object):
                       unique=unique, **drawargs)
 
         # plot elements
-        self.plt.ylabel(figstyle, self.bfit.ylabel_dict.get(draw_mode, 'Asymmetry'))
+        self.plt.ylabel(figstyle, self.bfit.ylabel_dict.get(asym_mode, 'Asymmetry'))
         self.plt.xlabel(figstyle, xlabel)
 
         # show
@@ -2823,8 +2822,7 @@ class fitline(object):
         if omit == bfit.fetch_files.bin_remove_starter_line:
             omit = ''
 
-        bfit.draw(bdfit, bfit.get_asym_mode(fit_files), rebin=bdfit.rebin.get(),
-                    option=omit, figstyle='fit', color='k')
+        bdfit.draw(bfit.get_asym_mode(fit_files), figstyle='fit', color='k')
 
         # get the fit results
         results = {par:bdfit.fitpar.loc[par, 'res'] for par in pnames_combined}
@@ -2832,7 +2830,9 @@ class fitline(object):
         # draw if ncomp is 1
         if ncomp == 1:
             bfit.draw_style.set('stack')
-            fit_files.draw_fit(bdfit.id, 'fit', unique=False, label=fn_name)
+            fit_files.draw_fit(bdfit.id, 'fit', unique=False, 
+                               asym_mode=bfit.get_asym_mode(self.bfit.fit_files), 
+                               label=fn_name)
             self.bfit.draw_style.set(draw_mode)
             return
 
