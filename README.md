@@ -77,7 +77,7 @@ If you use [mudpy], [bdata], or [bfit] in your work, please cite:
 
 The following packages/applications are needed _prior_ to [bfit] installation:
 - [Python] 3.6 or higher: a dynamically typed programming language. [[install](https://wiki.python.org/moin/BeginnersGuide/Download)]
-- [Tkinter] : [Python]'s de-factor standard GUI package. [[install](https://tkdocs.com/tutorial/install.html)]
+- [Tkinter] : [Python]'s de facto standard GUI package. [[install](https://tkdocs.com/tutorial/install.html)]
 - [Cython] : [C]-language extensions for [Python]. [[install](https://cython.readthedocs.io/en/latest/src/quickstart/install.html)]
 - [NumPy] : array programming library for [Python]. [[install](https://numpy.org/install/)]
 
@@ -105,11 +105,11 @@ heirarchy:
 
 ```
 /path/
-    bnmr/
-    bnqr/
-        2017/
-        2018/
-            045123.msr
+|---bnmr/
+|---bnqr/
+|-------2017/
+|-------2018/
+|-----------045123.msr
 ```
 
 Here, the folders `/path/bnmr/` and `/path/bnqr/` both contain runs
