@@ -951,7 +951,6 @@ class fit_files(object):
         # get data and fit results
         data = self.bfit.data[id]
         fit_par = data.fitpar.loc[data.parnames, 'res'].values
-        fn = data.fitfn
         data = data.bd
 
         # default label value
@@ -980,7 +979,7 @@ class fit_files(object):
 
         # get residuals
         x, a, da = data.asym(self.bfit.get_asym_mode(self), rebin=rebin)
-        res = a - fn(x, *fit_par)
+        res = a - data.fitfn(x, *fit_par)
 
         # set x axis
         if data.mode in self.bfit.units:
@@ -1040,7 +1039,6 @@ class fit_files(object):
         # get data and fit results
         data = self.bfit.data[id]
         fit_par = data.fitpar.loc[data.parnames, 'res'].values
-        fn = data.fitfn
 
         # get draw style
         style = self.bfit.draw_style.get()
@@ -1073,7 +1071,7 @@ class fit_files(object):
             drawargs['linestyle'] = '-'
 
         # draw
-        t, a, da = data.asym(asym_mode)
+        t, a, da = data.asym('c')
 
         fitx = np.linspace(min(t), max(t), self.n_fitx_pts)
 
@@ -1084,7 +1082,7 @@ class fit_files(object):
             xlabel = self.bfit.xlabel_dict[self.mode]
 
         # get fity
-        fity = fn(fitx, *fit_par)
+        fity = data.fitfn(fitx, *fit_par)
 
         # draw relative to peak 0
         if self.bfit.draw_rel_peak0.get():
@@ -1130,19 +1128,12 @@ class fit_files(object):
             fitx *= unit[0]
 
         # account for normalized draw modes
-        if asym_mode == 'cn1':
-            draw_mode += 'f'
-            fity /= data.fitpar.loc['baseline','res']
-
-        elif asym_mode == 'cn2':
-            draw_mode += 'f'
-            if 'amp' in data.fitpar.index:
-                fity /= data.fitpar.loc['amp','res']
-            else:
-                fity /= fn(t[0], *par)
-
+        if asym_mode == 'cn':
+            asym_mode, norm, dnorm = data.get_norm(asym_mode, a, da)
+            fity /= norm    
+                
         elif asym_mode == 'cs':
-            draw_mode += 'f'
+            asym_mode += 'f'
             fity -= data.fitpar.loc['baseline', 'res']
 
         self.plt.plot(figstyle, draw_id, fitx, fity, zorder=10,
@@ -2818,10 +2809,6 @@ class fitline(object):
         bfit.draw_style.set('redraw')
 
         # draw the data
-        omit = bdfit.omit.get()
-        if omit == bfit.fetch_files.bin_remove_starter_line:
-            omit = ''
-
         bdfit.draw(bfit.get_asym_mode(fit_files), figstyle='fit', color='k')
 
         # get the fit results

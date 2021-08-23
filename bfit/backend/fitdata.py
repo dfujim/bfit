@@ -96,10 +96,12 @@ class fitdata(object):
             return self.__dict__[name]
         except KeyError:
             return getattr(self.bd, name)
-
+        
     # ======================================================================= #
     def asym(self, *args, **kwargs):
-        
+        """
+            Get asymmetry
+        """
         deadtime = 0
         
         # check if deadtime corrections are needed
@@ -622,9 +624,9 @@ class fitdata(object):
                 
                 plt.errorbar(figstyle, self.id, x, ac, dac, label=label, **drawargs)
                 
-            # plot combined helicities, normalized by baseline 
-            elif asym_type == 'cn1':
-                
+            # plot normalizd combined helicities
+            elif asym_type == 'cn':
+
                 # remove zero asym
                 ac = a.c[0]
                 dac = a.c[1]
@@ -633,43 +635,12 @@ class fitdata(object):
                 dac = dac[tag]
                 x = x[tag]
                 
-                # divide by last value or by baseline
-                if 'baseline' in self.fitpar['res'].keys() and bfit.norm_with_param.get():
-                    norm = self.fitpar['res']['baseline']
-                    dnorm = np.sqrt(self.fitpar['dres+']['baseline']**2 + \
-                                    self.fitpar['dres-']['baseline']**2)
-                    asym_type += 'f'
-                else:                
-                    norm = np.average(ac[-5:], weights=1/dac[-5:]**2)
-                    dnorm = 1/np.sum(1/dac[-5:]**2)**0.5
-                        
+                # normalize
+                asym_type, norm, dnorm = self.get_norm(asym_type, ac, dac)
                 dac = ac/norm * ((dnorm/norm)**2 + (dac/ac)**2)**0.5
                 ac /= norm
-                plt.errorbar(figstyle, self.id, x, ac, dac, label=label, **drawargs)
-
-            # plot combined helicities, normalized by initial asym
-            elif asym_type == 'cn2':
                 
-                # remove zero asym
-                ac = a.c[0]
-                dac = a.c[1]
-                tag = ac!=0
-                ac = ac[tag]
-                dac = dac[tag]
-                x = x[tag]
-
-                # divide by intial 
-                if 'amp' in self.fitpar['res'].keys() and bfit.norm_with_param.get():
-                    norm = self.fitpar['res']['amp']
-                    dnorm = np.sqrt(self.fitpar['dres+']['amp']**2 + \
-                                    self.fitpar['dres-']['amp']**2)
-                    asym_type += 'f'
-                else:
-                    norm = ac[0]
-                    dnorm = dac[0]
-
-                dac = ac/norm * ((dnorm/norm)**2 + (dac/ac)**2)**0.5
-                ac /= norm
+                # draw
                 plt.errorbar(figstyle, self.id, x, ac, dac, label=label, **drawargs)
                 
             # attempting to draw raw scans unlawfully
@@ -799,6 +770,52 @@ class fitdata(object):
         """
         unused = [p for p in self.fitpar.index if p not in parnames]
         self.fitpar = self.fitpar.drop(unused, axis='index')
+    
+    # ======================================================================= #
+    def get_norm(self, asym_type, asym, dasym):
+        """
+            Get normalization constant for drawing normalized
+            
+            asym_type: type of asymmetry to calculate (ex: c)
+            asym: array of asymmetry values 
+            dasym: array of asymmetry errors 
+            
+            modifies asym_type for id'ing the drawing label
+        """
+
+        # type 1 runs: divide by last value or by baseline
+        if '1' in self.mode:
+            asym_type += '1'
+            
+            if 'baseline' in self.fitpar['res'].keys() and self.bfit.norm_with_param.get():
+                norm = self.fitpar.loc['baseline', 'res']
+                dnorm = np.sqrt(self.fitpar.loc['baseline', 'dres+']**2 + \
+                                self.fitpar.loc['baseline', 'dres-']**2)
+                asym_type += 'f'
+            else:                
+                norm = np.average(asym[-5:], weights=1/dasym[-5:]**2)
+                dnorm = 1/np.sum(1/dasym[-5:]**2)**0.5
+
+        # type 2 runs: divide by first value
+        elif '2' in self.mode:
+            asym_type += '2'
+            
+            if 'amp' in self.fitpar['res'].keys() and self.bfit.norm_with_param.get():
+                norm = self.fitpar.loc['amp', 'res']
+                dnorm = np.sqrt(self.fitpar.loc['amp', 'dres+']**2 + \
+                                self.fitpar.loc['amp', 'dres-']**2)
+                asym_type += 'f'
+            else:
+                norm = asym[0]
+                dnorm = dasym[0]
+        
+        # unknown mode
+        else:
+            msg = 'Unknown run mode %s (cannot detect if type 1 or 2)' % self.mode
+            self.logger.exception(msg)
+            raise RuntimeError(msg)
+            
+        return(asym_type, norm, dnorm)
     
     # ======================================================================= #
     def get_temperature(self, channel='A'):
