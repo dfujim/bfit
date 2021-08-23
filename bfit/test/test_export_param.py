@@ -59,7 +59,7 @@ def test_columns_no_fit(b=None):
     b.fit_files.export(filename = filename)
     
     # get columns, no fit parameters (exp fit)
-    columns = list(b.fit_files.xaxis_combobox['values'][3:])
+    columns = list(b.fit_files.xaxis_combobox['values'][4:])
     
     # add missing columns: errors
     new_columns = []
