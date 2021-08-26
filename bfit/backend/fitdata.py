@@ -985,7 +985,7 @@ class fitdata(object):
             err = fetch(self, ['clift_read', 'std']) 
 
         elif 'He Mass Flow' in select:
-            var = 'mass_read' if data[runs[0]].area == 'BNMR' else 'he_read'
+            var = 'mass_read' if self.area == 'BNMR' else 'he_read'
             val = fetch(self, [var, 'mean'])
             err = fetch(self, [var, 'std']) 
 
@@ -1024,7 +1024,7 @@ class fitdata(object):
             err = np.nan
 
         elif 'Sample Rate (count/s)' in select:
-            hist = ('F+', 'F-', 'B-', 'B+') if data[runs[0]].area == 'BNMR' \
+            hist = ('F+', 'F-', 'B-', 'B+') if self.area == 'BNMR' \
                                          else ('L+', 'L-', 'R-', 'R+')
 
             rate = lambda b : np.sum([b.hist[h].data for h in hist])/b.duration
