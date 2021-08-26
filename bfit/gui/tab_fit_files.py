@@ -1522,8 +1522,8 @@ class fit_files(object):
 
     # ======================================================================= #
     def get_values(self, select):
-        """ Get plottable values"""
-
+        """ Get plottable values from all runs"""
+        
         data = self.bfit.data
         dlines = self.bfit.fetch_files.data_lines
 
@@ -1532,237 +1532,17 @@ class fit_files(object):
         runs.sort()
 
         self.logger.debug('Fetching parameter %s', select)
-
-        # parameter names
-        parnames = self.fitter.gen_param_names(self.fit_function_title.get(),
-                                               self.n_component.get())
-
-        # helper functions
-        def fetch(obj, attr):
-            """
-                Try fetching, if fails, return np.nan
-            """
-            
-            # recursively find the value
-            try:
-                if len(attr) == 1:
-                    return getattr(obj, attr[0])
-                else:
-                    obj = getattr(obj, attr[0])
-                    return fetch(obj, attr[1:])
-
-            except (KeyError, AttributeError):
-                return np.nan
-
-        # Data file options
-        if select == 'Temperature (K)':
-            val = [fetch(data[r], ['temperature','mean']) for r in runs]
-            err = [fetch(data[r], ['temperature', 'std']) for r in runs]
-
-        elif select == 'B0 Field (T)':
-            val = [fetch(data[r], ['field']) for r in runs]
-            err = [fetch(data[r], ['field_std']) for r in runs]
-
-        elif select == 'RF Level DAC':
-            try:
-                val = [fetch(data[r], ['rf_dac','mean']) for r in runs]
-                err = [fetch(data[r], ['rf_dac','std']) for r in runs]
-            except AttributeError:
-                pass
-
-        elif select == 'Platform Bias (kV)':
-            try:
-                val = [fetch(data[r], ['bias']) for r in runs]
-                err = [fetch(data[r], ['bias_std']) for r in runs]
-            except AttributeError:
-                pass
-
-        elif select == 'Impl. Energy (keV)':
-            val =  [fetch(data[r], ['beam_kev']) for r in runs]
-            err =  [fetch(data[r], ['beam_kev_err']) for r in runs]
-
-        elif select == 'Run Duration (s)':
-            val = [fetch(data[r], ['duration']) for r in runs]
-            err = [np.nan for r in runs]
-
-        elif select == 'Run Number':
-            val = [fetch(data[r], ['run']) for r in runs]
-            err = [np.nan for r in runs]
-
-        elif select == 'Sample':
-            val = [fetch(data[r], ['sample']) for r in runs]
-            err = [np.nan for r in runs]
-
-        elif select == 'Start Time':
-            val = [fetch(data[r], ['start_time']) for r in runs]
-            err = [np.nan for r in runs]
-
-        elif select == 'Title':
-            val = [fetch(data[r], ['title']) for r in runs]
-            err = [np.nan for r in runs]
-
-        elif select == '1000/T (1/K)':
-            val = [1000/fetch(data[r], ['temperature', 'mean']) for r in runs]
-            err = [1000*fetch(data[r], ['temperature', 'std'])/\
-                        (fetch(data[r], ['temperature', 'mean'])**2) \
-                   for r in runs]
-
-        elif select == 'Chi-Squared':
-            val = [fetch(data[r], ['chi']) for r in runs]
-            err = [np.nan for r in runs]
-
-        elif select == 'Year':
-            val = [fetch(data[r], ['year']) for r in runs]
-            err = [np.nan for r in runs]
-
-        elif select == 'Unique Id':
-            val = [fetch(data[r], ['id']) for r in runs]
-            err = [np.nan for r in runs]
-
-        elif 'Beta-Avg 1/<T1' in select:
-
-            # get component
-            idx = select.find('_')
-            if idx < 0:     comp_num = ''
-            else:           comp_num = select[idx:]
-            comp_num = comp_num.replace('>', '')
-
-            # initialize
-            val = []
-            err = []
-
-            # get T1 and beta from that component average
-            for r in runs:
-                T1i = data[r].fitpar.loc['1_T1'+comp_num, 'res']
-                T1 = 1/T1i
-                dT1_l = data[r].fitpar.loc['1_T1'+comp_num, 'dres-']/(T1i**2)
-                dT1_u = data[r].fitpar.loc['1_T1'+comp_num, 'dres+']/(T1i**2)
-
-                dT1 = (dT1_l + dT1_u)/2
-
-                beta = data[r].fitpar.loc['beta'+comp_num, 'res']
-                dbeta_l = data[r].fitpar.loc['beta'+comp_num, 'dres-']
-                dbeta_u = data[r].fitpar.loc['beta'+comp_num, 'dres+']
-
-                dbeta = (dbeta_l + dbeta_u)/2
-
-                # take average
-                betai = 1./beta
-                pd_T1 = gamma(betai)/beta
-                pd_beta = -T1*gamma(betai)*(1+betai*polygamma(0, betai))*(betai**2)
-                T1avg = T1*pd_T1
-                dT1avg = ( (pd_T1*dT1)**2 + (pd_beta*dbeta)**2 )**0.5
-
-                val.append(1/T1avg)
-                err.append(dT1avg/(T1avg**2))
-
-        elif 'Cryo Lift Set (mm)' in select:
-            val = [fetch(data[r], ['clift_set', 'mean']) for r in runs]
-            err = [fetch(data[r], ['clift_set', 'std']) for r in runs]
-
-        elif 'Cryo Lift Read (mm)' in select:
-            val = [fetch(data[r], ['clift_read', 'mean']) for r in runs]
-            err = [fetch(data[r], ['clift_read', 'std']) for r in runs]
-
-        elif 'He Mass Flow' in select:
-            var = 'mass_read' if data[runs[0]].area == 'BNMR' else 'he_read'
-            val = [fetch(data[r], [var, 'mean']) for r in runs]
-            err = [fetch(data[r], [var, 'std']) for r in runs]
-
-        elif 'CryoEx Mass Flow' in select:
-            val = [fetch(data[r], ['cryo_read', 'mean']) for r in runs]
-            err = [fetch(data[r], ['cryo_read', 'std']) for r in runs]
-
-        elif 'Needle Set (turns)' in select:
-            val = [fetch(data[r], ['needle_set', 'mean']) for r in runs]
-            err = [fetch(data[r], ['needle_set', 'std']) for r in runs]
-
-        elif 'Needle Read (turns)' in select:
-            val = [fetch(data[r], ['needle_pos', 'mean']) for r in runs]
-            err = [fetch(data[r], ['needle_pos', 'std']) for r in runs]
-
-        elif 'Laser Power (V)' in select:
-            val = [fetch(data[r], ['las_pwr', 'mean']) for r in runs]
-            err = [fetch(data[r], ['las_pwr', 'std']) for r in runs]
-
-        elif 'Laser Wavelength (nm)' in select:
-            val = [fetch(data[r], ['las_lambda', 'mean']) for r in runs]
-            err = [fetch(data[r], ['las_lambda', 'std']) for r in runs]
-
-        elif 'Laser Wavenumber (1/cm)' in select:
-            val = [fetch(data[r], ['las_wavenum', 'mean']) for r in runs]
-            err = [fetch(data[r], ['las_wavenum', 'std']) for r in runs]
-
-        elif 'Target Bias (kV)' in select:
-            val = [fetch(data[r], ['target_bias', 'mean']) for r in runs]
-            err = [fetch(data[r], ['target_bias', 'std']) for r in runs]
-
-        elif 'NBM Rate (count/s)' in select:
-            rate = lambda b : np.sum([b.hist['NBM'+h].data \
-                                    for h in ('F+', 'F-', 'B-', 'B+')])/b.duration
-            val = [rate(data[r].bd) for r in runs]
-            err = np.full(len(val), np.nan)
-
-        elif 'Sample Rate (count/s)' in select:
-            hist = ('F+', 'F-', 'B-', 'B+') if data[runs[0]].area == 'BNMR' \
-                                         else ('L+', 'L-', 'R-', 'R+')
-
-            rate = lambda b : np.sum([b.hist[h].data for h in hist])/b.duration
-            val = [rate(data[r].bd) for r in runs]
-            err = np.full(len(val), np.nan)
-
-        elif 'T1' in select and '1_T1' not in select:
-            
-            
-            # get component
-            idx = select.find('_')
-            if idx < 0:     comp_num = ''
-            else:           comp_num = select[idx:]
-
-            # initialize
-            val = []
-            err = []
-
-            # get T1 and beta from that component average
-            for r in runs:
-                T1i = data[r].fitpar.loc['1_T1'+comp_num, 'res']
-                T1 = 1/T1i
-                dT1_l = data[r].fitpar.loc['1_T1'+comp_num, 'dres-']/(T1i**2)
-                dT1_u = data[r].fitpar.loc['1_T1'+comp_num, 'dres+']/(T1i**2)
-
-                dT1 = (dT1_l + dT1_u)/2
-
-                val.append(T1)
-                err.append(dT1)
-            
-        # fitted parameter options
-        elif select in parnames:
-            val = []
-            err_l = []
-            err_u = []
-
-            for r in runs:
-                try:
-                    val.append(data[r].fitpar.loc[select, 'res'])
-                    err_l.append(data[r].fitpar.loc[select, 'dres-'])
-                    err_u.append(data[r].fitpar.loc[select, 'dres+'])
-                except KeyError:
-                    val.append(np.nan)
-                    err_l.append(np.nan)
-                    err_u.append(np.nan)
-            err = (err_l, err_u)
-
-        # check user-defined parameters
-        elif hasattr(self, 'pop_addpar') and select in self.pop_addpar.set_par.keys():
-            val = self.pop_addpar.set_par[select]()
-            err = np.full(len(val), np.nan)
-
-        try:
-            return (val, err)
-        except UnboundLocalError:
-            self.logger.warning('Parameter selection "%s" not found' % select)
-            raise AttributeError('Selection "%s" not found' % select) from None
-
+        
+        # get values
+        out = np.array([data[r].get_values(select) for r in runs], dtype=object)
+        
+        val = out[:, 0]
+        err = np.array(out[:, 1].tolist())
+        if len(err.shape) > 1: 
+            err = (err[:, 0], err[:, 1])
+        
+        return (val, err)
+        
     # ======================================================================= #
     def input_enable_disable(self, parent, state, first=True):
         """

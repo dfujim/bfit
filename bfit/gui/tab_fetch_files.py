@@ -920,6 +920,7 @@ class dataline(object):
         bd = bdfit.bd
         self.bdfit = bdfit
         self.id = bdfit.id
+        self.bdfit.dataline = self
         
         # build objects
         line_frame = Frame(fetch_tab_frame)
