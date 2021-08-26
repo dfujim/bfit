@@ -1279,7 +1279,7 @@ class fitdata(object):
             err = (err_l, err_u)
 
         # check user-defined parameters
-        elif hasattr(self, 'pop_addpar') and select in pop_addpar.set_par.keys():
+        elif select in pop_addpar.set_par.keys():
             val = pop_addpar.set_par[select]()
             err = np.nan
 
