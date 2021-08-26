@@ -95,7 +95,7 @@ class fit_files(object):
     mode = ""
     chi_threshold = 1.5 # threshold for red highlight on bad fits
     n_fitx_pts = 500    # number of points to draw in fitted curves
-
+    
     # ======================================================================= #
     def __init__(self, fit_data_tab, bfit):
 
@@ -1021,133 +1021,6 @@ class fit_files(object):
         self.plt.tight_layout(figstyle)
         self.plt.legend(figstyle)
 
-        raise_window()
-
-    # ======================================================================= #
-    def draw_fit(self, id, figstyle, unique=True, asym_mode=None, **drawargs):
-        """
-            Draw fit for a single run
-
-            id: id of run to draw fit of
-            figstyle: one of "data", "fit", or "param" to choose which figure
-                    to draw in
-            mode: from bfit.get_asym_mode, string of mode to draw
-         """
-
-        self.logger.info('Drawing fit for run %s. %s', id, drawargs)
-
-        # get data and fit results
-        data = self.bfit.data[id]
-        fit_par = data.fitpar.loc[data.parnames, 'res'].values
-
-        # get draw style
-        style = self.bfit.draw_style.get()
-
-        # label reset
-        if 'label' not in drawargs.keys():
-            drawargs['label'] = self.bfit.data[id].label.get()
-        drawargs['label'] += ' (fit)'
-        label = drawargs['label']
-
-        # set drawing style
-        draw_id = data.id
-
-        # make new window
-        if style == 'new' or not self.plt.active[figstyle]:
-            self.plt.figure(figstyle)
-        elif style == 'redraw':
-            self.plt.figure(figstyle)
-            self.plt.clf(figstyle)
-
-        # set drawing style arguments
-        for k in self.bfit.style:
-            if k not in drawargs.keys() \
-                    and 'marker' not in k \
-                    and k not in ['elinewidth', 'capsize']:
-                drawargs[k] = self.bfit.style[k]
-
-        # linestyle reset
-        if drawargs['linestyle'] == 'None':
-            drawargs['linestyle'] = '-'
-
-        # draw
-        t, a, da = data.asym('c')
-
-        fitx = np.linspace(min(t), max(t), self.n_fitx_pts)
-
-        if self.mode in self.bfit.units:
-            unit = self.bfit.units[self.mode]
-            xlabel = self.bfit.xlabel_dict[self.mode] % unit[1]
-        else:
-            xlabel = self.bfit.xlabel_dict[self.mode]
-
-        # get fity
-        fity = data.fitfn(fitx, *fit_par)
-
-        # draw relative to peak 0
-        if self.bfit.draw_rel_peak0.get():
-            
-            # get reference
-            par = data.fitpar
-            
-            if 'peak_0' in par.index:   index = 'peak_0'
-            elif 'mean_0' in par.index: index = 'mean_0'
-            elif 'peak' in par.index:   index = 'peak'
-            elif 'mean' in par.index:   index = 'mean'
-            else:
-                msg = "No 'peak' or 'mean' fit parameter found. Fit with" +\
-                     " an appropriate function."
-                self.logger.exception(msg)
-                messagebox.error(msg)
-                raise RuntimeError(msg)
-            
-            ref = par.loc[index, 'res']
-            
-            # do the shift
-            fitx -= ref                    
-            fitx *= unit[0]
-            xlabel = 'Frequency Shift (%s)' % unit[1]
-            self.logger.info('Drawing as freq shift from peak_0')
-        
-        # ppm shift
-        elif self.bfit.draw_ppm.get():
-            
-            # check div zero
-            try:
-                fitx = 1e6*(fitx-self.bfit.ppm_reference)/self.bfit.ppm_reference
-            except ZeroDivisionError as err:
-                self.logger.exception(str(msg))
-                messagebox.error(str(msg))
-                raise err
-            
-            self.logger.info('Drawing as PPM shift with reference %s Hz', 
-                             self.bfit.ppm_reference)
-            xlabel = 'Frequency Shift (PPM)'
-            
-        else: 
-            fitx *= unit[0]
-
-        # account for normalized draw modes
-        if asym_mode == 'cn':
-            asym_mode, norm, dnorm = data.get_norm(asym_mode, a, da)
-            fity /= norm    
-                
-        elif asym_mode == 'cs':
-            asym_mode += 'f'
-            fity -= data.fitpar.loc['baseline', 'res']
-
-        self.plt.plot(figstyle, draw_id, fitx, fity, zorder=10,
-                      unique=unique, **drawargs)
-
-        # plot elements
-        self.plt.ylabel(figstyle, self.bfit.ylabel_dict.get(asym_mode, 'Asymmetry'))
-        self.plt.xlabel(figstyle, xlabel)
-
-        # show
-        self.plt.tight_layout(figstyle)
-        self.plt.legend(figstyle)
-
-        # bring window to front
         raise_window()
 
     # ======================================================================= #
@@ -2597,9 +2470,9 @@ class fitline(object):
         # draw if ncomp is 1
         if ncomp == 1:
             bfit.draw_style.set('stack')
-            fit_files.draw_fit(bdfit.id, 'fit', unique=False, 
-                               asym_mode=bfit.get_asym_mode(self.bfit.fit_files), 
-                               label=fn_name)
+            bdfit.draw_fit('fit', unique=False, 
+                           asym_mode=bfit.get_asym_mode(self.bfit.fit_files), 
+                           label=fn_name)
             self.bfit.draw_style.set(draw_mode)
             return
 

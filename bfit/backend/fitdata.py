@@ -752,6 +752,134 @@ class fitdata(object):
             
         self.logger.debug('Drawing success.')
 
+        # ======================================================================= #
+    def draw_fit(self, figstyle, unique=True, asym_mode=None, **drawargs):
+        """
+            Draw fit for a single run
+            
+            figstyle: one of "data", "fit", or "param" to choose which figure
+                    to draw in
+            asym_mode: from bfit.get_asym_mode, string of mode to draw
+         """
+
+        self.logger.info('Drawing fit for run %s. %s', id, drawargs)
+
+        # get data and fit results
+        fit_par = self.fitpar.loc[self.parnames, 'res'].values
+
+        # get draw style
+        style = self.bfit.draw_style.get()
+        
+        # get PltTracker
+        plt = self.bfit.plt
+
+        # label reset
+        if 'label' not in drawargs.keys():
+            drawargs['label'] = self.label.get()
+        drawargs['label'] += ' (fit)'
+        label = drawargs['label']
+
+        # set drawing style
+        draw_id = self.id
+
+        # make new window
+        if style == 'new' or not plt.active[figstyle]:
+            plt.figure(figstyle)
+        elif style == 'redraw':
+            plt.figure(figstyle)
+            plt.clf(figstyle)
+
+        # set drawing style arguments
+        for k in self.bfit.style:
+            if k not in drawargs.keys() \
+                    and 'marker' not in k \
+                    and k not in ['elinewidth', 'capsize']:
+                drawargs[k] = self.bfit.style[k]
+
+        # linestyle reset
+        if drawargs['linestyle'] == 'None':
+            drawargs['linestyle'] = '-'
+
+        # draw
+        t, a, da = self.asym('c')
+
+        fitx = np.linspace(min(t), max(t), self.bfit.fit_files.n_fitx_pts)
+
+        if self.mode in self.bfit.units:
+            unit = self.bfit.units[self.mode]
+            xlabel = self.bfit.xlabel_dict[self.mode] % unit[1]
+        else:
+            xlabel = self.bfit.xlabel_dict[self.mode]
+
+        # get fity
+        fity = self.fitfn(fitx, *fit_par)
+
+        # draw relative to peak 0
+        if self.bfit.draw_rel_peak0.get():
+            
+            # get reference
+            par = self.fitpar
+            
+            if 'peak_0' in par.index:   index = 'peak_0'
+            elif 'mean_0' in par.index: index = 'mean_0'
+            elif 'peak' in par.index:   index = 'peak'
+            elif 'mean' in par.index:   index = 'mean'
+            else:
+                msg = "No 'peak' or 'mean' fit parameter found. Fit with" +\
+                     " an appropriate function."
+                self.logger.exception(msg)
+                messagebox.error(msg)
+                raise RuntimeError(msg)
+            
+            ref = par.loc[index, 'res']
+            
+            # do the shift
+            fitx -= ref                    
+            fitx *= unit[0]
+            xlabel = 'Frequency Shift (%s)' % unit[1]
+            self.logger.info('Drawing as freq shift from peak_0')
+        
+        # ppm shift
+        elif self.bfit.draw_ppm.get():
+            
+            # check div zero
+            try:
+                fitx = 1e6*(fitx-self.bfit.ppm_reference)/self.bfit.ppm_reference
+            except ZeroDivisionError as err:
+                self.logger.exception(str(msg))
+                messagebox.error(str(msg))
+                raise err
+            
+            self.logger.info('Drawing as PPM shift with reference %s Hz', 
+                             self.bfit.ppm_reference)
+            xlabel = 'Frequency Shift (PPM)'
+            
+        else: 
+            fitx *= unit[0]
+
+        # account for normalized draw modes
+        if asym_mode == 'cn':
+            asym_mode, norm, dnorm = self.get_norm(asym_mode, a, da)
+            fity /= norm    
+                
+        elif asym_mode == 'cs':
+            asym_mode += 'f'
+            fity -= self.fitpar.loc['baseline', 'res']
+
+        plt.plot(figstyle, draw_id, fitx, fity, zorder=10,
+                      unique=unique, **drawargs)
+
+        # plot elements
+        plt.ylabel(figstyle, self.bfit.ylabel_dict.get(asym_mode, 'Asymmetry'))
+        plt.xlabel(figstyle, xlabel)
+
+        # show
+        plt.tight_layout(figstyle)
+        plt.legend(figstyle)
+
+        # bring window to front
+        raise_window()
+    
     # ======================================================================= #
     @property
     def beam_kev(self): 
