@@ -1034,10 +1034,15 @@ class bfit(object):
         fileviewer_tab = self.fileviewer
         fileviewer_tab.year.set(from_file['fileview_year'])
         fileviewer_tab.runn.set(from_file['fileview_run'])
-        fileviewer_tab.get_data()
-        fileviewer_tab.asym_type.set(from_file['fileview_asym_type'])
-        fileviewer_tab.rebin.set(from_file['fileview_rebin'])
-        fileviewer_tab.is_updating.set(from_file['fileview_is_updating'])
+        
+        try:
+            fileviewer_tab.get_data()
+        except RuntimeError:
+            pass
+        else:
+            fileviewer_tab.asym_type.set(from_file['fileview_asym_type'])
+            fileviewer_tab.rebin.set(from_file['fileview_rebin'])
+            fileviewer_tab.is_updating.set(from_file['fileview_is_updating'])
 
         # fetch files
         fetch_files = self.fetch_files
