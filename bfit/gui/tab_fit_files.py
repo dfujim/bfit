@@ -1893,7 +1893,7 @@ class fitline(object):
                         command=lambda : self.bfit.fit_files.do_gui_param(id=self.dataline.id),
                         pad=0)
         result_comp_button = ttk.Button(fitframe, text='Result',
-                        command=self.show_fn_composition, pad=0)
+                        command=self.draw_fn_composition, pad=0)
 
         c = 0
         ttk.Label(fitframe, text='Parameter').grid(    column=c, row=1, padx=5); c+=1
@@ -2336,7 +2336,7 @@ class fitline(object):
                     disp['chi'][1]['readonlybackground']=colors.readonly
 
     # ======================================================================= #
-    def show_fn_composition(self):
+    def draw_fn_composition(self):
         """
             Draw window with function components and total
         """
