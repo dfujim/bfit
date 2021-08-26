@@ -635,6 +635,7 @@ class bfit(object):
         menu_help = Menu(menubar, title='Help')
         menubar.add_cascade(menu=menu_help, label='Help')
         menu_help.add_command(label='Show help wiki', command=self.help)
+        menu_help.add_command(label='Cite bfit', command=self.citation)
         menu_help.add_command(label='Update bfit', command=self.update_bfit)
         menu_help.add_command(label="What's new?", command=self.whatsnew)
         menu_help.add_command(label='Report an issue', command=self.report_issue)
@@ -700,6 +701,12 @@ class bfit(object):
             plt.close('all')
         except ImportError:
             pass
+    
+    # ======================================================================= #
+    def citation(self):
+        """Display publication page"""
+        self.logger.info('Opening https://arxiv.org/abs/2004.10395')
+        webbrowser.open('https://arxiv.org/abs/2004.10395')    
     
     # ======================================================================= #
     def do_close_all(self):
