@@ -329,8 +329,8 @@ class fit_files(object):
 
         # save/load state -----------------------
         state_frame = ttk.Labelframe(fit_data_tab, text='Program State', pad=5)
-        state_save_button = ttk.Button(state_frame, text='Save', command=self.save_state)
-        state_load_button = ttk.Button(state_frame, text='Load', command=self.load_state)
+        state_save_button = ttk.Button(state_frame, text='Save', command=self.bfit.save_state)
+        state_load_button = ttk.Button(state_frame, text='Load', command=self.bfit.load_state)
 
         state_save_button.grid(column=1, row=0, padx=5, pady=5)
         state_load_button.grid(column=2, row=0, padx=5, pady=5)
@@ -1371,191 +1371,6 @@ class fit_files(object):
             self.input_enable_disable(child, state=state, first=False)
 
     # ======================================================================= #
-    def load_state(self, filename=None):
-        """
-            Load the state of the gui
-        """
-
-        # get the filename
-        if filename is None:
-            filename = filedialog.askopenfilename(filetypes=[('yaml', '*.yaml'),
-                                                             ('allfiles', '*')])
-            if not filename:
-                return
-
-        self.logger.info('Loading program state from %s', filename)
-
-        # load the object with the data
-        with open(filename, 'r') as fid:
-            from_file = yaml.safe_load(fid)
-
-        # clear loaded runs
-        fetch_tab = self.bfit.fetch_files
-        fetch_tab.remove_all()
-
-        # bfit parameters
-        self.bfit.style = from_file['style']
-        self.bfit.hist_select = from_file['hist_select']
-        self.bfit.draw_style.set(from_file['draw_style'])
-        self.bfit.draw_fit.set(from_file['draw_fit'])
-        
-        self.bfit.probe_species.set(from_file['probe_species'])
-        self.bfit.set_probe_species()
-        
-        self.bfit.minimizer.set(from_file['minimizer'])
-        self.bfit.set_fit_routine()
-        
-        self.bfit.norm_with_param.set(from_file['norm_with_param'])
-        self.bfit.draw_standardized_res.set(from_file['draw_standardized_res'])
-        self.bfit.use_nbm.set(from_file['use_nbm'])
-        self.bfit.draw_ppm.set(from_file['draw_ppm'])
-        self.bfit.draw_rel_peak0.set(from_file['draw_rel_peak0'])
-        self.bfit.thermo_channel.set(from_file['thermo_channel'])
-        self.bfit.units = from_file['units']
-        self.bfit.label_default.set(from_file['label_default'])
-        self.bfit.ppm_reference = from_file['ppm_reference']
-        self.bfit.update_period = from_file['update_period']
-        self.bfit.bnmr_data_dir = from_file['bnmr_data_dir']
-        self.bfit.bnqr_data_dir = from_file['bnqr_data_dir']
-        
-        # set deadtime correction
-        self.bfit.deadtime = from_file['deadtime']
-        self.bfit.deadtime_switch.set(from_file['deadtime_switch'])
-        self.bfit.deadtime_global.set(from_file['deadtime_global'])
-        
-        # fileviewer
-        fileviewer_tab = self.bfit.fileviewer
-        fileviewer_tab.year.set(from_file['fileview_year'])
-        fileviewer_tab.runn.set(from_file['fileview_run'])
-        fileviewer_tab.get_data()
-        fileviewer_tab.asym_type.set(from_file['fileview_asym_type'])
-        fileviewer_tab.rebin.set(from_file['fileview_rebin'])
-        fileviewer_tab.is_updating.set(from_file['fileview_is_updating'])
-
-        # fetch files
-        fetch_files = self.bfit.fetch_files
-        fetch_files.year.set(from_file['fetch_year'])
-        fetch_files.run.set(from_file['fetch_run'])
-        fetch_files.check_state.set(from_file['fetch_check_state'])
-        fetch_files.check_state_data.set(from_file['fetch_check_state_data'])
-        fetch_files.check_state_fit.set(from_file['fetch_check_state_fit'])
-        fetch_files.check_state_res.set(from_file['fetch_check_state_res'])
-        fetch_files.check_rebin.set(from_file['fetch_check_rebin'])
-        fetch_files.check_bin_remove.set(from_file['fetch_check_bin_remove'])
-        fetch_files.asym_type.set(from_file['fetch_asym_type'])
-         
-        # load selected runs
-        datalines = from_file['datalines']
-        setyear = fetch_tab.year.get()
-        setrun =  fetch_tab.run.get()
-        for id in datalines:
-            d = datalines[id]
-
-            # set year and run and fetch
-            fetch_tab.year.set(d['year'])
-            fetch_tab.run.set(d['run'])
-            fetch_tab.get_data()
-
-            # set corresponding parameters for the run
-            d_actual = fetch_tab.data_lines[id]
-            d_actual.bin_remove.set(d['bin_remove'])
-            d_actual.check_data.set(d['check_data'])
-            d_actual.check_fit.set(d['check_fit'])
-            d_actual.check_res.set(d['check_res'])
-            d_actual.check_state.set(d['check_state'])
-            d_actual.label.set(d['label'])
-            d_actual.rebin.set(d['rebin'])
-
-        # reset year and run input info
-        fetch_tab.year.set(setyear)
-        fetch_tab.run.set(setrun)
-        
-        # fit files
-        self.annotation.set(from_file['fit_annotation'])
-        self.asym_type.set(from_file['fit_asym_type'])
-        self.fit_function_title.set(from_file['fit_fit_function_title'])
-        self.n_component.set(from_file['fit_n_component'])
-        self.par_label.set(from_file['fit_par_label'])
-        self.set_as_group.set(from_file['fit_set_as_group'])
-        self.set_prior_p0.set(from_file['fit_set_prior_p0'])
-        self.use_rebin.set(from_file['fit_use_rebin'])
-        self.xaxis.set(from_file['fit_xaxis'])
-        self.yaxis.set(from_file['fit_yaxis'])
-        self.xlo.set(from_file['fit_xlo'])
-        self.xhi.set(from_file['fit_xhi'])
-        self.gchi_label['text'] = from_file['gchi']
-        
-        # get parameters in fitting page
-        self.populate()
-
-        # set parameter values
-        d_fitdata = self.bfit.data
-        fitlines = from_file['fitlines']
-        for id in fitlines:
-            parentry = fitlines[id]
-            parentry_actual = self.fit_lines[id].parentry
-            for parname in parentry:
-                par = parentry[parname]
-                for k in par.keys():
-                    parentry_actual[parname][k][0].set(par[k])
-
-            # make sure dataline checkboxes are active
-            fetch_tab.data_lines[id].draw_fit_checkbox['state'] = 'normal'
-            fetch_tab.data_lines[id].draw_res_checkbox['state'] = 'normal'
-
-            # set fit inputs
-            df = pd.DataFrame([], columns=['p0', 'blo', 'bhi', 'fixed'])
-            for p, par in parentry.items(): 
-                s = pd.Series([par['p0'], par['blo'], par['bhi'], par['fixed']], 
-                              index=['p0', 'blo', 'bhi', 'fixed'],
-                              name=p)
-                df = df.append(s)
-            
-            d_fitdata[id].set_fitpar(df)
-
-            # get chisq
-            keylist = self.fitter.gen_param_names(from_file['fit_fit_function_title'],
-                                                  from_file['fit_n_component'])
-            for k in keylist:
-                if 'chi' in parentry[k].keys():
-                    if parentry[k]['chi'] != '':
-                        chi = float(parentry[k]['chi'])
-                    else:
-                        chi = np.nan
-                    break
-
-            # get pulse length
-            d_actual = fetch_tab.data_lines[id]
-            pulse_len = 0
-            if d_actual.mode in ('20', '2h'):
-                pulse_len = d_actual.bdfit.pulse_s
-
-            # get probe lifetime
-            lifetime = bd.life[from_file['probe_species']]
-
-            # get fit function
-            fitfn = self.fitter.get_fn(from_file['fit_fit_function_title'],
-                                       from_file['fit_n_component'],
-                                       pulse_len,
-                                       lifetime)
-
-            if '2' in d_actual.mode and from_file['probe_species'] == 'Mg31':
-                fitfn1 = decay_corrected_fn(fa_31Mg, fitfn, pulse_len)
-            else:
-                fitfn1 = fitfn
-
-            # set fit results
-            df = pd.DataFrame({ 'res':[float(parentry[p]['res']) 
-                                        if parentry[p]['res'] else np.nan for p in keylist],
-                                'dres-':[float(parentry[p]['dres-']) 
-                                        if parentry[p]['dres-'] else np.nan for p in keylist],
-                                'dres+':[float(parentry[p]['dres+']) 
-                                        if parentry[p]['dres+'] else np.nan for p in keylist],  
-                                'chi':np.full(len(keylist), chi)})  
-            
-            d_fitdata[id].set_fitresult({'fn': fitfn1, 'results': df})
-
-    # ======================================================================= #
     def modify_all(self, *args, source=None, par='', column=''):
         """
             Modify all input fields of each line to match the altered one,
@@ -1602,128 +1417,6 @@ class fit_files(object):
             pass
         else:
             self.do_fit()
-
-    # ======================================================================= #
-    def save_state(self, filename=None):
-        """
-            Save the state of the gui:
-
-            dataline state info
-            Fitting function
-            Number of components
-            Initial inputs
-            Fit results
-        """
-
-        # final output
-        to_file = {}
-
-        # bfit menu options
-        to_file['probe_species'] = self.bfit.probe_species.get()
-        to_file['minimizer'] = self.bfit.minimizer.get()
-        to_file['norm_with_param'] = self.bfit.norm_with_param.get()
-        to_file['draw_standardized_res'] = self.bfit.draw_standardized_res.get()
-        to_file['use_nbm'] = self.bfit.use_nbm.get()
-        to_file['draw_ppm'] = self.bfit.draw_ppm.get()
-        to_file['draw_rel_peak0'] = self.bfit.draw_rel_peak0.get()
-        to_file['thermo_channel'] = self.bfit.thermo_channel.get()
-        to_file['units'] = self.bfit.units
-        to_file['label_default'] = self.bfit.label_default.get()
-        to_file['ppm_reference'] = self.bfit.ppm_reference
-        to_file['update_period'] = self.bfit.update_period
-        to_file['deadtime'] = self.bfit.deadtime
-        to_file['deadtime_switch'] = self.bfit.deadtime_switch.get()
-        to_file['deadtime_global'] = self.bfit.deadtime_global.get()
-        to_file['style'] = self.bfit.style
-        to_file['hist_select'] = self.bfit.hist_select
-        to_file['draw_style'] = self.bfit.draw_style.get()
-        to_file['draw_fit'] = self.bfit.draw_fit.get()
-        to_file['bnmr_data_dir'] = self.bfit.bnmr_data_dir
-        to_file['bnqr_data_dir'] = self.bfit.bnqr_data_dir
-
-        # fileviewer
-        fileviewer_tab = self.bfit.fileviewer
-        to_file['fileview_year'] = fileviewer_tab.year.get()
-        to_file['fileview_run'] = fileviewer_tab.runn.get()
-        to_file['fileview_asym_type'] = fileviewer_tab.asym_type.get()
-        to_file['fileview_rebin'] = fileviewer_tab.rebin.get()
-        to_file['fileview_is_updating'] = fileviewer_tab.is_updating.get()
-
-        # fetch files
-        fetch_files = self.bfit.fetch_files
-        to_file['fetch_year'] = fetch_files.year.get()
-        to_file['fetch_run'] = fetch_files.run.get()
-        to_file['fetch_check_state'] = fetch_files.check_state.get()
-        to_file['fetch_check_state_data'] = fetch_files.check_state_data.get()
-        to_file['fetch_check_state_fit'] = fetch_files.check_state_fit.get()
-        to_file['fetch_check_state_res'] = fetch_files.check_state_res.get()
-        to_file['fetch_check_rebin'] = fetch_files.check_rebin.get()
-        to_file['fetch_check_bin_remove'] = fetch_files.check_bin_remove.get()
-        to_file['fetch_asym_type'] = fetch_files.asym_type.get()
-
-        # get state from datalines
-        datalines = fetch_files.data_lines
-        dlines = {}
-        for id in datalines:
-            d = datalines[id]
-            dlines[id] = {
-                    'bin_remove'   :d.bin_remove.get(),
-                    'check_data'   :d.check_data.get(),
-                    'check_fit'    :d.check_fit.get(),
-                    'check_res'    :d.check_res.get(),
-                    'check_state'  :d.check_state.get(),
-                    'id'           :d.id,
-                    'label'        :d.label.get(),
-                    'rebin'        :d.rebin.get(),
-                    'run'          :d.run,
-                    'year'         :d.year
-                    }
-        to_file['datalines'] = dlines
-
-        # fit files
-        to_file['gchi'] = self.gchi_label['text']
-        to_file['fit_annotation'] = self.annotation.get()
-        to_file['fit_asym_type'] = self.asym_type.get()
-        to_file['fit_fit_function_title'] = self.fit_function_title.get()
-        to_file['fit_n_component'] = self.n_component.get()
-        to_file['fit_par_label'] = self.par_label.get()
-        to_file['fit_set_as_group'] = self.set_as_group.get()
-        to_file['fit_set_prior_p0'] = self.set_prior_p0.get()
-        to_file['fit_use_rebin'] = self.use_rebin.get()
-        to_file['fit_xaxis'] = self.xaxis.get()
-        to_file['fit_yaxis'] = self.yaxis.get()
-        to_file['fit_xlo'] = self.xlo.get()
-        to_file['fit_xhi'] = self.xhi.get()
-        
-        # get parameter values from fitlines
-        fitlines = self.fit_lines
-        flines = {}
-        for id in fitlines:
-            parentry_actual = fitlines[id].parentry
-            parentry = {}
-            for param_name in parentry_actual:
-                par = parentry_actual[param_name]
-                parentry[param_name] = {k:par[k][0].get() for k in par}
-            flines[id] = parentry
-        to_file['fitlines'] = flines
-
-        # get xlims
-        to_file['xlo'] = self.xlo.get()
-        to_file['xhi'] = self.xhi.get()
-
-        # save file ----------------------------------------------------------
-        if filename is None:
-            fid = filedialog.asksaveasfile(mode='w', filetypes=[('yaml', '*.yaml'),
-                                                           ('allfiles', '*')],
-                                           defaultextension='.yaml')
-        else:
-            fid = open(filename, 'w')
-            
-        if fid:
-            yaml.dump(to_file, fid)
-            fid.close()
-
-        self.logger.info('Saving program state to %s', fid)
 
     # ======================================================================= #
     def show_all_results(self):
@@ -1936,6 +1629,213 @@ class fitline(object):
             pass
 
         if hasattr(self, 'parentry'):    del self.parentry
+
+    # ======================================================================= #
+    def get_new_parameters(self):
+        """
+            Fetch initial parameters from fitter, set to data.
+
+            plist: Dictionary of initial parameters {par_name:par_value}
+        """
+        
+        run = self.dataline.id
+
+        # get pointer to fit files object
+        fit_files = self.bfit.fit_files
+        fitter = fit_files.fitter
+        ncomp = fit_files.n_component.get()
+        fn_title = fit_files.fit_function_title.get()
+
+        # get list of parameter names
+        plist = list(fitter.gen_param_names(fn_title, ncomp))
+        plist.sort()
+
+        # check if we are using the fit results of the prior fit
+        values_res = None
+        res = self.bfit.data[run].fitpar['res']
+        
+        isfitted = any(res.values) # is this run fitted?
+        
+        if fit_files.set_prior_p0.get() and not isfitted:
+            
+            r = 0
+            for rkey in self.bfit.data:
+                data = self.bfit.data[rkey]
+                
+                isfitted = any(data.fitpar['res'].values) # is the latest run fitted?
+                if isfitted and data.run > r:
+                    r = data.run
+                    values_res = data.fitpar
+        
+        # get calcuated initial values
+        try:
+            values = fitter.gen_init_par(fn_title, ncomp, self.bfit.data[run].bd,
+                                    self.bfit.get_asym_mode(fit_files))
+        except Exception as err:
+            print(err)
+            self.logger.exception(err)
+            return tuple()
+            # ~ raise err from None
+              
+        # set p0 from old
+        if values_res is not None:
+            values['p0'] = values_res['res']
+                                     
+        # set to data
+        self.bfit.data[run].set_fitpar(values)
+        
+        return tuple(plist)
+
+    # ======================================================================= #
+    def grid(self, row):
+        """Re-grid a dataline object so that it is in order by run number"""
+        self.row = row
+        self.fitframe.grid(column=0, row=row, sticky=(W, N))
+        self.fitframe.update_idletasks()
+
+    # ======================================================================= #
+    def degrid(self):
+        """Remove displayed dataline object from file selection. """
+
+        self.logger.debug('Degridding fitline for run %s', self.dataline.id)
+        self.fitframe.grid_forget()
+        self.fitframe.update_idletasks()
+
+    # ======================================================================= #
+    def draw_fn_composition(self):
+        """
+            Draw window with function components and total
+        """
+
+        self.logger.info('Drawing fit composition for run %s', self.dataline.id)
+
+        # get top objects
+        fit_files = self.bfit.fit_files
+        bfit = self.bfit
+
+        # get fit object
+        bdfit = self.dataline.bdfit
+
+        # get base function
+        fn_name = fit_files.fit_function_title.get()
+
+        # get number of components and parameter names
+        ncomp = fit_files.n_component.get()
+        pnames_single = fit_files.fitter.gen_param_names(fn_name, 1)
+        pnames_combined = fit_files.fitter.gen_param_names(fn_name, ncomp)
+
+        if '2' in bdfit.mode:
+            fn_single = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=1,
+                            pulse_len=bdfit.pulse_s,
+                            lifetime=bd.life[bfit.probe_species.get()])
+            fn_combined = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=ncomp,
+                            pulse_len=bdfit.pulse_s,
+                            lifetime=bd.life[bfit.probe_species.get()])
+        else:
+            fn_single = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=1)
+            fn_combined = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=ncomp)
+
+        # draw in redraw mode
+        draw_mode = bfit.draw_style.get()
+        bfit.draw_style.set('redraw')
+
+        # draw the data
+        bdfit.draw(bfit.get_asym_mode(fit_files), figstyle='fit', color='k')
+
+        # get the fit results
+        results = {par:bdfit.fitpar.loc[par, 'res'] for par in pnames_combined}
+
+        # draw if ncomp is 1
+        if ncomp == 1:
+            bfit.draw_style.set('stack')
+            bdfit.draw_fit('fit', unique=False, 
+                           asym_mode=bfit.get_asym_mode(self.bfit.fit_files), 
+                           label=fn_name)
+            self.bfit.draw_style.set(draw_mode)
+            return
+
+        # draw baseline
+        if 'baseline' in pnames_single:
+            bfit.plt.axhline('fit', bdfit.id+'_base', results['baseline'], ls='--', zorder=6)
+
+        # get x pts
+        t, a, da = bdfit.asym(bfit.get_asym_mode(fit_files))
+        fitx = np.linspace(min(t), max(t), fit_files.n_fitx_pts)
+
+        # get x axis scaling
+        if bdfit.mode in bfit.units:
+            unit = bfit.units[bdfit.mode]
+        else:
+            fitxx = fitx
+
+        # draw relative to peak 0
+        if self.bfit.draw_rel_peak0.get():
+            
+            # get reference
+            par = data.fitpar
+            
+            if 'peak_0' in par.index:   index = 'peak_0'
+            elif 'mean_0' in par.index: index = 'mean_0'
+            elif 'peak' in par.index:   index = 'peak'
+            elif 'mean' in par.index:   index = 'mean'
+            else:
+                msg = "No 'peak' or 'mean' fit parameter found. Fit with" +\
+                     " an appropriate function."
+                self.logger.exception(msg)
+                messagebox.error(msg)
+                raise RuntimeError(msg)
+            
+            ref = par.loc[index, 'res']
+            
+            # do the shift
+            fitxx = fitx-ref                    
+            fitxx *= unit[0]
+            xlabel = 'Frequency Shift (%s)' % unit[1]
+            self.logger.info('Drawing as freq shift from peak_0')
+        
+        # ppm shift
+        elif self.bfit.draw_ppm.get():
+            
+            # check div zero
+            try:
+                fitxx = 1e6*(fitx-self.bfit.ppm_reference)/self.bfit.ppm_reference
+            except ZeroDivisionError as err:
+                self.logger.exception(str(msg))
+                messagebox.error(str(msg))
+                raise err
+            
+            self.logger.info('Drawing as PPM shift with reference %s Hz', 
+                             self.bfit.ppm_reference)
+            xlabel = 'Frequency Shift (PPM)'
+            
+        else: 
+            fitxx = fitx*unit[0]
+
+        # draw the combined
+        params = [results[name] for name in pnames_combined]
+
+        bfit.plt.plot('fit', bdfit.id+'_comb', fitxx, fn_combined(fitx, *params),
+                            unique=False, label='Combined', zorder=5)
+
+        # draw each component
+        for i in range(ncomp):
+
+            # get parameters
+            params = [results[single+'_%d'%i] \
+                        for single in pnames_single if single != 'baseline']
+
+            if 'baseline' in pnames_single:
+                params.append(results['baseline'])
+
+            # draw
+            bfit.plt.plot('fit', bdfit.id+'_%d'%i, fitxx, fn_single(fitx, *params),
+                            unique=False, ls='--', label='%s %d'%(fn_name, i), zorder=6)
+
+        # plot legend
+        bfit.plt.legend('fit')
+
+        # reset to old draw mode
+        bfit.draw_style.set(draw_mode)
 
     # ======================================================================= #
     def populate(self, force_modify=False):
@@ -2196,214 +2096,7 @@ class fitline(object):
 
         # drop old parameters
         fitdat.drop_unused_param(self.parentry.keys())
-
-    # ======================================================================= #
-    def get_new_parameters(self):
-        """
-            Fetch initial parameters from fitter, set to data.
-
-            plist: Dictionary of initial parameters {par_name:par_value}
-        """
-        
-        run = self.dataline.id
-
-        # get pointer to fit files object
-        fit_files = self.bfit.fit_files
-        fitter = fit_files.fitter
-        ncomp = fit_files.n_component.get()
-        fn_title = fit_files.fit_function_title.get()
-
-        # get list of parameter names
-        plist = list(fitter.gen_param_names(fn_title, ncomp))
-        plist.sort()
-
-        # check if we are using the fit results of the prior fit
-        values_res = None
-        res = self.bfit.data[run].fitpar['res']
-        
-        isfitted = any(res.values) # is this run fitted?
-        
-        if fit_files.set_prior_p0.get() and not isfitted:
-            
-            r = 0
-            for rkey in self.bfit.data:
-                data = self.bfit.data[rkey]
-                
-                isfitted = any(data.fitpar['res'].values) # is the latest run fitted?
-                if isfitted and data.run > r:
-                    r = data.run
-                    values_res = data.fitpar
-        
-        # get calcuated initial values
-        try:
-            values = fitter.gen_init_par(fn_title, ncomp, self.bfit.data[run].bd,
-                                    self.bfit.get_asym_mode(fit_files))
-        except Exception as err:
-            print(err)
-            self.logger.exception(err)
-            return tuple()
-            # ~ raise err from None
-              
-        # set p0 from old
-        if values_res is not None:
-            values['p0'] = values_res['res']
-                                     
-        # set to data
-        self.bfit.data[run].set_fitpar(values)
-        
-        return tuple(plist)
-
-    # ======================================================================= #
-    def grid(self, row):
-        """Re-grid a dataline object so that it is in order by run number"""
-        self.row = row
-        self.fitframe.grid(column=0, row=row, sticky=(W, N))
-        self.fitframe.update_idletasks()
-
-    # ======================================================================= #
-    def degrid(self):
-        """Remove displayed dataline object from file selection. """
-
-        self.logger.debug('Degridding fitline for run %s', self.dataline.id)
-        self.fitframe.grid_forget()
-        self.fitframe.update_idletasks()
-
-    # ======================================================================= #
-    def draw_fn_composition(self):
-        """
-            Draw window with function components and total
-        """
-
-        self.logger.info('Drawing fit composition for run %s', self.dataline.id)
-
-        # get top objects
-        fit_files = self.bfit.fit_files
-        bfit = self.bfit
-
-        # get fit object
-        bdfit = self.dataline.bdfit
-
-        # get base function
-        fn_name = fit_files.fit_function_title.get()
-
-        # get number of components and parameter names
-        ncomp = fit_files.n_component.get()
-        pnames_single = fit_files.fitter.gen_param_names(fn_name, 1)
-        pnames_combined = fit_files.fitter.gen_param_names(fn_name, ncomp)
-
-        if '2' in bdfit.mode:
-            fn_single = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=1,
-                            pulse_len=bdfit.pulse_s,
-                            lifetime=bd.life[bfit.probe_species.get()])
-            fn_combined = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=ncomp,
-                            pulse_len=bdfit.pulse_s,
-                            lifetime=bd.life[bfit.probe_species.get()])
-        else:
-            fn_single = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=1)
-            fn_combined = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=ncomp)
-
-        # draw in redraw mode
-        draw_mode = bfit.draw_style.get()
-        bfit.draw_style.set('redraw')
-
-        # draw the data
-        bdfit.draw(bfit.get_asym_mode(fit_files), figstyle='fit', color='k')
-
-        # get the fit results
-        results = {par:bdfit.fitpar.loc[par, 'res'] for par in pnames_combined}
-
-        # draw if ncomp is 1
-        if ncomp == 1:
-            bfit.draw_style.set('stack')
-            bdfit.draw_fit('fit', unique=False, 
-                           asym_mode=bfit.get_asym_mode(self.bfit.fit_files), 
-                           label=fn_name)
-            self.bfit.draw_style.set(draw_mode)
-            return
-
-        # draw baseline
-        if 'baseline' in pnames_single:
-            bfit.plt.axhline('fit', bdfit.id+'_base', results['baseline'], ls='--', zorder=6)
-
-        # get x pts
-        t, a, da = bdfit.asym(bfit.get_asym_mode(fit_files))
-        fitx = np.linspace(min(t), max(t), fit_files.n_fitx_pts)
-
-        # get x axis scaling
-        if bdfit.mode in bfit.units:
-            unit = bfit.units[bdfit.mode]
-        else:
-            fitxx = fitx
-
-        # draw relative to peak 0
-        if self.bfit.draw_rel_peak0.get():
-            
-            # get reference
-            par = data.fitpar
-            
-            if 'peak_0' in par.index:   index = 'peak_0'
-            elif 'mean_0' in par.index: index = 'mean_0'
-            elif 'peak' in par.index:   index = 'peak'
-            elif 'mean' in par.index:   index = 'mean'
-            else:
-                msg = "No 'peak' or 'mean' fit parameter found. Fit with" +\
-                     " an appropriate function."
-                self.logger.exception(msg)
-                messagebox.error(msg)
-                raise RuntimeError(msg)
-            
-            ref = par.loc[index, 'res']
-            
-            # do the shift
-            fitxx = fitx-ref                    
-            fitxx *= unit[0]
-            xlabel = 'Frequency Shift (%s)' % unit[1]
-            self.logger.info('Drawing as freq shift from peak_0')
-        
-        # ppm shift
-        elif self.bfit.draw_ppm.get():
-            
-            # check div zero
-            try:
-                fitxx = 1e6*(fitx-self.bfit.ppm_reference)/self.bfit.ppm_reference
-            except ZeroDivisionError as err:
-                self.logger.exception(str(msg))
-                messagebox.error(str(msg))
-                raise err
-            
-            self.logger.info('Drawing as PPM shift with reference %s Hz', 
-                             self.bfit.ppm_reference)
-            xlabel = 'Frequency Shift (PPM)'
-            
-        else: 
-            fitxx = fitx*unit[0]
-
-        # draw the combined
-        params = [results[name] for name in pnames_combined]
-
-        bfit.plt.plot('fit', bdfit.id+'_comb', fitxx, fn_combined(fitx, *params),
-                            unique=False, label='Combined', zorder=5)
-
-        # draw each component
-        for i in range(ncomp):
-
-            # get parameters
-            params = [results[single+'_%d'%i] \
-                        for single in pnames_single if single != 'baseline']
-
-            if 'baseline' in pnames_single:
-                params.append(results['baseline'])
-
-            # draw
-            bfit.plt.plot('fit', bdfit.id+'_%d'%i, fitxx, fn_single(fitx, *params),
-                            unique=False, ls='--', label='%s %d'%(fn_name, i), zorder=6)
-
-        # plot legend
-        bfit.plt.legend('fit')
-
-        # reset to old draw mode
-        bfit.draw_style.set(draw_mode)
-
+    
     # ======================================================================= #
     def set_input(self, source_line, parameter, column, set_all):
         """

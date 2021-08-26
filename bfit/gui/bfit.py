@@ -19,7 +19,7 @@ except ImportError as errmsg:
     print('No 3D axes drawing available')
     print(errmsg)
 
-import sys, os, datetime, textwrap
+import sys, os, datetime, textwrap, yaml
 import webbrowser, subprocess, importlib, logging, warnings
 import numpy as np
 import pandas as pd
@@ -456,7 +456,7 @@ class bfit(object):
         root.bind("<Button-4>", self.scroll_binder) 
         root.bind("<Button-5>", self.scroll_binder)
         
-        root.bind("<Control-Key-o>", self.do_load)
+        root.bind("<Control-Key-o>", self.load_state)
         
         # event bindings
         root.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -494,8 +494,8 @@ class bfit(object):
         menu_file.add_command(label='Run Commands', command=lambda:popup_terminal(wref.proxy(self)))
         menu_file.add_command(label='Export Data', command=self.do_export)
         menu_file.add_command(label='Export Fits', command=self.do_export_fit)
-        menu_file.add_command(label='Save State', command=self.do_save)
-        menu_file.add_command(label='Load State', command=self.do_load)
+        menu_file.add_command(label='Save State', command=self.save_state)
+        menu_file.add_command(label='Load State', command=self.load_state)
         menu_file.add_command(label='Close All Figures', command=self.do_close_all)
         menu_file.add_command(label='Exit', command=sys.exit)
         menubar.add_cascade(menu=menu_file, label='File')
@@ -726,12 +726,6 @@ class bfit(object):
     
     # ======================================================================= #
     def do_export_fit(self): self.fit_files.export_fit()
-        
-    # ======================================================================= #
-    def do_load(self, *args): self.fit_files.load_state()
-    
-    # ======================================================================= #
-    def do_save(self): self.fit_files.save_state()
         
     # ======================================================================= #
     def draw_binder(self, *args):
@@ -984,6 +978,192 @@ class bfit(object):
         webbrowser.open('https://github.com/dfujim/bfit/wiki')
     
     # ======================================================================= #
+    def load_state(self, filename=None):
+        """
+            Load the state of the gui
+        """
+
+        # get the filename
+        if filename is None:
+            filename = filedialog.askopenfilename(filetypes=[('yaml', '*.yaml'),
+                                                             ('allfiles', '*')])
+            if not filename:
+                return
+
+        self.logger.info('Loading program state from %s', filename)
+
+        # load the object with the data
+        with open(filename, 'r') as fid:
+            from_file = yaml.safe_load(fid)
+
+        # clear loaded runs
+        fetch_tab = self.fetch_files
+        fetch_tab.remove_all()
+
+        # bfit parameters
+        self.style = from_file['style']
+        self.hist_select = from_file['hist_select']
+        self.draw_style.set(from_file['draw_style'])
+        self.draw_fit.set(from_file['draw_fit'])
+        
+        self.probe_species.set(from_file['probe_species'])
+        self.set_probe_species()
+        
+        self.minimizer.set(from_file['minimizer'])
+        self.set_fit_routine()
+        
+        self.norm_with_param.set(from_file['norm_with_param'])
+        self.draw_standardized_res.set(from_file['draw_standardized_res'])
+        self.use_nbm.set(from_file['use_nbm'])
+        self.draw_ppm.set(from_file['draw_ppm'])
+        self.draw_rel_peak0.set(from_file['draw_rel_peak0'])
+        self.thermo_channel.set(from_file['thermo_channel'])
+        self.units = from_file['units']
+        self.label_default.set(from_file['label_default'])
+        self.ppm_reference = from_file['ppm_reference']
+        self.update_period = from_file['update_period']
+        self.bnmr_data_dir = from_file['bnmr_data_dir']
+        self.bnqr_data_dir = from_file['bnqr_data_dir']
+        
+        # set deadtime correction
+        self.deadtime = from_file['deadtime']
+        self.deadtime_switch.set(from_file['deadtime_switch'])
+        self.deadtime_global.set(from_file['deadtime_global'])
+        
+        # fileviewer
+        fileviewer_tab = self.fileviewer
+        fileviewer_tab.year.set(from_file['fileview_year'])
+        fileviewer_tab.runn.set(from_file['fileview_run'])
+        fileviewer_tab.get_data()
+        fileviewer_tab.asym_type.set(from_file['fileview_asym_type'])
+        fileviewer_tab.rebin.set(from_file['fileview_rebin'])
+        fileviewer_tab.is_updating.set(from_file['fileview_is_updating'])
+
+        # fetch files
+        fetch_files = self.fetch_files
+        fetch_files.year.set(from_file['fetch_year'])
+        fetch_files.run.set(from_file['fetch_run'])
+        fetch_files.check_state.set(from_file['fetch_check_state'])
+        fetch_files.check_state_data.set(from_file['fetch_check_state_data'])
+        fetch_files.check_state_fit.set(from_file['fetch_check_state_fit'])
+        fetch_files.check_state_res.set(from_file['fetch_check_state_res'])
+        fetch_files.check_rebin.set(from_file['fetch_check_rebin'])
+        fetch_files.check_bin_remove.set(from_file['fetch_check_bin_remove'])
+        fetch_files.asym_type.set(from_file['fetch_asym_type'])
+         
+        # load selected runs
+        datalines = from_file['datalines']
+        setyear = fetch_tab.year.get()
+        setrun =  fetch_tab.run.get()
+        for id in datalines:
+            d = datalines[id]
+
+            # set year and run and fetch
+            fetch_tab.year.set(d['year'])
+            fetch_tab.run.set(d['run'])
+            fetch_tab.get_data()
+
+            # set corresponding parameters for the run
+            d_actual = fetch_tab.data_lines[id]
+            d_actual.bin_remove.set(d['bin_remove'])
+            d_actual.check_data.set(d['check_data'])
+            d_actual.check_fit.set(d['check_fit'])
+            d_actual.check_res.set(d['check_res'])
+            d_actual.check_state.set(d['check_state'])
+            d_actual.label.set(d['label'])
+            d_actual.rebin.set(d['rebin'])
+
+        # reset year and run input info
+        fetch_tab.year.set(setyear)
+        fetch_tab.run.set(setrun)
+        
+        # fit files
+        fit_files = self.fit_files
+        fit_files.annotation.set(from_file['fit_annotation'])
+        fit_files.asym_type.set(from_file['fit_asym_type'])
+        fit_files.fit_function_title.set(from_file['fit_fit_function_title'])
+        fit_files.n_component.set(from_file['fit_n_component'])
+        fit_files.par_label.set(from_file['fit_par_label'])
+        fit_files.set_as_group.set(from_file['fit_set_as_group'])
+        fit_files.set_prior_p0.set(from_file['fit_set_prior_p0'])
+        fit_files.use_rebin.set(from_file['fit_use_rebin'])
+        fit_files.xaxis.set(from_file['fit_xaxis'])
+        fit_files.yaxis.set(from_file['fit_yaxis'])
+        fit_files.xlo.set(from_file['fit_xlo'])
+        fit_files.xhi.set(from_file['fit_xhi'])
+        fit_files.gchi_label['text'] = from_file['gchi']
+        
+        # get parameters in fitting page
+        fit_files.populate()
+
+        # set parameter values
+        d_fitdata = self.data
+        fitlines = from_file['fitlines']
+        for id in fitlines:
+            parentry = fitlines[id]
+            parentry_actual = fit_files.fit_lines[id].parentry
+            for parname in parentry:
+                par = parentry[parname]
+                for k in par.keys():
+                    parentry_actual[parname][k][0].set(par[k])
+
+            # make sure dataline checkboxes are active
+            fetch_tab.data_lines[id].draw_fit_checkbox['state'] = 'normal'
+            fetch_tab.data_lines[id].draw_res_checkbox['state'] = 'normal'
+
+            # set fit inputs
+            df = pd.DataFrame([], columns=['p0', 'blo', 'bhi', 'fixed'])
+            for p, par in parentry.items(): 
+                s = pd.Series([par['p0'], par['blo'], par['bhi'], par['fixed']], 
+                              index=['p0', 'blo', 'bhi', 'fixed'],
+                              name=p)
+                df = df.append(s)
+            
+            d_fitdata[id].set_fitpar(df)
+
+            # get chisq
+            keylist = self.fit_files.fitter.gen_param_names(from_file['fit_fit_function_title'],
+                                                            from_file['fit_n_component'])
+            for k in keylist:
+                if 'chi' in parentry[k].keys():
+                    if parentry[k]['chi'] != '':
+                        chi = float(parentry[k]['chi'])
+                    else:
+                        chi = np.nan
+                    break
+
+            # get pulse length
+            d_actual = fetch_tab.data_lines[id]
+            pulse_len = 0
+            if d_actual.mode in ('20', '2h'):
+                pulse_len = d_actual.bdfit.pulse_s
+
+            # get probe lifetime
+            lifetime = bd.life[from_file['probe_species']]
+
+            # get fit function
+            fitfn = fit_files.fitter.get_fn(from_file['fit_fit_function_title'],
+                                            from_file['fit_n_component'],
+                                            pulse_len,
+                                            lifetime)
+
+            if '2' in d_actual.mode and from_file['probe_species'] == 'Mg31':
+                fitfn1 = decay_corrected_fn(fa_31Mg, fitfn, pulse_len)
+            else:
+                fitfn1 = fitfn
+
+            # set fit results
+            df = pd.DataFrame({ 'res':[float(parentry[p]['res']) 
+                                        if parentry[p]['res'] else np.nan for p in keylist],
+                                'dres-':[float(parentry[p]['dres-']) 
+                                        if parentry[p]['dres-'] else np.nan for p in keylist],
+                                'dres+':[float(parentry[p]['dres+']) 
+                                        if parentry[p]['dres+'] else np.nan for p in keylist],  
+                                'chi':np.full(len(keylist), chi)})  
+            
+            d_fitdata[id].set_fitresult({'fn': fitfn1, 'results': df})
+
+    # ======================================================================= #
     def on_closing(self):
         """Excecute this when window is closed: destroy and close all plots."""
         self.logger.info('Closing all windows.')
@@ -1012,6 +1192,129 @@ class bfit(object):
             self.fit_files.return_binder()
         else:
             pass
+    
+    # ======================================================================= #
+    def save_state(self, filename=None):
+        """
+            Save the state of the gui:
+
+            dataline state info
+            Fitting function
+            Number of components
+            Initial inputs
+            Fit results
+        """
+
+        # final output
+        to_file = {}
+
+        # bfit menu options
+        to_file['probe_species'] = self.probe_species.get()
+        to_file['minimizer'] = self.minimizer.get()
+        to_file['norm_with_param'] = self.norm_with_param.get()
+        to_file['draw_standardized_res'] = self.draw_standardized_res.get()
+        to_file['use_nbm'] = self.use_nbm.get()
+        to_file['draw_ppm'] = self.draw_ppm.get()
+        to_file['draw_rel_peak0'] = self.draw_rel_peak0.get()
+        to_file['thermo_channel'] = self.thermo_channel.get()
+        to_file['units'] = self.units
+        to_file['label_default'] = self.label_default.get()
+        to_file['ppm_reference'] = self.ppm_reference
+        to_file['update_period'] = self.update_period
+        to_file['deadtime'] = self.deadtime
+        to_file['deadtime_switch'] = self.deadtime_switch.get()
+        to_file['deadtime_global'] = self.deadtime_global.get()
+        to_file['style'] = self.style
+        to_file['hist_select'] = self.hist_select
+        to_file['draw_style'] = self.draw_style.get()
+        to_file['draw_fit'] = self.draw_fit.get()
+        to_file['bnmr_data_dir'] = self.bnmr_data_dir
+        to_file['bnqr_data_dir'] = self.bnqr_data_dir
+
+        # fileviewer
+        fileviewer_tab = self.fileviewer
+        to_file['fileview_year'] = fileviewer_tab.year.get()
+        to_file['fileview_run'] = fileviewer_tab.runn.get()
+        to_file['fileview_asym_type'] = fileviewer_tab.asym_type.get()
+        to_file['fileview_rebin'] = fileviewer_tab.rebin.get()
+        to_file['fileview_is_updating'] = fileviewer_tab.is_updating.get()
+
+        # fetch files
+        fetch_files = self.fetch_files
+        to_file['fetch_year'] = fetch_files.year.get()
+        to_file['fetch_run'] = fetch_files.run.get()
+        to_file['fetch_check_state'] = fetch_files.check_state.get()
+        to_file['fetch_check_state_data'] = fetch_files.check_state_data.get()
+        to_file['fetch_check_state_fit'] = fetch_files.check_state_fit.get()
+        to_file['fetch_check_state_res'] = fetch_files.check_state_res.get()
+        to_file['fetch_check_rebin'] = fetch_files.check_rebin.get()
+        to_file['fetch_check_bin_remove'] = fetch_files.check_bin_remove.get()
+        to_file['fetch_asym_type'] = fetch_files.asym_type.get()
+
+        # get state from datalines
+        datalines = fetch_files.data_lines
+        dlines = {}
+        for id in datalines:
+            d = datalines[id]
+            dlines[id] = {
+                    'bin_remove'   :d.bin_remove.get(),
+                    'check_data'   :d.check_data.get(),
+                    'check_fit'    :d.check_fit.get(),
+                    'check_res'    :d.check_res.get(),
+                    'check_state'  :d.check_state.get(),
+                    'id'           :d.id,
+                    'label'        :d.label.get(),
+                    'rebin'        :d.rebin.get(),
+                    'run'          :d.run,
+                    'year'         :d.year
+                    }
+        to_file['datalines'] = dlines
+
+        # fit files
+        fit_files = self.fit_files
+        to_file['gchi'] = fit_files.gchi_label['text']
+        to_file['fit_annotation'] = fit_files.annotation.get()
+        to_file['fit_asym_type'] = fit_files.asym_type.get()
+        to_file['fit_fit_function_title'] = fit_files.fit_function_title.get()
+        to_file['fit_n_component'] = fit_files.n_component.get()
+        to_file['fit_par_label'] = fit_files.par_label.get()
+        to_file['fit_set_as_group'] = fit_files.set_as_group.get()
+        to_file['fit_set_prior_p0'] = fit_files.set_prior_p0.get()
+        to_file['fit_use_rebin'] = fit_files.use_rebin.get()
+        to_file['fit_xaxis'] = fit_files.xaxis.get()
+        to_file['fit_yaxis'] = fit_files.yaxis.get()
+        to_file['fit_xlo'] = fit_files.xlo.get()
+        to_file['fit_xhi'] = fit_files.xhi.get()
+        
+        # get parameter values from fitlines
+        fitlines = fit_files.fit_lines
+        flines = {}
+        for id in fitlines:
+            parentry_actual = fitlines[id].parentry
+            parentry = {}
+            for param_name in parentry_actual:
+                par = parentry_actual[param_name]
+                parentry[param_name] = {k:par[k][0].get() for k in par}
+            flines[id] = parentry
+        to_file['fitlines'] = flines
+
+        # get xlims
+        to_file['xlo'] = fit_files.xlo.get()
+        to_file['xhi'] = fit_files.xhi.get()
+
+        # save file ----------------------------------------------------------
+        if filename is None:
+            fid = filedialog.asksaveasfile(mode='w', filetypes=[('yaml', '*.yaml'),
+                                                           ('allfiles', '*')],
+                                           defaultextension='.yaml')
+        else:
+            fid = open(filename, 'w')
+            
+        if fid:
+            yaml.dump(to_file, fid)
+            fid.close()
+
+        self.logger.info('Saving program state to %s', fid)
     
     # ======================================================================= #
     def scroll_binder(self, event):

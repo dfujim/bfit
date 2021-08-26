@@ -176,7 +176,7 @@ def save():
         setv(b, v)
         
     # save and clean ---------------------------------------------------------
-    b.fit_files.save_state(filename)
+    b.save_state(filename)
     b.on_closing()
     del b
 
@@ -187,7 +187,7 @@ def test_load():
     
     # make gui and load
     b = bfit(None, True)
-    b.fit_files.load_state(filename)
+    b.load_state(filename)
     
     # check list
     def check(obj, lst):
