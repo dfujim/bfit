@@ -2269,73 +2269,6 @@ class fitline(object):
         self.fitframe.update_idletasks()
 
     # ======================================================================= #
-    def set_input(self, source_line, parameter, column, set_all):
-        """
-            Set the input value for a given parameter to match the value in
-            another fitline
-
-            source_line: the fitline to copy
-            parameter:   name of the parameter to copy
-            column:      name of the column to copy
-            set_all:     boolean corresponding to fit_files.set_as_group
-        """
-
-        # get parameter entry line and sharing
-        try:
-            parentry = self.parentry[parameter]
-            shared = parentry['shared'][0].get()
-            source_entry = source_line.parentry[parameter]
-        except KeyError:
-            return
-
-        # set value
-        if set_all or shared:
-
-            p = parentry[column][0]
-
-            # remove the trace
-            p.trace_vdelete("w", p.trace_id)
-
-            # set the value
-            p.set(source_entry[column][0].get())
-
-            # add the trace back
-            p.trace_id = p.trace("w", p.trace_callback)
-
-    # ======================================================================= #
-    def show_fit_result(self):
-
-        self.logger.debug('Showing fit result for run %s', self.dataline.id)
-
-        # Set up variables
-        displays = self.parentry
-
-        try:
-            data = self.dataline.bdfit
-        except KeyError:
-            return
-        
-        try:
-            chi = data.chi
-        except AttributeError:
-            return
-
-        # display
-        for parname in displays.keys():
-            disp = displays[parname]
-            showstr = "%"+".%df" % self.bfit.rounding
-            disp['res'][0].set(showstr % data.fitpar.loc[parname, 'res'])
-            disp['dres-'][0].set(showstr % data.fitpar.loc[parname, 'dres-'])
-            disp['dres+'][0].set(showstr % data.fitpar.loc[parname, 'dres+'])
-
-            if 'chi' in disp.keys():
-                disp['chi'][0].set('%.2f' % chi)
-                if float(chi) > self.bfit.fit_files.chi_threshold:
-                    disp['chi'][1]['readonlybackground']='red'
-                else:
-                    disp['chi'][1]['readonlybackground']=colors.readonly
-
-    # ======================================================================= #
     def draw_fn_composition(self):
         """
             Draw window with function components and total
@@ -2470,3 +2403,70 @@ class fitline(object):
 
         # reset to old draw mode
         bfit.draw_style.set(draw_mode)
+
+    # ======================================================================= #
+    def set_input(self, source_line, parameter, column, set_all):
+        """
+            Set the input value for a given parameter to match the value in
+            another fitline
+
+            source_line: the fitline to copy
+            parameter:   name of the parameter to copy
+            column:      name of the column to copy
+            set_all:     boolean corresponding to fit_files.set_as_group
+        """
+
+        # get parameter entry line and sharing
+        try:
+            parentry = self.parentry[parameter]
+            shared = parentry['shared'][0].get()
+            source_entry = source_line.parentry[parameter]
+        except KeyError:
+            return
+
+        # set value
+        if set_all or shared:
+
+            p = parentry[column][0]
+
+            # remove the trace
+            p.trace_vdelete("w", p.trace_id)
+
+            # set the value
+            p.set(source_entry[column][0].get())
+
+            # add the trace back
+            p.trace_id = p.trace("w", p.trace_callback)
+
+    # ======================================================================= #
+    def show_fit_result(self):
+
+        self.logger.debug('Showing fit result for run %s', self.dataline.id)
+
+        # Set up variables
+        displays = self.parentry
+
+        try:
+            data = self.dataline.bdfit
+        except KeyError:
+            return
+        
+        try:
+            chi = data.chi
+        except AttributeError:
+            return
+
+        # display
+        for parname in displays.keys():
+            disp = displays[parname]
+            showstr = "%"+".%df" % self.bfit.rounding
+            disp['res'][0].set(showstr % data.fitpar.loc[parname, 'res'])
+            disp['dres-'][0].set(showstr % data.fitpar.loc[parname, 'dres-'])
+            disp['dres+'][0].set(showstr % data.fitpar.loc[parname, 'dres+'])
+
+            if 'chi' in disp.keys():
+                disp['chi'][0].set('%.2f' % chi)
+                if float(chi) > self.bfit.fit_files.chi_threshold:
+                    disp['chi'][1]['readonlybackground']='red'
+                else:
+                    disp['chi'][1]['readonlybackground']=colors.readonly
