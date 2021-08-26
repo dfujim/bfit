@@ -1125,9 +1125,8 @@ class dataline(object):
                 
         # draw residual
         if self.check_res.get():
-            self.bfit.fit_files.draw_residual(id=self.id, 
-                                              figstyle=figstyle, 
-                                              rebin=self.rebin.get())
+            self.bdfit.draw_residual(figstyle=figstyle, 
+                                     rebin=self.rebin.get())
 
     # ======================================================================= #
     def set_check_text(self):

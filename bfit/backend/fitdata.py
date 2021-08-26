@@ -752,7 +752,7 @@ class fitdata(object):
             
         self.logger.debug('Drawing success.')
 
-        # ======================================================================= #
+    # ======================================================================= #
     def draw_fit(self, figstyle, unique=True, asym_mode=None, **drawargs):
         """
             Draw fit for a single run
@@ -881,6 +881,94 @@ class fitdata(object):
         raise_window()
     
     # ======================================================================= #
+    def draw_residual(self, figstyle, rebin=1, **drawargs):
+        """Draw fitting residuals for a single run"""
+
+        self.logger.info('Drawing residual for run %s, rebin %d, '+\
+                         'standardized: %s, %s', self.id, rebin,
+                         self.bfit.draw_standardized_res.get(), drawargs)
+
+        plt = self.bfit.plt
+
+        # get draw setting
+        figstyle = 'data'
+        draw_style = self.bfit.draw_style
+
+        # get data and fit results
+        fit_par = self.fitpar.loc[self.parnames, 'res'].values
+        
+        # default label value
+        if 'label' not in drawargs.keys():
+            label = str(self.run)
+        else:
+            label = drawargs.pop('label', None)
+
+        # set drawing style arguments
+        for k in self.bfit.style:
+            if k not in drawargs.keys():
+                drawargs[k] = self.bfit.style[k]
+
+        # make new window
+        style = self.bfit.draw_style.get()
+        if style == 'new' or not plt.active[figstyle]:
+            plt.figure(figstyle)
+        elif style == 'redraw':
+            plt.clf(figstyle)
+
+        ax = plt.gca(figstyle)
+        ax.get_xaxis().get_major_formatter().set_useOffset(False)
+
+        # get draw style
+        style = self.bfit.draw_style.get()
+
+        # get residuals
+        x, a, da = self.asym(self.bfit.get_asym_mode(self.bfit.fetch_files), 
+                             rebin=rebin)
+        res = a - self.fitfn(x, *fit_par)
+
+        # set x axis
+        if self.mode in self.bfit.units:
+            unit = self.bfit.units[self.mode]
+            x *= unit[0]
+            xlabel = self.bfit.xlabel_dict[self.mode] % unit[1]
+        else:
+            xlabel = self.bfit.xlabel_dict[self.mode]
+
+        # draw
+        if self.bfit.draw_standardized_res.get():
+            plt.errorbar(figstyle, id, x, res/da, np.zeros(len(x)),
+                              label=label, **drawargs)
+
+            # draw fill
+            ax = plt.gca(figstyle)
+            lim = ax.get_xlim()
+            for i in range(1, 4):
+                ax.fill_between(lim, -1*i, i, color='k', alpha=0.1)
+            plt.xlim(figstyle, lim)
+            plt.ylabel(figstyle, r'Standardized Residual ($\sigma$)')
+        else:
+            plt.errorbar(figstyle, id, x, res, da, label=label, **drawargs)
+            plt.ylabel(figstyle, 'Residual')
+
+        # draw pulse marker
+        if '2' in self.mode:
+            plt.axvline(figstyle, 'line', self.pulse_s, ls='--', color='k')
+            unq = False
+        else:
+            unq = True
+
+        # plot elements
+        plt.xlabel(figstyle, xlabel)
+        plt.axhline(figstyle, 'line', 0, color='k', linestyle='-', zorder=20,
+                        unique=unq)
+
+        # show
+        plt.tight_layout(figstyle)
+        plt.legend(figstyle)
+
+        raise_window()
+    
+    # ======================================================================= #
     @property
     def beam_kev(self): 
         try:
@@ -980,7 +1068,7 @@ class fitdata(object):
         
         return (T, dT)
         
-        # ======================================================================= #
+    # ======================================================================= #
     def get_values(self, select):
         """ Get plottable values"""
 
