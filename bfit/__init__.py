@@ -4,6 +4,7 @@ from .fitting.global_fitter import global_fitter
 from .fitting.global_bdata_fitter import global_bdata_fitter
 from .fitting.fit_bdata import fit_bdata
 from .fitting.minuit import minuit
+from .global_variables import __version__
 
 import logging, os, sys, argparse, subprocess, requests, json, code
 from logging.handlers import RotatingFileHandler
@@ -11,11 +12,10 @@ from textwrap import dedent
 from pkg_resources import parse_version 
 from tkinter import messagebox
 
-__all__ = ['gui','fitting','backend','test']
-__version__ = '4.12.4'
+__all__ = ['gui', 'fitting', 'backend', 'test']
 __author__ = 'Derek Fujimoto'
 logger_name = 'bfit'
-icon_path = os.path.join(os.path.dirname(__file__),'data','icon.gif')
+icon_path = os.path.join(os.path.dirname(__file__), 'data', 'icon.gif')
 
 __all__.extend(("lorentzian", 
                 "bilorentzian", 
@@ -38,6 +38,12 @@ def main():
     # check if maxOS
     if sys.platform == 'darwin':
         os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
+
+    # check if windows
+    if sys.platform == 'win32':
+        homedir = os.environ['HOMEPATH']
+    else:
+        homedir = os.environ['HOME']
 
     # command line switches ---------------------------------------------------
     parser = argparse.ArgumentParser(description=dedent("""\
@@ -66,7 +72,7 @@ def main():
 
     # get log filename
     try:
-        filename = os.path.join(os.environ['HOME'], '.bfit.log')
+        filename = os.path.join(homedir, '.bfit.log')
     except KeyError:
         filename = 'bfit.log'
 
