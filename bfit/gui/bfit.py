@@ -11,7 +11,10 @@ from multiprocessing import Process
 
 # set MPL backend
 import matplotlib as mpl
-mpl.use('TkAgg')
+try:
+    mpl.use('TkAgg')
+except ImportError:
+    pass
 
 try:
     from mpl_toolkits.mplot3d import Axes3D
