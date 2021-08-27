@@ -6,7 +6,7 @@ dist.Distribution().fetch_build_eggs(['cython>=0.28', 'numpy>=1.19'])
 import setuptools
 from distutils.core import Extension
 from Cython.Build import cythonize
-import numpy, os
+import numpy, os, sys
 from os.path import join
 
 with open("README.md", "r", encoding = "utf8") as fh:
@@ -20,6 +20,11 @@ with open(os.path.join('bfit', 'global_variables.py')) as fid:
 __version__  =  variables['__version__']
 __src__  =  variables['__src__']
 
+# get libraries
+libraries = []
+if sys.platform in ('unix', 'darwin'):
+    libraries.append('m')
+
 # module extension
 ext  =  Extension("bfit.fitting.integrator",
                 sources = [join(__src__, "integrator.pyx"),
@@ -27,7 +32,7 @@ ext  =  Extension("bfit.fitting.integrator",
                 language = "c++",             # generate C++ code                        
                 include_dirs = [join(__src__, "FastNumericalIntegration_src"), 
                                 numpy.get_include()],
-                libraries = ["m"],
+                libraries = libraries,
                 extra_compile_args = ["-ffast-math", '-O3']
                 )
 
