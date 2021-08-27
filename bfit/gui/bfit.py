@@ -7,7 +7,6 @@ from tkinter import *
 from tkinter import ttk, filedialog, messagebox
 from bdata import bdata, bmerged
 from scipy.optimize import curve_fit
-from multiprocessing import Process
 
 # set MPL backend
 import matplotlib as mpl
@@ -30,7 +29,7 @@ import matplotlib.pyplot as plt
 import bdata as bd
 import weakref as wref
 
-from multiprocessing import Process, Queue
+from multiprocessing import Queue
 import queue
 
 from bfit import __version__, logger_name, icon_path
