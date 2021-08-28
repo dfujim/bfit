@@ -1,0 +1,7 @@
+*egg*
+*.pyc
+*.pyd
+*.obj
+*.exp
+*.lib
+*.cpp

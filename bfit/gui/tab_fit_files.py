@@ -9,8 +9,7 @@ from bdata import bdata, bmerged
 from bfit import logger_name, __version__
 from scipy.special import gamma, polygamma
 from pandas.plotting import register_matplotlib_converters
-from multiprocessing import Process, Queue
-import queue
+from multiprocessing import Queue
 
 from bfit.gui.calculator_nqr_B0 import current2field
 from bfit.gui.popup_show_param import popup_show_param
