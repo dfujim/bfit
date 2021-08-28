@@ -5,3 +5,7 @@
 *.exp
 *.lib
 *.cpp
+dist*
+build*
+*.swp
+*.so
