@@ -189,7 +189,7 @@ class fitdata(object):
         
         # get asymmetry: raw scans
         if asym_type == 'r' and '1' in self.mode:
-            a = self.asym('raw', omit=self.omit.get(), 
+            a = self.asym('raw', omit=omit, 
                           hist_select=bfit.hist_select, 
                           nbm=bfit.use_nbm.get())
             x = np.arange(len(a.p[0]))
