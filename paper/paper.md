@@ -44,7 +44,7 @@ While the GUI greatly facilitates rapid on-line analysis, the [`bfit`] API provi
 
 # Acknowledgements
 
-The author acknowledges the support of a SBQMI QuEST fellowship.
+The author would like to thank the members of the $\beta$-NMR group at TRIUMF for their useful input and feedback. In particular, discussions with R. M. L. McFadden have been particularly useful. The author additionally acknowledges the support of a SBQMI QuEST fellowship.
 
 # References
 
