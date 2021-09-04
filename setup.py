@@ -1,7 +1,7 @@
 
 # install numpy and cython dependencies needed for the rest of the setup script
 from setuptools import dist
-dist.Distribution().fetch_build_eggs(['cython>=0.28', 'numpy>=1.19'])
+dist.Distribution().fetch_build_eggs(['cython>=0.28', 'numpy>=1.19', 'wheel>=0.34'])
 
 import setuptools
 from distutils.core import Extension
