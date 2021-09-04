@@ -129,7 +129,7 @@ To launch the GUI from a terminal simply call `bfit`, if this fails, one can als
 
 ### Testing
 
-Testing your installation of [bfit] is accomplished by running `pytest` within the installation folder. Note that some tests, particularly those involving drawing, fail when run as group in this environment, but they should pass on a second attempt: `pytest --lf`. Further testing information can be found [here](https://github.com/dfujim/bfit/wiki/Installation-and-first-startup).
+Testing your installation of [bfit] is accomplished by running `pytest` within the installation folder. Note that some tests, particularly those involving drawing, fail when run as group in this environment, but they should pass on a subsequent attempts: `pytest --lf`. Further testing information can be found [here](https://github.com/dfujim/bfit/wiki/Installation-and-first-startup).
 
 [Python]: https://www.python.org/
 [SciPy]: https://www.scipy.org/
