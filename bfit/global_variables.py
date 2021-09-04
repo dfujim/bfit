@@ -1,5 +1,3 @@
-from mudpy import global_variables
-
 # Define some global variables needed for setup
 # Derek Fujimoto
 # Aug 2021
