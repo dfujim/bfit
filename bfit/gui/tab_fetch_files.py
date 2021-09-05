@@ -904,9 +904,15 @@ class dataline(object):
         # get logger
         self.logger = logging.getLogger(logger_name)
         self.logger.debug('Initializing run %d (%d)', bdfit.run, bdfit.year)
-        
+    
         # variables
         self.bfit = bfit
+        self.row = row
+        
+        # variables from fitdata object
+        self.bdfit = bdfit
+        bd = bdfit.bd
+        
         self.bin_remove = bdfit.omit
         self.label = bdfit.label
         self.rebin = bdfit.rebin
@@ -914,13 +920,14 @@ class dataline(object):
         self.mode = bdfit.mode
         self.run =  bdfit.run
         self.year = bdfit.year
-        self.row = row
         self.lines_list = lines_list
         self.lines_list_old = lines_list_old
-        bd = bdfit.bd
-        self.bdfit = bdfit
         self.id = bdfit.id
         self.bdfit.dataline = self
+        
+        self.check_data = bdfit.check_draw_data
+        self.check_fit = bdfit.check_draw_fit
+        self.check_res = bdfit.check_draw_res
         
         # build objects
         line_frame = Frame(fetch_tab_frame)
@@ -940,20 +947,14 @@ class dataline(object):
                                  command=lambda:self.draw(figstyle='data'), 
                                  pad=1)
         
-        self.check_data = BooleanVar()
-        self.check_data.set(True)
         draw_data_checkbox = ttk.Checkbutton(line_frame, text='Data', 
                 variable=self.check_data, onvalue=True, offvalue=False, pad=5, 
                 command=self.do_check_data)
         
-        self.check_fit = BooleanVar()
-        self.check_fit.set(False)
         self.draw_fit_checkbox = ttk.Checkbutton(line_frame, text='Fit', 
                 variable=self.check_fit, onvalue=True, offvalue=False, pad=5, 
                 state=DISABLED, command=self.do_check_fit)
         
-        self.check_res = BooleanVar()
-        self.check_res.set(False)
         self.draw_res_checkbox = ttk.Checkbutton(line_frame, text='Res', 
                 variable=self.check_res, onvalue=True, offvalue=False, pad=5, 
                 state=DISABLED, command=self.do_check_res)

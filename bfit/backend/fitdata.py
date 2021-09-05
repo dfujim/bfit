@@ -31,7 +31,12 @@ class fitdata(object):
             bfit:       pointer to top level parent object (bfit)
             bias:       platform bias in kV (float)
             bias_std:   platform bias in kV (float)
-            check_state:(BooleanVar)  
+            
+            check_draw_data: BooleanVar, draw data?
+            check_draw_fit: BooleanVar, draw fit?
+            check_draw_res: BooleanVar, draw residuals?
+            check_state: BooleanVar
+            
             chi:        chisquared from fit (float)
             dataline:   pointer to dataline object in fetch_files tab
             fitline:    pointer to fitline object in fit_files tab
@@ -68,18 +73,27 @@ class fitdata(object):
         # bdata access
         self.bd = bd
         
-        # input variables for tkinter
+        # bfit variables
+        self.nbm = self.bfit.use_nbm
+        
+        # fetch files variables
+        self.check_state = BooleanVar()
         self.rebin = IntVar()
         self.omit = StringVar()
         self.label = StringVar()
-        self.check_state = BooleanVar()
+        self.check_draw_data = BooleanVar()
+        self.check_draw_fit = BooleanVar()
+        self.check_draw_res = BooleanVar()
+
         
-        self.nbm = self.bfit.use_nbm
-        
+        # fetch files defaults
+        self.check_state.set(True)
         self.rebin.set(1)
         self.omit.set('')
         self.label.set('')
-        self.check_state.set(False)
+        self.check_draw_data.set(True)
+        self.check_draw_fit.set(False)
+        self.check_draw_res.set(False)
         
         # key for IDing file 
         self.id = self.bfit.get_run_key(data=bd)
