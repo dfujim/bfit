@@ -154,7 +154,7 @@ class fitdata(object):
             
             bfit:       bfit object
             asym_type:  input for asymmetry calculation
-            figstyle:   figure style. One of "data", "fit", or "param"
+            figstyle:   figure style. One of "inspect", "data", "fit", or "param"
             drawargs:   passed to errorbar
         """
         

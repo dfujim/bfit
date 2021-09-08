@@ -12,6 +12,7 @@ import matplotlib as mpl
 import webbrowser
 import logging
 from functools import partial
+import matplotlib.pyplot as plt
 
 # ========================================================================== #
 class popup_prepare_data(object):
@@ -101,7 +102,8 @@ class popup_prepare_data(object):
         self.entry_label.grid(column=1, row=0, sticky='w')
         button_label.grid(column=2, row=0, sticky='w', padx=5)
         frame_label.grid(column=0, row=r, sticky='new'); r+=1
-        button_inspect.grid(column=0, row=r, sticky='ne', padx=5, pady=5); r+= 1
+        button_inspect.grid(column=0, row=r, sticky='se', padx=5, pady=5)
+        frame_details.grid_rowconfigure(r, weight=1)
         
         # mode ----------------------------------------------------------------
         mode_text = self.bfit.fetch_files.runmode_relabel[self.data.mode]
@@ -118,6 +120,16 @@ class popup_prepare_data(object):
         self.config_checkbutton_state()
         self.checkbutton_state.grid(column=0, row=0)
         
+        # rebin ---------------------------------------------------------------
+        frame_rebin = ttk.Labelframe(topframe, text='Rebin', pad=5)
+        label_rebin = ttk.Label(frame_rebin, text='Rebin:')
+        spin_rebin = Spinbox(frame_rebin, from_=0, to=100,
+                             width=3,
+                             textvariable=self.data.rebin)
+        
+        label_rebin.grid(column=0, row=0, padx=5, pady=5)
+        spin_rebin.grid(column=1, row=0, padx=5, pady=5)
+        
         # scan repair ---------------------------------------------------------
         frame_scan = ttk.Labelframe(topframe, text='Scan Repair', pad=5)
         
@@ -129,15 +141,12 @@ class popup_prepare_data(object):
         
         # omit last scan
         self.omit_scan = BooleanVar()
-        self.omit_scan.set(False)
         checkbutton_omit_scan = ttk.Checkbutton(frame_scan, text='Omit final scan if incomplete', 
                 variable=self.omit_scan, onvalue=True, offvalue=False, pad=5,
                 command=self.set_bin_repair)
         
         # flatten baseline
         self.flatten_base = IntVar()
-        self.flatten_base.set(0)
-        
         self.label_flatten_base = ttk.Label(frame_scan, 
                                       text='Flatten baseline using N end bins. N = ')
         spin_flatten_base = Spinbox(frame_scan, from_=0, to=100000,
@@ -146,12 +155,6 @@ class popup_prepare_data(object):
         spin_flatten_base.bind("<KeyRelease>", self.set_bin_repair)
         spin_flatten_base.bind("<Leave>", self.set_bin_repair)
  
-        self.flatten_over = BooleanVar()
-        self.flatten_over.set(False)        
-        checkbutton_flatten_over = ttk.Checkbutton(frame_scan, text='Ensure combined scans are flattened', 
-                variable=self.flatten_over, onvalue=True, offvalue=False, pad=5,
-                command=self.set_bin_repair)
-                
         frame_draw_corrected = ttk.Labelframe(frame_scan, text='Draw Correction', pad=5)
         button_draw_raw_flat = ttk.Button(frame_draw_corrected, text='Raw', 
                                     command=lambda: self.draw_compare(draw_style='r'))
@@ -179,7 +182,7 @@ class popup_prepare_data(object):
         r = 0
         label_omit.grid(column=0, row=r, sticky='w')
         entry_omit.grid(column=1, row=r, sticky='w')
-        button_omit.grid(column=3, row=r, sticky='e'); r+=1
+        button_omit.grid(column=3, row=r, sticky='e', padx=10); r+=1
         checkbutton_omit_scan.grid(column=0, row=r, sticky='w', columnspan=2); r+=1
         self.label_flatten_base.grid(column=0, row=r, sticky='w', columnspan=2)
         spin_flatten_base.grid(column=2, row=r, sticky='w')
@@ -188,33 +191,31 @@ class popup_prepare_data(object):
         button_draw_raw_comb.grid(column=1, row=0, sticky='')
         frame_draw_corrected.grid(column=3, row=r-1, sticky='ens', pady=5, padx=5, 
                                   rowspan=2)
-        
-        # Key bindings
-        # ~ self.win.bind('<Return>', self.set)             
-        # ~ self.win.bind('<KP_Enter>', self.set)
-
-        # ~ # instructions
-        # ~ insr = ttk.Label(topframe, text='Set unit as "default" to disable', pad=5, justify=LEFT)
-        
-        # ~ # make objects: buttons
-        # ~ set_button = ttk.Button(frame, text='Set', command=self.set)
-        # ~ close_button = ttk.Button(frame, text='Cancel', command=self.cancel)
-        
-        # ~ # grid
-        # ~ topframe.grid(column=0, row=0, columnspan=2, pady=10)
-        # ~ insr.grid(column=0, row=r, columnspan=4); r+= 1
-        
-        # ~ set_button.grid(column=0, row=r, pady=10)
-        # ~ close_button.grid(column=1, row=r, pady=10)
-            
+    
         # grid frames
         topframe.grid(column=0, row=0)
-        frame_details.grid(column=0, row=0, sticky='nw', padx=5, pady=5, rowspan=4)
+        frame_details.grid(column=0, row=0, sticky='nws', padx=5, pady=5, rowspan=4)
         
         r = 0
         frame_mode.grid(column=1, row=r, sticky='new', padx=5, pady=5); r+=1
         frame_state.grid(column=1, row=r, sticky='new', padx=5, pady=5); r+=1
-        frame_scan.grid(column=1, row=r, sticky='ne', padx=5, pady=5); r+=1
+        frame_rebin.grid(column=1, row=r, sticky='new', padx=5, pady=5); r+=1
+        
+        if '1' in self.data.mode:
+            frame_scan.grid(column=1, row=r, sticky='ne', padx=5, pady=5); r+=1
+        
+        # set defaults
+        scan_repair_options = [opt for opt in self.data.scan_repair_options.split(':') if opt]
+        self.omit_scan.set('omit' in scan_repair_options)
+        
+        try:
+            del scan_repair_options[scan_repair_options.index('omit')]
+        except ValueError:
+            pass
+    
+        if len(scan_repair_options) > 0:
+            self.flatten_base.set(int(scan_repair_options[0]))
+        self.set_bin_repair()
         
         self.logger.debug('Initialization success. Starting mainloop.')
     
@@ -240,49 +241,120 @@ class popup_prepare_data(object):
         """
         bfit = self.bfit
         
-        # save draw style
-        style = bfit.draw_style.get()
+     
+        plt.figure()
+        omit = self.data.omit.get() if self.data.omit.get() != self.bfit.fetch_files.bin_remove_starter_line \
+                                    else ''
+        a_orig = self.data.asym(draw_style, omit=omit, scan_repair_options='')
+        a_corr = self.data.asym(draw_style, omit=omit)
         
-        # draw uncorrected
-        bfit.draw_style.set('new')
-        repair_string = self.data.scan_repair_options
-        self.data.scan_repair_options = ''
-        self.data.draw(draw_style, figstyle='inspect', label='Un-corrected ',
-                       color='k')
-        
-        # draw corrected
-        bfit.draw_style.set('stack')
-        self.data.scan_repair_options = repair_string
-        self.data.draw(draw_style, figstyle='inspect', label='Corrected ', 
-                       unique=False, marker='x', color='r')
-                       
-        # set axis as bins
-        if draw_style == 'c':
+        # raw
+        if draw_style == 'r':
+            x = np.arange(len(a_orig.p[0]))
             
-            ax = bfit.plt.gca('inspect')
-            lim = ax.get_xlim()
-            for cont in ax.containers:
-                for line in cont.lines:
-                    if type(line) is mpl.lines.Line2D:
-                        x = line.get_xdata()
-                        line.set_xdata(np.arange(len(x))) 
-                        lim = (-1, len(x)+1)
+            p = a_orig.p[0]
+            dp = a_orig.p[1]
+            p[p==0] = np.nan
+            dp[dp==0] = np.nan
+            
+            n = a_orig.n[0]
+            dn = a_orig.n[1]
+            n[n==0] = np.nan
+            dn[dn==0] = np.nan
+            
+            plt.errorbar(x, p, dp, fmt='.k', label='Uncorrected ($+$)')
+            plt.errorbar(x, n, dn, fmt='.', color='grey', 
+                         ecolor='grey', label='Uncorrected ($-$)')
+        
+            x = np.arange(len(a_corr.p[0]))
+            
+            p = a_corr.p[0]
+            dp = a_corr.p[1]
+            p[p==0] = np.nan
+            dp[dp==0] = np.nan
+            
+            n = a_corr.n[0]
+            dn = a_corr.n[1]
+            n[n==0] = np.nan
+            dn[dn==0] = np.nan
+            
+            plt.errorbar(x, p, dp, fmt='xr', label='Corrected ($+$)')
+            plt.errorbar(x, n, dn, fmt='x', color='orange', 
+                         ecolor='orange', label='Corrected ($-$)')
+            
+            plt.xlabel('Bin')
+        
+        # combined
+        elif draw_style == 'c':
+            unit = self.bfit.units[self.data.mode]
+            x, a, da = a_orig
+            
+            plt.errorbar(x*unit[0], a, da, fmt='.k', label='Uncorrected')
+            
+            n = self.flatten_base.get()
+            x, a, da = a_corr
+            plt.errorbar(x*unit[0], a, da, fmt='xr', label='Corrected')
+            if n > 0:
+                plt.errorbar(np.concatenate((x[:n], x[-n:]))*unit[0], 
+                             np.concatenate((a[:n], a[-n:])), 
+                             np.concatenate((da[:n], da[-n:])), 
+                             fmt='ob', fillstyle='none', label='Baseline')
+            
+            plt.xlabel(self.bfit.xlabel_dict[self.data.mode] % unit[1])
+            
+        plt.ylabel('Asymmetry')
+        plt.legend(fontsize='x-small')
+        plt.tight_layout()
+        
+        # ~ # draw corrected
+        # ~ bfit.draw_style.set('stack')
+        # ~ self.data.scan_repair_options = repair_string
+        # ~ self.data.draw(draw_style, figstyle='inspect', label='Corrected ', 
+                       # ~ unique=False, marker='x', color='r')
+        
+        # ~ if draw_style == 'c':
+        
+            # ~ # set axis as bins and make end points different
+            # ~ ax = bfit.plt.gca('inspect')
+            # ~ lim = ax.get_xlim()
+            # ~ for cont in ax.containers:
+                
+                # ~ # do points
+                # ~ line = cont.lines[0]
+                # ~ assert type(line) is mpl.lines.Line2D
+                        
+                # ~ # get data
+                # ~ x = line.get_xdata()
+                # ~ y = line.get_ydata()
+                
+                # ~ # modify axis
+                # ~ n = len(x)
+                # ~ x = np.arange(n)
+                # ~ lim = (-1, n+1)
+                
+                # ~ # set data
+                # ~ line.set_xdata(x) 
+                # ~ line.set_ydata(y) 
+
+                # ~ # do errors
+                # ~ line2 = cont.lines[2][0]
+                # ~ assert type(line2) is mpl.collections.LineCollection
+                
+                # ~ # get data
+                # ~ xy = line2.get_segments()
+                
+                # ~ # modify axis
+                # ~ for i in range(len(xy)):
+                    # ~ xy[i][:, 0] = i
                     
-                    elif type(line) is tuple and len(line)>0:
-                        
-                        assert type(line[0]) is mpl.collections.LineCollection
-                        x = line[0].get_segments()
-                        
-                        for i in range(len(x)):
-                            x[i][:, 0] = i
-                        line[0].set_segments(x)
-                        
-            ax.set_xlim(lim)
-            ax.set_xlabel('Bin')
-            
+                # ~ # set data
+                # ~ line2.set_segments(xy)
+                
+            # ~ ax.set_xlim(lim)
+            # ~ ax.set_xlabel('Bin')
         
-        # reset draw style
-        bfit.draw_style.set(style)
+        # ~ # reset draw style
+        # ~ bfit.draw_style.set(style)
     
     # ====================================================================== #
     def draw_raw(self):
