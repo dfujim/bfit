@@ -5,6 +5,8 @@ import pandas as pd
 import bdata as bd
 from bfit.gui.bfit import bfit
 import os
+import matplotlib
+matplotlib.use('TkAgg') 
 
 filename = 'test.yaml'
 
@@ -21,6 +23,7 @@ menu     = (('style', 'alpha', 0.1),
             ('draw_ppm', True),
             ('draw_standardized_res', False),
             ('norm_with_param', False),
+            ('draw_fit', False),
             ('use_nbm', True),
             ('draw_rel_peak0', False),
             ('minimizer', 'bfit.fitting.fitter_migrad_minos'),
@@ -44,10 +47,12 @@ fetch    = (('year', 2019),
             ('asym_type', 'Shifted Split'),
             )
             
-dataline = (('check_state', True),
+data     = (('check_state', True),
             ('label', 'TEST LABEL'),
             ('rebin', 10),
-            ('bin_remove', '10 22'),
+            ('omit', '10 22'),
+            ('base_bins', 5),
+            ('omit_scan', True),
             )
             
 fit      = (('annotation', 'fwhm'),
@@ -148,14 +153,14 @@ def save():
         if i == 1:
             tab.get_data()
 
-    dline = tab.data_lines['2019.40123']
-    for v in dataline:
+    dline = b.data['2019.40123']
+    for v in data:
         setv(dline, v)
     
     # set fit items ----------------------------------------------------------
     tab = b.fit_files
     tab.populate()
-    tab.do_fit()
+    # ~ tab.do_fit()
     for v in fit:
         setv(tab, v)
         
@@ -207,7 +212,7 @@ def test_load():
     check(b, menu)
     check(b.fileviewer, fileview)
     check(b.fetch_files, fetch)
-    check(b.fetch_files.data_lines['2019.40123'], dataline)
+    check(b.data['2019.40123'], data)
     check(b.fit_files, fit)
     check(b.fit_files.fit_lines['2019.40123'], fitline)
     check(b, deadtime)
