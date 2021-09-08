@@ -1064,28 +1064,31 @@ class bfit(object):
         fetch_files.check_rebin.set(from_file['fetch_check_rebin'])
         fetch_files.check_bin_remove.set(from_file['fetch_check_bin_remove'])
         fetch_files.asym_type.set(from_file['fetch_asym_type'])
+        fetch_files.omit_state.set(from_file['fetch_omit_state'])
+        fetch_files.base_bins.set(from_file['fetch_base_bins'])
          
         # load selected runs
-        datalines = from_file['datalines']
+        data = from_file['data']
         setyear = fetch_tab.year.get()
         setrun =  fetch_tab.run.get()
-        for id in datalines:
-            d = datalines[id]
-
+        for id, d in data.items():
+            
             # set year and run and fetch
             fetch_tab.year.set(d['year'])
             fetch_tab.run.set(d['run'])
             fetch_tab.get_data()
 
             # set corresponding parameters for the run
-            d_actual = fetch_tab.data_lines[id]
-            d_actual.bin_remove.set(d['bin_remove'])
-            d_actual.check_data.set(d['check_data'])
-            d_actual.check_fit.set(d['check_fit'])
-            d_actual.check_res.set(d['check_res'])
+            d_actual = self.data[id]
+            d_actual.omit.set(d['omit'])
+            d_actual.omit_scan.set(d['omit_scan'])
+            d_actual.check_draw_data.set(d['check_draw_data'])
+            d_actual.check_draw_fit.set(d['check_draw_fit'])
+            d_actual.check_draw_res.set(d['check_draw_res'])
             d_actual.check_state.set(d['check_state'])
             d_actual.label.set(d['label'])
             d_actual.rebin.set(d['rebin'])
+            d_actual.base_bins.set(d['base_bins'])
 
         # reset year and run input info
         fetch_tab.year.set(setyear)
@@ -1264,25 +1267,28 @@ class bfit(object):
         to_file['fetch_check_rebin'] = fetch_files.check_rebin.get()
         to_file['fetch_check_bin_remove'] = fetch_files.check_bin_remove.get()
         to_file['fetch_asym_type'] = fetch_files.asym_type.get()
+        to_file['fetch_base_bins'] = fetch_files.base_bins.get()
+        to_file['fetch_omit_state'] = fetch_files.omit_state.get()
 
-        # get state from datalines
+        # get state from data
         datalines = fetch_files.data_lines
-        dlines = {}
-        for id in datalines:
-            d = datalines[id]
-            dlines[id] = {
-                    'bin_remove'   :d.bin_remove.get(),
-                    'check_data'   :d.check_data.get(),
-                    'check_fit'    :d.check_fit.get(),
-                    'check_res'    :d.check_res.get(),
-                    'check_state'  :d.check_state.get(),
-                    'id'           :d.id,
-                    'label'        :d.label.get(),
-                    'rebin'        :d.rebin.get(),
-                    'run'          :d.run,
-                    'year'         :d.year
+        data = {}
+        for id, d in self.data.items():
+            data[id] = {
+                    'omit'              :d.omit.get(),
+                    'check_draw_data'   :d.check_draw_data.get(),
+                    'check_draw_fit'    :d.check_draw_fit.get(),
+                    'check_draw_res'    :d.check_draw_res.get(),
+                    'check_state'       :d.check_state.get(),
+                    'omit_scan'         :d.omit_scan.get(),
+                    'id'                :d.id,
+                    'label'             :d.label.get(),
+                    'rebin'             :d.rebin.get(),
+                    'run'               :d.run,
+                    'year'              :d.year,
+                    'base_bins'         :d.base_bins.get(),
                     }
-        to_file['datalines'] = dlines
+        to_file['data'] = data
 
         # fit files
         fit_files = self.fit_files
