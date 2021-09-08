@@ -841,7 +841,7 @@ class fitdata(object):
             drawargs['linestyle'] = '-'
 
         # draw
-        t, a, da = self.asym('c', **asym_args)
+        t, a, da = self.asym('c')
 
         fitx = np.linspace(min(t), max(t), self.bfit.fit_files.n_fitx_pts)
 
