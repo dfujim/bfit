@@ -27,6 +27,7 @@ class fetch_files(object):
             
             asym_type: StringVar, drawing style
             bfit: pointer to parent class
+            base_bins = IntVar, number of bins to use as baseline on scan ends
             canvas_frame_id: id number of frame in canvas
             check_rebin: IntVar for handling rebin aspect of checkall
             check_bin_remove: StringVar for handing omission of 1F data
@@ -44,6 +45,7 @@ class fetch_files(object):
             fet_entry_frame: frame of fetch tab
             listbox_history: listbox for run input history
             max_number_fetched: max number of files you can fetch
+            omit_state: BooleanVar, if true set omit all final incomplete scans
             run: StringVar input to fetch runs.
             runmode_label: display run mode
             runmode: display run mode list of strings
@@ -153,31 +155,62 @@ class fetch_files(object):
         
         # Frame for group set options ----------------------------------------
         right_frame = ttk.Labelframe(bigright_frame, \
-                text='Operations on Checked Items', pad=30)
+                text='Operations on Active Items', pad=30)
         
         check_remove = ttk.Button(right_frame, text='Remove', \
                 command=self.remove_all, pad=5)
         check_draw = ttk.Button(right_frame, text='Draw', \
                 command=lambda:self.draw_all('data'), pad=5)
         
-        check_rebin_label = ttk.Label(right_frame, text="Rebin:", pad=5)
-        check_rebin_box = Spinbox(right_frame, from_=1, to=100, width=3, \
+        
+        # Scan repair options ------------------------------------------------
+        frame_scan = ttk.Labelframe(right_frame, \
+                text='Scan Repair Options', pad=5)
+        
+        check_rebin_label = ttk.Label(frame_scan, text="Rebin:", pad=5)
+        check_rebin_box = Spinbox(frame_scan, from_=1, to=100, width=3, \
                 textvariable=self.check_rebin, 
-                command=self.set_all)
-        check_bin_remove_entry = Entry(right_frame, \
+                command=lambda: self.set_all('rebin'))
+        
+        check_bin_remove_label = ttk.Label(frame_scan, text="Remove:", pad=5)
+        check_bin_remove_entry = Entry(frame_scan, \
                 textvariable=self.check_bin_remove, width=20)
         
+        self.omit_state = BooleanVar()
+        omit_checkbox = ttk.Checkbutton(frame_scan, 
+                text='Omit incomplete final scan', variable=self.omit_state, 
+                onvalue=True, offvalue=False, pad=5, 
+                command=lambda: self.set_all('omit_scan'))
+        self.omit_state.set(False)
+        
+        self.base_bins = IntVar()
+        base_label = ttk.Label(frame_scan, text="baseline bins", pad=5)
+        base_spinbox = Spinbox(frame_scan, from_=0, to=1000, width=4, \
+                               textvariable=self.base_bins, 
+                               command=lambda: self.set_all('base_bins'))
+        self.base_bins.set(0)
+        
+        # grid
+        check_rebin_label.grid(     column=0, row=0, sticky='e')
+        check_rebin_box.grid(       column=1, row=0, sticky='w')
+        check_bin_remove_label.grid(column=0, row=1, sticky='e')
+        check_bin_remove_entry.grid(column=1, row=1, sticky='w', columnspan=2)
+        omit_checkbox.grid(column=0, row=2, sticky='w', columnspan=2)
+        base_spinbox.grid(column=0, row=3, sticky='e')
+        base_label.grid(column=1, row=3, sticky='w')
+        
         # key bindings
-        check_bin_remove_entry.bind('<KeyRelease>', self.set_all)
-        check_rebin_box.bind('<KeyRelease>', self.set_all)
+        check_bin_remove_entry.bind('<KeyRelease>', lambda x: self.set_all('omit'))
+        check_rebin_box.bind('<KeyRelease>', lambda x: self.set_all('rebin'))
+        base_spinbox.bind('<KeyRelease>', lambda x: self.set_all('base_bins'))
         
+        # checkboxes
+        right_checkbox_frame = ttk.Frame(right_frame)
         
-        check_all_box = ttk.Checkbutton(right_frame, 
-                text='Force Check State', variable=self.check_state, 
+        check_all_box = ttk.Checkbutton(right_checkbox_frame, 
+                text='State', variable=self.check_state, 
                 onvalue=True, offvalue=False, pad=5, command=self.check_all)
         self.check_state.set(True)
-        
-        right_checkbox_frame = ttk.Frame(right_frame)
         
         self.check_state_data = BooleanVar()        
         check_data_box = ttk.Checkbutton(right_checkbox_frame, 
@@ -222,24 +255,19 @@ class fetch_files(object):
         self.data_canvas.grid(column=0, row=1, sticky=(E, W, S, N), padx=5, pady=5)
         yscrollbar.grid(column=1, row=1, sticky=(W, S, N), pady=5)
         
-        check_data_box.grid(        column=0, row=0, sticky=(N))
-        check_fit_box.grid(         column=1, row=0, sticky=(N))
-        check_res_box.grid(         column=2, row=0, sticky=(N)) 
+        check_all_box.grid(        column=0, row=0, sticky=(N))
+        check_data_box.grid(        column=1, row=0, sticky=(N))
+        check_fit_box.grid(         column=2, row=0, sticky=(N))
+        check_res_box.grid(         column=3, row=0, sticky=(N)) 
         
         right_frame.grid(           column=0, row=0, sticky=(N, E, W))
         r = 0
-        check_all_box.grid(         column=0, row=r, sticky=(N), columnspan=2); r+= 1
         right_checkbox_frame.grid(  column=0, row=r, sticky=(N), columnspan=2); r+= 1
         check_toggle_button.grid(   column=0, row=r, sticky=(N, E, W), columnspan=2, pady=1, padx=5); r+= 1
         check_draw.grid(            column=0, row=r, sticky=(N, W, E), pady=5, padx=5);
         check_remove.grid(          column=1, row=r, sticky=(N, E, W), pady=5, padx=5); r+= 1
-        check_rebin_label.grid(     column=0, row=r)
-        check_rebin_box.grid(       column=1, row=r); r+= 1
-        check_bin_remove_entry.grid(column=0, row=r, sticky=(N), columnspan=2); r+= 1
+        frame_scan.grid(            column=0, row=r, sticky=(N, E, W), pady=5, padx=5, columnspan=2); r+= 1        
         bigright_frame.grid(        rowspan=2, sticky=(N, E, W))
-        
-        check_rebin_box.grid_configure(padx=5, pady=5, sticky=(E, W))
-        check_rebin_label.grid_configure(padx=5, pady=5, sticky=(E, W))
         
         # resizing
         fetch_data_tab.grid_columnconfigure(0, weight=1)        # main area
@@ -718,35 +746,43 @@ class fetch_files(object):
             pass
 
     # ======================================================================= #
-    def set_all(self, *args):
+    def set_all(self, changed, *args):
         """Set a particular property for all checked items. """
         
         self.logger.info('Set all')
+        data = self.bfit.data
         
         # check all file lines
-        for r in self.data_lines.keys():
+        for dat in data.values():
             
             # if checked
-            if self.data_lines[r].check_state.get():
+            if dat.check_state.get():
                 
-                # get values to enter
-                try:
-                    rebin = self.check_rebin.get()
-                except TclError:
-                    rebin = 1
-                    
-                self.data_lines[r].rebin.set(rebin)
-                new_text = self.check_bin_remove.get()
+                # rebin
+                if changed == 'rebin':
+                    try:
+                        rebin = self.check_rebin.get()
+                    except TclError:
+                        rebin = 1
+                        
+                    dat.rebin.set(rebin)
                 
-                # check for greyed text
-                if new_text != self.bin_remove_starter_line:
-                    self.data_lines[r].bin_remove.set(new_text)
-                else:
-                    self.data_lines[r].bin_remove.set("")
+                # omit bins
+                elif changed == 'omit':
+                    dat.omit.set(self.check_bin_remove.get())
+                
+                # omit scan
+                elif changed == 'omit_scan':
+                    dat.omit_scan.set(self.omit_state.get())
+                
+                # baseline corrections
+                elif changed == 'base_bins':
+                    try:
+                        val = self.base_bins.get()
+                    except TclError:
+                        val = 1
+                    dat.base_bins.set(val)
                     
-                # generate focus out event: trigger grey text reset
-                self.data_lines[r].bin_remove_entry.event_generate('<FocusOut>')
-
     # ======================================================================= #
     def set_all_labels(self):
         """Set lable text in all items """

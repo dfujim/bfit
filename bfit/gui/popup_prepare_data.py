@@ -140,18 +140,16 @@ class popup_prepare_data(object):
         button_omit = ttk.Button(frame_scan, text='Draw raw uncorrected', command=self.draw_raw)
         
         # omit last scan
-        self.omit_scan = BooleanVar()
         checkbutton_omit_scan = ttk.Checkbutton(frame_scan, text='Omit final scan if incomplete', 
-                variable=self.omit_scan, onvalue=True, offvalue=False, pad=5,
+                variable=self.data.omit_scan, onvalue=True, offvalue=False, pad=5,
                 command=self.set_bin_repair)
         
         # flatten baseline
-        self.flatten_base = IntVar()
         self.label_flatten_base = ttk.Label(frame_scan, 
                                       text='Flatten baseline using N end bins. N = ')
-        spin_flatten_base = Spinbox(frame_scan, from_=0, to=100000,
+        spin_flatten_base = Spinbox(frame_scan, from_=0, to=1000,
                                         width=4,
-                                        textvariable=self.flatten_base)
+                                        textvariable=self.data.base_bins)
         spin_flatten_base.bind("<KeyRelease>", self.set_bin_repair)
         spin_flatten_base.bind("<Leave>", self.set_bin_repair)
  
@@ -204,17 +202,6 @@ class popup_prepare_data(object):
         if '1' in self.data.mode:
             frame_scan.grid(column=1, row=r, sticky='ne', padx=5, pady=5); r+=1
         
-        # set defaults
-        scan_repair_options = [opt for opt in self.data.scan_repair_options.split(':') if opt]
-        self.omit_scan.set('omit' in scan_repair_options)
-        
-        try:
-            del scan_repair_options[scan_repair_options.index('omit')]
-        except ValueError:
-            pass
-    
-        if len(scan_repair_options) > 0:
-            self.flatten_base.set(int(scan_repair_options[0]))
         self.set_bin_repair()
         
         self.logger.debug('Initialization success. Starting mainloop.')
@@ -243,10 +230,8 @@ class popup_prepare_data(object):
         
      
         plt.figure()
-        omit = self.data.omit.get() if self.data.omit.get() != self.bfit.fetch_files.bin_remove_starter_line \
-                                    else ''
-        a_orig = self.data.asym(draw_style, omit=omit, scan_repair_options='')
-        a_corr = self.data.asym(draw_style, omit=omit)
+        a_orig = self.data.asym(draw_style, scan_repair_options='')
+        a_corr = self.data.asym(draw_style)
         
         # raw
         if draw_style == 'r':
@@ -291,7 +276,7 @@ class popup_prepare_data(object):
             
             plt.errorbar(x*unit[0], a, da, fmt='.k', label='Uncorrected')
             
-            n = self.flatten_base.get()
+            n = self.data.base_bins.get()
             x, a, da = a_corr
             plt.errorbar(x*unit[0], a, da, fmt='xr', label='Corrected')
             if n > 0:
@@ -305,56 +290,6 @@ class popup_prepare_data(object):
         plt.ylabel('Asymmetry')
         plt.legend(fontsize='x-small')
         plt.tight_layout()
-        
-        # ~ # draw corrected
-        # ~ bfit.draw_style.set('stack')
-        # ~ self.data.scan_repair_options = repair_string
-        # ~ self.data.draw(draw_style, figstyle='inspect', label='Corrected ', 
-                       # ~ unique=False, marker='x', color='r')
-        
-        # ~ if draw_style == 'c':
-        
-            # ~ # set axis as bins and make end points different
-            # ~ ax = bfit.plt.gca('inspect')
-            # ~ lim = ax.get_xlim()
-            # ~ for cont in ax.containers:
-                
-                # ~ # do points
-                # ~ line = cont.lines[0]
-                # ~ assert type(line) is mpl.lines.Line2D
-                        
-                # ~ # get data
-                # ~ x = line.get_xdata()
-                # ~ y = line.get_ydata()
-                
-                # ~ # modify axis
-                # ~ n = len(x)
-                # ~ x = np.arange(n)
-                # ~ lim = (-1, n+1)
-                
-                # ~ # set data
-                # ~ line.set_xdata(x) 
-                # ~ line.set_ydata(y) 
-
-                # ~ # do errors
-                # ~ line2 = cont.lines[2][0]
-                # ~ assert type(line2) is mpl.collections.LineCollection
-                
-                # ~ # get data
-                # ~ xy = line2.get_segments()
-                
-                # ~ # modify axis
-                # ~ for i in range(len(xy)):
-                    # ~ xy[i][:, 0] = i
-                    
-                # ~ # set data
-                # ~ line2.set_segments(xy)
-                
-            # ~ ax.set_xlim(lim)
-            # ~ ax.set_xlabel('Bin')
-        
-        # ~ # reset draw style
-        # ~ bfit.draw_style.set(style)
     
     # ====================================================================== #
     def draw_raw(self):
@@ -366,16 +301,13 @@ class popup_prepare_data(object):
         
         # save draw style
         style = bfit.draw_style.get()
-        repair_string = self.data.scan_repair_options
-        self.data.scan_repair_options = ''
         
         # draw new
         bfit.draw_style.set('new')
-        self.data.draw('r', figstyle='inspect')
+        self.data.draw('r', figstyle='inspect', asym_args={'scan_repair_options':''})
         
         # reset draw style
         bfit.draw_style.set(style)
-        self.data.scan_repair_options = repair_string
         
     # ====================================================================== #
     def inspect(self):
@@ -420,7 +352,7 @@ class popup_prepare_data(object):
         
         # get n bins in baseline
         try:
-            n_base = self.flatten_base.get()
+            n_base = self.data.base_bins.get()
         except:
             return
             
@@ -429,13 +361,6 @@ class popup_prepare_data(object):
             self.label_flatten_base.config(foreground=colors.selected)
         else:
             self.label_flatten_base.config(foreground=colors.foreground)
-        
-        # make string
-        s1 = 'omit' if self.omit_scan.get() else ''
-        s2 = str(n_base) if n_base else ''
-        string = [s for s in (s1, s2) if s]
-        
-        self.data.scan_repair_options = ':'.join(string)
         
     # ====================================================================== #
     def ungray_label(self, _):

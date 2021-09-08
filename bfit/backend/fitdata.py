@@ -27,6 +27,7 @@ class fitdata(object):
         
         Data Fields:
             
+            base_bins:  n bins to use in baseline flatten (IntVar)
             bd:         bdata object for data and asymmetry (bdata)
             bfit:       pointer to top level parent object (bfit)
             bias:       platform bias in kV (float)
@@ -35,7 +36,7 @@ class fitdata(object):
             check_draw_data: BooleanVar, draw data?
             check_draw_fit: BooleanVar, draw fit?
             check_draw_res: BooleanVar, draw residuals?
-            check_state: BooleanVar
+            check_state: BooleanVar, include in fit?
             
             chi:        chisquared from fit (float)
             dataline:   pointer to dataline object in fetch_files tab
@@ -51,10 +52,10 @@ class fitdata(object):
             label:      label for drawing (StringVar)
             mode:       run mode (str, ex: 1f)
             omit:       omit bins, 1f only (StringVar)
+            omit_scan:  if true omit incomplete scan (BoolVar)
             parnames:   parameter names in the order needed by the fit function
             rebin:      rebin factor (IntVar)
             run:        run number (int)
-            scan_repair_options: string
             year:       run year (int)
               
     """
@@ -80,21 +81,26 @@ class fitdata(object):
         # fetch files variables
         self.check_state = BooleanVar()
         self.rebin = IntVar()
+        self.base_bins = IntVar()
         self.omit = StringVar()
         self.label = StringVar()
         self.check_draw_data = BooleanVar()
         self.check_draw_fit = BooleanVar()
         self.check_draw_res = BooleanVar()
+        self.omit_scan = BooleanVar()
 
         
         # fetch files defaults
         self.check_state.set(True)
         self.rebin.set(1)
+        self.base_bins.set(0)
         self.omit.set('')
         self.label.set('')
         self.check_draw_data.set(True)
         self.check_draw_fit.set(False)
         self.check_draw_res.set(False)
+        self.omit_scan.set(False)
+        
         self.scan_repair_options = ''
         self.parnames = []
         
@@ -136,8 +142,30 @@ class fitdata(object):
         
         # set repair options 
         if 'scan_repair_options' not in kwargs.keys():
-            kwargs['scan_repair_options'] = self.scan_repair_options
+            s1 = 'omit' if self.omit_scan.get() else ''
+            s2 = '%d' % self.base_bins.get()
+            kwargs['scan_repair_options'] = '%s:%s' % (s1, s2)
         
+        # rebin
+        if 'rebin' not in kwargs.keys():
+            kwargs['rebin'] = self.rebin.get()
+        
+        # omit
+        if 'omit' not in kwargs.keys():
+            omit = self.omit.get()
+            if omit == self.bfit.fetch_files.bin_remove_starter_line:
+                omit = ''
+        
+            kwargs['omit'] = omit
+            
+        # nbm
+        if 'nbm' not in kwargs.keys():
+            kwargs['nbm'] = self.nbm.get()
+                          
+        # hist select
+        if 'hist_select' not in kwargs.keys():
+            kwargs['hist_select'] = self.bfit.hist_select
+                          
         # check for errors
         try:
             return self.bd.asym(*args, deadtime=deadtime, 
@@ -148,7 +176,7 @@ class fitdata(object):
             raise err from None
 
     # ======================================================================= #
-    def draw(self, asym_type, figstyle='', **drawargs):
+    def draw(self, asym_type, figstyle='', asym_args=None, **drawargs):
         """
             Draw the selected file
             
@@ -168,15 +196,13 @@ class fitdata(object):
                      self.bfit.draw_style.get(), 
                      drawargs)
                 
+        # format
+        if asym_args is None:
+            asym_args = {}
+                
         # useful pointers
         bfit = self.bfit
         plt = self.bfit.plt
-        rebin = self.rebin.get()
-        omit = self.omit.get()
-        
-        # check omit values
-        if omit == self.bfit.fetch_files.bin_remove_starter_line:
-            omit = ''
         
         # convert asym type
         asym_type = self.bfit.asym_dict.get(asym_type, asym_type)
@@ -211,9 +237,7 @@ class fitdata(object):
         
         # get asymmetry: raw scans
         if asym_type == 'r' and '1' in self.mode:
-            a = self.asym('raw', omit=omit, 
-                          hist_select=bfit.hist_select, 
-                          nbm=bfit.use_nbm.get())
+            a = self.asym('raw', **asym_args)
             x = np.arange(len(a.p[0]))
             idx_p = a.p[0]!=0
             idx_n = a.n[0]!=0
@@ -230,7 +254,7 @@ class fitdata(object):
         elif self.mode == '2e':
             
             # get asym
-            a = self.asym(hist_select=bfit.hist_select)
+            a = self.asym(**asym_args)
         
             # draw
             if asym_type in ["raw_c", "raw_h", "raw_hs"]:
@@ -346,10 +370,7 @@ class fitdata(object):
             
         # get asymmetry: not raw scans, not 2e
         else:
-            a = self.asym(omit=omit, 
-                          rebin=rebin, 
-                          hist_select=bfit.hist_select, 
-                          nbm=bfit.use_nbm.get())
+            a = self.asym(**asym_args)
             
             # get x self
             if 'custom' in a.keys():
@@ -676,24 +697,21 @@ class fitdata(object):
                 
             # draw alpha diffusion
             elif asym_type == 'ad':
-                a = self.asym('adif', rebin=rebin, hist_select=bfit.hist_select, 
-                              nbm=bfit.use_nbm.get())
+                a = self.asym('adif', **asym_args)
                 plt.errorbar(figstyle, self.id, *a, label=label, **drawargs)
                 plt.ylabel(figstyle, r'$N_\alpha/N_\beta$')
                 
             # draw normalized alpha diffusion
             elif asym_type == 'adn':
                 
-                a = self.asym('adif', rebin=1, hist_select=bfit.hist_select, 
-                              nbm=bfit.use_nbm.get())
+                a = self.asym('adif', rebin=1, **asym_args)
                           
                 # take mean of first few points
                 idx = (a[0]<bfit.norm_alph_diff_time)*(~np.isnan(a[1]))
                 a0 = np.average(a[1][idx], weights=1/a[2][idx]**2)
                 
                 # normalize
-                a = self.asym('adif', rebin=rebin, hist_select=bfit.hist_select, 
-                              nbm=bfit.use_nbm.get())
+                a = self.asym('adif', **asym_args)
                 a[1] /= a0
                 a[2] /= a0
                 
@@ -703,8 +721,7 @@ class fitdata(object):
             # draw alpha tagged runs
             elif asym_type in ['at_c', 'at_h', 'nat_c', 'nat_h']:
                 
-                a = self.asym('atag', rebin=rebin, hist_select=bfit.hist_select, 
-                              nbm=bfit.use_nbm.get())
+                a = self.asym('atag', **asym_args)
                 t = a.time_s
                 
                 if asym_type == 'at_c':
@@ -824,7 +841,7 @@ class fitdata(object):
             drawargs['linestyle'] = '-'
 
         # draw
-        t, a, da = self.asym('c')
+        t, a, da = self.asym('c', **asym_args)
 
         fitx = np.linspace(min(t), max(t), self.bfit.fit_files.n_fitx_pts)
 
@@ -946,7 +963,7 @@ class fitdata(object):
 
         # get residuals
         x, a, da = self.asym(self.bfit.get_asym_mode(self.bfit.fetch_files), 
-                             rebin=rebin)
+                             **asym_args)
         res = a - self.fitfn(x, *fit_par)
 
         # set x axis
