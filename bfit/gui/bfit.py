@@ -407,7 +407,7 @@ class bfit(object):
         root.option_add("*Entry.DisabledBackground",colors.entry_disabled)
         
         ttk_style = ttk.Style()
-        ttk_style.configure('.', font=colors.font, 
+        ttk_style.configure('.',   font=colors.font, 
                                    background=colors.background, 
                                    foreground=colors.foreground, 
                                    arrowcolor=colors.foreground, 

@@ -1,0 +1,375 @@
+# Drawing style window
+# Derek Fujimoto
+# July 2018
+
+from tkinter import *
+from tkinter import ttk
+import numpy as np
+from bfit import logger_name
+from bfit.backend.entry_color_set import on_focusout, on_entry_click
+import bfit.backend.colors as colors
+import matplotlib as mpl
+import webbrowser
+import logging
+from functools import partial
+
+# ========================================================================== #
+class popup_prepare_data(object):
+    """
+        Popup window for preparing data for fitting. 
+        
+        Data fields:
+        
+        bfit:               bfit object
+        checkbutton_state:  Checkbutton, linked to bdfit.check_state
+
+        data:               fitdata object
+        entry_label:        ttk.Entry, set run label
+        label_flatten_base: ttk.Label for flattening the baseline
+        omit_scan:          BooleanVar, if true, omit last scan from asym calc
+        flatten_base:       IntVar, if >0, flatten the baseline using this many bins
+        flatten_over:       BooleanVar, if true, apply baseline overcorrection in flatten
+    """
+
+    # ====================================================================== #
+    def __init__(self, bfit, data):
+        """
+            bfit: bfit object
+            data: fitdata object
+        """
+        
+        # set variables
+        self.bfit = bfit    # fit_files pointer
+        self.data = data
+        
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.info('Initializing')
+        
+        # make a new window
+        self.win = Toplevel(bfit.mainframe)
+        self.win.title('Prepare %s for fitting' % data.get_values('Unique Id')[0])
+        topframe = ttk.Frame(self.win, relief='sunken', pad=5)
+
+        # icon
+        self.bfit.set_icon(self.win)
+
+        # show file details ---------------------------------------------------
+        frame_details = ttk.Labelframe(topframe, pad=5, text='File Details')
+        
+        r = 0
+        keys = (('Unique Id', '', ''), 
+                ('Title', '', ''), 
+                ('Temperature (K)',    'T    = ', ' K'), 
+                ('B0 Field (T)',       'B0   = ', ' T'), 
+                ('Platform Bias (kV)', 'Bias = ', ' kV'), 
+                ('Run Duration (s)', 'Duration: ', ''))
+        for key, label, unit in keys:
+            val, err = data.get_values(key)
+            
+            # prep output string
+            if key == 'Run Duration (s)':
+                
+                text = '%s%d:%d' % (label, int(val/60), val%60)
+                
+            else:
+                if type(val) is not str:
+                    val = '%.3f' % val
+                
+                text = '%s%s%s' % (label, val, unit)
+            
+            # set label in window
+            label = ttk.Label(frame_details, text=text, justify=LEFT)
+            label.grid(column=0, row=r, sticky='nw')
+            r += 1
+        
+        
+        # run label
+        frame_label = ttk.Frame(frame_details)
+        label_label = ttk.Label(frame_label, text='Label:', justify=LEFT)
+        self.entry_label = Entry(frame_label, textvariable=self.data.label, width=18)
+        self.entry_label.bind('<KeyRelease>', self.ungray_label)
+        button_label = ttk.Button(frame_label, text='Reset to default', 
+                                    command=self.reset_label, pad=1)
+        
+        # inspect button
+        button_inspect = ttk.Button(frame_details, text='Inspect', 
+                                    command=self.inspect, pad=1)
+        
+        # grid 
+        label_label.grid(column=0, row=0, sticky='w')
+        self.entry_label.grid(column=1, row=0, sticky='w')
+        button_label.grid(column=2, row=0, sticky='w', padx=5)
+        frame_label.grid(column=0, row=r, sticky='new'); r+=1
+        button_inspect.grid(column=0, row=r, sticky='ne', padx=5, pady=5); r+= 1
+        
+        # mode ----------------------------------------------------------------
+        mode_text = self.bfit.fetch_files.runmode_relabel[self.data.mode]
+        mode_text = mode_text.split('(')[0] + '(%s)' % self.data.mode
+        frame_mode = ttk.Labelframe(topframe, text='Run Mode', pad=5)
+        label_mode = ttk.Label(frame_mode, text=mode_text, justify=LEFT)
+        label_mode.grid(column=0, row=0, sticky='nw')
+        
+        # include in fit ------------------------------------------------------
+        frame_state = ttk.Labelframe(topframe, text='State', pad=5)
+        self.checkbutton_state = ttk.Checkbutton(frame_state, text='Active', 
+                variable=self.data.check_state, onvalue=True, offvalue=False, pad=5,
+                command=self.config_checkbutton_state)
+        self.config_checkbutton_state()
+        self.checkbutton_state.grid(column=0, row=0)
+        
+        # scan repair ---------------------------------------------------------
+        frame_scan = ttk.Labelframe(topframe, text='Scan Repair', pad=5)
+        
+        
+        # omit bins
+        label_omit = ttk.Label(frame_scan, text='Remove bins:')
+        entry_omit = Entry(frame_scan, textvariable=self.data.omit, width=25)
+        button_omit = ttk.Button(frame_scan, text='Draw raw uncorrected', command=self.draw_raw)
+        
+        # omit last scan
+        self.omit_scan = BooleanVar()
+        self.omit_scan.set(False)
+        checkbutton_omit_scan = ttk.Checkbutton(frame_scan, text='Omit final scan if incomplete', 
+                variable=self.omit_scan, onvalue=True, offvalue=False, pad=5,
+                command=self.set_bin_repair)
+        
+        # flatten baseline
+        self.flatten_base = IntVar()
+        self.flatten_base.set(0)
+        
+        self.label_flatten_base = ttk.Label(frame_scan, 
+                                      text='Flatten baseline using N end bins. N = ')
+        spin_flatten_base = Spinbox(frame_scan, from_=0, to=100000,
+                                        width=4,
+                                        textvariable=self.flatten_base)
+        spin_flatten_base.bind("<KeyRelease>", self.set_bin_repair)
+        spin_flatten_base.bind("<Leave>", self.set_bin_repair)
+ 
+        self.flatten_over = BooleanVar()
+        self.flatten_over.set(False)        
+        checkbutton_flatten_over = ttk.Checkbutton(frame_scan, text='Ensure combined scans are flattened', 
+                variable=self.flatten_over, onvalue=True, offvalue=False, pad=5,
+                command=self.set_bin_repair)
+                
+        frame_draw_corrected = ttk.Labelframe(frame_scan, text='Draw Correction', pad=5)
+        button_draw_raw_flat = ttk.Button(frame_draw_corrected, text='Raw', 
+                                    command=lambda: self.draw_compare(draw_style='r'))
+        button_draw_raw_comb = ttk.Button(frame_draw_corrected, text='Combined', 
+                                    command=lambda: self.draw_compare(draw_style='c'))
+        
+        # add grey text to bin removal
+        bin_remove_starter_line = self.bfit.fetch_files.bin_remove_starter_line
+        input_line = data.omit.get()
+        
+        if not input_line:
+            input_line = bin_remove_starter_line
+            entry_omit.config(foreground=colors.entry_grey)
+        
+        entry_omit.delete(0, 'end')
+        entry_omit.insert(0, input_line)
+        entry_fn = partial(on_entry_click, \
+                text=bin_remove_starter_line, entry=entry_omit)
+        on_focusout_fn = partial(on_focusout, \
+                text=bin_remove_starter_line, entry=entry_omit)
+        entry_omit.bind('<FocusIn>', entry_fn)
+        entry_omit.bind('<FocusOut>', on_focusout_fn)
+        
+        # grid
+        r = 0
+        label_omit.grid(column=0, row=r, sticky='w')
+        entry_omit.grid(column=1, row=r, sticky='w')
+        button_omit.grid(column=3, row=r, sticky='e'); r+=1
+        checkbutton_omit_scan.grid(column=0, row=r, sticky='w', columnspan=2); r+=1
+        self.label_flatten_base.grid(column=0, row=r, sticky='w', columnspan=2)
+        spin_flatten_base.grid(column=2, row=r, sticky='w')
+        
+        button_draw_raw_flat.grid(column=0, row=0, sticky='')
+        button_draw_raw_comb.grid(column=1, row=0, sticky='')
+        frame_draw_corrected.grid(column=3, row=r-1, sticky='ens', pady=5, padx=5, 
+                                  rowspan=2)
+        
+        # Key bindings
+        # ~ self.win.bind('<Return>', self.set)             
+        # ~ self.win.bind('<KP_Enter>', self.set)
+
+        # ~ # instructions
+        # ~ insr = ttk.Label(topframe, text='Set unit as "default" to disable', pad=5, justify=LEFT)
+        
+        # ~ # make objects: buttons
+        # ~ set_button = ttk.Button(frame, text='Set', command=self.set)
+        # ~ close_button = ttk.Button(frame, text='Cancel', command=self.cancel)
+        
+        # ~ # grid
+        # ~ topframe.grid(column=0, row=0, columnspan=2, pady=10)
+        # ~ insr.grid(column=0, row=r, columnspan=4); r+= 1
+        
+        # ~ set_button.grid(column=0, row=r, pady=10)
+        # ~ close_button.grid(column=1, row=r, pady=10)
+            
+        # grid frames
+        topframe.grid(column=0, row=0)
+        frame_details.grid(column=0, row=0, sticky='nw', padx=5, pady=5, rowspan=4)
+        
+        r = 0
+        frame_mode.grid(column=1, row=r, sticky='new', padx=5, pady=5); r+=1
+        frame_state.grid(column=1, row=r, sticky='new', padx=5, pady=5); r+=1
+        frame_scan.grid(column=1, row=r, sticky='ne', padx=5, pady=5); r+=1
+        
+        self.logger.debug('Initialization success. Starting mainloop.')
+    
+    # ====================================================================== #
+    def cancel(self):
+        self.win.destroy()
+    
+    # ====================================================================== #
+    def config_checkbutton_state(self):
+        """
+            Change text in state checkbox
+        """
+        
+        if self.data.check_state.get():
+            self.checkbutton_state.config(text='Active')
+        else:
+            self.checkbutton_state.config(text='Disabled')
+        
+    # ====================================================================== #
+    def draw_compare(self, draw_style='c'):
+        """
+            Draw effect of baseline flattening on combined asym
+        """
+        bfit = self.bfit
+        
+        # save draw style
+        style = bfit.draw_style.get()
+        
+        # draw uncorrected
+        bfit.draw_style.set('new')
+        repair_string = self.data.scan_repair_options
+        self.data.scan_repair_options = ''
+        self.data.draw(draw_style, figstyle='inspect', label='Un-corrected ',
+                       color='k')
+        
+        # draw corrected
+        bfit.draw_style.set('stack')
+        self.data.scan_repair_options = repair_string
+        self.data.draw(draw_style, figstyle='inspect', label='Corrected ', 
+                       unique=False, marker='x', color='r')
+                       
+        # set axis as bins
+        if draw_style == 'c':
+            
+            ax = bfit.plt.gca('inspect')
+            lim = ax.get_xlim()
+            for cont in ax.containers:
+                for line in cont.lines:
+                    if type(line) is mpl.lines.Line2D:
+                        x = line.get_xdata()
+                        line.set_xdata(np.arange(len(x))) 
+                        lim = (-1, len(x)+1)
+                    
+                    elif type(line) is tuple and len(line)>0:
+                        
+                        assert type(line[0]) is mpl.collections.LineCollection
+                        x = line[0].get_segments()
+                        
+                        for i in range(len(x)):
+                            x[i][:, 0] = i
+                        line[0].set_segments(x)
+                        
+            ax.set_xlim(lim)
+            ax.set_xlabel('Bin')
+            
+        
+        # reset draw style
+        bfit.draw_style.set(style)
+    
+    # ====================================================================== #
+    def draw_raw(self):
+        """
+            Draw raw scans in an inspect window
+        """
+        
+        bfit = self.bfit
+        
+        # save draw style
+        style = bfit.draw_style.get()
+        repair_string = self.data.scan_repair_options
+        self.data.scan_repair_options = ''
+        
+        # draw new
+        bfit.draw_style.set('new')
+        self.data.draw('r', figstyle='inspect')
+        
+        # reset draw style
+        bfit.draw_style.set(style)
+        self.data.scan_repair_options = repair_string
+        
+    # ====================================================================== #
+    def inspect(self):
+        """
+            Load data in inspect window
+        """
+        ins = self.bfit.fileviewer
+        
+        ins.runn.set(self.data.run)
+        ins.year.set(self.data.year)
+        ins.get_data()
+        self.bfit.notebook.select(0)
+        
+    # ====================================================================== #
+    def reset_label(self):
+        """
+            Reset the label back to default
+        """
+        
+        # get default label
+        try:
+            label = self.bfit.get_label(self.data)
+        except KeyError:
+            return
+            
+        # clear old text
+        self.entry_label.delete(0, 'end')
+        
+        # set
+        self.entry_label.insert(0, label)
+        
+        # reset color in fetch tab
+        line = self.bfit.fetch_files.data_lines[self.data.id]
+        entry = line.label_entry
+        entry.config(foreground=colors.entry_grey)
+        
+    # ====================================================================== #
+    def set_bin_repair(self, *event):
+        """
+            Make and set bin repair string
+        """
+        
+        # get n bins in baseline
+        try:
+            n_base = self.flatten_base.get()
+        except:
+            return
+            
+        # set colors
+        if n_base > 0:
+            self.label_flatten_base.config(foreground=colors.selected)
+        else:
+            self.label_flatten_base.config(foreground=colors.foreground)
+        
+        # make string
+        s1 = 'omit' if self.omit_scan.get() else ''
+        s2 = str(n_base) if n_base else ''
+        string = [s for s in (s1, s2) if s]
+        
+        self.data.scan_repair_options = ':'.join(string)
+        
+    # ====================================================================== #
+    def ungray_label(self, _):
+        """
+            Remove the gray in the fetch tab label entry
+        """
+        line = self.bfit.fetch_files.data_lines[self.data.id]
+        entry = line.label_entry
+        entry.config(foreground=colors.entry_white)

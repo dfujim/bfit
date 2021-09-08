@@ -8,6 +8,7 @@ from bfit import logger_name
 from bdata import bdata, bmerged
 from functools import partial
 from bfit.backend.fitdata import fitdata
+from bfit.gui.popup_prepare_data import popup_prepare_data
 from bfit.backend.entry_color_set import on_focusout, on_entry_click
 import bfit.backend.colors as colors
 import numpy as np
@@ -869,7 +870,6 @@ class dataline(object):
         bdfit:          fitdata object 
         bfit:           pointer to root 
         bin_remove:     StringVar for specifying which bins to remove in 1f runs
-        bin_remove_entry: Entry object for bin remove 
         check:          Checkbox for selection (related to check_state)
         check_data:     BooleanVar for specifying to draw data
         check_fit:      BooleanVar for specifying to draw fit
@@ -934,9 +934,6 @@ class dataline(object):
         line_frame.bind('<Enter>', self.on_line_enter)
         line_frame.bind('<Leave>', self.on_line_leave)
         
-        bin_remove_entry = Entry(line_frame, textvariable=self.bin_remove, \
-                width=17)
-                
         label_label = ttk.Label(line_frame, text="Label:", pad=5)
         self.label_entry = Entry(line_frame, textvariable=self.label, \
                 width=18)
@@ -969,25 +966,19 @@ class dataline(object):
                 onvalue=True, offvalue=False, pad=5)
          
         self.set_check_text()
+        
+        # add button for data prep
+        button_prep_data = ttk.Button(line_frame, text='Prep Data', 
+                                      command=lambda : popup_prepare_data(self.bfit, self.bdfit), 
+                                      pad=1)
          
-        # add grey text to bin removal
-        bin_remove_entry.insert(0, self.bin_remove_starter_line)
-        entry_fn = partial(on_entry_click, \
-                text=self.bin_remove_starter_line, entry=bin_remove_entry)
-        on_focusout_fn = partial(on_focusout, \
-                text=self.bin_remove_starter_line, entry=bin_remove_entry)
-        bin_remove_entry.bind('<FocusIn>', entry_fn)
-        bin_remove_entry.bind('<FocusOut>', on_focusout_fn)
-        bin_remove_entry.config(foreground=colors.entry_grey)
-             
         # add grey text to label
         self.set_label()
                 
         # grid
         c = 1
         self.check.grid(column=c, row=0, sticky=E); c+=1
-        if self.mode in ['1f', '1n', '1w', '1x']: 
-            bin_remove_entry.grid(column=c, row=0, sticky=E); c+=1
+        button_prep_data.grid(column=c, row=0, sticky=E); c+=1
         rebin_label.grid(column=c, row=0, sticky=E); c+=1
         rebin_box.grid(column=c, row=0, sticky=E); c+=1
         label_label.grid(column=c, row=0, sticky=E); c+=1
@@ -1007,8 +998,7 @@ class dataline(object):
         
         # passing
         self.line_frame = line_frame
-        self.bin_remove_entry = bin_remove_entry
-        
+                
     # ======================================================================= #
     def __del__(self):
         

@@ -324,7 +324,6 @@ class fitter(object):
                 col: p0, blo, bhi, fixed
                 index: parameter name
         """
-        
         # asym_mode un-used types 
         if asym_mode in (   'h',           # Split Helicity          
                             'hm',          # Matched Helicity

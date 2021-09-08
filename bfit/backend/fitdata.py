@@ -54,6 +54,7 @@ class fitdata(object):
             parnames:   parameter names in the order needed by the fit function
             rebin:      rebin factor (IntVar)
             run:        run number (int)
+            scan_repair_options: string
             year:       run year (int)
               
     """
@@ -94,6 +95,8 @@ class fitdata(object):
         self.check_draw_data.set(True)
         self.check_draw_fit.set(False)
         self.check_draw_res.set(False)
+        self.scan_repair_options = ''
+        self.parnames = []
         
         # key for IDing file 
         self.id = self.bfit.get_run_key(data=bd)
@@ -121,7 +124,7 @@ class fitdata(object):
             Get asymmetry
         """
         deadtime = 0
-        
+
         # check if deadtime corrections are needed
         if self.bfit.deadtime_switch.get():
             
@@ -131,9 +134,14 @@ class fitdata(object):
             else:
                 deadtime = self.bd.get_deadtime(c=self.bfit.deadtime, fixed='c')
         
+        # set repair options 
+        if 'scan_repair_options' not in kwargs.keys():
+            kwargs['scan_repair_options'] = self.scan_repair_options
+        
         # check for errors
         try:
-            return self.bd.asym(*args, deadtime=deadtime, **kwargs)
+            return self.bd.asym(*args, deadtime=deadtime, 
+                                **kwargs)
         except Exception as err:
             messagebox.showerror(title=type(err).__name__, message=str(err))
             self.logger.exception(str(err))
@@ -159,7 +167,7 @@ class fitdata(object):
                      asym_type, 
                      self.bfit.draw_style.get(), 
                      drawargs)
-        
+                
         # useful pointers
         bfit = self.bfit
         plt = self.bfit.plt
@@ -214,8 +222,9 @@ class fitdata(object):
             plt.errorbar(figstyle, self.id, x[idx_p], a.p[0][idx_p], a.p[1][idx_p], 
                     label=label+"($+$)", **drawargs)
             
+            drawargs['unique'] = False
             plt.errorbar(figstyle, self.id, x[idx_n], a.n[0][idx_n], a.n[1][idx_n], 
-                    label=label+"($-$)", unique=False, **drawargs)
+                    label=label+"($-$)", **drawargs)
             
         # do 2e mode
         elif self.mode == '2e':
@@ -1426,3 +1435,5 @@ class temperature_class(object):
         self.mean = mean
         self.std = std
     
+    def __str__(self):
+        return '%f K' % self.mean
