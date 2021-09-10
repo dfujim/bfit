@@ -150,12 +150,28 @@ class fetch_files(object):
         dataline_frame.bind("<Configure>", self.config_canvas) # bind resize to alter scrollable region
         self.data_canvas.bind("<Configure>", self.config_dataline_frame) # bind resize to change size of contained frame
         
+        
+        
         # Frame to hold everything on the right ------------------------------
         bigright_frame = ttk.Frame(fetch_data_tab, pad=5)
         
+        # asymmetry calculation
+        style_frame = ttk.Labelframe(bigright_frame, text='Asymmetry Calculation', \
+                pad=5)
+        self.asym_type = StringVar()
+        self.asym_type.set('')
+        self.entry_asym_type = ttk.Combobox(style_frame, \
+                textvariable=self.asym_type, state='readonly', \
+                width=20)
+        self.entry_asym_type['values'] = ()
+        
+        style_frame.grid(column=0, row=0, sticky=(W, N, E))
+        style_frame.grid_columnconfigure(0, weight=1)
+        self.entry_asym_type.grid(column=0, row=0, sticky=(N, E, W), padx=10)
+        
         # Frame for group set options ----------------------------------------
         right_frame = ttk.Labelframe(bigright_frame, \
-                text='Operations on Active Items', pad=30)
+                text='Operations on Active Items', pad=15)
         
         check_remove = ttk.Button(right_frame, text='Remove', \
                 command=self.remove_all, pad=5)
@@ -250,7 +266,7 @@ class fetch_files(object):
         runmode_label_frame.grid(column=2, row=0, sticky=(N, W, E, S), pady=5, padx=5)
         self.runmode_label.grid(column=0, row=0, sticky=(N, W, E))
         
-        bigright_frame.grid(column=2, row=1, sticky=(N, E))
+        bigright_frame.grid(column=2, row=1, rowspan=2, sticky='new')
         
         self.data_canvas.grid(column=0, row=1, sticky=(E, W, S, N), padx=5, pady=5)
         yscrollbar.grid(column=1, row=1, sticky=(W, S, N), pady=5)
@@ -260,14 +276,47 @@ class fetch_files(object):
         check_fit_box.grid(         column=2, row=0, sticky=(N))
         check_res_box.grid(         column=3, row=0, sticky=(N)) 
         
-        right_frame.grid(           column=0, row=0, sticky=(N, E, W))
+        right_frame.grid(           column=0, row=1, sticky=(N, E, W), pady=5)
         r = 0
         right_checkbox_frame.grid(  column=0, row=r, sticky=(N), columnspan=2); r+= 1
         check_toggle_button.grid(   column=0, row=r, sticky=(N, E, W), columnspan=2, pady=1, padx=5); r+= 1
         check_draw.grid(            column=0, row=r, sticky=(N, W, E), pady=5, padx=5);
         check_remove.grid(          column=1, row=r, sticky=(N, E, W), pady=5, padx=5); r+= 1
         frame_scan.grid(            column=0, row=r, sticky=(N, E, W), pady=5, padx=5, columnspan=2); r+= 1        
-        bigright_frame.grid(        rowspan=2, sticky=(N, E, W))
+        
+        # filtering -----------------------------------------------------------
+        frame_filter = ttk.Labelframe(bigright_frame, text='Filter Runs', pad=5)
+        button_filter_instr = ttk.Button(frame_filter, text='Instructions', 
+                                         command=self.show_filter_instructions)
+        self.text_filter = Text(frame_filter, width=35, height=5, state='normal', 
+                                wrap='none')
+        
+        frame_filter_button = ttk.Frame(frame_filter, pad=5)
+        button_filter = ttk.Button(frame_filter_button, text='Filter', 
+                                         command=self.filter_runs)
+        self.filter_opt = StringVar()
+        self.filter_opt.set('activate')
+        radio_filter_activate = ttk.Radiobutton(frame_filter_button, 
+                                       variable=self.filter_opt, 
+                                       value='activate',
+                                       text='By activatation',
+                                       )
+        radio_filter_remove = ttk.Radiobutton(frame_filter_button, 
+                                       variable=self.filter_opt, 
+                                       value='remove',
+                                       text='By removal',
+                                       )
+        
+        button_filter.grid(column=0, row=0, rowspan=2, sticky='w', padx=5)
+        radio_filter_activate.grid(column=1, row=0, sticky='w', padx=5)
+        radio_filter_remove.grid(column=1, row=1, sticky='w', padx=5)
+        
+        # final grid
+        frame_filter.grid(column=0, row=2, sticky='new', pady=5)
+        r = 0
+        button_filter_instr.grid(column=0, row=r, sticky='new', pady=5); r+= 1
+        text_filter.grid(column=0, row=r, sticky='new', pady=5); r+= 1
+        frame_filter_button.grid(column=0, row=r, sticky='new', pady=5); r+= 1
         
         # resizing
         fetch_data_tab.grid_columnconfigure(0, weight=1)        # main area
@@ -280,20 +329,6 @@ class fetch_files(object):
         self.data_canvas.grid_columnconfigure(0, weight=1)    # fetch frame 
         self.data_canvas.grid_rowconfigure(0, weight=1)
             
-        # asymmetry calculation
-        style_frame = ttk.Labelframe(bigright_frame, text='Asymmetry Calculation', \
-                pad=5)
-        self.asym_type = StringVar()
-        self.asym_type.set('')
-        self.entry_asym_type = ttk.Combobox(style_frame, \
-                textvariable=self.asym_type, state='readonly', \
-                width=20)
-        self.entry_asym_type['values'] = ()
-        
-        style_frame.grid(column=0, row=1, sticky=(W, N, E))
-        style_frame.grid_columnconfigure(0, weight=1)
-        self.entry_asym_type.grid(column=0, row=0, sticky=(N, E, W), padx=10)
-        
         # passing
         self.entry_run = entry_run
         self.entry_year = entry_year
@@ -466,6 +501,11 @@ class fetch_files(object):
                              omit=omit)
         self.logger.debug('Success.')
         
+    # ======================================================================= #
+    def filter_runs(self):
+        """Remove or select runs based on filter conditions"""
+        raise RuntimeError('filter_runs not yet implemented')
+    
     # ======================================================================= #
     def get_data(self):
         """Split data into parts, and assign to dictionary."""
@@ -811,6 +851,11 @@ class fetch_files(object):
         
         self.bfit.set_nbm(mode)
     
+    # ======================================================================= #
+    def show_filter_instructions(self):
+        """Display popup with instructions on filtering"""
+        raise RuntimeError('show_filter_instructions not yet implemented')
+            
     # ======================================================================= #
     def string2run(self, string):
         """Parse string, return list of run numbers"""

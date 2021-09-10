@@ -425,7 +425,10 @@ class bfit(object):
         
         ttk_style.map("TCheckbutton", foreground=[('selected', colors.selected), 
                                                  ('disabled', colors.disabled)], 
-                                      indicatorcolor=[('selected', 'green3')])
+                                      indicatorcolor=[('selected', colors.selected)])
+        ttk_style.map("TRadiobutton", foreground=[('selected', colors.selected), 
+                                                  ('disabled', colors.foreground)], 
+                                      indicatorcolor=[('selected', colors.selected)])
         ttk_style.map('TCombobox', fieldbackground=[('readonly', colors.background)])
         
         ttk_style.configure('TSpinbox', borderwidth=0, background=colors.background)
