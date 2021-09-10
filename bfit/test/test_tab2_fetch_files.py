@@ -149,3 +149,40 @@ def test_checkbox(tab=None, b=None):
     assert_equal(tab.data_lines['2020.40123'].check_state.get(), True, 'fetch tab toggle check False -> True')
     assert_equal(tab.data_lines['2020.40124'].check_state.get(), False, 'fetch tab toggle check True -> False')
 
+@with_bfit
+def test_filter(tab=None, b=None):
+    
+    # get data
+    tab.year.set(2020)
+    tab.run.set('40123-40128')
+    tab.get_data()
+    
+    # ensure all runs are activated
+    for k in '345678':
+        b.data['2020.4012'+k].check_state.set(True)
+    
+    # deactivate a run which will be later activated
+    b.data['2020.40124'].check_state.set(False)
+    
+    # filter by activation
+    tab.text_filter.insert('1.0', '13 < BIAS < 20\nTEMP>281')
+    tab.filter_opt.set('activate')
+    tab.filter_runs()
+    
+    # check activation state
+    states = [b.data['2020.4012'+k].check_state.get() for k in '45']
+    assert all(states), 'Incorrect runs activated on filter'
+    
+    states = [b.data['2020.4012'+k].check_state.get() for k in '3678']
+    assert not any(states), 'Incorrect runs de-activated on filter'
+    
+    # filter by removal
+    tab.filter_opt.set('remove')
+    tab.filter_runs()
+    
+    remaining = [('2020.4012'+k) in b.data.keys() for k in '45']
+    assert all(remaining), "Filter remove didn't keep correct runs"
+    
+    removed = [('2020.4012'+k) in b.data.keys() for k in '3678']
+    assert not any(removed), "Filter remove didn't remove correct runs"
+    

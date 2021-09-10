@@ -834,6 +834,12 @@ class fetch_files(object):
         elif focus_id == self.check_all_box:
             self.logger.debug('Focus is: check all box')
             self.draw_all()
+            
+        # filter
+        elif focus_id == self.text_filter:
+            self.logger.debug('Focus is: text_filter')
+            self.filter_runs()
+            
         else:
             pass
 
