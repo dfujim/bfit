@@ -11,6 +11,7 @@ from bfit.backend.fitdata import fitdata
 from bfit.gui.popup_prepare_data import popup_prepare_data
 from bfit.backend.entry_color_set import on_focusout, on_entry_click
 import bfit.backend.colors as colors
+from bfit.global_variables import KEYVARS
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -506,7 +507,11 @@ class fetch_files(object):
     # ======================================================================= #
     def filter_runs(self):
         """Remove or select runs based on filter conditions"""
-        raise RuntimeError('filter_runs not yet implemented')
+        
+        # parse input string
+        string = self.text_filter.get(0)
+        print(string)
+        
     
     # ======================================================================= #
     def get_data(self):
@@ -856,7 +861,27 @@ class fetch_files(object):
     # ======================================================================= #
     def show_filter_instructions(self):
         """Display popup with instructions on filtering"""
-        raise RuntimeError('show_filter_instructions not yet implemented')
+        
+        # instructions
+        msg = 'Write one boolean expression per line using ' +\
+              'the below variables to filter fetched runs.\n\n'
+              
+        # variables
+        keys = sorted(KEYVARS.keys())
+        values = [KEYVARS[k] for k in keys]
+        max_keylen = max(tuple(map(len, keys)))
+        
+        lines = [k.ljust(max_keylen+2) + v for k, v in zip(keys, values)]
+              
+        msg += '\n'.join(lines)
+        
+        # example
+        ex = 'ex: "10 < BIAS < 15"'
+        msg += '\n\n' + ex
+        
+        # show message
+        messagebox.showinfo(title = 'How to filter runs',
+                            message = msg)
             
     # ======================================================================= #
     def string2run(self, string):
