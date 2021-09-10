@@ -358,6 +358,31 @@ class fetch_files(object):
             pass
         
     # ======================================================================= #
+    def _check_condition(self, data, string):
+        """Check whether a run satisfies the condition given as a string"""
+        
+        # determine what variable is being tested
+        keyvars = np.array(list(KEYVARS.keys()))
+        keylens = [len(k) for k in keyvars]
+        keyvars = keyvars[np.argsort(keylens)[::-1]]
+        
+        found = False
+        for key in keyvars:
+            if key in string:
+                found = True
+                break
+        
+        if not found:
+            raise RuntimeError('Variable not recognized in "%s"' % string)
+        
+        # replace key with value
+        val, err = data.get_values(KEYVARS[key])
+        string = string.replace(key, str(val))
+        
+        # evaluate
+        return eval(string)
+    
+    # ======================================================================= #
     def _do_check_all(self, state, var, box):
         """
             Force all tickboxes of a given type to be in a given state, assuming 
@@ -384,7 +409,7 @@ class fetch_files(object):
             # run check for other items
             if hasattr(dline, 'do_'+var):
                 getattr(dline, 'do_'+var)()
-
+    
     # ======================================================================= #
     def canvas_scroll(self, event):
         """Scroll canvas with files selected."""
@@ -509,9 +534,29 @@ class fetch_files(object):
         """Remove or select runs based on filter conditions"""
         
         # parse input string
-        string = self.text_filter.get(0)
-        print(string)
+        string = self.text_filter.get('1.0', END)
+        lines = [l for l in string.split('\n') if l]
         
+        # iterate on fetched data
+        data_keep = []
+        
+        for k, d in self.bfit.data.items():
+            
+            # check conditions
+            satisfy = all([self._check_condition(d, line) for line in lines])
+            if satisfy:
+                data_keep.append(k)
+            
+        # do filtering by selection
+        if self.filter_opt.get() == 'activate':
+            for k, d in self.bfit.data.items():
+                d.check_state.set(k in data_keep)
+                
+        elif self.filter_opt.get() == 'remove':
+            keys = tuple(self.data_lines.keys())
+            for k in keys:
+                if k not in data_keep:
+                    self.data_lines[k].degrid()
     
     # ======================================================================= #
     def get_data(self):
@@ -863,8 +908,9 @@ class fetch_files(object):
         """Display popup with instructions on filtering"""
         
         # instructions
-        msg = 'Write one boolean expression per line using ' +\
-              'the below variables to filter fetched runs.\n\n'
+        msg = 'Write one boolean expression per line using the the below '+\
+              'variables. \n\n'+\
+              'Runs which satisfy all expressions are kept/activated\n\n'
               
         # variables
         keys = sorted(KEYVARS.keys())
@@ -873,7 +919,7 @@ class fetch_files(object):
         
         lines = [k.ljust(max_keylen+2) + v for k, v in zip(keys, values)]
               
-        msg += '\n'.join(lines)
+        msg += '   ' + ('\n   '.join(lines))
         
         # example
         ex = 'ex: "10 < BIAS < 15"'
