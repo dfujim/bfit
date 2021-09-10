@@ -4,6 +4,7 @@
 
 import numpy as np
 from bfit.backend.ConstrainedFunction import ConstrainedFunction
+from bfit.global_variables import KEYVARS
 
 # =========================================================================== # 
 class ParameterFunction(ConstrainedFunction):
@@ -27,7 +28,7 @@ class ParameterFunction(ConstrainedFunction):
         self.name = name
         
         # get variables in decreasing order of length (no mistakes in replace)
-        varlist = np.array(list(self.keyvars.keys()))
+        varlist = np.array(list(KEYVARS.keys()))
         varlist = varlist[np.argsort(list(map(len, varlist))[::-1])]
     
         # replace 1_T1 with lambda
@@ -73,7 +74,7 @@ class ParameterFunction(ConstrainedFunction):
         for var in self.inputs:
             
             # get value for all data
-            if var in self.keyvars:
+            if var in KEYVARS:
                 values = [self._get_value(self.bfit.data[r], var) for r in runs]
             elif var in self.parnames:
                 

@@ -43,12 +43,14 @@ class fetch_files(object):
             entry_asym_type: combobox for asym calc and draw type
             entry_run: entry to put in run number string
             fet_entry_frame: frame of fetch tab
+            filter_opt: StringVar, holds state of filter radio buttons
             listbox_history: listbox for run input history
             max_number_fetched: max number of files you can fetch
             omit_state: BooleanVar, if true set omit all final incomplete scans
             run: StringVar input to fetch runs.
             runmode_label: display run mode
             runmode: display run mode list of strings
+            text_filter: Text box for filter commands input
             year: IntVar of year to fetch runs from 
     """
     
@@ -315,7 +317,7 @@ class fetch_files(object):
         frame_filter.grid(column=0, row=2, sticky='new', pady=5)
         r = 0
         button_filter_instr.grid(column=0, row=r, sticky='new', pady=5); r+= 1
-        text_filter.grid(column=0, row=r, sticky='new', pady=5); r+= 1
+        self.text_filter.grid(column=0, row=r, sticky='new', pady=5); r+= 1
         frame_filter_button.grid(column=0, row=r, sticky='new', pady=5); r+= 1
         
         # resizing

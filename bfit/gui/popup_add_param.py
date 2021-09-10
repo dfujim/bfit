@@ -20,6 +20,7 @@ import bfit.backend.colors as colors
 
 from bfit.fitting.fit_bdata import fit_bdata
 from bfit.backend.ParameterFunction import ParameterFunction as ParFnGenerator
+from bfit.global_variables import KEYVARS
 
 # ========================================================================== #
 class popup_add_param(object):
@@ -105,7 +106,7 @@ class popup_add_param(object):
         # Keyword parameters
         key_param_frame = ttk.Frame(self.left_frame, relief='sunken', pad=5)
         s = 'Reserved variable names:\n\n'
-        self.reserved_pars = ParFnGenerator.keyvars
+        self.reserved_pars = KEYVARS
         
         keys = list(self.reserved_pars.keys())
         descr = [self.reserved_pars[k] for k in self.reserved_pars]

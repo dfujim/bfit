@@ -13,6 +13,7 @@ import pandas as pd
 import bdata as bd
 
 from bfit.backend.ConstrainedFunction import ConstrainedFunction as CstrFnGenerator
+from bfit.global_variables import KEYVARS
 from bfit.fitting.fit_bdata import fit_bdata
 from bfit.gui.template_fit_popup import template_fit_popup
 from bfit.gui.popup_ongoing_process import popup_ongoing_process 
@@ -53,7 +54,7 @@ class popup_fit_constraints(template_fit_popup):
         # Keyword parameters
         key_param_frame = ttk.Frame(self.left_frame, relief='sunken', pad=5)
         s = 'Reserved variable names:\n\n'
-        self.reserved_pars = CstrFnGenerator.keyvars
+        self.reserved_pars = KEYVARS
         
         keys = list(self.reserved_pars.keys())
         descr = [self.reserved_pars[k] for k in self.reserved_pars]

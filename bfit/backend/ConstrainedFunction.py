@@ -3,6 +3,7 @@
 # August 2019
 
 import numpy as np
+from bfit.global_variables import KEYVARS
 
 # =========================================================================== # 
 class ConstrainedFunction(object):
@@ -14,22 +15,6 @@ class ConstrainedFunction(object):
         equation
     """
     
-    # keywords used to identify variables
-    keyvars = { 'B0'    : 'B0 Field (T)', 
-                'BIAS'  : 'Platform Bias (kV)', 
-                'CLFT'  : 'Cryo Lift Read (mm)', 
-                'DUR'   : 'Run Duration (s)', 
-                'ENRG'  : 'Impl. Energy (keV)', 
-                'LAS'   : 'Laser Power', 
-                'NBMR'  : 'NBM Rate (count/s)', 
-                'RATE'  : 'Sample Rate (count/s)', 
-                'RF'    : 'RF Level DAC', 
-                'RUN'   : 'Run Number', 
-                'TEMP'  : 'Temperature (K)', 
-                'TIME'  : 'Start Time', 
-                'YEAR'  : 'Year', 
-              }    
-                       
     # ======================================================================= # 
     def __init__(self, defined, equation, newpar, oldpar):
         """
@@ -58,7 +43,7 @@ class ConstrainedFunction(object):
         """
         
         # get variables in decreasing order of length (no mistakes in replace)
-        varlist = np.array(list(self.keyvars.keys()))
+        varlist = np.array(list(KEYVARS.keys()))
         varlist = varlist[np.argsort(list(map(len, varlist))[::-1])]
     
         eqn = []
@@ -86,22 +71,24 @@ class ConstrainedFunction(object):
         """
             Tranlate typed constant to numerical value
         """
+        new_name = KEYVARS[name]
+        return data.get_values(new_name)[0]
         
-        if   name == 'B0'   :   return data.field
-        elif name =='BIAS'  :   return data.bias
-        elif name =='CLFT'  :   return data.bd.camp.clift_read.mean
-        elif name =='DUR'   :   return data.bd.duration
-        elif name =='ENRG'  :   return data.bd.beam_kev()
-        elif name =='LAS'   :   return data.bd.epics.las_pwr.mean
-        elif name =='NBMR'  :   
-            return np.sum([data.hist['NBM'+h].data \
-                           for h in ('F+', 'F-', 'B-', 'B+')])/data.duration
-        elif name =='RATE'  :   
-            hist = ('F+', 'F-', 'B-', 'B+') if data.area == 'BNMR' \
-                                         else ('L+', 'L-', 'R-', 'R+')    
-            return np.sum([data.hist[h].data for h in hist])/data.duration
-        elif name =='RF'    :   return data.bd.camp.rf_dac.mean
-        elif name =='RUN'   :   return data.run
-        elif name =='TEMP'  :   return data.temperature.mean
-        elif name =='TIME'  :   return data.bd.start_time
-        elif name =='YEAR'  :   return data.year
+        # ~ if   name == 'B0'   :   return data.field
+        # ~ elif name =='BIAS'  :   return data.bias
+        # ~ elif name =='CLFT'  :   return data.bd.camp.clift_read.mean
+        # ~ elif name =='DUR'   :   return data.bd.duration
+        # ~ elif name =='ENRG'  :   return data.bd.beam_kev()
+        # ~ elif name =='LAS'   :   return data.bd.epics.las_pwr.mean
+        # ~ elif name =='NBMR'  :   
+            # ~ return np.sum([data.hist['NBM'+h].data \
+                           # ~ for h in ('F+', 'F-', 'B-', 'B+')])/data.duration
+        # ~ elif name =='RATE'  :   
+            # ~ hist = ('F+', 'F-', 'B-', 'B+') if data.area == 'BNMR' \
+                                         # ~ else ('L+', 'L-', 'R-', 'R+')    
+            # ~ return np.sum([data.hist[h].data for h in hist])/data.duration
+        # ~ elif name =='RF'    :   return data.bd.camp.rf_dac.mean
+        # ~ elif name =='RUN'   :   return data.run
+        # ~ elif name =='TEMP'  :   return data.temperature.mean
+        # ~ elif name =='TIME'  :   return data.bd.start_time
+        # ~ elif name =='YEAR'  :   return data.year
