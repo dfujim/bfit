@@ -373,7 +373,9 @@ class fetch_files(object):
                 break
         
         if not found:
-            raise RuntimeError('Variable not recognized in "%s"' % string)
+            msg = 'Variable not recognized in "%s"' % string
+            messagebox.showerror('Filter', msg)
+            raise RuntimeError(msg)
         
         # replace key with value
         val, err = data.get_values(KEYVARS[key])
