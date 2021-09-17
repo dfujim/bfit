@@ -916,9 +916,9 @@ class fetch_files(object):
         """Display popup with instructions on filtering"""
         
         # instructions
-        msg = 'Write one boolean expression per line using the the below '+\
+        msg = 'Write one boolean expression \nper line using the below '+\
               'variables. \n\n'+\
-              'Runs which satisfy all expressions are kept/activated\n\n'
+              'Runs which satisfy all expressions \nare kept/activated\n\n'
               
         # variables
         keys = sorted(KEYVARS.keys())
@@ -927,15 +927,22 @@ class fetch_files(object):
         
         lines = [k.ljust(max_keylen+2) + v for k, v in zip(keys, values)]
               
-        msg += '   ' + ('\n   '.join(lines))
+        msg += '     ' + ('\n     '.join(lines))
         
         # example
         ex = 'ex: "10 < BIAS < 15"'
         msg += '\n\n' + ex
         
-        # show message
-        messagebox.showinfo(title = 'How to filter runs',
-                            message = msg)
+        # make window
+        win = Toplevel(self.bfit.mainframe)
+        win.title('How to filter runs')
+        self.bfit.set_icon(win)
+        
+        frame = ttk.Frame(win, pad=10, relief='sunken')
+        frame.grid(column=0, row=0)
+        ttk.Label(frame, text=msg, justify='left').grid(column=0, row=0, pady=5)
+        ttk.Button(frame, text='Close', 
+                   command=lambda: win.destroy()).grid(column=0, row=1, pady=5)
             
     # ======================================================================= #
     def string2run(self, string):
