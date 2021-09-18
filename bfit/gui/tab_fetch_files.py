@@ -1205,9 +1205,6 @@ class dataline(object):
         self.check_fit.set(False)
         self.draw_fit_checkbox.config(state='disabled')
         
-        # repopulate fit files tab
-        self.bfit.fit_files.populate()
-        
         # remove data from storage
         if len(self.lines_list) == 0:
             ff = self.bfit.fetch_files
