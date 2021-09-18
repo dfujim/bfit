@@ -1,5 +1,11 @@
 from tkinter import *
+from tkinter import ttk, messagebox
 from functools import partial
+import logging
+
+import numpy as np
+
+from bfit import logger_name
 import bfit.backend.colors as colors
 
 
@@ -10,10 +16,12 @@ class InputLine(object):
         as well as the frames and variables        
         
         bfit: bfit object
+        data: fitdata object
         entry: dict[col] = entry or checkbutton object
         fitline: fitline object
         frame: ttk.Frame
         label: ttk.label, parameter name
+        logger: logger
         pname: string, name of parameter for this line
         variable: dict[col] = variable (StringVar or BooleanVar)            
     """
@@ -28,9 +36,15 @@ class InputLine(object):
             frame: frame in which line will grid (first row is 1)
             show_chi: if true, grid the chi parameter
         """
+        
+        # get logger
+        self.logger = logging.getLogger(logger_name)
+        self.logger.debug('Initializing')
+        
         self.pname = ''
         self.bfit = bfit
         self.fitline = fitline
+        self.data = fitline.dataline.bdfit
         self.frame = frame
         self.label = ttk.Label(self.frame, text=self.pname, justify='right')
         
@@ -89,7 +103,6 @@ class InputLine(object):
             self.variable[k].trace_id = \
                 self.variable[k].trace("w", partial(self._sync_values, col=k))
             self.variable[k].trace_callback = partial(self._sync_values, col=k)
-
 
     # ======================================================================= #
     def _sync_values(self, *args, col):
@@ -169,12 +182,26 @@ class InputLine(object):
             col: str, name of column to get
         """
         
+        # wildcards
+        if col == '*':
+            return {c:self.get(c) for c in self.columns}
+        
+        # get single value
         if col in self.variable.keys():
             v = self.variable[col].get()
             
         if type(v) is str:
-            v = float(v)
             
+            if v == '':
+                return np.nan
+            
+            try:
+                v = float(v)
+            except ValueError as errmsg:
+                self.logger.exception("Bad input.")
+                messagebox.showerror("Error", str(errmsg))
+                raise errmsg
+                
         return v
 
     # ======================================================================= #
@@ -207,16 +234,45 @@ class InputLine(object):
         if pname is not None:
             self.pname = pname
             self.label.config(text=pname)
+            self.data.fit_variables[pname] = self.variables
+        
 
         for k, v in values.items():
-            v = str(v)                
+            vstr = str(v)                
             
             # don't set
-            if v == 'nan':
-                continue
+            if vstr == 'nan':
+                pass
                 
-            # set
-            if v in ('True', 'False'):
+            # set boolean
+            elif vstr in ('True', 'False'):
                 self.variable[k].set(v=='True')
-            else:
+                continue
+            
+            
+            # set string
+            elif type(v) is str:
                 self.variable[k].set(v)
+            
+            # set float
+            else:
+            
+                v = float(v)
+                
+                if k == 'chi':
+                    
+                    # set number decimal places
+                    showstr = "%"+".%df" % 2
+                    
+                    # set color
+                    if v > self.bfit.fit_files.chi_threshold:
+                        self.entry['chi']['readonlybackground']='red'
+                    else:
+                        self.entry['chi']['readonlybackground']=colors.readonly
+            
+                else:
+                    showstr = "%"+".%df" % self.bfit.rounding
+                
+                self.variable[k].set(showstr % v)
+            
+            

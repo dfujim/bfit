@@ -428,33 +428,6 @@ class fit_files(object):
                             )
 
     # ======================================================================= #
-    def _make_shared_var_dict(self):
-        """Make the dictionary to make sure all shared checkboxes are synched"""
-
-        # get parameter list
-        try:
-            parlst = [p for p in self.fitter.gen_param_names(
-                                                self.fit_function_title.get(),
-                                                self.n_component.get())]
-
-        # no paramteters: empty out the variable list
-        except KeyError:
-            share_var = {}
-
-        # make new shared list
-        else:
-            # re-initialize
-            share_var = {p:BooleanVar() for p in parlst}
-
-            # set to old values if they exist
-            for p in parlst:
-                if p in self.share_var.keys():
-                    share_var[p].set(self.share_var[p].get())
-
-        # save to object
-        self.share_var = share_var
-
-    # ======================================================================= #
     def canvas_scroll(self, event):
         """Scroll canvas with files selected."""
         if event.num == 4:
@@ -514,8 +487,6 @@ class fit_files(object):
             self.fit_runmode_label['text'] = ""
             self.mode = ""
 
-        # make shared_var dictionary
-        self._make_shared_var_dict()
 
         # delete unused fitline objects
         for k in list(self.fit_lines.keys()):       # iterate fit list
@@ -593,8 +564,6 @@ class fit_files(object):
         self.xaxis_combobox['values'] = [''] + parlst + lst
         self.yaxis_combobox['values'] = [''] + parlst + lst
         self.annotation_combobox['values'] = [''] + parlst + lst
-
-        self._make_shared_var_dict()
 
         # turn off modify all so we don't cause an infinite loop
         modify_all_value = self.set_as_group.get()
@@ -711,34 +680,11 @@ class fit_files(object):
             # bdata object
             bdfit = fitline.dataline.bdfit
 
-            # pdict
+            # get entry values
             pdict = {}
-            for parname in fitline.parentry.keys():
-
-                # get entry values
-                pline = fitline.parentry[parname]
-                line = []
-                for col in fitline.collist:
-
-                    # get number entries
-                    if col in ('p0', 'blo', 'bhi'):
-                        try:
-                            line.append(float(pline[col][0].get()))
-                        except ValueError as errmsg:
-                            self.logger.exception("Bad input.")
-                            messagebox.showerror("Error", str(errmsg))
-                            raise errmsg
-
-                    # get "Fixed" entry
-                    elif col in ['fixed']:
-                        line.append(pline[col][0].get())
-
-                    # get "Shared" entry
-                    elif col in ['shared']:
-                        line.append(pline[col][0].get())
-
-                # make dict
-                pdict[parname] = line
+            for line in fitline.lines:
+                inpt = line.get('*')
+                pdict[line.pname] = [inpt[k] for k in ('p0', 'blo', 'bhi', 'fixed', 'shared')]
 
             # doptions
             doptions = {}
@@ -746,12 +692,12 @@ class fit_files(object):
             if self.use_rebin.get():
                 doptions['rebin'] = bdfit.rebin.get()
 
-            if self.mode in ('1f', '1w', '1x'):
+            if '1' in self.mode:
                 dline = self.bfit.fetch_files.data_lines[key]
                 doptions['omit'] = dline.bin_remove.get()
                 if doptions['omit'] == dline.bin_remove_starter_line:
                     doptions['omit'] = ''
-            elif self.mode in ('20', '2h', '2e'):
+            elif '2' in self.mode:
                 pass
             else:
                 msg = 'Fitting mode %s not recognized' % self.mode
@@ -817,13 +763,12 @@ class fit_files(object):
         for key, df in fit_output.items(): # iterate run ids
             
             # get fixed and shared
-            parentry = self.fit_lines[key].parentry
-            keylist = tuple(parentry.keys())
-            fs = {'fixed':[], 'shared':[], 'parnames':keylist}
-            
-            for kk in keylist:  # iterate parameters
-                fs['fixed'].append(parentry[kk]['fixed'][0].get())
-                fs['shared'].append(parentry[kk]['shared'][0].get())
+            fs = {'fixed':[], 'shared':[], 'parnames':[]}
+            for line in self.fit_lines[key].lines:
+                
+                fs['parnames'].append(line.pname)
+                fs['fixed'].append(line.get('fixed'))
+                fs['shared'].append(line.get('shared'))
             
             df2 = pd.concat((df, pd.DataFrame(fs).set_index('parnames')), axis='columns')
             
@@ -831,11 +776,11 @@ class fit_files(object):
             new_output = {'results': df2, 
                           'fn': fns[key],
                           'gchi': gchi}
-                          
+          
             self.bfit.data[key].set_fitresult(new_output)
             self.bfit.data[key].fit_title = self.fit_function_title.get()
             self.bfit.data[key].ncomp = self.n_component.get()
-
+            
         # display run results
         for key in self.fit_lines.keys():
             self.fit_lines[key].show_fit_result()
@@ -1388,7 +1333,12 @@ class fit_files(object):
             line = fitline.lines[id]
             
             # set 
-            line.set(**{col:value})        
+            line.set(**{col:value})     
+            
+            # change inital value
+            value = float(value)
+            fitpar = self.bfit.data[line.pname].fitpar
+            fitpar.loc[line.pname, col] = value
 
     # ======================================================================= #
     def return_binder(self):
@@ -1529,9 +1479,7 @@ class fitline(object):
             fitframe        mainframe for this tab.
     """
 
-    n_runs_max = 5      # number of runs before scrollbar appears
     collist = ['p0', 'blo', 'bhi', 'res', 'dres-', 'dres+', 'chi', 'fixed', 'shared']
-    selected = 0        # index of selected run
 
     # ======================================================================= #
     def __init__(self, bfit, parent, dataline, row):
@@ -1874,7 +1822,8 @@ class fitline(object):
             
         # add new lines
         elif n_lines_needed > 0:
-            self.lines.extend([InputLine(fitframe, self.bfit, self) for i in range(n_lines_needed)])
+            self.lines.extend([InputLine(fitframe, self.bfit, self) \
+                                                for i in range(n_lines_needed)])
         
         # reassign and regrid lines
         for i, line in enumerate(self.lines):
@@ -1894,9 +1843,6 @@ class fitline(object):
     def show_fit_result(self):
         self.logger.debug('Showing fit result for run %s', self.dataline.id)
 
-        # Set up variables
-        displays = self.parentry
-
         try:
             data = self.dataline.bdfit
         except KeyError:
@@ -1907,19 +1853,8 @@ class fitline(object):
         except AttributeError:
             return
 
-        # display
-        for parname in displays.keys():
-            disp = displays[parname]
-            showstr = "%"+".%df" % self.bfit.rounding
-            disp['res'][0].set(showstr % data.fitpar.loc[parname, 'res'])
-            disp['dres-'][0].set(showstr % data.fitpar.loc[parname, 'dres-'])
-            disp['dres+'][0].set(showstr % data.fitpar.loc[parname, 'dres+'])
-
-            if 'chi' in disp.keys():
-                disp['chi'][0].set('%.2f' % chi)
-                if float(chi) > self.bfit.fit_files.chi_threshold:
-                    disp['chi'][1]['readonlybackground']='red'
-                else:
-                    disp['chi'][1]['readonlybackground']=colors.readonly
-
-
+        # show fit results
+        for line in self.lines:
+            values = {r: data.fitpar.loc[line.pname, r] for r in ('res', 'dres-', 'dres+')}
+            values['chi'] = chi
+            line.set(**values)
