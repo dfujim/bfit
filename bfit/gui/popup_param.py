@@ -148,12 +148,13 @@ class popup_param(object):
         self.fname = fit_tab.fit_function_title.get()
         self.parnames = self.fitter.gen_param_names(fn_name=self.fname, 
                                           ncomp=self.n_components)
-        parentry = fit_tab.fit_lines[run_id].parentry
+        
+        lines = fit_tab.fit_lines[run_id].lines
         
         # make initial parameter list
-        self.p0 = {k:parentry[k]['p0'][0] for k in parentry.keys()}
-        self.blo = {k:parentry[k]['blo'][0] for k in parentry.keys()}
-        self.bhi = {k:parentry[k]['bhi'][0] for k in parentry.keys()}
+        self.p0 = {line.pname:line.variable['p0'] for line in lines}
+        self.blo = {line.pname:line.variable['blo'] for line in lines}
+        self.bhi = {line.pname:line.variable['bhi'] for line in lines}
         
         # check for zero width
         for k in self.p0.keys():
