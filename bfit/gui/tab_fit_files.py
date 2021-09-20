@@ -1833,8 +1833,8 @@ class fitline(object):
         
         # set initial parameters
         for i, k in enumerate(param_values.index):
-            self.lines[i].assign_shared()
             self.lines[i].set(k, **param_values.loc[k].to_dict())
+            self.lines[i].assign_shared()
             self.lines[i].assign_inputs()
 
     # ======================================================================= #
