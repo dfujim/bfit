@@ -1796,10 +1796,7 @@ class fitline(object):
                 return          # returns if no parameters found
             except RuntimeError as err:
                 messagebox.showerror('RuntimeError', err)
-                raise err from None
-            else:
-                fitdat.fitpar.sort_index(inplace=True)
-                param_values = fitdat.fitpar
+                raise err from None    
         else:
             plist = tuple(param_values.index.values)
             
@@ -1830,6 +1827,8 @@ class fitline(object):
             
         # drop old parameters
         fitdat.drop_unused_param(plist)
+        fitdat.fitpar.sort_index(inplace=True)
+        param_values = fitdat.fitpar
         
         # set initial parameters
         for i, k in enumerate(param_values.index):
