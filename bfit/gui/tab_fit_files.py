@@ -851,25 +851,16 @@ class fit_files(object):
 
         self.logger.info('Setting initial parameters as fit results')
 
-        # turn off modify all
-        modify_all_value = self.set_as_group.get()
-        self.set_as_group.set(False)
-
         # set result to initial value
         for k in self.fit_lines.keys():
 
             # get line
-            line = self.fit_lines[k]
+            fline = self.fit_lines[k]
 
-            # get parameters
-            parentry = line.parentry
-
-            # set
-            for p in parentry.keys():
-                parentry[p]['p0'][0].set(parentry[p]['res'][0].get())
-
-        # reset modify all setting
-        self.set_as_group.set(modify_all_value)
+            # set parameters
+            for line in fline.lines:
+                val = line.get('res')
+                line.set(p0=val)
 
     # ======================================================================= #
     def do_reset_initial(self, *args):
