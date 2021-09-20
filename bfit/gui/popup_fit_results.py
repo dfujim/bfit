@@ -8,6 +8,7 @@ from functools import partial
 import logging
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from bfit import logger_name
 from bfit.gui.template_fit_popup import template_fit_popup
@@ -415,24 +416,29 @@ class popup_fit_results(template_fit_popup):
 
     # ======================================================================= #
     def draw_model(self):
+        """Draw model line as stacked"""
         figstyle = 'param'
         
         self.logger.info('Draw model "%s"', self.text)
         
         # get fit function and label id
         fn = self.model_fn
-        id = self.fittab.par_label.get()
+        draw_id = self.fittab.par_label.get()
+        
+        # get default data_id
+        if not draw_id and self.bfit.draw_style.get() == 'stack':
+            ax = self.bfit.plt.gca(figstyle)
         
         # get x data
         xstr = self.xaxis.get()
         xvals, _, _ = self._get_data(xstr)
         
         # draw fit
-        self.bfit.plt.figure('param', num=self.bfit.plt.active['param'])
+        self.bfit.plt.gca('param')
         fitx = np.linspace(min(xvals), max(xvals), self.fittab.n_fitx_pts)
-        f = self.bfit.plt.plot(figstyle, id+self.text, fitx, fn(fitx, *self.par), 
-                               color='k', label=self.text)
-                
+        f = self.bfit.plt.plot(figstyle, draw_id, fitx, fn(fitx, *self.par), 
+                               color='k', label=self.text, unique=False)
+        plt.show()
         raise_window()
 
     # ====================================================================== #
