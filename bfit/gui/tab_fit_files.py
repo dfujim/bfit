@@ -148,11 +148,11 @@ class fit_files(object):
         # fit and other buttons
         fit_button = ttk.Button(fn_select_frame, text='        Fit        ', command=self.do_fit, \
                                 pad=1)
-        constraint_button = ttk.Button(fn_select_frame, text='Constrained Fit',
+        constraint_button = ttk.Button(fn_select_frame, text='Constrain',
                                        command=self.do_fit_constraints, pad=1)
         set_param_button = ttk.Button(fn_select_frame, text='   Set Result as P0   ',
                         command=self.do_set_result_as_initial, pad=1)
-        reset_param_button = ttk.Button(fn_select_frame, text='     Reset P0     ',
+        reset_param_button = ttk.Button(fn_select_frame, text='     sReset P0     ',
                         command=self.do_reset_initial, pad=1)
 
         # GRIDDING
@@ -877,9 +877,6 @@ class fit_files(object):
         """Draw the fit parameters"""
         figstyle = 'param'
 
-        # make sure plot shows
-        plt.ion()
-
         # get draw components
         xdraw = self.xaxis.get()
         ydraw = self.yaxis.get()
@@ -1078,7 +1075,7 @@ class fit_files(object):
 
         # bring window to front
         raise_window()
-
+        
     # ======================================================================= #
     def export(self, savetofile=True, filename=None):
         """Export the fit parameter and file headers"""

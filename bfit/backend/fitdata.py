@@ -1319,8 +1319,9 @@ class fitdata(object):
 
         # check user-defined parameters
         elif select in pop_addpar.set_par.keys():
-            val = pop_addpar.set_par[select]()
+            val = pop_addpar.set_par[select](self.id)
             err = np.nan
+            print(val)
 
         try:
             return (val, err)

@@ -16,14 +16,14 @@ import weakref as wref
 from bfit import logger_name
 from bfit.backend.entry_color_set import on_focusout, on_entry_click
 from bfit.backend.raise_window import raise_window
-import bfit.backend.colors as colors
-
 from bfit.fitting.fit_bdata import fit_bdata
 from bfit.backend.ParameterFunction import ParameterFunction as ParFnGenerator
 from bfit.global_variables import KEYVARS
+from bfit.gui.template_fit_popup import template_fit_popup
+import bfit.backend.colors as colors
 
 # ========================================================================== #
-class popup_add_param(object):
+class popup_add_param(template_fit_popup):
     """
         Popup window for adding parameters for fitting or drawing
         
@@ -48,60 +48,16 @@ class popup_add_param(object):
     # ====================================================================== #
     def __init__(self, bfit, input_fn_text=''):
         
-        self.bfit = bfit
-        self.fittab = bfit.fit_files
         
-        self.input_fn_text = input_fn_text
+        super().__init__(bfit, input_fn_text)
+        
         self.set_par = {}
         self.new_par = {}
         
-        # get logger
-        self.logger = logging.getLogger(logger_name)
-        self.logger.info('Initializing')
-        
-        # make a new window
-        self.win = Toplevel(bfit.mainframe)
-        self.win.title(self.window_title)
-        frame = ttk.Frame(self.win, relief='sunken', pad=5)
-        left_frame = ttk.Frame(frame)
-        right_frame = ttk.Frame(frame)
-
-        # set icon
-        self.bfit.set_icon(self.win)
-
-        # Key bindings
-        self.win.bind('<Control-Key-Return>', self.do_add)
-        self.win.bind('<Control-Key-KP_Enter>', self.do_add)
-        
-        # Text entry
-        entry_frame = ttk.Frame(right_frame, relief='sunken', pad=5)
-        self.entry_label = ttk.Label(entry_frame, justify=LEFT, text='')
-        self.entry = Text(entry_frame, width=60, height=13, state='normal')
-        self.entry.bind('<KeyRelease>', self.get_input)
-        scrollb = Scrollbar(entry_frame, command=self.entry.yview)
-        self.entry['yscrollcommand'] = scrollb.set
-        
-        # Insert default text
-        self.entry.insert('1.0', self.input_fn_text.strip())
-        
         # add button 
-        add_button = ttk.Button(right_frame, text='Set Parameters', command=self.do_add)
+        add_button = ttk.Button(self.right_frame, text='Set Parameters', command=self.do_add)
         
-        # gridding
-        self.entry_label.grid(column=0, row=0, sticky=W)
-        self.entry.grid(column=0, row=1)
-        
-        # grid to frame
-        frame.grid(column=0, row=0)
-        left_frame.grid(column=0, row=0, sticky=(N, S))
-        right_frame.grid(column=1, row=0, sticky=(N, S))
-        
-        entry_frame.grid(column=0, row=0, sticky=(N, E, W), padx=1, pady=1)
         add_button.grid(column=0, row=1, sticky=(N, E, W, S), padx=20, pady=20)
-        right_frame.rowconfigure(1, weight=1)
-        
-        # initialize 
-        self.left_frame = left_frame
         
         # Keyword parameters
         key_param_frame = ttk.Frame(self.left_frame, relief='sunken', pad=5)
@@ -158,13 +114,9 @@ class popup_add_param(object):
         fit_param_frame.grid(column=0, row=3, sticky=(E, W, N, S), padx=1, pady=1)
         
         self.logger.debug('Initialization success. Starting mainloop.')
-        
+
     # ====================================================================== #
-    def cancel(self):
-        self.win.destroy()
-        
-    # ====================================================================== #
-    def do_add(self, *args):
+    def do_add(self, *_):
         """
             Add the parameter and the corresponding function
         """
@@ -183,49 +135,21 @@ class popup_add_param(object):
         
         # update the lists
         self.bfit.fit_files.populate_param()
+            
+        # close the window
+        self.cancel()
         
-    # ====================================================================== #
-    def do_parse(self, *args):
-        """
-            Detect new global variables
-            returns split lines, new parameter names 
-        """
+        # ====================================================================== #
+    def do_after_parse(self, defined=None, eqn=None, new_par=None):
         
-        # clean input
-        text = self.input_fn_text.split('\n')
-        text = [t.strip() for t in text if '=' in t]
-        
-        # check for no input
-        if not text:
-            self.new_par = {}
+        # no input
+        if defined is None:
             return
         
-        # get equations and defined variables
-        defined = [t.split('=')[0].strip() for t in text]
-        eqn = [t.split('=')[1].strip() for t in text]
-        
-        # set fields
+        # add result
         self.new_par = {k:e for k, e in zip(defined, eqn)}
         
-        # save input
-        self.input_fn_text = '\n'.join(text)
-        
-        # logging
-        self.logger.info('Parse found parameters %s', self.new_par)
-    
     # ====================================================================== #
-    def get_input(self, *args):
-        """Get input from text box."""
-        self.input_fn_text = self.entry.get('1.0', END)
-        self.do_parse()
-        
-    # ====================================================================== #
-    def yview(self, *args):
-        """
-            Scrollbar for all output text fields
-        """
-        self.output_par_text.yview(*args)
-        for k in self.output_text:
-            self.output_text[k].yview(*args)
-
+    def do_return(self, *_):
+        return self.do_add()
     
