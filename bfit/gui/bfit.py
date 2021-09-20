@@ -461,7 +461,7 @@ class bfit(object):
         root.bind("<Button-4>", self.scroll_binder) 
         root.bind("<Button-5>", self.scroll_binder)
         
-        root.bind("<Control-Key-o>", self.load_state)
+        root.bind("<Control-Key-o>", lambda x: self.load_state())
         
         # event bindings
         root.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -1115,48 +1115,21 @@ class bfit(object):
         
         # get parameters in fitting page
         fit_files.populate()
+        fit_files.populate_param(force_modify=True)
 
         # set parameter values
-        d_fitdata = self.data
-        fitlines = from_file['fitlines']
-        for id in fitlines:
-            parentry = fitlines[id]
-            parentry_actual = fit_files.fit_lines[id].parentry
-            for parname in parentry:
-                par = parentry[parname]
-                for k in par.keys():
-                    parentry_actual[parname][k][0].set(par[k])
-
+        data = self.data
+        fitpar_all = from_file['fitpar']
+        for id, fitpar in fitpar_all.items():
+            
             # make sure dataline checkboxes are active
             fetch_tab.data_lines[id].draw_fit_checkbox['state'] = 'normal'
             fetch_tab.data_lines[id].draw_res_checkbox['state'] = 'normal'
 
-            # set fit inputs
-            df = pd.DataFrame([], columns=['p0', 'blo', 'bhi', 'fixed'])
-            for p, par in parentry.items(): 
-                s = pd.Series([par['p0'], par['blo'], par['bhi'], par['fixed']], 
-                              index=['p0', 'blo', 'bhi', 'fixed'],
-                              name=p)
-                df = df.append(s)
-            
-            d_fitdata[id].set_fitpar(df)
-
-            # get chisq
-            keylist = self.fit_files.fitter.gen_param_names(from_file['fit_fit_function_title'],
-                                                            from_file['fit_n_component'])
-            for k in keylist:
-                if 'chi' in parentry[k].keys():
-                    if parentry[k]['chi'] != '':
-                        chi = float(parentry[k]['chi'])
-                    else:
-                        chi = np.nan
-                    break
-
             # get pulse length
-            d_actual = fetch_tab.data_lines[id]
             pulse_len = 0
-            if d_actual.mode in ('20', '2h'):
-                pulse_len = d_actual.bdfit.pulse_s
+            if '2' in data[id].mode:
+                pulse_len = data[id].pulse_s
 
             # get probe lifetime
             lifetime = bd.life[from_file['probe_species']]
@@ -1167,22 +1140,19 @@ class bfit(object):
                                             pulse_len,
                                             lifetime)
 
-            if '2' in d_actual.mode and from_file['probe_species'] == 'Mg31':
+            if '2' in data[id].mode and from_file['probe_species'] == 'Mg31':
                 fitfn1 = decay_corrected_fn(fa_31Mg, fitfn, pulse_len)
             else:
                 fitfn1 = fitfn
 
             # set fit results
-            df = pd.DataFrame({ 'res':[float(parentry[p]['res']) 
-                                        if parentry[p]['res'] else np.nan for p in keylist],
-                                'dres-':[float(parentry[p]['dres-']) 
-                                        if parentry[p]['dres-'] else np.nan for p in keylist],
-                                'dres+':[float(parentry[p]['dres+']) 
-                                        if parentry[p]['dres+'] else np.nan for p in keylist],  
-                                'chi':np.full(len(keylist), chi)})  
+            fitpar = pd.DataFrame(fitpar)
+            data[id].set_fitpar(fitpar)
+            data[id].drop_unused_param(fitpar.index)
+            data[id].fitfn = fitfn1
             
-            d_fitdata[id].set_fitresult({'fn': fitfn1, 'results': df})
-
+        fit_files.populate()
+        
     # ======================================================================= #
     def on_closing(self):
         """Excecute this when window is closed: destroy and close all plots."""
@@ -1309,17 +1279,9 @@ class bfit(object):
         to_file['fit_xlo'] = fit_files.xlo.get()
         to_file['fit_xhi'] = fit_files.xhi.get()
         
-        # get parameter values from fitlines
-        fitlines = fit_files.fit_lines
-        flines = {}
-        for id in fitlines:
-            parentry_actual = fitlines[id].parentry
-            parentry = {}
-            for param_name in parentry_actual:
-                par = parentry_actual[param_name]
-                parentry[param_name] = {k:par[k][0].get() for k in par}
-            flines[id] = parentry
-        to_file['fitlines'] = flines
+        # get parameter values from data
+        data_values = {id: dat.fitpar.to_dict() for id, dat in self.data.items()}
+        to_file['fitpar'] = data_values
 
         # get xlims
         to_file['xlo'] = fit_files.xlo.get()

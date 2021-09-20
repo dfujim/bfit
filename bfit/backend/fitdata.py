@@ -1028,7 +1028,7 @@ class fitdata(object):
             Check self.fitpar for parameters not in list of parnames. Drop them.
         """
         unused = [p for p in self.fitpar.index if p not in parnames]
-        self.fitpar = self.fitpar.drop(unused, axis='index')
+        self.fitpar.drop(unused, axis='index', inplace=True)
     
     # ======================================================================= #
     def get_norm(self, asym_type, asym, dasym):

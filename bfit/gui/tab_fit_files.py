@@ -1836,7 +1836,7 @@ class fitline(object):
             self.lines[i].set(k, **param_values.loc[k].to_dict())
             self.lines[i].assign_shared()
             self.lines[i].assign_inputs()
-
+            
     # ======================================================================= #
     def show_fit_result(self):
         self.logger.debug('Showing fit result for run %s', self.data.id)

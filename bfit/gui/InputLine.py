@@ -219,8 +219,10 @@ class InputLine(object):
         # assign key
         else:
             self.variable['shared'] = share_var[self.pname]
-            self.variable['shared'] = self._set_trace(self.variable['shared'], 
-                                                      'unfix', self._unfix)
+        
+        # set trace to uncheck fixed box
+        self.variable['shared'] = self._set_trace(self.variable['shared'], 
+                                                  'unfix', self._unfix)
                 
         # link to checkbox
         self.entry['shared'].config(variable=self.variable['shared'])
@@ -290,25 +292,25 @@ class InputLine(object):
             values: keyed by self.columns, the numerical or boolean values for each 
                     column to take
         """
-        
+                
         # label
         if pname is not None:
             self.pname = pname
             self.label.config(text=pname)        
 
         for k, v in values.items():
-            vstr = str(v)                
             
-            # disable trace
+            # disable traces
             self.variable[k], tr = self._pop_trace(self.variable[k], 'modify_all')
+            self.variable[k], _ = self._pop_trace(self.variable[k], 'sync_fitpar')
             
             # don't set
-            if vstr == 'nan':
+            if str(v) == 'nan':
                 pass
                 
             # set boolean
-            elif vstr in ('True', 'False'):
-                self.variable[k].set(v=='True')
+            elif type(v) is bool:
+                self.variable[k].set(v)
             
             # set string
             elif type(v) is str:
@@ -316,7 +318,7 @@ class InputLine(object):
             
             # set float
             else:
-            
+                
                 v = float(v)
                 
                 if k == 'chi':
@@ -332,7 +334,12 @@ class InputLine(object):
             
                 else:
                     n_figs = self.bfit.rounding
+                    
                 self.variable[k].set('{:g}'.format(float('{:.{p}g}'.format(v, p=n_figs))))
-            
-            # set trace
+                
+            # set traces
             self.variable[k] = self._set_trace(self.variable[k], 'modify_all', tr)
+            self.variable[k] = self._set_trace(self.variable[k], 'sync_fitpar', 
+                                                self.data.gen_set_from_var(self.pname, 
+                                                                           k, 
+                                                                           self.variable[k]))
