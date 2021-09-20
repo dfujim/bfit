@@ -478,7 +478,9 @@ class fit_files(object):
                 # set run functions
                 fn_titles = self.fitter.function_names[self.mode]
                 self.fit_function_title_box['values'] = fn_titles
-                if self.fit_function_title.get() == '':
+                
+                # set current function
+                if self.fit_function_title.get() not in fn_titles:
                     self.fit_function_title.set(fn_titles[0])
 
         except UnboundLocalError:
@@ -486,8 +488,7 @@ class fit_files(object):
             self.fit_function_title.set("")
             self.fit_runmode_label['text'] = ""
             self.mode = ""
-
-
+        
         # delete unused fitline objects
         for k in list(self.fit_lines.keys()):       # iterate fit list
             self.fit_lines[k].degrid()
