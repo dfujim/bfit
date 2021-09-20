@@ -324,7 +324,7 @@ class InputLine(object):
                 if k == 'chi':
                     
                     # set number decimal places
-                    n_figs = 3
+                    n_figs = 2
                     
                     # set color
                     if v > self.bfit.fit_files.chi_threshold:
@@ -335,7 +335,14 @@ class InputLine(object):
                 else:
                     n_figs = self.bfit.rounding
                     
-                self.variable[k].set('{:g}'.format(float('{:.{p}g}'.format(v, p=n_figs))))
+                # round to n_figs significant figures decimal places
+                try:
+                    v_decimal = v - int(v)
+                    v_decimal = float('{:.{p}g}'.format(v_decimal, p=n_figs))
+                    v = int(v) + v_decimal
+                except OverflowError:
+                    pass
+                self.variable[k].set('{:.{p}g}'.format(v, p=8))
                 
             # set traces
             self.variable[k] = self._set_trace(self.variable[k], 'modify_all', tr)
