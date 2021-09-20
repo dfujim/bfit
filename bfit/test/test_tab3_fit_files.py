@@ -94,9 +94,9 @@ def separate_curve_fit(entry, run, **kwargs):
     # fit function
     pexp = pulsed_exp(lifetime = bd.life.Li8, pulse_len = dat.pulse_s)
 
-    p0 = [float(entry[k]['p0'][1].get()) for k in entry.keys()]
-    blo = [float(entry[k]['blo'][1].get()) for k in entry.keys()]
-    bhi = [float(entry[k]['bhi'][1].get()) for k in entry.keys()]
+    p0 = [float(entry[k]['p0'].get()) for k in entry.keys()]
+    blo = [float(entry[k]['blo'].get()) for k in entry.keys()]
+    bhi = [float(entry[k]['bhi'].get()) for k in entry.keys()]
     
     # fit
     t,a,da = dat.asym('c')
@@ -119,9 +119,9 @@ def separate_migrad(entry, run, do_minos=False, **kwargs):
     pexp = pulsed_exp(lifetime = bd.life.Li8, pulse_len = dat.pulse_s)
 
     # get p0, bounds
-    p0 = {k.replace('1_T1','lambda_s'):float(entry[k]['p0'][1].get()) for k in entry.keys()}
-    bounds = [( float(entry[k]['blo'][1].get()), 
-                float(entry[k]['bhi'][1].get())) for k in entry.keys()]
+    p0 = {k.replace('1_T1','lambda_s'):float(entry[k]['p0'].get()) for k in entry.keys()}
+    bounds = [( float(entry[k]['blo'].get()), 
+                float(entry[k]['bhi'].get())) for k in entry.keys()]
     
     # fit
     t,a,da = dat.asym('c')
@@ -164,15 +164,15 @@ def fit(separate_fit, minimizer, b=None, tab=None, tab2=None):
     
     for k, line in tab.fit_lines.items():
     
-        entry = line.parentry
+        entry = {l.pname: l.variable for l in line.lines}
         
         # get results separately
         par, lower, upper, chi2 = separate_fit(entry, k)    
         
         # get results displayed
-        res = [float(entry[k]['res'][1].get()) for k in entry.keys()]
-        low = [float(entry[k]['dres-'][1].get()) for k in entry.keys()]
-        upp = [float(entry[k]['dres+'][1].get()) for k in entry.keys()]
+        res = [float(entry[k]['res'].get()) for k in entry.keys()]
+        low = [float(entry[k]['dres-'].get()) for k in entry.keys()]
+        upp = [float(entry[k]['dres+'].get()) for k in entry.keys()]
         
         # check
         assert_array_almost_equal(par, res, err_msg = 'Copying %s minimizer results for %s' % (minimizer, k), decimal=3)
@@ -180,7 +180,7 @@ def fit(separate_fit, minimizer, b=None, tab=None, tab2=None):
         assert_array_almost_equal(upper, upp, err_msg = 'Copying %s minimizer upper errors for %s' % (minimizer, k), decimal=3)
         
         # check chi2
-        chi = float(entry['1_T1']['chi'][1].get())
+        chi = float(entry['1_T1']['chi'].get())
         assert_almost_equal(chi, chi2, 
                         err_msg = 'Copying chi2 for %s minimizer for %s' % (minimizer, k), 
                         decimal=2)
@@ -202,7 +202,7 @@ def fit_single(separate_fit, minimizer, b=None, tab=None, tab2=None):
 
     tab.populate()
     line = tab.fit_lines['2020.40123']
-    entry = line.parentry
+    entry = {l.pname: l.variable for l in line.lines}
     
     # set minimizer
     b.minimizer.set('bfit.fitting.fitter_%s' % minimizer)
@@ -215,9 +215,9 @@ def fit_single(separate_fit, minimizer, b=None, tab=None, tab2=None):
     tab.do_fit()
     
     # get results displayed
-    res = [float(entry[k]['res'][1].get()) for k in entry.keys()]
-    low = [float(entry[k]['dres-'][1].get()) for k in entry.keys()]
-    upp = [float(entry[k]['dres+'][1].get()) for k in entry.keys()]
+    res = [float(entry[k]['res'].get()) for k in entry.keys()]
+    low = [float(entry[k]['dres-'].get()) for k in entry.keys()]
+    upp = [float(entry[k]['dres+'].get()) for k in entry.keys()]
     
     # check
     assert_array_almost_equal(par, res, 
@@ -228,7 +228,7 @@ def fit_single(separate_fit, minimizer, b=None, tab=None, tab2=None):
                 err_msg = 'Copying %s minimizer upper errors for single run' % minimizer, decimal=3)
     
     # check chi2
-    chi = float(entry['1_T1']['chi'][1].get())
+    chi = float(entry['1_T1']['chi'].get())
     assert_almost_equal(chi, chi2, err_msg='Copying chi2 for %s minimizer for single run' % minimizer, decimal=2)
     
     # reset minimizer
@@ -301,46 +301,46 @@ def test_shared(b=None, tab=None, tab2=None):
     tab.populate()
     line = tab.fit_lines['2020.40123']
     line2 = tab.fit_lines['2020.40127']
-    entry = line.parentry
-    entry2 = line2.parentry
+    entry = {l.pname: l.variable for l in line.lines}
+    entry2 = {l.pname: l.variable for l in line2.lines}
     
     # shared input
-    entry['1_T1']['shared'][0].set(True)
+    entry['1_T1']['shared'].set(True)
     tab.do_fit()
     
-    T11 = float(entry['1_T1']['res'][1].get())
-    T12 = float(entry2['1_T1']['res'][1].get())
+    T11 = float(entry['1_T1']['res'].get())
+    T12 = float(entry2['1_T1']['res'].get())
     
     assert_almost_equal(T11, T12, err_msg = 'Shared result not equal')
     
-    T11 = float(entry['1_T1']['dres-'][1].get())
-    T12 = float(entry2['1_T1']['dres-'][1].get())
+    T11 = float(entry['1_T1']['dres-'].get())
+    T12 = float(entry2['1_T1']['dres-'].get())
     
     assert_almost_equal(T11, T12, err_msg = 'Shared lower error not equal')
     
-    T11 = float(entry['1_T1']['dres+'][1].get())
-    T12 = float(entry2['1_T1']['dres+'][1].get())
+    T11 = float(entry['1_T1']['dres+'].get())
+    T12 = float(entry2['1_T1']['dres+'].get())
     
     assert_almost_equal(T11, T12, err_msg = 'Shared upper error not equal')
     
     # check the unshared result
-    amp1 = float(entry['amp']['res'][1].get())
-    amp2 = float(entry2['amp']['res'][1].get())
+    amp1 = float(entry['amp']['res'].get())
+    amp2 = float(entry2['amp']['res'].get())
     
     assert amp1 != amp2, 'Unshared result is equal'
     
-    amp1 = float(entry['amp']['dres-'][1].get())
-    amp2 = float(entry2['amp']['dres-'][1].get())
+    amp1 = float(entry['amp']['dres-'].get())
+    amp2 = float(entry2['amp']['dres-'].get())
     
     assert amp1 != amp2, 'Unshared lower error not equal'
     
-    amp1 = float(entry['amp']['dres+'][1].get())
-    amp2 = float(entry2['amp']['dres+'][1].get())
+    amp1 = float(entry['amp']['dres+'].get())
+    amp2 = float(entry2['amp']['dres+'].get())
     
     assert amp1 != amp2, 'Unshared upper error not equal'
     
     # unshare
-    entry['1_T1']['shared'][0].set(False)
+    entry['1_T1']['shared'].set(False)
     
 @with_bfit
 def test_modify_for_all_reset_p0(b=None, tab=None, tab2=None):
@@ -349,8 +349,8 @@ def test_modify_for_all_reset_p0(b=None, tab=None, tab2=None):
     tab.populate()
     line = tab.fit_lines['2020.40123']
     line2 = tab.fit_lines['2020.40127']
-    entry = line.parentry
-    entry2 = line2.parentry
+    entry = {l.pname: l.variable for l in line.lines}
+    entry2 = {l.pname: l.variable for l in line2.lines}
     
     # modify
     tab.set_as_group.set(True)
@@ -361,18 +361,18 @@ def test_modify_for_all_reset_p0(b=None, tab=None, tab2=None):
         for c in ('p0', 'blo', 'bhi'):
             
             # get initial state
-            initial[k][c] = float(entry[k][c][0].get())
+            initial[k][c] = float(entry[k][c].get())
             
             # modify all
-            entry[k][c][0].set('25')
-            assert_equal(entry2[k][c][0].get(), '25', err_msg = "Modify all for %s (%s)" % (k, '25'))
+            entry[k][c].set('25')
+            assert_equal(entry2[k][c].get(), '25', err_msg = "Modify all for %s (%s)" % (k, '25'))
             
     # reset
     tab.set_as_group.set(False)
     tab.do_reset_initial()
     for k in entry.keys():    
         for c in ('p0', 'blo', 'bhi'):
-            assert_equal(float(entry[k][c][0].get()), initial[k][c], 
+            assert_equal(float(entry[k][c].get()), initial[k][c], 
                         err_msg = "Reset p0 for %s (%s)" % (k, c))
                 
 @with_bfit
@@ -381,22 +381,22 @@ def test_fixed(b=None, tab=None, tab2=None):
     # get data
     tab.populate()
     line = tab.fit_lines['2020.40123']
-    entry = line.parentry
+    entry = {l.pname: l.variable for l in line.lines}
     
     # fixed input -----------------------------------------------------------
-    entry['1_T1']['p0'][0].set('1')
-    entry['1_T1']['fixed'][0].set(True)
+    entry['1_T1']['p0'].set('1')
+    entry['1_T1']['fixed'].set(True)
     tab.do_fit()
     
-    assert_equal(float(entry['1_T1']['res'][1].get()), 1, 'Fixed result')
-    assert np.isnan(float(entry['1_T1']['dres-'][1].get())), 'Fixed lower error'
-    assert np.isnan(float(entry['1_T1']['dres+'][1].get())), 'Fixed upper error'
-    assert float(entry['amp']['res'][1].get()) != 1, 'Unfixed result'
-    assert not np.isnan(float(entry['amp']['dres-'][1].get())), 'Unfixed lower error'
-    assert not np.isnan(float(entry['amp']['dres+'][1].get())), 'Unfixed upper error'
+    assert_equal(float(entry['1_T1']['res'].get()), 1, 'Fixed result')
+    assert entry['1_T1']['dres-'].get() == '', 'Fixed lower error'
+    assert entry['1_T1']['dres+'].get() == '', 'Fixed upper error'
+    assert float(entry['amp']['res'].get()) != 1, 'Unfixed result'
+    assert not np.isnan(float(entry['amp']['dres-'].get())), 'Unfixed lower error'
+    assert not np.isnan(float(entry['amp']['dres+'].get())), 'Unfixed upper error'
     
     # unfix
-    entry['1_T1']['fixed'][0].set(False)
+    entry['1_T1']['fixed'].set(False)
 
 @with_bfit
 def test_p0_prior(b=None, tab=None, tab2=None):
@@ -417,12 +417,12 @@ def test_p0_prior(b=None, tab=None, tab2=None):
     tab.populate()
     
     # get results and compare
-    result = tab.fit_lines['2020.40127'].parentry
-    p0 = tab.fit_lines['2020.40124'].parentry
+    result = tab.fit_lines['2020.40127'].lines
+    p0 = tab.fit_lines['2020.40124'].lines
     
-    for k in result.keys():
-        assert_almost_equal(float(result[k]['res'][0].get()), float(p0[k]['p0'][0].get()), 
-             err_msg = 'Set last result as p0 for new run for %s'%k, decimal=5)
+    for r, p in zip(result, p0):
+        assert_almost_equal(float(r.get('res')), float(p.get('p0')), 
+             err_msg = 'Set last result as p0 for new run for %s'%r.pname, decimal=5)
     
 @with_bfit
 def test_result_as_p0(b=None, tab=None, tab2=None):
@@ -439,10 +439,10 @@ def test_result_as_p0(b=None, tab=None, tab2=None):
     
     # check
     for run_id in tab.fit_lines.keys():
-        entry = tab.fit_lines[run_id].parentry
+        entry = {l.pname: l.variable for l in tab.fit_lines[run_id].lines}
     
         for k in entry.keys():
-            assert_almost_equal(float(entry[k]['res'][0].get()), float(entry[k]['p0'][0].get()), 
+            assert_almost_equal(float(entry[k]['res'].get()), float(entry[k]['p0'].get()), 
                 err_msg = 'Set result as p0 for %s'%k, decimal=5)
         
 @pytest.mark.filterwarnings('ignore:Tight layout')
