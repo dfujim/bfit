@@ -44,7 +44,7 @@ class InputLine(object):
         self.pname = ''
         self.bfit = bfit
         self.fitline = fitline
-        self.data = fitline.dataline.bdfit
+        self.data = fitline.data
         self.frame = frame
         self.label = ttk.Label(self.frame, text=self.pname, justify='right')
         
@@ -88,24 +88,21 @@ class InputLine(object):
                 self.entry[key]['foreground'] = colors.foreground
         
         # disallow fixed and shared variables
-        share = self.variable['shared']
-        share.trace_id = share.trace("w", self._unfix)
-        share.trace_callback = self._unfix
-      
-        fixed = self.variable['fixed']
-        fixed.trace_id = fixed.trace("w", self._unshare)
-        fixed.trace_callback = self._unshare
+        self.variable['shared'] = self._set_trace(self.variable['shared'],
+                                                  'unfix', self._unfix)
+        self.variable['fixed'] = self._set_trace(self.variable['fixed'],
+                                                 'unshare', self._unshare)
       
         # set modify all synchronization
         for k in ('p0', 'blo', 'bhi', 'fixed'):
 
             # set new trace callback
-            self.variable[k].trace_id = \
-                self.variable[k].trace("w", partial(self._sync_values, col=k))
-            self.variable[k].trace_callback = partial(self._sync_values, col=k)
-
+            self.variable[k] = self._set_trace(self.variable[k], 
+                                               'modify_all', 
+                                               partial(self._modify_all, col=k))
+                            
     # ======================================================================= #
-    def _sync_values(self, *args, col):
+    def _modify_all(self, *args, col):
         """
             Do modify all synchronization. Make other lines of the same id equal 
             in value
@@ -114,11 +111,58 @@ class InputLine(object):
         # check if enabled
         if not self.bfit.fit_files.set_as_group.get():
             return 
-
+        
+        # disable trace
+        self.variable[col], tr = self._pop_trace(self.variable[col], 'modify_all')
+                
         # set 
         self.bfit.fit_files.set_lines(pname=self.pname, 
                                       col=col, 
-                                      value=self.variable[col].get())
+                                      value=self.variable[col].get(), 
+                                      skipline=self)
+                                      
+        # re-enable trace
+        self.variable[col] = self._set_trace(self.variable[col], 'modify_all', tr)
+    
+    # ======================================================================= #
+    def _pop_trace(self, var, name):
+        """
+            Remove and return trace function
+        """
+        
+        # check if variable has trace dict
+        if not hasattr(var, 'trace_id') or name not in var.trace_id.keys():
+            return (var, None)
+            
+        # pop
+        tr = var.trace_id[name]
+        var.trace_remove("write", tr[0])
+        del var.trace_id[name]
+        
+        # return 
+        return (var, tr[1])
+        
+    # ======================================================================= #
+    def _set_trace(self, var, name, function):
+        """
+            Set the trace functions
+        """
+        
+        # no input
+        if function is None:
+            return var
+        
+        # check if variable has trace dict
+        if not hasattr(var, 'trace_id'):
+            var.trace_id = {}
+            
+        # check if trace exists
+        self._pop_trace(var, name)
+        
+        # add trace
+        var.trace_id[name] = (var.trace_add("write", function), function)
+            
+        return var
         
     # ======================================================================= #
     def _unfix(self, *args):
@@ -136,6 +180,25 @@ class InputLine(object):
         if self.variable['fixed'].get():
             self.variable['shared'].set(False)
 
+    # ======================================================================= #
+    def assign_inputs(self):
+        """
+            Make sure the inputs are saved to fitdata.fitpar DataFrame
+        """        
+        
+        # check if valid
+        if not self.pname:
+            return
+            
+        # assign
+        gen = self.data.gen_set_from_var
+        for k in ('p0', 'blo', 'bhi', 'fixed'):
+
+            # set new trace callback
+            self.variable[k] = self._set_trace(self.variable[k], 
+                                               'sync_fitpar', 
+                                               gen(self.pname, k, self.variable[k]))
+            
     # ======================================================================= #
     def assign_shared(self):
         """
@@ -156,11 +219,9 @@ class InputLine(object):
         # assign key
         else:
             self.variable['shared'] = share_var[self.pname]
-            
-            share = self.variable['shared']
-            share.trace_id = share.trace("w", self._unfix)
-            share.trace_callback = self._unfix
-            
+            self.variable['shared'] = self._set_trace(self.variable['shared'], 
+                                                      'unfix', self._unfix)
+                
         # link to checkbox
         self.entry['shared'].config(variable=self.variable['shared'])
         
@@ -233,12 +294,13 @@ class InputLine(object):
         # label
         if pname is not None:
             self.pname = pname
-            self.label.config(text=pname)
-            self.data.fit_variables[pname] = self.variables
-        
+            self.label.config(text=pname)        
 
         for k, v in values.items():
             vstr = str(v)                
+            
+            # disable trace
+            self.variable[k], tr = self._pop_trace(self.variable[k], 'modify_all')
             
             # don't set
             if vstr == 'nan':
@@ -247,8 +309,6 @@ class InputLine(object):
             # set boolean
             elif vstr in ('True', 'False'):
                 self.variable[k].set(v=='True')
-                continue
-            
             
             # set string
             elif type(v) is str:
@@ -262,7 +322,7 @@ class InputLine(object):
                 if k == 'chi':
                     
                     # set number decimal places
-                    showstr = "%"+".%df" % 2
+                    n_figs = 3
                     
                     # set color
                     if v > self.bfit.fit_files.chi_threshold:
@@ -271,8 +331,8 @@ class InputLine(object):
                         self.entry['chi']['readonlybackground']=colors.readonly
             
                 else:
-                    showstr = "%"+".%df" % self.bfit.rounding
-                
-                self.variable[k].set(showstr % v)
+                    n_figs = self.bfit.rounding
+                self.variable[k].set('{:g}'.format(float('{:.{p}g}'.format(v, p=n_figs))))
             
-            
+            # set trace
+            self.variable[k] = self._set_trace(self.variable[k], 'modify_all', tr)

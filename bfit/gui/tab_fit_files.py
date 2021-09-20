@@ -502,7 +502,7 @@ class fit_files(object):
                 if k in self.fit_lines_old.keys():
                     self.fit_lines[k] = self.fit_lines_old[k]
                 else:
-                    self.fit_lines[k] = fitline(self.bfit, self.runframe, dl[k], n)
+                    self.fit_lines[k] = fitline(self.bfit, self.runframe, dl[k].bdfit, n)
             self.fit_lines[k].grid(n)
             n+=1
 
@@ -678,7 +678,7 @@ class fit_files(object):
             fitline = self.fit_lines[key]
 
             # bdata object
-            bdfit = fitline.dataline.bdfit
+            bdfit = fitline.data
 
             # get entry values
             pdict = {}
@@ -1119,7 +1119,7 @@ class fit_files(object):
         keylist = []
         for k, line in self.fit_lines.items():
             keylist.append(k)
-            data = line.dataline.bdfit
+            data = line.data
             
             for kk in data.fitpar.index:
                 
@@ -1316,7 +1316,7 @@ class fit_files(object):
             self.input_enable_disable(child, state=state, first=False)
 
     # ======================================================================= #
-    def set_lines(self, pname, col, value):
+    def set_lines(self, pname, col, value, skipline=None):
         """
             Modify all input fields of each line to match the altered one
             conditional on self.set_as_group
@@ -1324,6 +1324,7 @@ class fit_files(object):
             pname: string, parameter being changed
             col:   str, column being changed
             value: new value to assign
+            skipline: if this line, don't modify
         """
     
         for fitline in self.fit_lines.values():
@@ -1332,14 +1333,12 @@ class fit_files(object):
             id = [line.pname for line in fitline.lines].index(pname)
             line = fitline.lines[id]
             
+            if line == skipline:
+                continue
+            
             # set 
             line.set(**{col:value})     
-            
-            # change inital value
-            value = float(value)
-            fitpar = self.bfit.data[line.pname].fitpar
-            fitpar.loc[line.pname, col] = value
-
+                        
     # ======================================================================= #
     def return_binder(self):
         """
@@ -1469,7 +1468,7 @@ class fitline(object):
         Instance variables
 
             bfit            pointer to top class
-            dataline        pointer to dataline object in fetch_files_tab
+            data            fitdata object in bfit.data dictionary
             disable_entry_callback  disables copy of entry strings to
                                     dataline.bdfit parameter values
             lines           list of InputLine objects
@@ -1482,7 +1481,7 @@ class fitline(object):
     collist = ['p0', 'blo', 'bhi', 'res', 'dres-', 'dres+', 'chi', 'fixed', 'shared']
 
     # ======================================================================= #
-    def __init__(self, bfit, parent, dataline, row):
+    def __init__(self, bfit, parent, data, row):
         """
             Inputs:
                 bfit:       top level pointer
@@ -1495,12 +1494,12 @@ class fitline(object):
         # get logger
         self.logger = logging.getLogger(logger_name)
         self.logger.debug('Initializing fit line for run %d in row %d',
-                          dataline.run, row)
+                          data.run, row)
 
         # initialize
         self.bfit = bfit
         self.parent = parent
-        self.dataline = dataline
+        self.data = data
         self.row = row
         self.disable_entry_callback = False
         self.lines = []
@@ -1511,14 +1510,14 @@ class fitline(object):
         frame_title = ttk.Frame(fitframe)
 
         # label for displyaing run number
-        if type(self.dataline.bdfit.bd) is bdata:
+        if type(self.data.bd) is bdata:
             self.run_label = Label(frame_title,
-                            text='[ %d - %d ]' % (self.dataline.run,
-                                                  self.dataline.year),
+                            text='[ %d - %d ]' % (self.data.run,
+                                                  self.data.year),
                            bg=colors.foreground, fg=colors.background)
 
-        elif type(self.dataline.bdfit.bd) is bmerged:
-            runs = textwrap.wrap(str(self.dataline.run), 5)
+        elif type(self.data.bd) is bmerged:
+            runs = textwrap.wrap(str(self.data.run), 5)
 
             self.run_label = Label(frame_title,
                                 text='[ %s ]' % ' + '.join(runs),
@@ -1526,12 +1525,12 @@ class fitline(object):
 
         # title of run
         self.run_label_title = Label(frame_title,
-                            text=self.dataline.bdfit.title,
+                            text=self.data.title,
                             justify='right', fg=colors.red)
 
         # Parameter input labels
         gui_param_button = ttk.Button(fitframe, text='Initial Value',
-                        command=lambda : self.bfit.fit_files.do_gui_param(id=self.dataline.id),
+                        command=lambda : self.bfit.fit_files.do_gui_param(id=self.data.id),
                         pad=0)
         result_comp_button = ttk.Button(fitframe, text='Result',
                         command=self.draw_fn_composition, pad=0)
@@ -1585,7 +1584,7 @@ class fitline(object):
             plist: Dictionary of initial parameters {par_name:par_value}
         """
         
-        run = self.dataline.id
+        run = self.data.id
 
         # get pointer to fit files object
         fit_files = self.bfit.fit_files
@@ -1643,7 +1642,7 @@ class fitline(object):
     def degrid(self):
         """Remove displayed dataline object from file selection. """
 
-        self.logger.debug('Degridding fitline for run %s', self.dataline.id)
+        self.logger.debug('Degridding fitline for run %s', self.data.id)
         self.fitframe.grid_forget()
         self.fitframe.update_idletasks()
 
@@ -1653,14 +1652,14 @@ class fitline(object):
             Draw window with function components and total
         """
 
-        self.logger.info('Drawing fit composition for run %s', self.dataline.id)
+        self.logger.info('Drawing fit composition for run %s', self.data.id)
 
         # get top objects
         fit_files = self.bfit.fit_files
         bfit = self.bfit
 
         # get fit object
-        bdfit = self.dataline.bdfit
+        bdfit = self.data
 
         # get base function
         fn_name = fit_files.fit_function_title.get()
@@ -1791,20 +1790,29 @@ class fitline(object):
             force_modify: if true, clear and reset parameter inputs.
         """
 
-        # get list of parameters and initial values
-        try:
-            plist = self.get_new_parameters()
-        except KeyError as err:
-            return          # returns if no parameters found
-        except RuntimeError as err:
-            messagebox.showerror('RuntimeError', err)
-            raise err from None
-
-        self.logger.debug('Populating parameter list with %s', plist)
-        
         # get data and frame
         fitframe = self.fitframe
-        fitdat = self.dataline.bdfit
+        fitdat = self.data
+        
+        # get list of parameters and initial values
+        fitdat.fitpar.sort_index(inplace=True)
+        param_values = fitdat.fitpar
+        
+        if force_modify or len(param_values) == 0:
+            try:
+                plist = self.get_new_parameters()
+            except KeyError as err:
+                return          # returns if no parameters found
+            except RuntimeError as err:
+                messagebox.showerror('RuntimeError', err)
+                raise err from None
+            else:
+                fitdat.fitpar.sort_index(inplace=True)
+                param_values = fitdat.fitpar
+        else:
+            plist = tuple(param_values.index.values)
+            
+        self.logger.debug('Populating parameter list with %s', plist)
         
         # get needed number of lines
         n_lines_total = len(plist)
@@ -1833,18 +1841,17 @@ class fitline(object):
         fitdat.drop_unused_param(plist)
         
         # set initial parameters
-        fitdat.fitpar.sort_index(inplace=True)
-        param_values = fitdat.fitpar
         for i, k in enumerate(param_values.index):
             self.lines[i].assign_shared()
             self.lines[i].set(k, **param_values.loc[k].to_dict())
+            self.lines[i].assign_inputs()
 
     # ======================================================================= #
     def show_fit_result(self):
-        self.logger.debug('Showing fit result for run %s', self.dataline.id)
+        self.logger.debug('Showing fit result for run %s', self.data.id)
 
         try:
-            data = self.dataline.bdfit
+            data = self.data
         except KeyError:
             return
         

@@ -139,7 +139,7 @@ class bfit(object):
     """
     bnmr_archive_label = "BNMR_ARCHIVE"
     bnqr_archive_label = "BNQR_ARCHIVE"
-    rounding = 5       # number of decimal places to round results to in display
+    rounding = 5       # number of significant figures to round results to in display
     norm_alph_diff_time = 0.1   # number of seconds to take average over when 
                                 # normalizing alpha diffusion runs
     legend_max_draw = 8 # max number of items to draw before removing the legend
