@@ -88,7 +88,6 @@ class fitdata(object):
         self.check_draw_fit = BooleanVar()
         self.check_draw_res = BooleanVar()
         self.omit_scan = BooleanVar()
-
         
         # fetch files defaults
         self.check_state.set(True)
@@ -107,7 +106,7 @@ class fitdata(object):
         # key for IDing file 
         self.id = self.bfit.get_run_key(data=bd)
         
-        # initialize fitpar with fitinputtab.collist
+        # initialize fitpar
         self.fitpar = pd.DataFrame([], columns=['p0', 'blo', 'bhi', 'res', 
                                     'dres+', 'dres-', 'chi', 'fixed', 'shared'])
         
@@ -1409,6 +1408,44 @@ class fitdata(object):
                 self.fitpar.loc[v, c] = values.loc[v, c]
                 
         self.logger.debug('Fit initial parameters set to %s', self.fitpar)
+
+    # ======================================================================= #
+    def gen_set_from_var(self, pname, col, obj):
+        """Make function to set fitting initial parameters from StringVar or 
+            BooleanVarobject
+            
+            pname: string, name of parameter
+            col: string, one of 'p0', 'blo', 'bhi'
+            obj: the StringVar or BooleanVar to fetch from
+        """
+    
+        if pname in self.fitpar.index and col in self.fitpar.columns:
+            
+            if type(obj) is StringVar:
+                
+                def set_from_var(*args):
+                    try:
+                        value = float(obj.get())
+                    except ValueError:
+                        pass
+                    else:
+                        self.fitpar.loc[pname, col] = value
+                        
+            elif type(obj) is BooleanVar:
+                
+                def set_from_var(*args):
+                    try:
+                        value = bool(obj.get())
+                    except ValueError:
+                        pass
+                    else:
+                        self.fitpar.loc[pname, col] = value
+                        
+            else:
+                
+                raise RuntimeError('Bad obj input')
+    
+            return set_from_var
 
     # ======================================================================= #
     def set_fitresult(self, values):
