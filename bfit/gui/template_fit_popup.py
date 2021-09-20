@@ -185,7 +185,7 @@ class template_fit_popup(object):
         pass
         
     # ====================================================================== #
-    def get_input(self, *args):
+    def get_input(self, *_):
         """Get input from text box."""
         self.input_fn_text = self.entry.get('1.0', END)
         out = self.do_parse()

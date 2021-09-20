@@ -4,7 +4,7 @@
 
 
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from functools import partial
 
 import logging, re, os, warnings
@@ -24,11 +24,16 @@ import queue
 # ========================================================================== #
 class popup_fit_constraints(template_fit_popup):
     """
-        Popup window for modelling the fit results with a function
+        Popup window for settings fit parameters according to a function
         
         bfit
         fittab
         logger
+        
+        
+        label_new_var       Label, show new variables
+        label_defined       Label, show which variables will be redefined
+        
         
         output_par_text     text, detected parameter names
         output_text         dict, keys: p0, blo, bhi, res, err, value: tkk.Text objects
@@ -43,13 +48,12 @@ class popup_fit_constraints(template_fit_popup):
 
     # names of modules the constraints have access to
     modules = {'np':'numpy'}
-    
-    window_title = 'Fit data with contrained parameters'
+    window_title = 'Constrain parameters'
     
     # ====================================================================== #
-    def __init__(self, bfit, constr_text='', output_par_text='', output_text=''):
+    def __init__(self, bfit, input_fn_text=''):
         
-        super().__init__(bfit, constr_text, output_par_text, output_text)
+        super().__init__(bfit, input_fn_text)
         
         # Keyword parameters
         key_param_frame = ttk.Frame(self.left_frame, relief='sunken', pad=5)
@@ -90,18 +94,63 @@ class popup_fit_constraints(template_fit_popup):
         # Text entry
         self.entry_label['text'] = 'Enter one constraint equation per line.'+\
                                  '\nNon-reserved words are shared variables.'+\
-                                 '\nEx: "1_T1 = a*np.exp(b*BIAS**0.5)+c"'+\
-                                 '\nNote: Shared and fixed flags from main window ignored.'
+                                 '\nEx: "1_T1 = a*np.exp(b*BIAS**0.5)+c"'                                 
+                
+        # detected new parameters
+        frame_detected = ttk.Frame(self.right_frame)
+        label_defined_title = ttk.Label(frame_detected, text='Constrained parameters')
+        label_new_var_title = ttk.Label(frame_detected, text='New variables')
+        
+        self.label_new_var = ttk.Label(frame_detected, text='')
+        self.label_defined = ttk.Label(frame_detected, text='')
+                
+        # add constrain button
+        button_constrain = ttk.Button(self.right_frame, text='Constrain', 
+                                      command=self.set_constraints)
                 
         # gridding
         key_param_label.grid(column=0, row=0)
         fit_param_label.grid(column=0, row=0)
         modules_label.grid(column=0, row=0)
         
-        key_param_frame.grid(column=0, row=0, rowspan=1, sticky=(E, W), padx=1, pady=1)
-        module_frame.grid(column=0, row=1, sticky=(E, W), padx=1, pady=1, rowspan=2)
-        fit_param_frame.grid(column=0, row=3, sticky=(E, W, N, S), padx=1, pady=1)
+        key_param_frame.grid(column=0, row=0, rowspan=1, sticky='ew', padx=1, pady=1)
+        module_frame.grid(column=0, row=1, sticky='ew', padx=1, pady=1, rowspan=2)
+        fit_param_frame.grid(column=0, row=3, sticky='ewns', padx=1, pady=1)
         
+        frame_detected.grid(column=0, row=4, sticky='ewn', padx=1, pady=1)
+        frame_detected.grid_columnconfigure(0, weight=1)
+        frame_detected.grid_columnconfigure(1, weight=1)
+        label_defined_title.grid(column=0, row=0, sticky='n', padx=1, pady=1)
+        label_new_var_title.grid(column=1, row=0, sticky='n', padx=1, pady=1)
+        self.label_defined.grid( column=0, row=1, sticky='n', padx=1, pady=1)
+        self.label_new_var.grid( column=1, row=1, sticky='n', padx=1, pady=1)
+        
+        
+        self.right_frame.grid_rowconfigure(4, weight=1)
+        button_constrain.grid(column=0, row=5, sticky='ews', padx=1, pady=1)
+        
+        # parse
+        if input_fn_text:
+            self.get_input()
+        
+    # ====================================================================== #
+    def do_after_parse(self, defined=None, eqn=None, new_par=None):
+        
+        # show inputs as readback
+        s = '\n'.join(sorted(defined))
+        self.label_defined.config(text=s)
+        
+        s = sorted(np.unique(np.concatenate(new_par)))
+        s = [i for i in s if i and i not in self.parnames]
+        
+        self.label_new_var.config(text='\n'.join(s))
+    
+        # set inputs
+        self.defined = defined
+        self.eqn = eqn
+        self.new_par = new_par
+    
+    
     # ====================================================================== #
     def _do_fit(self, text):
         """
@@ -213,110 +262,132 @@ class popup_fit_constraints(template_fit_popup):
         blo = np.array(blo).T
         bhi = np.array(bhi).T
         
-        # set up fitter inputs
-        npar = len(sharelist)
-        bounds = [[l, h] for l, h in zip(blo, bhi)]
-        data = [self.bfit.data[k] for k in keylist]
-        kwargs = {'p0':p0, 'bounds':bounds}
+        # ~ # set up fitter inputs
+        # ~ npar = len(sharelist)
+        # ~ bounds = [[l, h] for l, h in zip(blo, bhi)]
+        # ~ data = [self.bfit.data[k] for k in keylist]
+        # ~ kwargs = {'p0':p0, 'bounds':bounds}
         
-        # get minimizer
-        if 'trf'   in fit_files.fitter.__name__:  minimizer = 'trf'
-        if 'minos' in fit_files.fitter.__name__:  minimizer = 'minos'
-        if 'hesse' in fit_files.fitter.__name__:  minimizer = 'migrad'
+        # ~ # get minimizer
+        # ~ if 'trf'   in fit_files.fitter.__name__:  minimizer = 'trf'
+        # ~ if 'minos' in fit_files.fitter.__name__:  minimizer = 'minos'
+        # ~ if 'hesse' in fit_files.fitter.__name__:  minimizer = 'migrad'
         
-        # set up queue for results
-        que = Queue()
+        # ~ # set up queue for results
+        # ~ que = Queue()
         
-        # do fit
-        def run_fit():
-            try:
-                out = fit_bdata(data=data, 
-                                fn=fitfns, 
-                                shared=sharelist, 
-                                asym_mode='c', 
-                                rebin=rebin, 
-                                omit=omit, 
-                                xlims=None, 
-                                hist_select=self.bfit.hist_select, 
-                                minimizer=minimizer, 
-                                **kwargs)
-            except Exception as err:
-                que.put(str(err))
-                raise err from None
+        # ~ # do fit
+        # ~ def run_fit():
+            # ~ try:
+                # ~ out = fit_bdata(data=data, 
+                                # ~ fn=fitfns, 
+                                # ~ shared=sharelist, 
+                                # ~ asym_mode='c', 
+                                # ~ rebin=rebin, 
+                                # ~ omit=omit, 
+                                # ~ xlims=None, 
+                                # ~ hist_select=self.bfit.hist_select, 
+                                # ~ minimizer=minimizer, 
+                                # ~ **kwargs)
+            # ~ except Exception as err:
+                # ~ que.put(str(err))
+                # ~ raise err from None
                 
-            # par, std_l, std_u, cov, chi, gchi
-            que.put(out)
+            # ~ # par, std_l, std_u, cov, chi, gchi
+            # ~ que.put(out)
             
-        # start the fit
-        def do_enable():
-            fit_files.input_enable_disable(self.win, state='normal', first=False)
-            fit_files.input_enable_disable(fit_files.fit_data_tab, state='normal')
-        def do_disable():
-            fit_files.input_enable_disable(self.win, state='disabled', first=False)
-            fit_files.input_enable_disable(fit_files.fit_data_tab, state='disabled')
+        # ~ # start the fit
+        # ~ def do_enable():
+            # ~ fit_files.input_enable_disable(self.win, state='normal', first=False)
+            # ~ fit_files.input_enable_disable(fit_files.fit_data_tab, state='normal')
+        # ~ def do_disable():
+            # ~ fit_files.input_enable_disable(self.win, state='disabled', first=False)
+            # ~ fit_files.input_enable_disable(fit_files.fit_data_tab, state='disabled')
             
-        popup = popup_ongoing_process(self.bfit, 
-                    target = run_fit,
-                    message="Constrained fit in progress...", 
-                    queue = que,
-                    do_disable = do_disable,
-                    do_enable = do_enable,
-                    )
+        # ~ popup = popup_ongoing_process(self.bfit, 
+                    # ~ target = run_fit,
+                    # ~ message="Constrained fit in progress...", 
+                    # ~ queue = que,
+                    # ~ do_disable = do_disable,
+                    # ~ do_enable = do_enable,
+                    # ~ )
             
-        output = popup.run()
+        # ~ output = popup.run()
         
-        # fit success
-        if type(output) is tuple:
-            par, std_l, std_u, cov, chi, gchi = output
-            std_l = np.abs(std_l)
+        # ~ # fit success
+        # ~ if type(output) is tuple:
+            # ~ par, std_l, std_u, cov, chi, gchi = output
+            # ~ std_l = np.abs(std_l)
         
-        # error
-        elif type(output) is str:
-            messagebox.showerror("Error", output)
-            return 
+        # ~ # error
+        # ~ elif type(output) is str:
+            # ~ messagebox.showerror("Error", output)
+            # ~ return 
         
-        # fit cancelled
-        elif output is None:
-            return
+        # ~ # fit cancelled
+        # ~ elif output is None:
+            # ~ return
             
-        # check list depth
-        try:
-            par[0][0]
-        except IndexError:
-            par = np.array([par])
-            std_l = np.array([std_l])
-            std_u = np.array([std_u])
-            chi = np.array([chi])
+        # ~ # check list depth
+        # ~ try:
+            # ~ par[0][0]
+        # ~ except IndexError:
+            # ~ par = np.array([par])
+            # ~ std_l = np.array([std_l])
+            # ~ std_u = np.array([std_u])
+            # ~ chi = np.array([chi])
             
-        # calculate original parameter equivalents
-        for i, k in enumerate(keylist):
-            data = fetch_files.data_lines[k].bdfit
+        # ~ # calculate original parameter equivalents
+        # ~ for i, k in enumerate(keylist):
+            # ~ data = fetch_files.data_lines[k].bdfit
 
-            # calculate parameter values and estimate errors
-            old_par = [cfn(*par[i]) for cfn in constr_fns[i]]
-            old_std_l = [abs(p-cfn(*(par[i]-std_l[i]))) for p, cfn in zip(old_par, constr_fns[i])]
-            old_std_u = [abs(p-cfn(*(par[i]+std_u[i]))) for p, cfn in zip(old_par, constr_fns[i])]
+            # ~ # calculate parameter values and estimate errors
+            # ~ old_par = [cfn(*par[i]) for cfn in constr_fns[i]]
+            # ~ old_std_l = [abs(p-cfn(*(par[i]-std_l[i]))) for p, cfn in zip(old_par, constr_fns[i])]
+            # ~ old_std_u = [abs(p-cfn(*(par[i]+std_u[i]))) for p, cfn in zip(old_par, constr_fns[i])]
             
-            old_chi = chi[i]
+            # ~ old_chi = chi[i]
             
-            # set to fitdata containers
-            results = pd.DataFrame({'res': old_par, 
-                                    'dres+': old_std_u,
-                                    'dres-': old_std_l,
-                                    'chi': old_chi,
-                                    }, index=cgen.oldpar)
-            data.set_fitresult({'fn': fnptrs[i], 'results': results, 'gchi': gchi})
+            # ~ # set to fitdata containers
+            # ~ results = pd.DataFrame({'res': old_par, 
+                                    # ~ 'dres+': old_std_u,
+                                    # ~ 'dres-': old_std_l,
+                                    # ~ 'chi': old_chi,
+                                    # ~ }, index=cgen.oldpar)
+            # ~ data.set_fitresult({'fn': fnptrs[i], 'results': results, 'gchi': gchi})
             
-        # display in fit_files tab
-        for key in fit_files.fit_lines:
-            fit_files.fit_lines[key].show_fit_result()
+        # ~ # display in fit_files tab
+        # ~ for key in fit_files.fit_lines:
+            # ~ fit_files.fit_lines[key].show_fit_result()
         
-        # show global chi
-        fit_files.gchi_label['text'] = str(np.around(gchi, 2))
+        # ~ # show global chi
+        # ~ fit_files.gchi_label['text'] = str(np.around(gchi, 2))
 
-        # do end-of-fit stuff
-        fit_files.do_end_of_fit()
+        # ~ # do end-of-fit stuff
+        # ~ fit_files.do_end_of_fit()
         
-        self.logger.info('Fitting end')
+        # ~ self.logger.info('Fitting end')
         
-        return (par[0, :], std_l[0, :], std_u[0, :])
+        # ~ return (par[0, :], std_l[0, :], std_u[0, :])
+
+
+    # ====================================================================== #
+    def set_constraints(self):
+        """
+            Set up constraining parameter functions
+        """
+        
+        # check for circular definitions
+        for d, e in zip(self.defined, self.eqn):
+            if d in e:
+                msg = 'Circular parameter definitions not allowed:\n{d} = f({d})'.format(d=d)
+                messagebox.showerror('Error', msg)
+                raise RuntimeError(msg)
+        
+        
+        # TODO: FILL IN
+        
+        
+        
+        # close
+        self.cancel()

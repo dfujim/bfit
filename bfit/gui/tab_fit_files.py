@@ -152,7 +152,7 @@ class fit_files(object):
                                        command=self.do_fit_constraints, pad=1)
         set_param_button = ttk.Button(fn_select_frame, text='   Set Result as P0   ',
                         command=self.do_set_result_as_initial, pad=1)
-        reset_param_button = ttk.Button(fn_select_frame, text='     sReset P0     ',
+        reset_param_button = ttk.Button(fn_select_frame, text='     Reset P0     ',
                         command=self.do_reset_initial, pad=1)
 
         # GRIDDING
@@ -806,8 +806,7 @@ class fit_files(object):
 
             # make a new window, using old inputs and outputs
             self.pop_fitconstr = popup_fit_constraints(self.bfit,
-                                    output_par_text=p.output_par_text_val,
-                                    output_text=p.output_text_val)
+                                                       input_fn_text=p.input_fn_text)
 
         # make entirely new window
         else:
