@@ -19,6 +19,7 @@ class InputLine(object):
         data: fitdata object
         entry: dict[col] = entry or checkbutton object
         fitline: fitline object
+        is_disabled: Boolean, if true don't re-enable after fitting
         frame: ttk.Frame
         label: ttk.label, parameter name
         logger: logger
@@ -41,10 +42,13 @@ class InputLine(object):
         self.logger = logging.getLogger(logger_name)
         self.logger.debug('Initializing')
         
+        # assign inputs and defaults
         self.pname = ''
         self.bfit = bfit
         self.fitline = fitline
         self.data = fitline.data
+        self.is_disabled = False
+        
         self.frame = frame
         self.label = ttk.Label(self.frame, text=self.pname, justify='right')
         
@@ -237,6 +241,26 @@ class InputLine(object):
         for i, key in enumerate(self.columns):
             self.entry[key].destroy()
             
+    # ======================================================================= #
+    def disable(self):
+        """
+            Prevent editing
+        """        
+        for k, e in self.entry.items():
+            if k not in ('chi',):
+                e.configure(state='disabled')
+        
+    # ======================================================================= #
+    def enable(self):
+        """
+            Allow editing
+        """        
+        for k, e in self.entry.items():
+            if k in ('res', 'dres+', 'dres-', 'chi'):
+                e.configure(state='readonly')
+            else:
+                e.configure(state='normal')
+                
     # ======================================================================= #
     def get(self, col):
         """

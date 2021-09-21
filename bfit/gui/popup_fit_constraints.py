@@ -137,7 +137,12 @@ class popup_fit_constraints(template_fit_popup):
     def do_after_parse(self, defined=None, eqn=None, new_par=None):
         
         # show inputs as readback
-        s = '\n'.join(sorted(defined))
+        ncomp = self.bfit.fit_files.n_component.get()
+        fn_name = self.bfit.fit_files.fit_function_title.get()
+        par_names = self.bfit.fit_files.fitter.gen_param_names(fn_name, ncomp)
+        s = [d if d else '<blank>' for d in sorted(defined)]
+        s = [d if d in par_names else '%s [ERROR: Bad parameter]' % d for d in s]
+        s = '\n'.join(s)
         self.label_defined.config(text=s)
         
         s = sorted(np.unique(np.concatenate(new_par)))
@@ -262,114 +267,113 @@ class popup_fit_constraints(template_fit_popup):
         blo = np.array(blo).T
         bhi = np.array(bhi).T
         
-        # ~ # set up fitter inputs
-        # ~ npar = len(sharelist)
-        # ~ bounds = [[l, h] for l, h in zip(blo, bhi)]
-        # ~ data = [self.bfit.data[k] for k in keylist]
-        # ~ kwargs = {'p0':p0, 'bounds':bounds}
+        # set up fitter inputs
+        npar = len(sharelist)
+        bounds = [[l, h] for l, h in zip(blo, bhi)]
+        data = [self.bfit.data[k] for k in keylist]
+        kwargs = {'p0':p0, 'bounds':bounds}
         
-        # ~ # get minimizer
-        # ~ if 'trf'   in fit_files.fitter.__name__:  minimizer = 'trf'
-        # ~ if 'minos' in fit_files.fitter.__name__:  minimizer = 'minos'
-        # ~ if 'hesse' in fit_files.fitter.__name__:  minimizer = 'migrad'
+        # get minimizer
+        if 'trf'   in fit_files.fitter.__name__:  minimizer = 'trf'
+        if 'minos' in fit_files.fitter.__name__:  minimizer = 'minos'
+        if 'hesse' in fit_files.fitter.__name__:  minimizer = 'migrad'
         
-        # ~ # set up queue for results
-        # ~ que = Queue()
+        # set up queue for results
+        que = Queue()
         
-        # ~ # do fit
-        # ~ def run_fit():
-            # ~ try:
-                # ~ out = fit_bdata(data=data, 
-                                # ~ fn=fitfns, 
-                                # ~ shared=sharelist, 
-                                # ~ asym_mode='c', 
-                                # ~ rebin=rebin, 
-                                # ~ omit=omit, 
-                                # ~ xlims=None, 
-                                # ~ hist_select=self.bfit.hist_select, 
-                                # ~ minimizer=minimizer, 
-                                # ~ **kwargs)
-            # ~ except Exception as err:
-                # ~ que.put(str(err))
-                # ~ raise err from None
+        # do fit
+        def run_fit():
+            try:
+                out = fit_bdata(data=data, 
+                                fn=fitfns, 
+                                shared=sharelist, 
+                                asym_mode='c', 
+                                rebin=rebin, 
+                                omit=omit, 
+                                xlims=None, 
+                                hist_select=self.bfit.hist_select, 
+                                minimizer=minimizer, 
+                                **kwargs)
+            except Exception as err:
+                que.put(str(err))
+                raise err from None
                 
-            # ~ # par, std_l, std_u, cov, chi, gchi
-            # ~ que.put(out)
+            # par, std_l, std_u, cov, chi, gchi
+            que.put(out)
             
-        # ~ # start the fit
-        # ~ def do_enable():
-            # ~ fit_files.input_enable_disable(self.win, state='normal', first=False)
-            # ~ fit_files.input_enable_disable(fit_files.fit_data_tab, state='normal')
-        # ~ def do_disable():
-            # ~ fit_files.input_enable_disable(self.win, state='disabled', first=False)
-            # ~ fit_files.input_enable_disable(fit_files.fit_data_tab, state='disabled')
+        # start the fit
+        def do_enable():
+            fit_files.input_enable_disable(self.win, state='normal', first=False)
+            fit_files.input_enable_disable(fit_files.fit_data_tab, state='normal')
+        def do_disable():
+            fit_files.input_enable_disable(self.win, state='disabled', first=False)
+            fit_files.input_enable_disable(fit_files.fit_data_tab, state='disabled')
             
-        # ~ popup = popup_ongoing_process(self.bfit, 
-                    # ~ target = run_fit,
-                    # ~ message="Constrained fit in progress...", 
-                    # ~ queue = que,
-                    # ~ do_disable = do_disable,
-                    # ~ do_enable = do_enable,
-                    # ~ )
+        popup = popup_ongoing_process(self.bfit, 
+                    target = run_fit,
+                    message="Constrained fit in progress...", 
+                    queue = que,
+                    do_disable = do_disable,
+                    do_enable = do_enable,
+                    )
             
-        # ~ output = popup.run()
+        output = popup.run()
         
-        # ~ # fit success
-        # ~ if type(output) is tuple:
-            # ~ par, std_l, std_u, cov, chi, gchi = output
-            # ~ std_l = np.abs(std_l)
+        # fit success
+        if type(output) is tuple:
+            par, std_l, std_u, cov, chi, gchi = output
+            std_l = np.abs(std_l)
         
-        # ~ # error
-        # ~ elif type(output) is str:
-            # ~ messagebox.showerror("Error", output)
-            # ~ return 
+        # error
+        elif type(output) is str:
+            messagebox.showerror("Error", output)
+            return 
         
-        # ~ # fit cancelled
-        # ~ elif output is None:
-            # ~ return
+        # fit cancelled
+        elif output is None:
+            return
             
-        # ~ # check list depth
-        # ~ try:
-            # ~ par[0][0]
-        # ~ except IndexError:
-            # ~ par = np.array([par])
-            # ~ std_l = np.array([std_l])
-            # ~ std_u = np.array([std_u])
-            # ~ chi = np.array([chi])
+        # check list depth
+        try:
+            par[0][0]
+        except IndexError:
+            par = np.array([par])
+            std_l = np.array([std_l])
+            std_u = np.array([std_u])
+            chi = np.array([chi])
             
-        # ~ # calculate original parameter equivalents
-        # ~ for i, k in enumerate(keylist):
-            # ~ data = fetch_files.data_lines[k].bdfit
+        # calculate original parameter equivalents
+        for i, k in enumerate(keylist):
+            data = fetch_files.data_lines[k].bdfit
 
-            # ~ # calculate parameter values and estimate errors
-            # ~ old_par = [cfn(*par[i]) for cfn in constr_fns[i]]
-            # ~ old_std_l = [abs(p-cfn(*(par[i]-std_l[i]))) for p, cfn in zip(old_par, constr_fns[i])]
-            # ~ old_std_u = [abs(p-cfn(*(par[i]+std_u[i]))) for p, cfn in zip(old_par, constr_fns[i])]
+            # calculate parameter values and estimate errors
+            old_par = [cfn(*par[i]) for cfn in constr_fns[i]]
+            old_std_l = [abs(p-cfn(*(par[i]-std_l[i]))) for p, cfn in zip(old_par, constr_fns[i])]
+            old_std_u = [abs(p-cfn(*(par[i]+std_u[i]))) for p, cfn in zip(old_par, constr_fns[i])]
             
-            # ~ old_chi = chi[i]
+            old_chi = chi[i]
             
-            # ~ # set to fitdata containers
-            # ~ results = pd.DataFrame({'res': old_par, 
-                                    # ~ 'dres+': old_std_u,
-                                    # ~ 'dres-': old_std_l,
-                                    # ~ 'chi': old_chi,
-                                    # ~ }, index=cgen.oldpar)
-            # ~ data.set_fitresult({'fn': fnptrs[i], 'results': results, 'gchi': gchi})
+            # set to fitdata containers
+            results = pd.DataFrame({'res': old_par, 
+                                    'dres+': old_std_u,
+                                    'dres-': old_std_l,
+                                    'chi': old_chi,
+                                    }, index=cgen.oldpar)
+            data.set_fitresult({'fn': fnptrs[i], 'results': results, 'gchi': gchi})
             
-        # ~ # display in fit_files tab
-        # ~ for key in fit_files.fit_lines:
-            # ~ fit_files.fit_lines[key].show_fit_result()
+        # display in fit_files tab
+        for key in fit_files.fit_lines:
+            fit_files.fit_lines[key].show_fit_result()
         
-        # ~ # show global chi
-        # ~ fit_files.gchi_label['text'] = str(np.around(gchi, 2))
+        # show global chi
+        fit_files.gchi_label['text'] = str(np.around(gchi, 2))
 
-        # ~ # do end-of-fit stuff
-        # ~ fit_files.do_end_of_fit()
+        # do end-of-fit stuff
+        fit_files.do_end_of_fit()
         
-        # ~ self.logger.info('Fitting end')
+        self.logger.info('Fitting end')
         
-        # ~ return (par[0, :], std_l[0, :], std_u[0, :])
-
+        return (par[0, :], std_l[0, :], std_u[0, :])
 
     # ====================================================================== #
     def set_constraints(self):
@@ -392,6 +396,17 @@ class popup_fit_constraints(template_fit_popup):
                     msg = 'Redefined parameter {p} cannot be used as an input'.format(p=d)
                     messagebox.showerror('Error', msg)
                     raise RuntimeError(msg)
+        
+        # disable lines
+        for fline in self.fittab.fit_lines.values():
+            for line in fline.lines:
+                line.enable()
+                if line.pname in self.defined:
+                    line.variable['fixed'].set(False)
+                    line.variable['shared'].set(False)
+                    line.disable()
+        
+        # add lines and parameters
         
         # TODO: FILL IN
         
