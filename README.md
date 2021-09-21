@@ -6,6 +6,7 @@
 <img src="https://img.shields.io/tokei/lines/github/dfujim/bfit"/>
 <img src="https://img.shields.io/pypi/l/bfit"/>
 [![status](https://joss.theoj.org/papers/742ff627aec73ce2a647bbede7c73fc2/status.svg)](https://joss.theoj.org/papers/742ff627aec73ce2a647bbede7c73fc2)
+[![DOI](https://zenodo.org/badge/159874104.svg)](https://zenodo.org/badge/latestdoi/159874104)
 
 <a href="https://github.com/dfujim/bfit/commits/master" alt="Commits"><img src="https://img.shields.io/github/commits-since/dfujim/bfit/latest/master"/></a>
 <a href="https://github.com/dfujim/bfit/commits/master" alt="Commits"><img src="https://img.shields.io/github/last-commit/dfujim/bfit"/></a>
