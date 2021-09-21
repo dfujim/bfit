@@ -380,14 +380,20 @@ class popup_fit_constraints(template_fit_popup):
         # check for circular definitions
         for d, e in zip(self.defined, self.eqn):
             if d in e:
-                msg = 'Circular parameter definitions not allowed:\n{d} = f({d})'.format(d=d)
+                msg = 'Circular parameter definitions not allowed:'+\
+                      '\n{d} = f({d}) is not allowed'.format(d=d)
                 messagebox.showerror('Error', msg)
                 raise RuntimeError(msg)
         
+        # check for more circular definitions
+        for d in self.defined:
+            for e in self.eqn:
+                if d in e:
+                    msg = 'Redefined parameter {p} cannot be used as an input'.format(p=d)
+                    messagebox.showerror('Error', msg)
+                    raise RuntimeError(msg)
         
         # TODO: FILL IN
-        
-        
         
         # close
         self.cancel()
