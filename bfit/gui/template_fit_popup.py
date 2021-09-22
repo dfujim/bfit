@@ -61,7 +61,6 @@ class template_fit_popup(object):
         self.logger.info('Initializing')
         
         # draw window
-        # ~ self.show()
         self.logger.debug('Initialization success. Starting mainloop.')
     
     # ====================================================================== #

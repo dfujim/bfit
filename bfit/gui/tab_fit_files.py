@@ -1353,20 +1353,15 @@ class fit_files(object):
 
         self.logger.info('Launching fit constraints popup')
 
-        if hasattr(self, 'pop_fitconstr'):
-            p = self.pop_fitconstr
+        p = self.pop_fitconstr
 
-            # don't make more than one window
-            if hasattr(p, 'win') and Toplevel.winfo_exists(p.win):
-                p.win.lift()
-                return
-
-            # make a new window, using old inputs and outputs
-            p.show()
-
-        # make entirely new window
-        # ~ else:
+        # don't make more than one window
+        if hasattr(p, 'win') and Toplevel.winfo_exists(p.win):
+            p.win.lift()
             
+        # make a new window, using old inputs and outputs
+        else:
+            p.show()
 
     # ======================================================================= #
     def update_param(self, *args):
@@ -1619,7 +1614,7 @@ class fitline(object):
         self.bfit.data[run].set_fitpar(values)
         
         # set contrained values
-        if hasattr(fit_files, 'pop_fitconstr') and not force_modify:
+        if not force_modify:
             new_par = fit_files.pop_fitconstr.add_new_par(self.data)
             plist.extend(list(new_par))
             plist.sort()
@@ -1844,7 +1839,6 @@ class fitline(object):
                 line.enable()
         
         # set constrained values
-        # ~ elif hasattr(self, 'pop_fitconstr'):
         else:
             self.bfit.fit_files.pop_fitconstr.disable_constrained_par()
         
