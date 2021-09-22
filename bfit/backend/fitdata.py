@@ -39,7 +39,8 @@ class fitdata(object):
             check_state: BooleanVar, include in fit?
             
             chi:        chisquared from fit (float)
-            constrained:list of str, names of constrained parameters
+            constrained:dict of (fn handles, inputs (str)), keyed by names of 
+                        constrained parameters
             dataline:   pointer to dataline object in fetch_files tab
             fitline:    pointer to fitline object in fit_files tab
             drawarg:    drawing arguments for errorbars (dict)
@@ -110,7 +111,7 @@ class fitdata(object):
         # initialize fitpar
         self.fitpar = pd.DataFrame([], columns=['p0', 'blo', 'bhi', 'res', 
                                     'dres+', 'dres-', 'chi', 'fixed', 'shared'])
-        self.constrained = []
+        self.constrained = {}
         
         # set area as upper
         self.area = self.area.upper()
@@ -1420,6 +1421,16 @@ class fitdata(object):
         self.logger.debug('Fit initial parameters set to %s', self.fitpar)
 
     # ======================================================================= #
+    def set_constrained(self, col):
+        """
+            Change parameter values based on constraint equation and typed inputs
+        """
+        for par in self.fitpar.index:
+            if par in self.constrained.keys():
+                inputs = self.fitpar.loc[self.constrained[par][1], col]
+                self.fitline.set(par, **{col:self.constrained[par][0](*inputs)})
+                
+    # ======================================================================= #
     def gen_set_from_var(self, pname, col, obj):
         """Make function to set fitting initial parameters from StringVar or 
             BooleanVarobject
@@ -1440,6 +1451,7 @@ class fitdata(object):
                         pass
                     else:
                         self.fitpar.loc[pname, col] = value
+                        self.set_constrained(col)
                         
             elif type(obj) is BooleanVar:
                 

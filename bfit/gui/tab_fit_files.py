@@ -1490,6 +1490,8 @@ class fitline(object):
         self.disable_entry_callback = False
         self.lines = []
 
+        data.fitline = self
+
         # get parent frame
         fitframe = ttk.Frame(self.parent, pad=(5, 0))
 
@@ -1842,6 +1844,15 @@ class fitline(object):
         # set constrained values
         elif hasattr(self, 'pop_fitconstr'):
             self.pop_fitconstr.disable_constrained_par()
+        
+    # ======================================================================= #
+    def set(self, pname, **kwargs):
+        """
+            Set line columns
+        """
+        for line in self.lines:
+            if line.pname == pname:
+                line.set(**kwargs)
         
     # ======================================================================= #
     def show_fit_result(self):

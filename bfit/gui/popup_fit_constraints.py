@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import bdata as bd
 
+from bfit.global_variables import KEYVARS
 from bfit.backend.ConstrainedFunction import ConstrainedFunction as CstrFnGenerator
 from bfit.global_variables import KEYVARS
 from bfit.gui.template_fit_popup import template_fit_popup
@@ -425,6 +426,35 @@ class popup_fit_constraints(template_fit_popup):
         return (par[0, :], std_l[0, :], std_u[0, :])
 
     # ====================================================================== #
+    def add_fn(self, data):
+        """
+            Make a lambda function to add to data
+        """
+        
+        # get variables in decreasing order of length (no mistakes in replace)
+        varlist = np.array(list(KEYVARS.keys()))
+        varlist = varlist[np.argsort(list(map(len, varlist))[::-1])]
+    
+        # make functions
+        fns = {}
+        for defined, eqn, new_par in zip(self.defined, self.eqn, self.new_par):
+            
+            # find constant names in the string, replace with constant
+            for var in varlist:
+                if var in eqn:
+                    value = data.get_values(KEYVARS[var])[0]
+                    eqn = eqn.replace(var, str(value))
+            
+            new_par.sort()
+            f = 'lambda {new_par} : {equation}'
+            f = f.format(new_par=','.join(new_par), 
+                         equation=eqn)
+                                          
+            fns[defined] = (eval(f), new_par)
+            
+        data.constrained = fns
+        
+    # ====================================================================== #
     def add_new_par(self, data):
         """
             Add constrained parameters to data.fitpar
@@ -457,9 +487,6 @@ class popup_fit_constraints(template_fit_popup):
         data.set_fitpar(pd.DataFrame(new_fit_par, 
                                      index=self.new_par_unique)
                         )
-                        
-        # copy defined param to data
-        data.constrained = self.defined
         
         return self.new_par_unique
 
@@ -501,7 +528,7 @@ class popup_fit_constraints(template_fit_popup):
                 if self.new_par_unique_old is not None:
                     fline.data.drop_param(self.new_par_unique_old)
                         
-                fline.data.constrained = []
+                fline.data.constrained = {}
                         
             # clean up
             self.new_par_unique_old = None
@@ -528,9 +555,10 @@ class popup_fit_constraints(template_fit_popup):
         # disable lines
         self.disable_constrained_par()
             
-        # add runs
+        # add runs and equations
         for fline in self.fittab.fit_lines.values():
             self.add_new_par(fline.data)
+            self.add_fn(fline.data)
         self.fittab.populate()
         
         # save defined values
