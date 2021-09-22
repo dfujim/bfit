@@ -1427,8 +1427,12 @@ class fitdata(object):
         """
         for par in self.fitpar.index:
             if par in self.constrained.keys():
-                inputs = self.fitpar.loc[self.constrained[par][1], col]
-                self.fitline.set(par, **{col:self.constrained[par][0](*inputs)})
+                try:
+                    inputs = self.fitpar.loc[self.constrained[par][1], col]
+                except KeyError:
+                    pass
+                else:
+                    self.fitline.set(par, **{col:self.constrained[par][0](*inputs)})
                 
     # ======================================================================= #
     def gen_set_from_var(self, pname, col, obj):

@@ -78,7 +78,6 @@ class popup_fit_constraints(template_fit_popup):
         self.new_par_unique = []
         self.new_par_unique_old = []
         self.fittab = fittab
-        # ~ self.show()
         
     # ====================================================================== #
     def show(self):
@@ -172,7 +171,7 @@ class popup_fit_constraints(template_fit_popup):
             show inputs as readback and save
         """
         
-        if defined is not None:
+        if defined and defined is not None:
         
             # check defined variables
             ncomp = self.bfit.fit_files.n_component.get()
@@ -195,6 +194,9 @@ class popup_fit_constraints(template_fit_popup):
         else:
             self.label_defined.config(text='')
             self.label_new_var.config(text='')
+            defined = []
+            eqn = []
+            new_par = []
         
         # save
         self.defined = defined
@@ -203,8 +205,8 @@ class popup_fit_constraints(template_fit_popup):
         
         try:
             self.new_par_unique = sorted(np.unique(np.concatenate(new_par)))
-        except TypeError:
-            self.new_par_unique = None
+        except ValueError:
+            self.new_par_unique = []
     
     # ====================================================================== #
     def _do_fit(self, text):
@@ -464,7 +466,7 @@ class popup_fit_constraints(template_fit_popup):
         n = len(self.new_par_unique)
             
         # delete unused parameters
-        if self.new_par_unique_old is not None:
+        if self.new_par_unique_old:
             data.drop_param(self.new_par_unique_old)
         
         # add new parameters, looking for present values
@@ -517,7 +519,7 @@ class popup_fit_constraints(template_fit_popup):
         """
         
         # no constraints: enable all lines
-        if self.defined is None:
+        if not self.defined:
             for fline in self.fittab.fit_lines.values():
                 
                 # enable
@@ -525,16 +527,23 @@ class popup_fit_constraints(template_fit_popup):
                     line.enable()
                     
                 # delete unused parameters
-                if self.new_par_unique_old is not None:
+                if self.new_par_unique_old:
                     fline.data.drop_param(self.new_par_unique_old)
                         
                 fline.data.constrained = {}
                         
             # clean up
-            self.new_par_unique_old = None
+            self.new_par_unique_old = []
             self.fittab.populate()
             self.cancel()
             return
+            
+        # check for missing equations
+        if any([e=='' for e in self.eqn]):
+            defi = self.defined[self.eqn.index('')]
+            msg = 'Missing equation for {d}'.format(d=defi)
+            messagebox.showerror('Error', msg)
+            raise RuntimeError(msg)
         
         # check for circular definitions
         for d, e in zip(self.defined, self.eqn):
