@@ -29,14 +29,14 @@ class popup_fit_constraints(template_fit_popup):
         
         defined             list of str, defined parameter names
         eqn                 list of str, equations for each defined parameter
-    
-        
         
         label_new_var       Label, show new variables
         label_defined       Label, show which variables will be redefined
         
         new_par             list of list of str, new parameter found in each eqn
         new_par_unique      list of str, new parameters, sorted
+        new_par_unique_old  list of str, new parameters, sorted at the last 
+                            call of set_constrained
         
         output_par_text     text, detected parameter names
         output_text         dict, keys: p0, blo, bhi, res, err, value: tkk.Text objects
@@ -63,6 +63,19 @@ class popup_fit_constraints(template_fit_popup):
         self.eqn = None
         self.new_par = None
         self.new_par_unique = None
+        self.new_par_unique_old = None
+        
+        self.show()
+        
+    # ====================================================================== #
+    def show(self):
+        """
+            show window
+        """
+        
+        # show base class
+        if not hasattr(self, 'win') or not Toplevel.winfo_exists(self.win):
+            super().show()
         
         # Keyword parameters
         key_param_frame = ttk.Frame(self.left_frame, relief='sunken', pad=5)
@@ -137,10 +150,6 @@ class popup_fit_constraints(template_fit_popup):
         
         self.right_frame.grid_rowconfigure(4, weight=1)
         button_constrain.grid(column=0, row=5, sticky='ews', padx=1, pady=1)
-        
-        # parse
-        if input_fn_text:
-            self.get_input()
         
     # ====================================================================== #
     def do_after_parse(self, defined=None, eqn=None, new_par=None):
@@ -417,8 +426,22 @@ class popup_fit_constraints(template_fit_popup):
         # no constraints: enable all lines
         if self.defined is None:
             for fline in self.fittab.fit_lines.values():
+                
+                # enable
                 for line in fline.lines:
                     line.enable()
+                    
+                # delete unused parameters
+                if self.new_par_unique_old is not None:
+                    fline.data.fitpar.drop(self.new_par_unique_old, 
+                                           axis='index', 
+                                           inplace=True)
+                        
+                fline.data.constrained = []
+                        
+            # clean up
+            self.new_par_unique_old = None
+            self.fittab.populate()
             self.cancel()
             return
         
@@ -451,6 +474,12 @@ class popup_fit_constraints(template_fit_popup):
         n = len(self.new_par_unique)
         for fline in self.fittab.fit_lines.values():
             data = fline.data
+            
+            # delete unused parameters
+            if self.new_par_unique_old is not None:
+                data.fitpar.drop(self.new_par_unique_old, axis='index', inplace=True)
+            
+            # add new parameters
             cols = InputLine.columns
             new_fit_par = { cols[0]: np.ones(n),            # p0
                             cols[1]: np.full(n, -np.inf),   # blo    
@@ -465,9 +494,15 @@ class popup_fit_constraints(template_fit_popup):
             data.set_fitpar(pd.DataFrame(new_fit_par, 
                                          index=self.new_par_unique)
                             )
+                            
+            # copy defined param to data
+            data.constrained = self.defined
+            
+        # add runs
+        self.fittab.populate()
         
-        
-        # TODO: FILL IN
+        # save defined values
+        self.new_par_unique_old = self.new_par_unique
         
         # close
         self.cancel()

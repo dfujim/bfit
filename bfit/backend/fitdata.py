@@ -39,6 +39,7 @@ class fitdata(object):
             check_state: BooleanVar, include in fit?
             
             chi:        chisquared from fit (float)
+            constrained:list of str, names of constrained parameters
             dataline:   pointer to dataline object in fetch_files tab
             fitline:    pointer to fitline object in fit_files tab
             drawarg:    drawing arguments for errorbars (dict)
@@ -109,6 +110,7 @@ class fitdata(object):
         # initialize fitpar
         self.fitpar = pd.DataFrame([], columns=['p0', 'blo', 'bhi', 'res', 
                                     'dres+', 'dres-', 'chi', 'fixed', 'shared'])
+        self.constrained = []
         
         # set area as upper
         self.area = self.area.upper()
@@ -1321,7 +1323,6 @@ class fitdata(object):
         elif select in pop_addpar.set_par.keys():
             val = pop_addpar.set_par[select](self.id)
             err = np.nan
-            print(val)
 
         try:
             return (val, err)

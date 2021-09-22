@@ -19,7 +19,6 @@ class InputLine(object):
         data: fitdata object
         entry: dict[col] = entry or checkbutton object
         fitline: fitline object
-        is_disabled: Boolean, if true don't re-enable after fitting
         frame: ttk.Frame
         label: ttk.label, parameter name
         logger: logger
@@ -47,7 +46,6 @@ class InputLine(object):
         self.bfit = bfit
         self.fitline = fitline
         self.data = fitline.data
-        self.is_disabled = False
         
         self.frame = frame
         self.label = ttk.Label(self.frame, text=self.pname, justify='right')
@@ -320,8 +318,15 @@ class InputLine(object):
         # label
         if pname is not None:
             self.pname = pname
-            self.label.config(text=pname)        
+            self.label.config(text=pname)     
+            
+            # check if line is constrained
+            if pname in self.data.constrained:
+                self.disable()
+            else:
+                self.enable()
 
+        # set values
         for k, v in values.items():
             
             # disable traces

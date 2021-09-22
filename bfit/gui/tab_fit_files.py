@@ -47,8 +47,6 @@ class fit_files(object):
             draw_components:list of titles for labels, options to export, draw.
             entry_asym_type:combobox for asym calculations
             fit_canvas:     canvas object allowing for scrolling
-            par_label_entry:draw parameter label entry box
-            pop_fitconstr:  object for fitting with constrained functions
             fit_data_tab:   containing frame (for destruction)
             fit_function_title: StringVar, title of fit function to use
             fit_function_title_box: combobox for fit function names
@@ -63,11 +61,12 @@ class fit_files(object):
             n_component:    number of fitting components (IntVar)
             n_component_box:Spinbox for number of fitting components
             par_label       StringVar, label for plotting parameter set
+            par_label_entry:draw parameter label entry box
             plt:            self.bfit.plt
 
             pop_addpar:     popup for ading parameters which are combinations of others
             pop_fitres:     modelling popup, for continuity between button presses
-            pop_fitcontr:   popup for fitting constrained values
+            pop_fitconstr:  object for fitting with constrained functions
 
             probe_label:    Label for probe species
             runframe:       frame for displaying fit results and inputs
@@ -805,8 +804,7 @@ class fit_files(object):
                 return
 
             # make a new window, using old inputs and outputs
-            self.pop_fitconstr = popup_fit_constraints(self.bfit,
-                                                       input_fn_text=p.input_fn_text)
+            p.show()
 
         # make entirely new window
         else:

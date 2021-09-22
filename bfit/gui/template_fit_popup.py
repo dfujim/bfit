@@ -62,6 +62,17 @@ class template_fit_popup(object):
         self.logger = logging.getLogger(logger_name)
         self.logger.info('Initializing')
         
+        # draw window
+        self.show()
+        self.logger.debug('Initialization success. Starting mainloop.')
+    
+    # ====================================================================== #
+    def show(self):
+        """
+            Show window
+        """
+        bfit = self.bfit
+        
         # make a new window
         self.win = Toplevel(bfit.mainframe)
         self.win.title(self.window_title)
@@ -103,8 +114,6 @@ class template_fit_popup(object):
         self.left_frame = left_frame
         self.right_frame = right_frame
         
-        self.logger.debug('Initialization success. Starting mainloop.')
-    
     # ====================================================================== #
     def cancel(self):
         self.win.destroy()
