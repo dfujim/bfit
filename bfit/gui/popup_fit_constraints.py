@@ -53,6 +53,18 @@ class popup_fit_constraints(template_fit_popup):
     modules = {'np':'numpy'}
     window_title = 'Constrain parameters'
     
+    # default values
+    defaults = {'p0':       1,
+                'blo':      -np.inf,
+                'bhi':      np.inf,
+                'res':      np.nan,
+                'dres+':    np.nan,
+                'dres-':    np.nan,
+                'chi':      np.nan,
+                'fixed':    False,
+                'shared':   False,
+                }
+    
     # ====================================================================== #
     def __init__(self, bfit, input_fn_text=''):
         
@@ -150,6 +162,8 @@ class popup_fit_constraints(template_fit_popup):
         
         self.right_frame.grid_rowconfigure(4, weight=1)
         button_constrain.grid(column=0, row=5, sticky='ews', padx=1, pady=1)
+        
+        self.get_input()
         
     # ====================================================================== #
     def do_after_parse(self, defined=None, eqn=None, new_par=None):
@@ -411,12 +425,64 @@ class popup_fit_constraints(template_fit_popup):
         return (par[0, :], std_l[0, :], std_u[0, :])
 
     # ====================================================================== #
+    def add_new_par(self, data):
+        """
+            Add constrained parameters to data.fitpar
+        """
+        
+        # add lines and parameters
+        n = len(self.new_par_unique)
+            
+        # delete unused parameters
+        if self.new_par_unique_old is not None:
+            data.drop_param(self.new_par_unique_old)
+        
+        # add new parameters, looking for present values
+        cols = InputLine.columns
+        new_fit_par = {}
+        
+        for c in cols:
+            
+            # get values
+            values = []
+            for par in self.new_par_unique:
+                if c in data.fitpar.columns and par in data.fitpar.index:
+                    values.append(data.fitpar.loc[par, c])
+                else:
+                    values.append(self.defaults[c])
+                    
+            # set values                
+            new_fit_par[c] = values
+        
+        data.set_fitpar(pd.DataFrame(new_fit_par, 
+                                     index=self.new_par_unique)
+                        )
+                        
+        # copy defined param to data
+        data.constrained = self.defined
+        
+        return self.new_par_unique
+
+    # ====================================================================== #
+    def disable_constrained_par(self):
+        """
+            Disable all lines corresponding to a constrained par
+        """
+        for fline in self.fittab.fit_lines.values():
+            for line in fline.lines:
+                line.enable()
+                if line.pname in self.defined:
+                    line.variable['fixed'].set(False)
+                    line.variable['shared'].set(False)
+                    line.disable()
+        
+    # ====================================================================== #
     def do_return(self, *_):
         """
             Activated on press of return key
         """
         self.set_constraints()
-    
+            
     # ====================================================================== #
     def set_constraints(self):
         """
@@ -433,9 +499,7 @@ class popup_fit_constraints(template_fit_popup):
                     
                 # delete unused parameters
                 if self.new_par_unique_old is not None:
-                    fline.data.fitpar.drop(self.new_par_unique_old, 
-                                           axis='index', 
-                                           inplace=True)
+                    fline.data.drop_param(self.new_par_unique_old)
                         
                 fline.data.constrained = []
                         
@@ -462,43 +526,11 @@ class popup_fit_constraints(template_fit_popup):
                     raise RuntimeError(msg)
         
         # disable lines
-        for fline in self.fittab.fit_lines.values():
-            for line in fline.lines:
-                line.enable()
-                if line.pname in self.defined:
-                    line.variable['fixed'].set(False)
-                    line.variable['shared'].set(False)
-                    line.disable()
-        
-        # add lines and parameters
-        n = len(self.new_par_unique)
-        for fline in self.fittab.fit_lines.values():
-            data = fline.data
-            
-            # delete unused parameters
-            if self.new_par_unique_old is not None:
-                data.fitpar.drop(self.new_par_unique_old, axis='index', inplace=True)
-            
-            # add new parameters
-            cols = InputLine.columns
-            new_fit_par = { cols[0]: np.ones(n),            # p0
-                            cols[1]: np.full(n, -np.inf),   # blo    
-                            cols[2]: np.full(n, np.inf),    # bhi
-                            cols[3]: np.full(n, np.nan),    # res
-                            cols[4]: np.full(n, np.nan),    # dres-
-                            cols[5]: np.full(n, np.nan),    # dres+
-                            cols[6]: np.full(n, np.nan),    # chi
-                            cols[7]: np.full(n, False),     # fixed
-                            cols[8]: np.full(n, False),     # shared
-                            }
-            data.set_fitpar(pd.DataFrame(new_fit_par, 
-                                         index=self.new_par_unique)
-                            )
-                            
-            # copy defined param to data
-            data.constrained = self.defined
+        self.disable_constrained_par()
             
         # add runs
+        for fline in self.fittab.fit_lines.values():
+            self.add_new_par(fline.data)
         self.fittab.populate()
         
         # save defined values

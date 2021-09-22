@@ -1025,6 +1025,14 @@ class fitdata(object):
             return np.nan
         
     # ======================================================================= #
+    def drop_param(self, parnames):
+        """
+            Check self.fitpar for parameters not in list of parnames. Drop them.
+        """
+        present = [p for p in parnames if p in self.fitpar.index]
+        self.fitpar.drop(present, axis='index', inplace=True)
+    
+    # ======================================================================= #
     def drop_unused_param(self, parnames):
         """
             Check self.fitpar for parameters not in list of parnames. Drop them.

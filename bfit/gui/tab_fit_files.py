@@ -1563,7 +1563,7 @@ class fitline(object):
         if hasattr(self, 'parentry'):    del self.parentry
 
     # ======================================================================= #
-    def get_new_parameters(self):
+    def get_new_parameters(self, force_modify=False):
         """
             Fetch initial parameters from fitter, set to data.
 
@@ -1579,8 +1579,7 @@ class fitline(object):
         fn_title = fit_files.fit_function_title.get()
 
         # get list of parameter names
-        plist = list(fitter.gen_param_names(fn_title, ncomp))
-        plist.sort()
+        plist = sorted(fitter.gen_param_names(fn_title, ncomp))
 
         # check if we are using the fit results of the prior fit
         values_res = None
@@ -1614,6 +1613,12 @@ class fitline(object):
                                      
         # set to data
         self.bfit.data[run].set_fitpar(values)
+        
+        # set contrained values
+        if hasattr(fit_files, 'pop_fitconstr') and not force_modify:
+            new_par = fit_files.pop_fitconstr.add_new_par(self.data)
+            plist.extend(list(new_par))
+            plist.sort()
         
         return tuple(plist)
 
@@ -1786,12 +1791,12 @@ class fitline(object):
         
         if force_modify or len(param_values) == 0:
             try:
-                plist = self.get_new_parameters()
+                plist = self.get_new_parameters(force_modify)
             except KeyError as err:
                 return          # returns if no parameters found
             except RuntimeError as err:
                 messagebox.showerror('RuntimeError', err)
-                raise err from None    
+                raise err from None
         else:
             plist = tuple(param_values.index.values)
             
@@ -1835,6 +1840,11 @@ class fitline(object):
         if force_modify:
             for line in self.lines:
                 line.enable()
+        
+        # set constrained values
+        elif hasattr(self, 'pop_fitconstr'):
+            self.pop_fitconstr.disable_constrained_par()
+        
             
     # ======================================================================= #
     def show_fit_result(self):
