@@ -67,18 +67,18 @@ class popup_fit_constraints(template_fit_popup):
                 }
     
     # ====================================================================== #
-    def __init__(self, bfit, input_fn_text=''):
+    def __init__(self, bfit, fittab, input_fn_text=''):
         
         super().__init__(bfit, input_fn_text)
         
         # initialize
-        self.defined = None
-        self.eqn = None
-        self.new_par = None
-        self.new_par_unique = None
-        self.new_par_unique_old = None
-        
-        self.show()
+        self.defined = []
+        self.eqn = []
+        self.new_par = []
+        self.new_par_unique = []
+        self.new_par_unique_old = []
+        self.fittab = fittab
+        # ~ self.show()
         
     # ====================================================================== #
     def show(self):

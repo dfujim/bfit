@@ -50,7 +50,9 @@ class popup_add_param(template_fit_popup):
         
         
         super().__init__(bfit, input_fn_text)
+        super().show()
         
+        self.fittab = bfit.fit_files
         self.set_par = {}
         self.new_par = {}
         

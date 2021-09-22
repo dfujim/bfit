@@ -48,7 +48,9 @@ class popup_fit_results(template_fit_popup):
                  chi=np.nan, x='', y=''):
         
         super().__init__(bfit, input_fn_text)
+        super().show()
         
+        self.fittab = bfit.fit_files
         self.output_par_text_val = output_par_text
         
         if not output_text:

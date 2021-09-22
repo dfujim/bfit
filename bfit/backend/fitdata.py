@@ -1451,7 +1451,8 @@ class fitdata(object):
                         pass
                     else:
                         self.fitpar.loc[pname, col] = value
-                        self.set_constrained(col)
+                        if pname not in self.constrained.keys():
+                            self.set_constrained(col)
                         
             elif type(obj) is BooleanVar:
                 

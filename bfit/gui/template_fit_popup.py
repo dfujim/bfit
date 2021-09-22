@@ -54,8 +54,6 @@ class template_fit_popup(object):
     def __init__(self, bfit, input_fn_text=''):
         
         self.bfit = bfit
-        self.fittab = bfit.fit_files
-        
         self.input_fn_text = input_fn_text
         
         # get logger
@@ -63,7 +61,7 @@ class template_fit_popup(object):
         self.logger.info('Initializing')
         
         # draw window
-        self.show()
+        # ~ self.show()
         self.logger.debug('Initialization success. Starting mainloop.')
     
     # ====================================================================== #

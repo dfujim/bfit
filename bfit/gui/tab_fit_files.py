@@ -111,6 +111,11 @@ class fit_files(object):
         self.draw_components = list(bfit.draw_components)
         self.fit_data_tab = fit_data_tab
         self.plt = self.bfit.plt
+        
+        self.fit_lines = {}
+        self.fit_lines_old = {}
+
+        self.pop_fitconstr = popup_fit_constraints(self.bfit, self)
 
         # additional button bindings
         self.bfit.root.bind('<Control-Key-u>', self.update_param)
@@ -148,7 +153,7 @@ class fit_files(object):
         fit_button = ttk.Button(fn_select_frame, text='        Fit        ', command=self.do_fit, \
                                 pad=1)
         constraint_button = ttk.Button(fn_select_frame, text='Constrain',
-                                       command=self.do_fit_constraints, pad=1)
+                                       command=self.show_constr_window, pad=1)
         set_param_button = ttk.Button(fn_select_frame, text='   Set Result as P0   ',
                         command=self.do_set_result_as_initial, pad=1)
         reset_param_button = ttk.Button(fn_select_frame, text='     Reset P0     ',
@@ -382,9 +387,6 @@ class fit_files(object):
         for i in range(2):
             results_frame.grid_columnconfigure(i, weight=0)
 
-        # store lines for fitting
-        self.fit_lines = {}
-        self.fit_lines_old = {}
 
     # ======================================================================= #
     def __del__(self):
@@ -789,26 +791,6 @@ class fit_files(object):
         self.gchi_label['text'] = str(np.around(gchi, 2))
 
         self.do_end_of_fit()
-
-    # ======================================================================= #
-    def do_fit_constraints(self):
-
-        self.logger.info('Launching fit constraints popup')
-
-        if hasattr(self, 'pop_fitconstr'):
-            p = self.pop_fitconstr
-
-            # don't make more than one window
-            if Toplevel.winfo_exists(p.win):
-                p.win.lift()
-                return
-
-            # make a new window, using old inputs and outputs
-            p.show()
-
-        # make entirely new window
-        else:
-            self.pop_fitconstr = popup_fit_constraints(self.bfit)
 
     # ======================================================================= #
     def do_fit_model(self):
@@ -1367,6 +1349,26 @@ class fit_files(object):
         popup_show_param(df)
 
     # ======================================================================= #
+    def show_constr_window(self):
+
+        self.logger.info('Launching fit constraints popup')
+
+        if hasattr(self, 'pop_fitconstr'):
+            p = self.pop_fitconstr
+
+            # don't make more than one window
+            if hasattr(p, 'win') and Toplevel.winfo_exists(p.win):
+                p.win.lift()
+                return
+
+            # make a new window, using old inputs and outputs
+            p.show()
+
+        # make entirely new window
+        # ~ else:
+            
+
+    # ======================================================================= #
     def update_param(self, *args):
         """Update all figures with parameters drawn with new fit results"""
 
@@ -1842,8 +1844,9 @@ class fitline(object):
                 line.enable()
         
         # set constrained values
-        elif hasattr(self, 'pop_fitconstr'):
-            self.pop_fitconstr.disable_constrained_par()
+        # ~ elif hasattr(self, 'pop_fitconstr'):
+        else:
+            self.bfit.fit_files.pop_fitconstr.disable_constrained_par()
         
     # ======================================================================= #
     def set(self, pname, **kwargs):
