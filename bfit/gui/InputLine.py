@@ -320,16 +320,17 @@ class InputLine(object):
             self.pname = pname
             self.label.config(text=pname)     
             
+            # assign inputs
+            self.variable['shared'] = BooleanVar()
+            self.assign_shared()
+            self.assign_inputs()
+            
             # check if line is constrained
             if pname in self.data.constrained:
                 self.disable()
             else:
                 self.enable()
                 
-            # assign inputs
-            self.assign_shared()
-            self.assign_inputs()
-
         # set values
         for k, v in values.items():
             
