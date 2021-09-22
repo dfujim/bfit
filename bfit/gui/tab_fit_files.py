@@ -1323,7 +1323,7 @@ class fit_files(object):
                 continue
             
             # set 
-            line.set(**{col:value})     
+            line.set(**{col:value})
                         
     # ======================================================================= #
     def return_binder(self):
@@ -1833,8 +1833,6 @@ class fitline(object):
         # set initial parameters
         for i, k in enumerate(param_values.index):
             self.lines[i].set(k, **param_values.loc[k].to_dict())
-            self.lines[i].assign_shared()
-            self.lines[i].assign_inputs()
             
         # enable
         if force_modify:
@@ -1845,7 +1843,6 @@ class fitline(object):
         elif hasattr(self, 'pop_fitconstr'):
             self.pop_fitconstr.disable_constrained_par()
         
-            
     # ======================================================================= #
     def show_fit_result(self):
         self.logger.debug('Showing fit result for run %s', self.data.id)

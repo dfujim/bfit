@@ -210,13 +210,13 @@ class InputLine(object):
         # no key
         if not self.pname:
             return
-        
+
         # get dict of shared boolean var
         share_var = self.bfit.fit_files.share_var
         
         # check if key is present
         if self.pname not in share_var.keys():
-            self.bfit.fit_files.share_var[self.pname] = self.variable['shared']
+            share_var[self.pname] = self.variable['shared']
             
         # assign key
         else:
@@ -325,13 +325,16 @@ class InputLine(object):
                 self.disable()
             else:
                 self.enable()
+                
+            # assign inputs
+            self.assign_shared()
+            self.assign_inputs()
 
         # set values
         for k, v in values.items():
             
             # disable traces
             self.variable[k], tr = self._pop_trace(self.variable[k], 'modify_all')
-            self.variable[k], _ = self._pop_trace(self.variable[k], 'sync_fitpar')
             
             # don't set
             if str(v) == 'nan':
