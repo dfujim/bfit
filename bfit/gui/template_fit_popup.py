@@ -129,7 +129,7 @@ class template_fit_popup(object):
         
         # check for no input
         if not text:
-            return
+            return (None, None, None)
         
         # get equations and defined variables
         defined = [t.split('=')[0].strip() for t in text]
@@ -189,9 +189,7 @@ class template_fit_popup(object):
         """Get input from text box."""
         self.input_fn_text = self.entry.get('1.0', END)
         out = self.do_parse()
-        
-        if out is not None:
-            self.do_after_parse(*out)
+        self.do_after_parse(*out)
             
     # ====================================================================== #
     def yview(self, *args):

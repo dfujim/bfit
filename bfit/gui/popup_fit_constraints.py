@@ -14,12 +14,9 @@ import bdata as bd
 
 from bfit.backend.ConstrainedFunction import ConstrainedFunction as CstrFnGenerator
 from bfit.global_variables import KEYVARS
-from bfit.fitting.fit_bdata import fit_bdata
 from bfit.gui.template_fit_popup import template_fit_popup
-from bfit.gui.popup_ongoing_process import popup_ongoing_process 
+from bfit.gui.InputLine import InputLine
 
-from multiprocessing import Process, Queue
-import queue
 
 # ========================================================================== #
 class popup_fit_constraints(template_fit_popup):
@@ -30,10 +27,16 @@ class popup_fit_constraints(template_fit_popup):
         fittab
         logger
         
+        defined             list of str, defined parameter names
+        eqn                 list of str, equations for each defined parameter
+    
+        
         
         label_new_var       Label, show new variables
         label_defined       Label, show which variables will be redefined
         
+        new_par             list of list of str, new parameter found in each eqn
+        new_par_unique      list of str, new parameters, sorted
         
         output_par_text     text, detected parameter names
         output_text         dict, keys: p0, blo, bhi, res, err, value: tkk.Text objects
@@ -54,6 +57,12 @@ class popup_fit_constraints(template_fit_popup):
     def __init__(self, bfit, input_fn_text=''):
         
         super().__init__(bfit, input_fn_text)
+        
+        # initialize
+        self.defined = None
+        self.eqn = None
+        self.new_par = None
+        self.new_par_unique = None
         
         # Keyword parameters
         key_param_frame = ttk.Frame(self.left_frame, relief='sunken', pad=5)
@@ -135,26 +144,43 @@ class popup_fit_constraints(template_fit_popup):
         
     # ====================================================================== #
     def do_after_parse(self, defined=None, eqn=None, new_par=None):
+        """
+            show inputs as readback and save
+        """
         
-        # show inputs as readback
-        ncomp = self.bfit.fit_files.n_component.get()
-        fn_name = self.bfit.fit_files.fit_function_title.get()
-        par_names = self.bfit.fit_files.fitter.gen_param_names(fn_name, ncomp)
-        s = [d if d else '<blank>' for d in sorted(defined)]
-        s = [d if d in par_names else '%s [ERROR: Bad parameter]' % d for d in s]
-        s = '\n'.join(s)
-        self.label_defined.config(text=s)
+        if defined is not None:
         
-        s = sorted(np.unique(np.concatenate(new_par)))
-        s = [i for i in s if i and i not in self.parnames]
+            # check defined variables
+            ncomp = self.bfit.fit_files.n_component.get()
+            fn_name = self.bfit.fit_files.fit_function_title.get()
+            par_names = self.bfit.fit_files.fitter.gen_param_names(fn_name, ncomp)
+            s = [d if d else '<blank>' for d in sorted(defined)]
+            s = [d if d in par_names else '%s [ERROR: Bad parameter]' % d for d in s]
+            s = '\n'.join(s)
+            
+            # set label
+            self.label_defined.config(text=s)
+            
+            # check new variables
+            s = sorted(np.unique(np.concatenate(new_par)))
+            s = [i for i in s if i and i not in self.parnames]
+            
+            # show input
+            self.label_new_var.config(text='\n'.join(s))
         
-        self.label_new_var.config(text='\n'.join(s))
-    
-        # set inputs
+        else:
+            self.label_defined.config(text='')
+            self.label_new_var.config(text='')
+        
+        # save
         self.defined = defined
         self.eqn = eqn
         self.new_par = new_par
-    
+        
+        try:
+            self.new_par_unique = sorted(np.unique(np.concatenate(new_par)))
+        except TypeError:
+            self.new_par_unique = None
     
     # ====================================================================== #
     def _do_fit(self, text):
@@ -376,10 +402,25 @@ class popup_fit_constraints(template_fit_popup):
         return (par[0, :], std_l[0, :], std_u[0, :])
 
     # ====================================================================== #
+    def do_return(self, *_):
+        """
+            Activated on press of return key
+        """
+        self.set_constraints()
+    
+    # ====================================================================== #
     def set_constraints(self):
         """
             Set up constraining parameter functions
         """
+        
+        # no constraints: enable all lines
+        if self.defined is None:
+            for fline in self.fittab.fit_lines.values():
+                for line in fline.lines:
+                    line.enable()
+            self.cancel()
+            return
         
         # check for circular definitions
         for d, e in zip(self.defined, self.eqn):
@@ -407,6 +448,24 @@ class popup_fit_constraints(template_fit_popup):
                     line.disable()
         
         # add lines and parameters
+        n = len(self.new_par_unique)
+        for fline in self.fittab.fit_lines.values():
+            data = fline.data
+            cols = InputLine.columns
+            new_fit_par = { cols[0]: np.ones(n),            # p0
+                            cols[1]: np.full(n, -np.inf),   # blo    
+                            cols[2]: np.full(n, np.inf),    # bhi
+                            cols[3]: np.full(n, np.nan),    # res
+                            cols[4]: np.full(n, np.nan),    # dres-
+                            cols[5]: np.full(n, np.nan),    # dres+
+                            cols[6]: np.full(n, np.nan),    # chi
+                            cols[7]: np.full(n, False),     # fixed
+                            cols[8]: np.full(n, False),     # shared
+                            }
+            data.set_fitpar(pd.DataFrame(new_fit_par, 
+                                         index=self.new_par_unique)
+                            )
+        
         
         # TODO: FILL IN
         

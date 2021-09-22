@@ -1833,6 +1833,11 @@ class fitline(object):
             self.lines[i].assign_shared()
             self.lines[i].assign_inputs()
             
+        # enable
+        if force_modify:
+            for line in self.lines:
+                line.enable()
+            
     # ======================================================================= #
     def show_fit_result(self):
         self.logger.debug('Showing fit result for run %s', self.data.id)
