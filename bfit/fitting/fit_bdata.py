@@ -373,13 +373,19 @@ def _fit_single_minuit(fn, x, y, dy, fixed, do_minos=True, **kwargs):
     m = minuit(fn, x, y, dy, **kwargs_minuit)
     m.migrad()
     
+    # get errors
     if do_minos:
         try:
             m.minos()
+            names = list(m.mname)
+            mlower = np.abs(m.mlower)
+            mupper = m.mupper
             
-            n = len(m.merrors)
-            lower = np.abs(np.array([m.merrors[i].lower for i in range(n)]))
-            upper = np.array([m.merrors[i].upper for i in range(n)])
+            # insert errors of zero for fixed parameters
+            lower = [mlower[names.index(p)] if not m.fixed[p] else 0 for p in m.parameters]
+            upper = [mupper[names.index(p)] if not m.fixed[p] else 0 for p in m.parameters]
+            
+            
         except RuntimeError as errmsg: # migrad did not converge
             print(errmsg)
             err = m.errors
