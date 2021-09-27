@@ -31,6 +31,8 @@ class popup_fit_constraints(template_fit_popup):
         defined             list of str, defined parameter names
         eqn                 list of str, equations for each defined parameter
         
+        input_error         Bool, if true don't allow contrain to run
+        
         label_new_var       Label, show new variables
         label_defined       Label, show which variables will be redefined
         
@@ -78,6 +80,7 @@ class popup_fit_constraints(template_fit_popup):
         self.new_par_unique = []
         self.new_par_unique_old = []
         self.fittab = fittab
+        self.input_error = False
         
     # ====================================================================== #
     def show(self):
@@ -181,6 +184,9 @@ class popup_fit_constraints(template_fit_popup):
             s = [d if d in par_names else '%s [ERROR: Bad parameter]' % d for d in s]
             s = '\n'.join(s)
             
+            # check for errors
+            self.input_error = 'ERROR' in s
+            
             # set label
             self.label_defined.config(text=s)
             
@@ -197,6 +203,7 @@ class popup_fit_constraints(template_fit_popup):
             defined = []
             eqn = []
             new_par = []
+            self.input_error = False
         
         # save
         self.defined = defined
@@ -518,6 +525,13 @@ class popup_fit_constraints(template_fit_popup):
             Set up constraining parameter functions
         """
         
+        # check for input errors
+        if self.input_error:
+            msg = 'Input error'
+            self.logger.exception(msg)
+            messagebox.showerror('Error', msg)
+            raise RuntimeError(msg)
+        
         # no constraints: enable all lines
         if not self.defined:
             for fline in self.fittab.fit_lines.values():
@@ -542,6 +556,7 @@ class popup_fit_constraints(template_fit_popup):
         if any([e=='' for e in self.eqn]):
             defi = self.defined[self.eqn.index('')]
             msg = 'Missing equation for {d}'.format(d=defi)
+            self.logger.exception(msg)
             messagebox.showerror('Error', msg)
             raise RuntimeError(msg)
         
@@ -551,6 +566,7 @@ class popup_fit_constraints(template_fit_popup):
                 msg = 'Circular parameter definitions not allowed:'+\
                       '\n{d} = f({d}) is not allowed'.format(d=d)
                 messagebox.showerror('Error', msg)
+                self.logger.exception(msg)
                 raise RuntimeError(msg)
         
         # check for more circular definitions
@@ -558,6 +574,7 @@ class popup_fit_constraints(template_fit_popup):
             for e in self.eqn:
                 if d in e:
                     msg = 'Redefined parameter {p} cannot be used as an input'.format(p=d)
+                    self.logger.exception(msg)
                     messagebox.showerror('Error', msg)
                     raise RuntimeError(msg)
         

@@ -104,7 +104,7 @@ class fitter(object):
             
             fn_name: name of function to fit
             ncomp : number of components to incude (2 = biexp, for example)
-            data_list: list of [[bdata object, pdict, doptions], ]
+            data_list: list of [[fitdata object, pdict, doptions], ]
             
                 where pdict = {par:(init val,   # initial guess
                                     bound_lo,   # lower fitting bound
@@ -146,6 +146,9 @@ class fitter(object):
         # parameter names
         keylist = self.gen_param_names(fn_name, ncomp)
         npar = len(keylist)
+        
+        # constrained parameter names
+        constr_keys = data_list[0][0].constrained.keys()
         
         # gather list of data to fit 
         fn = []
