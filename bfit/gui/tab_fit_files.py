@@ -387,7 +387,6 @@ class fit_files(object):
         for i in range(2):
             results_frame.grid_columnconfigure(i, weight=0)
 
-
     # ======================================================================= #
     def __del__(self):
 
@@ -1656,19 +1655,25 @@ class fitline(object):
 
         # get number of components and parameter names
         ncomp = fit_files.n_component.get()
-        pnames_single = fit_files.fitter.gen_param_names(fn_name, 1)
-        pnames_combined = fit_files.fitter.gen_param_names(fn_name, ncomp)
+        pnames_single = fit_files.fitter.gen_param_names(fn_name, 1, bdfit.constrained)
+        pnames_combined = fit_files.fitter.gen_param_names(fn_name, ncomp, bdfit.constrained)
 
         if '2' in bdfit.mode:
-            fn_single = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=1,
+            fn_single = fit_files.fitter.get_fn(fn_name=fn_name, 
+                            ncomp=1,
                             pulse_len=bdfit.pulse_s,
-                            lifetime=bd.life[bfit.probe_species.get()])
-            fn_combined = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=ncomp,
+                            lifetime=bd.life[bfit.probe_species.get()],
+                            constr=bdfit.constrained)
+            fn_combined = fit_files.fitter.get_fn(fn_name=fn_name, 
+                            ncomp=ncomp,
                             pulse_len=bdfit.pulse_s,
-                            lifetime=bd.life[bfit.probe_species.get()])
+                            lifetime=bd.life[bfit.probe_species.get()],
+                            constr=bdfit.constrained)
         else:
-            fn_single = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=1)
-            fn_combined = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=ncomp)
+            fn_single = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=1, 
+                                                constr=bdfit.constrained)
+            fn_combined = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=ncomp, 
+                                                constr=bdfit.constrained)
 
         # draw in redraw mode
         draw_mode = bfit.draw_style.get()

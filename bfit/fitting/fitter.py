@@ -144,11 +144,8 @@ class fitter(object):
         asym_mode = asym_mode.replace('2e_', '')
             
         # parameter names
-        keylist = self.gen_param_names(fn_name, ncomp)
+        keylist = list(self.gen_param_names(fn_name, ncomp, data_list[0][0].constrained))
         npar = len(keylist)
-        
-        # constrained parameter names
-        constr_keys = data_list[0][0].constrained.keys()
         
         # gather list of data to fit 
         fn = []
@@ -173,12 +170,19 @@ class fitter(object):
             # get fitting function for 20 and 2h
             if dat.mode in ['20', '2h']: 
                 pulse = dat.pulse_s
-                fn.append(self.get_fn(fn_name=fn_name, ncomp=ncomp, 
-                          pulse_len=pulse, lifetime=life))                
+                fn.append(self.get_fn(fn_name=fn_name, 
+                                      ncomp=ncomp, 
+                                      pulse_len=pulse, 
+                                      lifetime=life, 
+                                      constr=dat.constrained))                
                 
             # 1f functions
             else:                       
-                fn.append(self.get_fn(fn_name, ncomp, -1, life))
+                fn.append(self.get_fn(fn_name=fn_name, 
+                                      ncomp=ncomp, 
+                                      pulse_len=-1, 
+                                      lifetime=life, 
+                                      constr=dat.constrained))
             
             # get bdata objects
             bdata_list.append(dat)
@@ -273,11 +277,11 @@ class fitter(object):
             # get fitting function for 20 and 2h
             if dat.mode in ('20', '2h'): 
                 pulse = dat.pulse_s                
-                fn = self.get_fn(fn_name, ncomp, pulse, life)
+                fn = self.get_fn(fn_name, ncomp, pulse, life, dat.constrained)
                 
             # 1f functions
             else:                       
-                fn = self.get_fn(fn_name, ncomp, -1, life)
+                fn = self.get_fn(fn_name, ncomp, -1, life, dat.constrained)
 
             # make output
             output[self.keyfn(dat)] = fn
@@ -285,12 +289,13 @@ class fitter(object):
         return output
 
     # ======================================================================= #
-    def gen_param_names(self, fn_name, ncomp):
+    def gen_param_names(self, fn_name, ncomp, constr=None):
         """
             Make a list of the parameter names based on the number of components.
             
             fn_name: name of function (should match those in param_names)
             ncomp: number of components
+            constr: dict {defined (string) : [fn (unused), par names (list of str)]
             
             return (names)
         """
@@ -300,18 +305,30 @@ class fitter(object):
         
         # special case of one component
         if ncomp == 1: 
-            return names_orig
-        
+            names = names_orig
+            
         # multicomponent: make copies of everything other than the baselines
-        names = []
-        for c in range(ncomp): 
-            for n in names_orig:
-                if 'base' in n: continue
-                names.append(n+'_%d' % c)
-                
-        if 'base' in names_orig[-1]:
-            names.append(names_orig[-1])
+        else:
+            names = []
+            for c in range(ncomp): 
+                for n in names_orig:
+                    if 'base' in n: continue
+                    names.append(n+'_%d' % c)
+                    
+            if 'base' in names_orig[-1]:
+                names.append(names_orig[-1])
         
+        # constrained parameter names {defined: [fn, par]}        
+        if constr and constr is not None:
+            names = list(names)
+            new_names = []
+            for c in constr.keys():
+                if c in names:
+                    del names[names.index(c)]
+                    new_names.extend(constr[c][1])    
+            new_names = np.unique(new_names)
+            names.extend(new_names)
+            
         return tuple(names)
         
     # ======================================================================= #
@@ -477,7 +494,7 @@ class fitter(object):
         return pd.DataFrame(par_values2, index=['p0', 'blo', 'bhi', 'fixed']).transpose()
         
     # ======================================================================= #
-    def get_fn(self, fn_name, ncomp=1, pulse_len=-1, lifetime=-1):
+    def get_fn(self, fn_name, ncomp=1, pulse_len=-1, lifetime=-1, constr=None):
         """
             Get the fitting function used.
             
@@ -523,14 +540,20 @@ class fitter(object):
         if self.mode == 2 and self.probe_species == 'Mg31':
             fn = fns.decay_corrected_fn(fa_31Mg, fn, beam_pulse=pulse_len)
         
-        # Make final function based on number of components
+        # Make superimposed function based on number of components
         fnlist = [fn]*ncomp
         
         if self.mode == 1:
             fnlist.append(lambda x, b: b)
             
         fn = fns.get_fn_superpos(fnlist)
-        
+
+        # set parameter constraints
+        if constr and constr is not None:
+            par_names_orig = self.gen_param_names(fn_name, ncomp)
+            par_names_constr = self.gen_param_names(fn_name, ncomp, constr)
+            fn = fns.get_constrained_fn(fn, par_names_orig, par_names_constr, constr)
+            
         return fn
         
 

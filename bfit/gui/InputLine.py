@@ -8,7 +8,6 @@ import numpy as np
 from bfit import logger_name
 import bfit.backend.colors as colors
 
-
 class InputLine(object):
     """
         Stores one line of inputs: 
