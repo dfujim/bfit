@@ -292,6 +292,15 @@ class popup_fit_constraints(template_fit_popup):
                     line.variable['fixed'].set(False)
                     line.variable['shared'].set(False)
                     line.disable()
+
+    # ====================================================================== #
+    def set_init_button_state(self, state):
+        """
+            Set the state of the gui_param_buttons in fit_lines
+        """
+        for fline in self.fittab.fit_lines.values():
+            fline.gui_param_button.config(state=state)
+    
         
     # ====================================================================== #
     def do_return(self, *_):
@@ -326,6 +335,9 @@ class popup_fit_constraints(template_fit_popup):
                     fline.data.drop_param(self.new_par_unique_old)
                         
                 fline.data.constrained = {}
+                      
+            # enable buttons
+            self.set_init_button_state('disabled')
                         
             # clean up
             self.new_par_unique_old = []
@@ -359,8 +371,9 @@ class popup_fit_constraints(template_fit_popup):
                     messagebox.showerror('Error', msg)
                     raise RuntimeError(msg)
         
-        # disable lines
+        # disable lines and buttons
         self.disable_constrained_par()
+        self.set_init_button_state('disabled')
             
         # add runs and equations
         for fline in self.fittab.fit_lines.values():
