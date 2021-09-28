@@ -1568,8 +1568,6 @@ class fitline(object):
             plist: Dictionary of initial parameters {par_name:par_value}
         """
         
-        run = self.data.id
-
         # get pointer to fit files object
         fit_files = self.bfit.fit_files
         fitter = fit_files.fitter
@@ -1581,42 +1579,44 @@ class fitline(object):
 
         # check if we are using the fit results of the prior fit
         values_res = None
-        res = self.bfit.data[run].fitpar['res']
+        res = self.data.fitpar['res']
         
         isfitted = any(res.values) # is this run fitted?
         
         if fit_files.set_prior_p0.get() and not isfitted:
             
             r = 0
-            for rkey in self.bfit.data:
-                data = self.bfit.data[rkey]
-                
+            for data in self.bfit.data.values():
                 isfitted = any(data.fitpar['res'].values) # is the latest run fitted?
                 if isfitted and data.run > r:
                     r = data.run
-                    values_res = data.fitpar
+                    values_res = data.fitpar.copy()
         
         # get calcuated initial values
         try:
-            values = fitter.gen_init_par(fn_title, ncomp, self.bfit.data[run].bd,
+            values = fitter.gen_init_par(fn_title, ncomp, self.data.bd,
                                     self.bfit.get_asym_mode(fit_files))
         except Exception as err:
             print(err)
             self.logger.exception(err)
             return tuple()
               
-        # set p0 from old
-        if values_res is not None:
-            values['p0'] = values_res['res']
-                                     
-        # set to data
-        self.bfit.data[run].set_fitpar(values)
-        
         # set contrained values
         if not force_modify and all(d in plist for d in fit_files.pop_fitconstr.defined):                
             new_par = fit_files.pop_fitconstr.add_new_par(self.data)
             plist.extend(list(new_par))
             plist.sort()
+        
+        # set p0 from old
+        if values_res is not None:
+            for idx in values_res.index:
+                if idx not in values.index:
+                    values = values.append(values_res.loc[idx])
+                    values.loc[idx, ['res', 'dres+', 'dres-', 'chi']] = np.nan
+            values.loc[:, 'p0'] = values_res.loc[:, 'res']
+        
+        # set to data
+        self.data.set_fitpar(values)
         
         return tuple(plist)
 
