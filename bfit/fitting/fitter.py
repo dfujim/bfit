@@ -248,8 +248,6 @@ class fitter(object):
         output = {}
         for i, d in enumerate(bdata_list):
             key = self.keyfn(d)
-            # ~ print(keylist, pars, stds_l, stds_h, chis)
-
             output[key] = pd.DataFrame({'parname':keylist,
                                         'res': pars[i],
                                         'dres+': stds_h[i],

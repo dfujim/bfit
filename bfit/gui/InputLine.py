@@ -103,7 +103,7 @@ class InputLine(object):
                                                partial(self._modify_all, col=k))
                             
     # ======================================================================= #
-    def _modify_all(self, *args, col):
+    def _modify_all(self, *_, col):
         """
             Do modify all synchronization. Make other lines of the same id equal 
             in value
@@ -166,7 +166,7 @@ class InputLine(object):
         return var
         
     # ======================================================================= #
-    def _unfix(self, *args):
+    def _unfix(self, *_):
         """
             disallow fixed shared parameters
         """
@@ -174,7 +174,7 @@ class InputLine(object):
             self.variable['fixed'].set(False)
     
     # ======================================================================= #
-    def _unshare(self, *args):
+    def _unshare(self, *_):
         """
             disallow fixed shared parameters
         """
@@ -220,10 +220,11 @@ class InputLine(object):
         # assign key
         else:
             self.variable['shared'] = share_var[self.pname]
-        
+            
         # set trace to uncheck fixed box
         self.variable['shared'] = self._set_trace(self.variable['shared'], 
-                                                  'unfix', self._unfix)
+                                                  'unfix_{id}'.format(id=self.data.id), 
+                                                  self._unfix)
                 
         # link to checkbox
         self.entry['shared'].config(variable=self.variable['shared'])
