@@ -300,8 +300,7 @@ class popup_fit_constraints(template_fit_popup):
         """
         for fline in self.fittab.fit_lines.values():
             fline.gui_param_button.config(state=state)
-    
-        
+            
     # ====================================================================== #
     def do_return(self, *_):
         """
@@ -337,7 +336,7 @@ class popup_fit_constraints(template_fit_popup):
                 fline.data.constrained = {}
                       
             # enable buttons
-            self.set_init_button_state('disabled')
+            self.set_init_button_state('normal')
                         
             # clean up
             self.new_par_unique_old = []

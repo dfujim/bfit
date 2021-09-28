@@ -1806,6 +1806,7 @@ class fitline(object):
         # get data and frame
         fitframe = self.fitframe
         fitdat = self.data
+        fit_files = self.bfit.fit_files
         
         # get list of parameters and initial values
         fitdat.fitpar.sort_index(inplace=True)
@@ -1857,23 +1858,30 @@ class fitline(object):
             self.lines[i].set(k, **param_values.loc[k].to_dict())
             
         # ensure constrained dict is present
-        self.bfit.fit_files.pop_fitconstr.add_fn(self.data)    
+        fit_files.pop_fitconstr.add_fn(self.data)    
         
         # enable
         if force_modify:
             for line in self.lines:
                 line.enable()
         
-        # set constrained values
         else:
-            self.bfit.fit_files.pop_fitconstr.disable_constrained_par()
-        
+            
+            # set constrained values
+            fit_files.pop_fitconstr.disable_constrained_par()
+            
             # set parameters again - ensure constr param synced
             try:
                 for i, k in enumerate(param_values.index):
                     self.lines[i].set(k, **param_values.loc[k].to_dict())
             except IndexError:
                 pass
+                
+        # if any disabled lines, disable init button
+        for line in self.lines:
+            if str(line.entry['p0']['state']) == 'disabled':
+                self.gui_param_button.config(state='disabled')
+                break
         
     # ======================================================================= #
     def set(self, pname, **kwargs):
