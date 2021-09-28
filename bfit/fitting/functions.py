@@ -73,7 +73,7 @@ def get_constrained_fn(fn, pname_orig, pname_constr, constr):
     # new fit function with input order matching that of pname_constr
     def new_fn(x, *pars):
         pars = np.asarray(pars)
-        new_inpt = [i[0](pars[i[1]]) if type(i) is tuple else pars[i] for i in inpt]
+        new_inpt = [i[0](*pars[i[1]]) if type(i) is tuple else pars[i] for i in inpt]
         return fn(x, *new_inpt)
         
     return new_fn
