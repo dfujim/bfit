@@ -1870,6 +1870,7 @@ class fitline(object):
         # enable
         if force_modify:
             self.gui_param_button.config(state='normal')
+            self.data.constrained = {}
             for line in self.lines:
                 line.enable()
         
