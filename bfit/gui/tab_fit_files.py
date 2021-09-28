@@ -1858,6 +1858,9 @@ class fitline(object):
         for i, k in enumerate(param_values.index):
             self.lines[i].set(k, **param_values.loc[k].to_dict())
             
+        # ensure constrained dict is present
+        self.bfit.fit_files.pop_fitconstr.add_fn(self.data)    
+        
         # enable
         if force_modify:
             for line in self.lines:
@@ -1866,13 +1869,10 @@ class fitline(object):
         # set constrained values
         else:
             self.bfit.fit_files.pop_fitconstr.disable_constrained_par()
-            
-        # ensure constrained dict is present
-        self.bfit.fit_files.pop_fitconstr.add_fn(self.data)
         
-        # set parameters again - ensure constr param synced
-        for i, k in enumerate(param_values.index):
-            self.lines[i].set(k, **param_values.loc[k].to_dict())
+            # set parameters again - ensure constr param synced
+            for i, k in enumerate(param_values.index):
+                self.lines[i].set(k, **param_values.loc[k].to_dict())
         
     # ======================================================================= #
     def set(self, pname, **kwargs):
