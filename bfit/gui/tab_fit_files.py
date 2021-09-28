@@ -7,7 +7,6 @@ from tkinter import ttk, messagebox, filedialog
 from functools import partial
 from bdata import bdata, bmerged
 from bfit import logger_name, __version__
-from scipy.special import gamma, polygamma
 from pandas.plotting import register_matplotlib_converters
 from multiprocessing import Queue
 
@@ -122,7 +121,7 @@ class fit_files(object):
 
         # make top level frames
         mid_fit_frame = ttk.Labelframe(fit_data_tab,
-                                       text='Set Initial Parameters', pad=5)
+                                       text='Initial Parameters and Fit Results', pad=5)
 
         mid_fit_frame.grid(column=0, row=1, rowspan=6, sticky=(S, W, E, N), padx=5, pady=5)
 
@@ -140,7 +139,7 @@ class fit_files(object):
         self.fit_function_title_box = ttk.Combobox(fn_select_frame,
                 textvariable=self.fit_function_title, state='readonly')
         self.fit_function_title_box.bind('<<ComboboxSelected>>',
-            lambda x :self.populate_param(force_modify=True))
+                lambda x:self.populate_param(force_modify=True))
 
         # number of components in fit spinbox
         self.n_component = IntVar()
@@ -863,7 +862,6 @@ class fit_files(object):
             for line in fline.lines:
                 values = {c: fitpar.loc[line.pname, c] for c in fitpar.columns}
                 line.set(**values)
-            
             
     # ======================================================================= #
     def draw_param(self, *args):
@@ -1819,6 +1817,9 @@ class fitline(object):
         param_values = fitdat.fitpar
         
         if force_modify or len(param_values) == 0:
+            
+            fitdat.reset_fitpar()
+            
             try:
                 plist = self.get_new_parameters(force_modify)
             except KeyError as err:
@@ -1868,6 +1869,7 @@ class fitline(object):
         
         # enable
         if force_modify:
+            self.gui_param_button.config(state='normal')
             for line in self.lines:
                 line.enable()
         

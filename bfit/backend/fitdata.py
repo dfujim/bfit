@@ -8,6 +8,7 @@ from bdata import bdata, bmerged
 from bfit.gui.calculator_nqr_B0 import current2field
 from bfit.gui.calculator_nqr_B0_hh6 import current2field as current2field_hh6
 from bfit import logger_name
+from scipy.special import gamma, polygamma
 
 from bfit.backend.raise_window import raise_window
 
@@ -109,8 +110,7 @@ class fitdata(object):
         self.id = self.bfit.get_run_key(data=bd)
         
         # initialize fitpar
-        self.fitpar = pd.DataFrame([], columns=['p0', 'blo', 'bhi', 'res', 
-                                    'dres+', 'dres-', 'chi', 'fixed', 'shared'])
+        self.reset_fitpar()
         self.constrained = {}
         
         # set area as upper
@@ -1403,6 +1403,11 @@ class fitdata(object):
             
         # set area as upper
         self.area = self.area.upper()
+        
+    # ======================================================================= #
+    def reset_fitpar(self):
+        self.fitpar = pd.DataFrame([], columns=['p0', 'blo', 'bhi', 'res', 
+                                    'dres+', 'dres-', 'chi', 'fixed', 'shared'])
         
     # ======================================================================= #
     def set_fitpar(self, values):
