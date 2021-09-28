@@ -1613,7 +1613,7 @@ class fitline(object):
         self.bfit.data[run].set_fitpar(values)
         
         # set contrained values
-        if not force_modify:
+        if not force_modify and all(d in plist for d in fit_files.pop_fitconstr.defined):                
             new_par = fit_files.pop_fitconstr.add_new_par(self.data)
             plist.extend(list(new_par))
             plist.sort()
