@@ -1843,7 +1843,7 @@ class fitline(object):
         fitdat.fitpar.sort_index(inplace=True)
         param_values = fitdat.fitpar
         
-        # set initial parameters
+        # set parameters
         for i, k in enumerate(param_values.index):
             self.lines[i].set(k, **param_values.loc[k].to_dict())
             
@@ -1858,6 +1858,10 @@ class fitline(object):
             
         # ensure constrained dict is present
         self.bfit.fit_files.pop_fitconstr.add_fn(self.data)
+        
+        # set parameters again - ensure constr param synced
+        for i, k in enumerate(param_values.index):
+            self.lines[i].set(k, **param_values.loc[k].to_dict())
         
     # ======================================================================= #
     def set(self, pname, **kwargs):
