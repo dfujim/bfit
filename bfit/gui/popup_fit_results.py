@@ -308,7 +308,11 @@ class popup_fit_results(template_fit_popup):
     def do_after_parse(self, defined, eqn, new_par):
         
         # add result
-        new_par = np.unique(np.concatenate(new_par))
+        try:
+            new_par = np.unique(np.concatenate(new_par))
+        except TypeError:
+            return 
+            
         for k in new_par:
             
             # bad input

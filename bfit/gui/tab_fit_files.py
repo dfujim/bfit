@@ -522,17 +522,26 @@ class fit_files(object):
         # populate axis comboboxes
         lst = self.draw_components.copy()
 
+        # get list of fit parameters
         try:
-            parlst = [p for p in self.fitter.gen_param_names(
-                                                self.fit_function_title.get(),
-                                                self.n_component.get())]
+            parlst = list(self.fitter.gen_param_names(
+                                            self.fit_function_title.get(),
+                                            self.n_component.get()),
+                          )
         except KeyError:
             self.xaxis_combobox['values'] = []
             self.yaxis_combobox['values'] = []
             self.annotation_combobox['values'] = []
             return
 
+        # get constrained parameters
+        constr_pop = self.pop_fitconstr
+        for d, new in zip(constr_pop.defined, constr_pop.new_par):
+            if d in parlst:
+                parlst.extend(new)
+
         # Sort the parameters
+        parlst = list(np.unique(parlst))
         parlst.sort()
 
         # add parameter beta averaged T1
@@ -1587,7 +1596,7 @@ class fitline(object):
             
             r = 0
             for data in self.bfit.data.values():
-                isfitted = any(data.fitpar['res'].values) # is the latest run fitted?
+                isfitted = not all(data.fitpar['res'].isna()) # is the latest run fitted?
                 if isfitted and data.run > r:
                     r = data.run
                     values_res = data.fitpar.copy()
@@ -1846,6 +1855,9 @@ class fitline(object):
         # set constrained values
         else:
             self.bfit.fit_files.pop_fitconstr.disable_constrained_par()
+            
+        # ensure constrained dict is present
+        self.bfit.fit_files.pop_fitconstr.add_fn(self.data)
         
     # ======================================================================= #
     def set(self, pname, **kwargs):
