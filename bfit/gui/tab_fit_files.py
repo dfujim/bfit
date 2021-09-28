@@ -856,9 +856,15 @@ class fit_files(object):
 
         self.logger.info('Reset initial parameters')
 
-        for k in self.fit_lines.keys():
-            self.fit_lines[k].populate(force_modify=True)
-
+        # reset lines
+        for fline in self.fit_lines.values():
+            fline.get_new_parameters(force_modify=True)
+            fitpar = fline.data.fitpar
+            for line in fline.lines:
+                values = {c: fitpar.loc[line.pname, c] for c in fitpar.columns}
+                line.set(**values)
+            
+            
     # ======================================================================= #
     def draw_param(self, *args):
         """Draw the fit parameters"""
