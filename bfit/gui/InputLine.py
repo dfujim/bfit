@@ -17,7 +17,6 @@ class InputLine(object):
         bfit: bfit object
         data: fitdata object
         entry: dict[col] = entry or checkbutton object
-        fitline: fitline object
         frame: ttk.Frame
         label: ttk.label, parameter name
         logger: logger
@@ -30,7 +29,7 @@ class InputLine(object):
     columns = ['p0', 'blo', 'bhi', 'res', 'dres-', 'dres+', 'chi', 'fixed', 'shared']
 
     # ======================================================================= #
-    def __init__(self, frame, bfit, fitline, show_chi=False):
+    def __init__(self, frame, bfit, data, show_chi=False):
         """
             frame: frame in which line will grid (first row is 1)
             show_chi: if true, grid the chi parameter
@@ -43,8 +42,7 @@ class InputLine(object):
         # assign inputs and defaults
         self.pname = ''
         self.bfit = bfit
-        self.fitline = fitline
-        self.data = fitline.data
+        self.data = data
         
         self.frame = frame
         self.label = ttk.Label(self.frame, text=self.pname, justify='right')

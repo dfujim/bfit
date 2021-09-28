@@ -1822,7 +1822,7 @@ class fitline(object):
             
         # add new lines
         elif n_lines_needed > 0:
-            self.lines.extend([InputLine(fitframe, self.bfit, self) \
+            self.lines.extend([InputLine(fitframe, self.bfit, self.data) \
                                                 for i in range(n_lines_needed)])
         
         # reassign and regrid lines
