@@ -335,9 +335,18 @@ class InputLine(object):
             # disable traces
             self.variable[k], tr = self._pop_trace(self.variable[k], 'modify_all')
             
-            # don't set
+            # blank
             if str(v) == 'nan':
-                pass
+                
+                # set as blank
+                if type(self.variable[k]) == StringVar:
+                    self.variable[k].set('')
+                elif type(self.variable[k]) == BooleanVar:
+                    self.variable[k].set(False)
+                    
+                # set chi box color
+                if k == 'chi':
+                    self.entry['chi']['readonlybackground']=colors.readonly
                 
             # set boolean
             elif type(v) is bool:

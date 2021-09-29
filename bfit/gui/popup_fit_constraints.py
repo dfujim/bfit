@@ -28,6 +28,7 @@ class popup_fit_constraints(template_fit_popup):
         fittab
         logger
         
+        constraints_are_set bool, if true, constraints should be in place
         defined             list of str, defined parameter names
         eqn                 list of str, equations for each defined parameter
         
@@ -81,7 +82,21 @@ class popup_fit_constraints(template_fit_popup):
         self.new_par_unique_old = []
         self.fittab = fittab
         self.input_error = False
+        self.constraints_are_set = False
         
+    # ====================================================================== #
+    def _no_constraints(self, fline):
+        # enable
+        for line in fline.lines:
+            line.enable()
+            
+        # delete unused parameters
+        if self.new_par_unique_old:
+            fline.data.drop_param(self.new_par_unique_old)
+                
+        fline.data.constrained = {}
+              
+            
     # ====================================================================== #
     def show(self):
         """
@@ -273,7 +288,6 @@ class popup_fit_constraints(template_fit_popup):
                     
             # set values                
             new_fit_par[c] = values
-        
         data.set_fitpar(pd.DataFrame(new_fit_par, 
                                      index=self.new_par_unique)
                         )
@@ -288,7 +302,7 @@ class popup_fit_constraints(template_fit_popup):
         for fline in self.fittab.fit_lines.values():
             for line in fline.lines:
                 line.enable()
-                if line.pname in self.defined:
+                if line.pname in fline.data.constrained.keys():
                     line.variable['fixed'].set(False)
                     line.variable['shared'].set(False)
                     line.disable()
@@ -324,21 +338,16 @@ class popup_fit_constraints(template_fit_popup):
         # no constraints: enable all lines
         if not self.defined:
             for fline in self.fittab.fit_lines.values():
+                self._no_constraints(fline)
                 
-                # enable
-                for line in fline.lines:
-                    line.enable()
-                    
-                # delete unused parameters
-                if self.new_par_unique_old:
-                    fline.data.drop_param(self.new_par_unique_old)
-                        
-                fline.data.constrained = {}
-                      
+            for fline in self.fittab.fit_lines_old.values():
+                self._no_constraints(fline)
+                
             # enable buttons
             self.set_init_button_state('normal')
                         
             # clean up
+            self.constraints_are_set = False
             self.new_par_unique_old = []
             self.fittab.populate()
             self.cancel()
@@ -370,12 +379,19 @@ class popup_fit_constraints(template_fit_popup):
                     messagebox.showerror('Error', msg)
                     raise RuntimeError(msg)
         
+        # set flag
+        self.constraints_are_set = True
+        
         # disable lines and buttons
         self.disable_constrained_par()
         self.set_init_button_state('disabled')
             
         # add runs and equations
         for fline in self.fittab.fit_lines.values():
+            self.add_new_par(fline.data)
+            self.add_fn(fline.data)
+            
+        for fline in self.fittab.fit_lines_old.values():
             self.add_new_par(fline.data)
             self.add_fn(fline.data)
         self.fittab.populate()
