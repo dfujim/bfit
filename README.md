@@ -6,7 +6,6 @@
 <img src="https://img.shields.io/tokei/lines/github/dfujim/bfit"/>
 <img src="https://img.shields.io/pypi/l/bfit"/>
 [![status](https://joss.theoj.org/papers/742ff627aec73ce2a647bbede7c73fc2/status.svg)](https://joss.theoj.org/papers/742ff627aec73ce2a647bbede7c73fc2)
-[![DOI](https://zenodo.org/badge/159874104.svg)](https://zenodo.org/badge/latestdoi/159874104)
 
 <a href="https://github.com/dfujim/bfit/commits/master" alt="Commits"><img src="https://img.shields.io/github/commits-since/dfujim/bfit/latest/master"/></a>
 <a href="https://github.com/dfujim/bfit/commits/master" alt="Commits"><img src="https://img.shields.io/github/last-commit/dfujim/bfit"/></a>
@@ -46,12 +45,9 @@ More generally, [bfit] has been written to fulfill the following needs:
 
 ## Citing
 
-If you use [mudpy], [bdata], or [bfit] in your work, please cite:
+If you use [bfit] in your work, please cite:
 
-- D. Fujimoto.
-  <i>bfit: A Python Application For Beta-Detected NMR</i>.
-  <a href="https://arxiv.org/abs/2004.10395">
-  arXiv:2004.10395 [physics.data-an]</a>.
+Fujimoto, D., (2021). bfit: A Python Application For Beta-Detected NMR. Journal of Open Source Software, 6(65), 3598, https://doi.org/10.21105/joss.03598
 
 ## Useful Links
 
