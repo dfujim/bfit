@@ -47,7 +47,7 @@ More generally, [bfit] has been written to fulfill the following needs:
 
 If you use [bfit] in your work, please cite:
 
-Fujimoto, D., (2021). bfit: A Python Application For Beta-Detected NMR. Journal of Open Source Software, 6(65), 3598, https://doi.org/10.21105/joss.03598
+D. Fujimoto, "bfit: A Python Application For Beta-Detected NMR," [J. Open Source Softw. <b>6</b>, 3598 (2021).](https://doi.org/10.21105/joss.03598)
 
 ## Useful Links
 
