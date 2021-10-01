@@ -39,8 +39,6 @@ class popup_fit_constraints(template_fit_popup):
         
         new_par             list of list of str, new parameter found in each eqn
         new_par_unique      list of str, new parameters, sorted
-        new_par_unique_old  list of str, new parameters, sorted at the last 
-                            call of set_constrained
         
         output_par_text     text, detected parameter names
         output_text         dict, keys: p0, blo, bhi, res, err, value: tkk.Text objects
@@ -79,23 +77,226 @@ class popup_fit_constraints(template_fit_popup):
         self.eqn = []
         self.new_par = []
         self.new_par_unique = []
-        self.new_par_unique_old = []
         self.fittab = fittab
         self.input_error = False
         self.constraints_are_set = False
         
     # ====================================================================== #
-    def _no_constraints(self, fline):
-        # enable
-        for line in fline.lines:
-            line.enable()
+    def add_fn(self, data):
+        """
+            Make a lambda function to add to data
+        """
+        
+        # trivial end
+        if not self.constraints_are_set:
+            data.constrained = {}
+            return
+        
+        # get variables in decreasing order of length (no mistakes in replace)
+        varlist = np.array(list(KEYVARS.keys()))
+        varlist = varlist[np.argsort(list(map(len, varlist))[::-1])]
+    
+        # make functions
+        fns = {}
+        for defined, eqn, new_par in zip(self.defined, self.eqn, self.new_par):
             
-        # delete unused parameters
-        if self.new_par_unique_old:
-            fline.data.drop_param(self.new_par_unique_old)
-                
-        fline.data.constrained = {}
-              
+            # find constant names in the string, replace with constant
+            for var in varlist:
+                if var in eqn:
+                    value = data.get_values(KEYVARS[var])[0]
+                    eqn = eqn.replace(var, str(value))
+            
+            new_par.sort()
+            f = 'lambda {new_par} : {equation}'
+            f = f.format(new_par=','.join(new_par), 
+                         equation=eqn)
+                                          
+            fns[defined] = (eval(f), new_par)
+            
+        data.constrained = fns
+        
+    # ====================================================================== #
+    def add_new_par(self, data):
+        """
+            Add constrained parameters to data.fitpar
+        """
+        
+        # clean nan rows
+        for p in self.new_par_unique:
+            if p in data.fitpar.index and all(data.fitpar.loc[p, ['p0', 'blo', 'bhi']].isna()):
+                data.fitpar.drop(index=p, inplace=True)
+        
+        # check if no changes to input list
+        if not any((p not in data.fitpar.index for p in self.new_par_unique)):
+            return 
+            
+        # check if constrained
+        if not self.constraints_are_set:
+            return
+        
+        # add new parameters, looking for present values
+        cols = InputLine.columns
+        new_fit_par = {}
+        new_par_added = []
+        
+        # iterate parameter names
+        for c in cols:
+            
+            # get values
+            values = []
+            for par in self.new_par_unique:
+                if par in data.fitpar.index:
+                    values.append(data.fitpar.loc[par, c])
+                else:
+                    if par not in new_par_added:
+                        new_par_added.append(par)
+                    values.append(self.defaults[c])
+                    
+            # set values                
+            new_fit_par[c] = values
+            
+        data.set_fitpar(pd.DataFrame(new_fit_par, 
+                                     index=self.new_par_unique)
+                        )
+
+    # ====================================================================== #
+    def do_after_parse(self, defined=None, eqn=None, new_par=None):
+        """
+            show inputs as readback and save
+        """
+        
+        if defined and defined is not None:
+        
+            # check defined variables
+            ncomp = self.bfit.fit_files.n_component.get()
+            fn_name = self.bfit.fit_files.fit_function_title.get()
+            par_names = self.bfit.fit_files.fitter.gen_param_names(fn_name, ncomp)
+            s = [d if d else '<blank>' for d in sorted(defined)]
+            s = [d if d in par_names else '%s [ERROR: Bad parameter]' % d for d in s]
+            s = '\n'.join(s)
+            
+            # check for errors
+            self.input_error = 'ERROR' in s
+            
+            # set label
+            self.label_defined.config(text=s)
+            
+            # check new variables
+            s = sorted(np.unique(np.concatenate(new_par)))
+            s = [i for i in s if i and i not in self.parnames]
+            
+            # show input
+            self.label_new_var.config(text='\n'.join(s))
+        
+        else:
+            self.label_defined.config(text='')
+            self.label_new_var.config(text='')
+            defined = []
+            eqn = []
+            new_par = []
+            self.input_error = False
+        
+        # save
+        self.defined = defined
+        self.eqn = eqn
+        self.new_par = new_par
+        
+        try:
+            self.new_par_unique = sorted(np.unique(np.concatenate(new_par)))
+        except ValueError:
+            self.new_par_unique = []
+    
+    # ====================================================================== #
+    def do_return(self, *_):
+        """
+            Activated on press of return key
+        """
+        self.set_constraints()
+
+    # ====================================================================== #
+    def drop_unused_param(self, data):
+        """
+            Remove rows from fitdata.fitpar if not constrained new_par
+        """
+        # get function input names
+        fit_files = self.bfit.fit_files
+        ncomp = fit_files.n_component.get()
+        fn_title = fit_files.fit_function_title.get()
+        pnames = sorted(fit_files.fitter.gen_param_names(fn_title, ncomp))
+        
+        # check if constrained, get parnames
+        if self.constraints_are_set:
+            pnames.extend(self.new_par_unique)
+        
+        # drop unused
+        data.drop_unused_param(pnames)
+        
+    # ====================================================================== #
+    def set_constraints(self):
+        """
+            Set up constraining parameter functions
+        """
+        
+        # check for input errors
+        if self.input_error:
+            msg = 'Input error'
+            self.logger.exception(msg)
+            messagebox.showerror('Error', msg)
+            raise RuntimeError(msg)
+        
+        # no constraints: enable all lines
+        if not self.defined:                
+            self.constraints_are_set = False
+            self.fittab.populate()
+            self.cancel()
+            return
+            
+        # check for missing equations
+        if any([e=='' for e in self.eqn]):
+            defi = self.defined[self.eqn.index('')]
+            msg = 'Missing equation for {d}'.format(d=defi)
+            self.logger.exception(msg)
+            messagebox.showerror('Error', msg)
+            raise RuntimeError(msg)
+        
+        # check for circular definitions
+        for d, e in zip(self.defined, self.eqn):
+            if d in e:
+                msg = 'Circular parameter definitions not allowed:'+\
+                      '\n{d} = f({d}) is not allowed'.format(d=d)
+                messagebox.showerror('Error', msg)
+                self.logger.exception(msg)
+                raise RuntimeError(msg)
+        
+        # check for more circular definitions
+        for d in self.defined:
+            for e in self.eqn:
+                if d in e:
+                    msg = 'Redefined parameter {p} cannot be used as an input'.format(p=d)
+                    self.logger.exception(msg)
+                    messagebox.showerror('Error', msg)
+                    raise RuntimeError(msg)
+        
+        # set flag
+        self.constraints_are_set = True
+        
+        # populate 
+        self.fittab.populate()
+        
+        # close
+        self.cancel()
+    
+    # ====================================================================== #
+    def set_init_button_state(self, fline):
+        """
+            Set the state of the gui_param_buttons in fit_lines
+        """
+        if self.constraints_are_set:
+            state = 'disabled'
+        else:
+            state = 'normal'
+        
+        fline.gui_param_button.config(state=state)
             
     # ====================================================================== #
     def show(self):
@@ -183,221 +384,4 @@ class popup_fit_constraints(template_fit_popup):
         
         self.get_input()
         
-    # ====================================================================== #
-    def do_after_parse(self, defined=None, eqn=None, new_par=None):
-        """
-            show inputs as readback and save
-        """
-        
-        if defined and defined is not None:
-        
-            # check defined variables
-            ncomp = self.bfit.fit_files.n_component.get()
-            fn_name = self.bfit.fit_files.fit_function_title.get()
-            par_names = self.bfit.fit_files.fitter.gen_param_names(fn_name, ncomp)
-            s = [d if d else '<blank>' for d in sorted(defined)]
-            s = [d if d in par_names else '%s [ERROR: Bad parameter]' % d for d in s]
-            s = '\n'.join(s)
-            
-            # check for errors
-            self.input_error = 'ERROR' in s
-            
-            # set label
-            self.label_defined.config(text=s)
-            
-            # check new variables
-            s = sorted(np.unique(np.concatenate(new_par)))
-            s = [i for i in s if i and i not in self.parnames]
-            
-            # show input
-            self.label_new_var.config(text='\n'.join(s))
-        
-        else:
-            self.label_defined.config(text='')
-            self.label_new_var.config(text='')
-            defined = []
-            eqn = []
-            new_par = []
-            self.input_error = False
-        
-        # save
-        self.defined = defined
-        self.eqn = eqn
-        self.new_par = new_par
-        
-        try:
-            self.new_par_unique = sorted(np.unique(np.concatenate(new_par)))
-        except ValueError:
-            self.new_par_unique = []
     
-    # ====================================================================== #
-    def add_fn(self, data):
-        """
-            Make a lambda function to add to data
-        """
-        
-        # get variables in decreasing order of length (no mistakes in replace)
-        varlist = np.array(list(KEYVARS.keys()))
-        varlist = varlist[np.argsort(list(map(len, varlist))[::-1])]
-    
-        # make functions
-        fns = {}
-        for defined, eqn, new_par in zip(self.defined, self.eqn, self.new_par):
-            
-            # find constant names in the string, replace with constant
-            for var in varlist:
-                if var in eqn:
-                    value = data.get_values(KEYVARS[var])[0]
-                    eqn = eqn.replace(var, str(value))
-            
-            new_par.sort()
-            f = 'lambda {new_par} : {equation}'
-            f = f.format(new_par=','.join(new_par), 
-                         equation=eqn)
-                                          
-            fns[defined] = (eval(f), new_par)
-            
-        data.constrained = fns
-        
-    # ====================================================================== #
-    def add_new_par(self, data):
-        """
-            Add constrained parameters to data.fitpar
-        """
-        
-        # add lines and parameters
-        n = len(self.new_par_unique)
-            
-        # delete unused parameters
-        if self.new_par_unique_old:
-            data.drop_param(self.new_par_unique_old)
-        
-        # add new parameters, looking for present values
-        cols = InputLine.columns
-        new_fit_par = {}
-        
-        for c in cols:
-            
-            # get values
-            values = []
-            for par in self.new_par_unique:
-                if c in data.fitpar.columns and par in data.fitpar.index:
-                    values.append(data.fitpar.loc[par, c])
-                else:
-                    values.append(self.defaults[c])
-                    
-            # set values                
-            new_fit_par[c] = values
-        data.set_fitpar(pd.DataFrame(new_fit_par, 
-                                     index=self.new_par_unique)
-                        )
-        
-        return self.new_par_unique
-
-    # ====================================================================== #
-    def disable_constrained_par(self):
-        """
-            Disable all lines corresponding to a constrained par
-        """
-        for fline in self.fittab.fit_lines.values():
-            for line in fline.lines:
-                line.enable()
-                if line.pname in fline.data.constrained.keys():
-                    line.variable['fixed'].set(False)
-                    line.variable['shared'].set(False)
-                    line.disable()
-
-    # ====================================================================== #
-    def set_init_button_state(self, state):
-        """
-            Set the state of the gui_param_buttons in fit_lines
-        """
-        for fline in self.fittab.fit_lines.values():
-            fline.gui_param_button.config(state=state)
-            
-    # ====================================================================== #
-    def do_return(self, *_):
-        """
-            Activated on press of return key
-        """
-        self.set_constraints()
-            
-    # ====================================================================== #
-    def set_constraints(self):
-        """
-            Set up constraining parameter functions
-        """
-        
-        # check for input errors
-        if self.input_error:
-            msg = 'Input error'
-            self.logger.exception(msg)
-            messagebox.showerror('Error', msg)
-            raise RuntimeError(msg)
-        
-        # no constraints: enable all lines
-        if not self.defined:
-            for fline in self.fittab.fit_lines.values():
-                self._no_constraints(fline)
-                
-            for fline in self.fittab.fit_lines_old.values():
-                self._no_constraints(fline)
-                
-            # enable buttons
-            self.set_init_button_state('normal')
-                        
-            # clean up
-            self.constraints_are_set = False
-            self.new_par_unique_old = []
-            self.fittab.populate()
-            self.cancel()
-            return
-            
-        # check for missing equations
-        if any([e=='' for e in self.eqn]):
-            defi = self.defined[self.eqn.index('')]
-            msg = 'Missing equation for {d}'.format(d=defi)
-            self.logger.exception(msg)
-            messagebox.showerror('Error', msg)
-            raise RuntimeError(msg)
-        
-        # check for circular definitions
-        for d, e in zip(self.defined, self.eqn):
-            if d in e:
-                msg = 'Circular parameter definitions not allowed:'+\
-                      '\n{d} = f({d}) is not allowed'.format(d=d)
-                messagebox.showerror('Error', msg)
-                self.logger.exception(msg)
-                raise RuntimeError(msg)
-        
-        # check for more circular definitions
-        for d in self.defined:
-            for e in self.eqn:
-                if d in e:
-                    msg = 'Redefined parameter {p} cannot be used as an input'.format(p=d)
-                    self.logger.exception(msg)
-                    messagebox.showerror('Error', msg)
-                    raise RuntimeError(msg)
-        
-        # set flag
-        self.constraints_are_set = True
-        
-        # disable lines and buttons
-        self.disable_constrained_par()
-        self.set_init_button_state('disabled')
-            
-        # add runs and equations
-        for fline in self.fittab.fit_lines.values():
-            self.add_new_par(fline.data)
-            self.add_fn(fline.data)
-            
-        for fline in self.fittab.fit_lines_old.values():
-            self.add_new_par(fline.data)
-            self.add_fn(fline.data)
-        self.fittab.populate()
-        
-        # save defined values
-        self.new_par_unique_old = self.new_par_unique
-        
-        # close
-        self.cancel()

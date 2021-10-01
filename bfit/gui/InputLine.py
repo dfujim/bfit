@@ -324,8 +324,11 @@ class InputLine(object):
             self.assign_inputs()
             
             # check if line is constrained
-            if pname in self.data.constrained:
+            constr_set = self.bfit.fit_files.pop_fitconstr.constraints_are_set
+            if pname in self.data.constrained.keys() and constr_set:
                 self.disable()
+                self.variable['fixed'].set(False)
+                self.variable['shared'].set(False)
             else:
                 self.enable()
                 
@@ -337,7 +340,7 @@ class InputLine(object):
             
             # blank
             if str(v) == 'nan':
-                
+
                 # set as blank
                 if type(self.variable[k]) == StringVar:
                     self.variable[k].set('')

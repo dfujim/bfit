@@ -451,7 +451,7 @@ class fit_files(object):
         """
             Make tabs for setting fit input parameters.
         """
-
+        
         # get data
         dl = self.bfit.fetch_files.data_lines
         keylist = [k for k in dl.keys() if dl[k].check_state.get()]
@@ -505,7 +505,7 @@ class fit_files(object):
                 # add back old fit line
                 if k in self.fit_lines_old.keys():
                     self.fit_lines[k] = self.fit_lines_old[k]
-                    # ~ self.fit_lines[k].populate()
+                    del self.fit_lines_old[k]
                                        
                 # make new fit line
                 else:
@@ -513,7 +513,7 @@ class fit_files(object):
                     
             self.fit_lines[k].grid(n)
             n+=1
-
+            
         self.populate_param()
 
     # ======================================================================= #
@@ -523,7 +523,7 @@ class fit_files(object):
 
             force_modify: passed to line.populate
         """
-
+       
         self.logger.debug('Populating fit parameters')
 
         # populate axis comboboxes
@@ -1601,7 +1601,7 @@ class fitline(object):
             pass
 
         if hasattr(self, 'parentry'):    del self.parentry
-
+        
     # ======================================================================= #
     def get_new_parameters(self, force_modify=False):
         """
@@ -1615,9 +1615,6 @@ class fitline(object):
         fitter = fit_files.fitter
         ncomp = fit_files.n_component.get()
         fn_title = fit_files.fit_function_title.get()
-
-        # get list of parameter names
-        plist = sorted(fitter.gen_param_names(fn_title, ncomp))
 
         # check if we are using the fit results of the prior fit
         values_res = None
@@ -1641,13 +1638,7 @@ class fitline(object):
         except Exception as err:
             print(err)
             self.logger.exception(err)
-            return tuple()
-              
-        # set contrained values
-        if not force_modify and fit_files.pop_fitconstr.constraints_are_set:              
-            new_par = fit_files.pop_fitconstr.add_new_par(self.data)
-            plist.extend(list(new_par))
-            plist.sort()
+            return
                 
         # set p0 from old
         if values_res is not None:
@@ -1660,8 +1651,6 @@ class fitline(object):
         # set to data
         self.data.set_fitpar(values)
         
-        return tuple(plist)
-
     # ======================================================================= #
     def grid(self, row):
         """Re-grid a dataline object so that it is in order by run number"""
@@ -1827,26 +1816,40 @@ class fitline(object):
         fitframe = self.fitframe
         fitdat = self.data
         fit_files = self.bfit.fit_files
-        
-        # get list of parameters and initial values
-        fitdat.fitpar.sort_index(inplace=True)
-        param_values = fitdat.fitpar
-        
-        if force_modify or len(param_values) == 0:
-            
-            # make a new parameter dataframe
+        pop_constr = fit_files.pop_fitconstr
+
+        if force_modify:
             fitdat.reset_fitpar()
             
+        # check if new data
+        new_data = len(fitdat.fitpar.index) == 0
+        
+        # disable init button if constrained
+        pop_constr.set_init_button_state(self)
+                    
+        # add constrained parameter and function
+        pop_constr.add_new_par(fitdat)    
+        pop_constr.add_fn(fitdat)
+        
+        # drop parameters which are no longer needed
+        pop_constr.drop_unused_param(fitdat)
+                
+        # set new p0
+        if force_modify or new_data:
+            
+            # make a new parameter dataframe
             try:
-                plist = self.get_new_parameters(force_modify)
+                self.get_new_parameters(force_modify)
             except KeyError as err:
                 return          # returns if no parameters found
             except RuntimeError as err:
                 messagebox.showerror('RuntimeError', err)
                 raise err from None
-        else:
-            plist = tuple(param_values.index.values)
-            
+        
+        # get list of parameters and initial values
+        fitdat.fitpar.sort_index(inplace=True)
+        fitpar = fitdat.fitpar
+        plist = tuple(fitpar.index.values)
         self.logger.debug('Populating parameter list with %s', plist)
         
         # get needed number of lines
@@ -1862,12 +1865,12 @@ class fitline(object):
                 rem.degrid()
                 del rem
             self.lines = self.lines[:n_lines_total]
-            
+
         # add new lines
         elif n_lines_needed > 0:
-            self.lines.extend([InputLine(fitframe, self.bfit, self.data) \
+            self.lines.extend([InputLine(fitframe, self.bfit, fitdat) \
                                                 for i in range(n_lines_needed)])
-        
+
         # reassign and regrid lines
         for i, line in enumerate(self.lines):
             line.grid(i+2)
@@ -1875,43 +1878,12 @@ class fitline(object):
         # drop old parameters
         fitdat.drop_unused_param(plist)
         fitdat.fitpar.sort_index(inplace=True)
-        param_values = fitdat.fitpar
+        fitpar = fitdat.fitpar
         
         # set parameters
-        for i, k in enumerate(param_values.index):
-            self.lines[i].set(k, **param_values.loc[k].to_dict())
-          
-        # enable
-        if force_modify:
-            self.gui_param_button.config(state='normal')            
-            self.data.constrained = {}
-            for line in self.lines:
-                line.enable()
-        
-        # set constrained 
-        pop_constr = fit_files.pop_fitconstr
-        if pop_constr.constraints_are_set:
-                        
-            # set constrained values
-            pop_constr.disable_constrained_par()
-            pop_constr.set_init_button_state('disabled')
-            
-            # add parameter and function
-            if any((p not in self.data.fitpar.index for p in pop_constr.new_par_unique)):
-            # ~ if force_modify:
-                pop_constr.add_new_par(self.data)    
-            pop_constr.add_fn(self.data)    
-            
-            fitdat.fitpar.sort_index(inplace=True)
-            param_values = fitdat.fitpar
-            
-            # set parameters again - ensure constr param synced
-            try:
-                for i, k in enumerate(param_values.index):
-                    self.lines[i].set(k, **param_values.loc[k].to_dict())
-            except IndexError:
-                pass
-
+        for i, k in enumerate(fitpar.index):
+            self.lines[i].set(k, **fitpar.loc[k].to_dict())
+                                     
     # ======================================================================= #
     def set(self, pname, **kwargs):
         """

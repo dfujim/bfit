@@ -177,6 +177,9 @@ class template_fit_popup(object):
                 except IndexError:  # error raised on incomplete math: ex "np."
                     pass
                 
+            # look for non-parameters
+            lst = [i for i in lst if i]
+                
             new_par.append(lst)
 
         # logging

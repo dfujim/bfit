@@ -18,7 +18,7 @@ def with_bfit(function):
         b.notebook.select(2)
         
         tab2.year.set(2020)
-        tab2.run.set('40123 40127')
+        tab2.run.set('40123 40124')
         tab2.get_data()
         tab.populate()
         b.draw_fit.set(False)
@@ -31,100 +31,300 @@ def with_bfit(function):
             
     return wrapper
 
+def check_line_names(fittab, names):
+    names = sorted(names)
+    for fline in fittab.fit_lines.values():
+        pname = sorted([line.pname for line in fline.lines])
+        assert pname == names, 'incorrect pnames in run {id}'.format(id=fline.data.id)
+
+def check_line_state(fittab, disabled_pnames):
+    for fline in fittab.fit_lines.values():
+        states = {line.pname: line.entry['p0']['state'] for line in fline.lines}
+        
+        for pname, state in states.items():
+            
+            if state == 'normal':
+                assert pname not in disabled_pnames, \
+                        '{pname} is disabled when it should not be'.format(pname=pname)
+            elif state == 'disabled':
+                assert pname in disabled_pnames, \
+                        '{pname} is not disabled when it should be'.format(pname=pname)
+            else:
+                raise RuntimeError('Unknown run state %s' % state)
+
+def check_line_p0(fittab):
+    # make sure all lines have p0 filled in (bounds should also be filled in if p0 is)
+    
+    for fline in fittab.fit_lines.values():
+        for line in fline.lines:
+            assert line.entry['p0'].get() != '', \
+                '"{pname}" of {run} has no p0'.format(pname=line.pname, run=fline.data.id)
+
 @with_bfit
 def test_par_detection(b=None, fittab=None, fetchtab=None):
     
-    constr = popup_fit_constraints(b)
-    constr.entry.insert('1.0', '1_T1 = a*np.exp(b*BIAS**0.5) + c\namp=d')
+    # start up
+    fittab.show_constr_window()
+    constr = fittab.pop_fitconstr
+    
+    # check input on first attempt
+    constr.entry.insert('1.0', 'amp = a*np.exp(b*BIAS**0.5)')
     constr.get_input()
     
-    assert all([k in constr.new_par['name'].values for k in 'abcd'])
-    assert len(constr.new_par['name'].values) == 4
+    assert constr.defined == ['amp'], 'defined parameters incorrect'
+    assert constr.eqn == ['a*np.exp(b*BIAS**0.5)'], 'eqn incorrect'
+    assert constr.new_par == [['a', 'b']], 'new_par incorrect'
+    assert constr.new_par_unique == ['a', 'b'], 'new_par_unique incorrect'
+    
+    # change input
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', 'amp = d+f')
+    constr.get_input()
+    
+    assert constr.defined == ['amp'], 'defined parameters incorrect'
+    assert constr.eqn == ['d+f'], 'eqn incorrect'
+    assert constr.new_par == [['d', 'f']], 'new_par incorrect'
+    assert constr.new_par_unique == ['d', 'f'], 'new_par_unique incorrect'
+    
+    # add defined input
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', 'amp = d+f\n1_T1 = a')
+    constr.get_input()
+    
+    assert constr.defined == ['amp', '1_T1'], 'defined parameters incorrect'
+    assert constr.eqn == ['d+f', 'a'], 'eqn incorrect'
+    assert constr.new_par == [['d', 'f'], ['a']], 'new_par incorrect'
+    assert constr.new_par_unique == ['a', 'd', 'f'], 'new_par_unique incorrect'
+    
+    # test no new parameters
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', 'amp = 1')
+    constr.get_input()
+    
+    assert constr.defined == ['amp'], 'defined parameters incorrect'
+    assert constr.eqn == ['1'], 'eqn incorrect'
+    assert constr.new_par == [[]], 'new_par incorrect'
+    assert constr.new_par_unique == [], 'new_par_unique incorrect'
 
 @with_bfit
-def test_defineable(b=None, fittab=None, fetchtab=None):
+def test_set_constr_lines(b=None, fittab=None, fetchtab=None):
+
+    # start up
+    fittab.show_constr_window()
+    constr = fittab.pop_fitconstr
     
-    constr = popup_fit_constraints(b)
-    assert all([k in constr.parnames for k in ('1_T1', 'amp')])
-    assert len(constr.parnames) == 2
-    
-@with_bfit
-def test_fit_accuracy(b=None, fittab=None, fetchtab=None):
-    
-    constr = popup_fit_constraints(b)
-    constr.entry.insert('1.0', '1_T1 = a\namp=b')
+    # check good input
+    constr.entry.insert('1.0', 'amp = a+b')
     constr.get_input()
-    constr.do_fit()
+    constr.set_constraints()
+    check_line_names(fittab, ['1_T1', 'amp', 'a', 'b'])
     
-    # get results
-    out_c = constr.new_par.set_index('name')
-    
-    # fit with normal sharing
-    line = fittab.fit_lines['2020.40123']
-    entry = line.parentry
-    entry['1_T1']['shared'][0].set(True)
-    entry['amp']['shared'][0].set(True)
-    fittab.do_fit()
-    
-    # check results
-    assert_almost_equal(out_c.loc['a','res'], float(entry['1_T1']['res'][1].get()), 
-                        err_msg = 'T1 res not equal', decimal=5)
-    assert_almost_equal(out_c.loc['a','err+'], float(entry['1_T1']['dres+'][1].get()), 
-                        err_msg = 'T1 err+ not equal', decimal=5)
-    assert_almost_equal(out_c.loc['a','err-'], float(entry['1_T1']['dres-'][1].get()), 
-                        err_msg = 'T1 err- not equal', decimal=5)
-    
-    assert_almost_equal(out_c.loc['b','res'], float(entry['amp']['res'][1].get()), 
-                        err_msg = 'T1 res not equal', decimal=5)
-    assert_almost_equal(out_c.loc['b','err+'], float(entry['amp']['dres+'][1].get()), 
-                        err_msg = 'T1 err+ not equal', decimal=5)
-    assert_almost_equal(out_c.loc['b','err-'], float(entry['amp']['dres-'][1].get()), 
-                        err_msg = 'amp err- not equal', decimal=5)
-    
-@with_bfit
-def test_fit_copy(b=None, fittab=None, fetchtab=None):
-    
-    constr = popup_fit_constraints(b)
-    constr.entry.insert('1.0', '1_T1 = a\namp=b')
+    # check change n new_par
+    fittab.show_constr_window()
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', 'amp = a')
     constr.get_input()
-    constr.do_fit()
+    constr.set_constraints()
+    check_line_names(fittab, ['1_T1', 'amp', 'a'])
     
-    # get results
-    out_c = constr.new_par.set_index('name')
-    line = fittab.fit_lines['2020.40123']
-    entry = line.parentry
+    fittab.show_constr_window()
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', 'amp = a+c')
+    constr.get_input()
+    constr.set_constraints()
+    check_line_names(fittab, ['1_T1', 'amp', 'a', 'c'])
     
-    # check that results copied to main page properly
-    assert_almost_equal(out_c.loc['a','res'], float(entry['1_T1']['res'][1].get()), 
-                        err_msg = 'T1 res not equal', decimal=5)
-    assert_almost_equal(out_c.loc['a','err+'], float(entry['1_T1']['dres+'][1].get()), 
-                        err_msg = 'T1 err+ not equal', decimal=5)
-    assert_almost_equal(out_c.loc['a','err-'], float(entry['1_T1']['dres-'][1].get()), 
-                        err_msg = 'T1 err- not equal', decimal=5)
-    
-    assert_almost_equal(out_c.loc['b','res'], float(entry['amp']['res'][1].get()), 
-                        err_msg = 'T1 res not equal', decimal=5)
-    assert_almost_equal(out_c.loc['b','err+'], float(entry['amp']['dres+'][1].get()), 
-                        err_msg = 'T1 err+ not equal', decimal=5)
-    assert_almost_equal(out_c.loc['b','err-'], float(entry['amp']['dres-'][1].get()), 
-                        err_msg = 'amp err- not equal', decimal=5)
-    
+    fittab.show_constr_window()
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', '')
+    constr.get_input()
+    constr.set_constraints()
+    check_line_names(fittab, ['1_T1', 'amp'])
+
 @with_bfit
-def test_1f_1run(b=None, fittab=None, fetchtab=None):
+def test_disable(b=None, fittab=None, fetchtab=None):
     """
-        Test constraining two variables in a single 1f run to be equal
+        check init button and line disable
     """
     
-    # get 1f data
-    fetchtab.remove_all()
-    fetchtab.run.set('40037')
-    fetchtab.get_data()
-    fittab.n_component.set(2)
+    # start up
+    constr = fittab.pop_fitconstr
+    
+    # a and b
+    fittab.show_constr_window()
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', 'amp = a+b')
+    constr.get_input()
+    constr.set_constraints()
+    check_line_state(fittab, ['amp'])
+    
+    # remove a
+    fittab.show_constr_window()
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', 'amp = b')
+    constr.get_input()
+    constr.set_constraints()
+    check_line_state(fittab, ['amp'])
+    
+    # switch to T1
+    fittab.show_constr_window()
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', '1_T1 = b')
+    constr.get_input()
+    constr.set_constraints()
+    check_line_state(fittab, ['1_T1'])
+
+    # none
+    fittab.show_constr_window()
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', '')
+    constr.get_input()
+    constr.set_constraints()
+    check_line_state(fittab, [])
+    
+    # check force modify
+    fittab.show_constr_window()
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', 'amp = a')
+    constr.get_input()
+    constr.set_constraints()
+    fittab.populate_param(force_modify=True)
+    check_line_state(fittab, [])
+    
+@with_bfit
+def test_adding_runs(b=None, fittab=None, fetchtab=None):
+    """
+        Test changing which runs are selected or not
+    """
+    # start up
+    constr = fittab.pop_fitconstr
+    
+    # a and b as normal
+    fittab.show_constr_window()
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', 'amp = a+b')
+    constr.get_input()
+    constr.set_constraints()
+    check_line_state(fittab, ['amp'])
+    check_line_names(fittab, ['1_T1', 'amp', 'a', 'b'])
+    check_line_p0(fittab)
+    
+    # uncheck one run
+    b.data['2020.40124'].check_state.set(False)
     fittab.populate()
-
-    # get constrained functions
-    constr = popup_fit_constraints(b)
-    constr.entry.insert('1.0', 'fwhm_0 = a\nfwhm_1 = a')
+    check_line_state(fittab, ['amp'])
+    check_line_names(fittab, ['1_T1', 'amp', 'a', 'b'])
+    check_line_p0(fittab)
+    
+    # repopulate
+    fittab.populate_param(force_modify=True)
+    check_line_state(fittab, [])
+    check_line_names(fittab, ['1_T1', 'amp'])
+    check_line_p0(fittab)
+    
+    # add back the run
+    b.data['2020.40124'].check_state.set(True)
+    fittab.populate()
+    check_line_state(fittab, [])
+    check_line_names(fittab, ['1_T1', 'amp'])
+    check_line_p0(fittab)
+    
+    # uncheck run, add constraints
+    b.data['2020.40124'].check_state.set(False)
+    fittab.populate()
+    fittab.show_constr_window()
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', 'amp = a+b')
     constr.get_input()
-    constr.do_fit()
+    constr.set_constraints()
+    check_line_state(fittab, ['amp'])
+    check_line_names(fittab, ['1_T1', 'amp', 'a', 'b'])
+    check_line_p0(fittab)
+    
+    # add back the run
+    b.data['2020.40124'].check_state.set(True)
+    fittab.populate()
+    check_line_state(fittab, ['amp'])
+    check_line_names(fittab, ['1_T1', 'amp', 'a', 'b'])
+    check_line_p0(fittab)
+        
+# ~ @with_bfit
+# ~ def test_fit_accuracy(b=None, fittab=None, fetchtab=None):
+    
+    # ~ constr = popup_fit_constraints(b)
+    # ~ constr.entry.insert('1.0', '1_T1 = a\namp=b')
+    # ~ constr.get_input()
+    # ~ constr.do_fit()
+    
+    # ~ # get results
+    # ~ out_c = constr.new_par.set_index('name')
+    
+    # ~ # fit with normal sharing
+    # ~ line = fittab.fit_lines['2020.40123']
+    # ~ entry = line.parentry
+    # ~ entry['1_T1']['shared'][0].set(True)
+    # ~ entry['amp']['shared'][0].set(True)
+    # ~ fittab.do_fit()
+    
+    # ~ # check results
+    # ~ assert_almost_equal(out_c.loc['a','res'], float(entry['1_T1']['res'][1].get()), 
+                        # ~ err_msg = 'T1 res not equal', decimal=5)
+    # ~ assert_almost_equal(out_c.loc['a','err+'], float(entry['1_T1']['dres+'][1].get()), 
+                        # ~ err_msg = 'T1 err+ not equal', decimal=5)
+    # ~ assert_almost_equal(out_c.loc['a','err-'], float(entry['1_T1']['dres-'][1].get()), 
+                        # ~ err_msg = 'T1 err- not equal', decimal=5)
+    
+    # ~ assert_almost_equal(out_c.loc['b','res'], float(entry['amp']['res'][1].get()), 
+                        # ~ err_msg = 'T1 res not equal', decimal=5)
+    # ~ assert_almost_equal(out_c.loc['b','err+'], float(entry['amp']['dres+'][1].get()), 
+                        # ~ err_msg = 'T1 err+ not equal', decimal=5)
+    # ~ assert_almost_equal(out_c.loc['b','err-'], float(entry['amp']['dres-'][1].get()), 
+                        # ~ err_msg = 'amp err- not equal', decimal=5)
+    
+# ~ @with_bfit
+# ~ def test_fit_copy(b=None, fittab=None, fetchtab=None):
+    
+    # ~ constr = popup_fit_constraints(b)
+    # ~ constr.entry.insert('1.0', '1_T1 = a\namp=b')
+    # ~ constr.get_input()
+    # ~ constr.do_fit()
+    
+    # ~ # get results
+    # ~ out_c = constr.new_par.set_index('name')
+    # ~ line = fittab.fit_lines['2020.40123']
+    # ~ entry = line.parentry
+    
+    # ~ # check that results copied to main page properly
+    # ~ assert_almost_equal(out_c.loc['a','res'], float(entry['1_T1']['res'][1].get()), 
+                        # ~ err_msg = 'T1 res not equal', decimal=5)
+    # ~ assert_almost_equal(out_c.loc['a','err+'], float(entry['1_T1']['dres+'][1].get()), 
+                        # ~ err_msg = 'T1 err+ not equal', decimal=5)
+    # ~ assert_almost_equal(out_c.loc['a','err-'], float(entry['1_T1']['dres-'][1].get()), 
+                        # ~ err_msg = 'T1 err- not equal', decimal=5)
+    
+    # ~ assert_almost_equal(out_c.loc['b','res'], float(entry['amp']['res'][1].get()), 
+                        # ~ err_msg = 'T1 res not equal', decimal=5)
+    # ~ assert_almost_equal(out_c.loc['b','err+'], float(entry['amp']['dres+'][1].get()), 
+                        # ~ err_msg = 'T1 err+ not equal', decimal=5)
+    # ~ assert_almost_equal(out_c.loc['b','err-'], float(entry['amp']['dres-'][1].get()), 
+                        # ~ err_msg = 'amp err- not equal', decimal=5)
+    
+# ~ @with_bfit
+# ~ def test_1f_1run(b=None, fittab=None, fetchtab=None):
+    # ~ """
+        # ~ Test constraining two variables in a single 1f run to be equal
+    # ~ """
+    
+    # ~ # get 1f data
+    # ~ fetchtab.remove_all()
+    # ~ fetchtab.run.set('40037')
+    # ~ fetchtab.get_data()
+    # ~ fittab.n_component.set(2)
+    # ~ fittab.populate()
+
+    # ~ # get constrained functions
+    # ~ constr = popup_fit_constraints(b)
+    # ~ constr.entry.insert('1.0', 'fwhm_0 = a\nfwhm_1 = a')
+    # ~ constr.get_input()
+    # ~ constr.do_fit()
     
