@@ -1207,8 +1207,8 @@ class dataline(object):
         
         # remove data from storage
         if len(self.lines_list) == 0:
-            ff = self.bfit.fetch_files
-            ff.runmode_label['text'] = ''
+            self.bfit.fetch_files.runmode_label['text'] = ''
+            self.bfit.fit_files.pop_fitconstr.constraints_are_set = False
                 
     # ======================================================================= #
     def do_check_data(self):

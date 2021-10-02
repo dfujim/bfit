@@ -247,6 +247,28 @@ def test_adding_runs(b=None, fittab=None, fetchtab=None):
     check_line_state(fittab, ['amp'])
     check_line_names(fittab, ['1_T1', 'amp', 'a', 'b'])
     check_line_p0(fittab)
+    
+    # change the data type to 1f
+    fetchtab.remove_all()
+    fetchtab.year.set(2021)
+    fetchtab.run.set('40123')
+    fetchtab.get_data()
+    fittab.populate()
+    
+    fittab.show_constr_window()
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', 'amp = a')
+    constr.get_input()
+    constr.set_constraints()
+    
+    fetchtab.remove_all()
+    fetchtab.run.set('40033')
+    fetchtab.get_data()
+    fittab.populate()
+    
+    check_line_state(fittab, [])
+    check_line_names(fittab, ['baseline', 'fwhm', 'height', 'peak'])
+    check_line_p0(fittab)
         
 @with_bfit
 def test_fit(b=None, fittab=None, fetchtab=None):
