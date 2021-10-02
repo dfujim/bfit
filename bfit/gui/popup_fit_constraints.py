@@ -269,10 +269,10 @@ class popup_fit_constraints(template_fit_popup):
                 raise RuntimeError(msg)
         
         # check for more circular definitions
-        for d in self.defined:
+        for d in self.parnames:
             for e in self.eqn:
                 if d in e:
-                    msg = 'Redefined parameter {p} cannot be used as an input'.format(p=d)
+                    msg = 'Reserved parameter "{p}" cannot be used as an input'.format(p=d)
                     self.logger.exception(msg)
                     messagebox.showerror('Error', msg)
                     raise RuntimeError(msg)

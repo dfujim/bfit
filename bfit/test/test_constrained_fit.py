@@ -248,83 +248,46 @@ def test_adding_runs(b=None, fittab=None, fetchtab=None):
     check_line_names(fittab, ['1_T1', 'amp', 'a', 'b'])
     check_line_p0(fittab)
         
-# ~ @with_bfit
-# ~ def test_fit_accuracy(b=None, fittab=None, fetchtab=None):
+@with_bfit
+def test_fit(b=None, fittab=None, fetchtab=None):
     
-    # ~ constr = popup_fit_constraints(b)
-    # ~ constr.entry.insert('1.0', '1_T1 = a\namp=b')
-    # ~ constr.get_input()
-    # ~ constr.do_fit()
+    # start up
+    constr = fittab.pop_fitconstr
     
-    # ~ # get results
-    # ~ out_c = constr.new_par.set_index('name')
+    # fit without constraints
+    fittab.do_fit()
+    result = b.data['2020.40123'].fitpar.copy()
     
-    # ~ # fit with normal sharing
-    # ~ line = fittab.fit_lines['2020.40123']
-    # ~ entry = line.parentry
-    # ~ entry['1_T1']['shared'][0].set(True)
-    # ~ entry['amp']['shared'][0].set(True)
-    # ~ fittab.do_fit()
+    # fit with simple constrained identity
+    fittab.show_constr_window()
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', 'amp = a')
+    constr.get_input()
+    constr.set_constraints()    
+    fittab.do_fit()
     
-    # ~ # check results
-    # ~ assert_almost_equal(out_c.loc['a','res'], float(entry['1_T1']['res'][1].get()), 
-                        # ~ err_msg = 'T1 res not equal', decimal=5)
-    # ~ assert_almost_equal(out_c.loc['a','err+'], float(entry['1_T1']['dres+'][1].get()), 
-                        # ~ err_msg = 'T1 err+ not equal', decimal=5)
-    # ~ assert_almost_equal(out_c.loc['a','err-'], float(entry['1_T1']['dres-'][1].get()), 
-                        # ~ err_msg = 'T1 err- not equal', decimal=5)
+    new_result = b.data['2020.40123'].fitpar
     
-    # ~ assert_almost_equal(out_c.loc['b','res'], float(entry['amp']['res'][1].get()), 
-                        # ~ err_msg = 'T1 res not equal', decimal=5)
-    # ~ assert_almost_equal(out_c.loc['b','err+'], float(entry['amp']['dres+'][1].get()), 
-                        # ~ err_msg = 'T1 err+ not equal', decimal=5)
-    # ~ assert_almost_equal(out_c.loc['b','err-'], float(entry['amp']['dres-'][1].get()), 
-                        # ~ err_msg = 'amp err- not equal', decimal=5)
+    assert_almost_equal(result.loc['amp', 'res'], new_result.loc['amp', 'res'], 
+                        err_msg = 'identity fit result not equal', decimal=5)
     
-# ~ @with_bfit
-# ~ def test_fit_copy(b=None, fittab=None, fetchtab=None):
+    assert_almost_equal(result.loc['amp', 'res'], new_result.loc['a', 'res'], 
+                        err_msg = 'identity fit result not equal', decimal=5)
     
-    # ~ constr = popup_fit_constraints(b)
-    # ~ constr.entry.insert('1.0', '1_T1 = a\namp=b')
-    # ~ constr.get_input()
-    # ~ constr.do_fit()
+    # fit with simple function constraint
+    fittab.show_constr_window()
+    constr.entry.delete('1.0', 'end')
+    constr.entry.insert('1.0', 'amp = a*2')
+    constr.get_input()
+    constr.set_constraints()    
+    fittab.do_fit()
     
-    # ~ # get results
-    # ~ out_c = constr.new_par.set_index('name')
-    # ~ line = fittab.fit_lines['2020.40123']
-    # ~ entry = line.parentry
+    new_result = b.data['2020.40123'].fitpar
     
-    # ~ # check that results copied to main page properly
-    # ~ assert_almost_equal(out_c.loc['a','res'], float(entry['1_T1']['res'][1].get()), 
-                        # ~ err_msg = 'T1 res not equal', decimal=5)
-    # ~ assert_almost_equal(out_c.loc['a','err+'], float(entry['1_T1']['dres+'][1].get()), 
-                        # ~ err_msg = 'T1 err+ not equal', decimal=5)
-    # ~ assert_almost_equal(out_c.loc['a','err-'], float(entry['1_T1']['dres-'][1].get()), 
-                        # ~ err_msg = 'T1 err- not equal', decimal=5)
+    assert_almost_equal(result.loc['amp', 'res'], new_result.loc['amp', 'res'], 
+                        err_msg = 'identity fit result not equal', decimal=2)
     
-    # ~ assert_almost_equal(out_c.loc['b','res'], float(entry['amp']['res'][1].get()), 
-                        # ~ err_msg = 'T1 res not equal', decimal=5)
-    # ~ assert_almost_equal(out_c.loc['b','err+'], float(entry['amp']['dres+'][1].get()), 
-                        # ~ err_msg = 'T1 err+ not equal', decimal=5)
-    # ~ assert_almost_equal(out_c.loc['b','err-'], float(entry['amp']['dres-'][1].get()), 
-                        # ~ err_msg = 'amp err- not equal', decimal=5)
+    assert_almost_equal(result.loc['amp', 'res'], new_result.loc['a', 'res']*2, 
+                        err_msg = 'identity fit result not equal', decimal=2)
     
-# ~ @with_bfit
-# ~ def test_1f_1run(b=None, fittab=None, fetchtab=None):
-    # ~ """
-        # ~ Test constraining two variables in a single 1f run to be equal
-    # ~ """
-    
-    # ~ # get 1f data
-    # ~ fetchtab.remove_all()
-    # ~ fetchtab.run.set('40037')
-    # ~ fetchtab.get_data()
-    # ~ fittab.n_component.set(2)
-    # ~ fittab.populate()
-
-    # ~ # get constrained functions
-    # ~ constr = popup_fit_constraints(b)
-    # ~ constr.entry.insert('1.0', 'fwhm_0 = a\nfwhm_1 = a')
-    # ~ constr.get_input()
-    # ~ constr.do_fit()
     

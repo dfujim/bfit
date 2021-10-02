@@ -293,7 +293,6 @@ def test_fit_ncomp(b=None, tab=None, tab2=None):
     # check ncomp
     assert_equal(tab.fit_input[1], 2, "Number of components passing to fitter")
 
-    
 @with_bfit
 def test_shared(b=None, tab=None, tab2=None):
     
