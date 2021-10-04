@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import bfit.backend.colors as colors
 
-import datetime, os, traceback, warnings, logging, 
+import datetime, os, traceback, warnings, logging
 
 register_matplotlib_converters()
 
