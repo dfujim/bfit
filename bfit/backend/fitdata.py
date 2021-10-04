@@ -8,6 +8,7 @@ from bdata import bdata, bmerged
 from bfit.gui.calculator_nqr_B0 import current2field
 from bfit.gui.calculator_nqr_B0_hh6 import current2field as current2field_hh6
 from bfit import logger_name
+from scipy.special import gamma, polygamma
 
 from bfit.backend.raise_window import raise_window
 
@@ -39,6 +40,8 @@ class fitdata(object):
             check_state: BooleanVar, include in fit?
             
             chi:        chisquared from fit (float)
+            constrained:dict of (fn handles, inputs (str)), keyed by names of 
+                        constrained parameters
             dataline:   pointer to dataline object in fetch_files tab
             fitline:    pointer to fitline object in fit_files tab
             drawarg:    drawing arguments for errorbars (dict)
@@ -88,7 +91,6 @@ class fitdata(object):
         self.check_draw_fit = BooleanVar()
         self.check_draw_res = BooleanVar()
         self.omit_scan = BooleanVar()
-
         
         # fetch files defaults
         self.check_state.set(True)
@@ -107,9 +109,9 @@ class fitdata(object):
         # key for IDing file 
         self.id = self.bfit.get_run_key(data=bd)
         
-        # initialize fitpar with fitinputtab.collist
-        self.fitpar = pd.DataFrame([], columns=['p0', 'blo', 'bhi', 'res', 
-                                    'dres+', 'dres-', 'chi', 'fixed', 'shared'])
+        # initialize fitpar
+        self.reset_fitpar()
+        self.constrained = {}
         
         # set area as upper
         self.area = self.area.upper()
@@ -1024,12 +1026,20 @@ class fitdata(object):
             return np.nan
         
     # ======================================================================= #
+    def drop_param(self, parnames):
+        """
+            Check self.fitpar for parameters not in list of parnames. Drop them.
+        """
+        present = [p for p in parnames if p in self.fitpar.index]
+        self.fitpar.drop(present, axis='index', inplace=True)
+    
+    # ======================================================================= #
     def drop_unused_param(self, parnames):
         """
             Check self.fitpar for parameters not in list of parnames. Drop them.
         """
         unused = [p for p in self.fitpar.index if p not in parnames]
-        self.fitpar = self.fitpar.drop(unused, axis='index')
+        self.fitpar.drop(unused, axis='index', inplace=True)
     
     # ======================================================================= #
     def get_norm(self, asym_type, asym, dasym):
@@ -1320,7 +1330,7 @@ class fitdata(object):
 
         # check user-defined parameters
         elif select in pop_addpar.set_par.keys():
-            val = pop_addpar.set_par[select]()
+            val = pop_addpar.set_par[select](self.id)
             err = np.nan
 
         try:
@@ -1395,6 +1405,11 @@ class fitdata(object):
         self.area = self.area.upper()
         
     # ======================================================================= #
+    def reset_fitpar(self):
+        self.fitpar = pd.DataFrame([], columns=['p0', 'blo', 'bhi', 'res', 
+                                    'dres+', 'dres-', 'chi', 'fixed', 'shared'])
+        
+    # ======================================================================= #
     def set_fitpar(self, values):
         """Set fitting initial parameters
         values: output of routine gen_init_par: DataFrame:            
@@ -1409,6 +1424,60 @@ class fitdata(object):
                 self.fitpar.loc[v, c] = values.loc[v, c]
                 
         self.logger.debug('Fit initial parameters set to %s', self.fitpar)
+
+    # ======================================================================= #
+    def set_constrained(self, col):
+        """
+            Change parameter values based on constraint equation and typed inputs
+        """
+        for par in self.fitpar.index:
+            if par in self.constrained.keys():
+                try:
+                    inputs = self.fitpar.loc[self.constrained[par][1], col]
+                except KeyError:
+                    pass
+                else:
+                    self.fitline.set(par, **{col:self.constrained[par][0](*inputs)})
+                
+    # ======================================================================= #
+    def gen_set_from_var(self, pname, col, obj):
+        """Make function to set fitting initial parameters from StringVar or 
+            BooleanVarobject
+            
+            pname: string, name of parameter
+            col: string, one of 'p0', 'blo', 'bhi'
+            obj: the StringVar or BooleanVar to fetch from
+        """
+    
+        if pname in self.fitpar.index and col in self.fitpar.columns:
+            
+            if type(obj) is StringVar:
+                
+                def set_from_var(*args):
+                    try:
+                        value = float(obj.get())
+                    except ValueError:
+                        pass
+                    else:
+                        self.fitpar.loc[pname, col] = value
+                        if pname not in self.constrained.keys():
+                            self.set_constrained(col)
+                        
+            elif type(obj) is BooleanVar:
+                
+                def set_from_var(*args):
+                    try:
+                        value = bool(obj.get())
+                    except ValueError:
+                        pass
+                    else:
+                        self.fitpar.loc[pname, col] = value
+                        
+            else:
+                
+                raise RuntimeError('Bad obj input')
+    
+            return set_from_var
 
     # ======================================================================= #
     def set_fitresult(self, values):

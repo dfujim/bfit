@@ -57,7 +57,7 @@ class ConstrainedFunction(object):
             eqn.append(c)
         
         # get constraint functions, sorted 
-        constr_fns = [eval(self.header+e)for e in eqn]    
+        constr_fns = [eval(self.header+e) for e in eqn]
         
         # define the new fitting function
         def new_fn(x, *newparam):
@@ -73,22 +73,3 @@ class ConstrainedFunction(object):
         """
         new_name = KEYVARS[name]
         return data.get_values(new_name)[0]
-        
-        # ~ if   name == 'B0'   :   return data.field
-        # ~ elif name =='BIAS'  :   return data.bias
-        # ~ elif name =='CLFT'  :   return data.bd.camp.clift_read.mean
-        # ~ elif name =='DUR'   :   return data.bd.duration
-        # ~ elif name =='ENRG'  :   return data.bd.beam_kev()
-        # ~ elif name =='LAS'   :   return data.bd.epics.las_pwr.mean
-        # ~ elif name =='NBMR'  :   
-            # ~ return np.sum([data.hist['NBM'+h].data \
-                           # ~ for h in ('F+', 'F-', 'B-', 'B+')])/data.duration
-        # ~ elif name =='RATE'  :   
-            # ~ hist = ('F+', 'F-', 'B-', 'B+') if data.area == 'BNMR' \
-                                         # ~ else ('L+', 'L-', 'R-', 'R+')    
-            # ~ return np.sum([data.hist[h].data for h in hist])/data.duration
-        # ~ elif name =='RF'    :   return data.bd.camp.rf_dac.mean
-        # ~ elif name =='RUN'   :   return data.run
-        # ~ elif name =='TEMP'  :   return data.temperature.mean
-        # ~ elif name =='TIME'  :   return data.bd.start_time
-        # ~ elif name =='YEAR'  :   return data.year

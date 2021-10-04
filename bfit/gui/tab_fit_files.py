@@ -7,7 +7,6 @@ from tkinter import ttk, messagebox, filedialog
 from functools import partial
 from bdata import bdata, bmerged
 from bfit import logger_name, __version__
-from scipy.special import gamma, polygamma
 from pandas.plotting import register_matplotlib_converters
 from multiprocessing import Queue
 
@@ -22,6 +21,7 @@ from bfit.fitting.decay_31mg import fa_31Mg
 from bfit.fitting.functions import decay_corrected_fn
 from bfit.backend.entry_color_set import on_focusout, on_entry_click
 from bfit.backend.raise_window import raise_window
+from bfit.gui.InputLine import InputLine
 
 import numpy as np
 import pandas as pd
@@ -46,8 +46,6 @@ class fit_files(object):
             draw_components:list of titles for labels, options to export, draw.
             entry_asym_type:combobox for asym calculations
             fit_canvas:     canvas object allowing for scrolling
-            par_label_entry:draw parameter label entry box
-            pop_fitconstr:  object for fitting with constrained functions
             fit_data_tab:   containing frame (for destruction)
             fit_function_title: StringVar, title of fit function to use
             fit_function_title_box: combobox for fit function names
@@ -62,11 +60,12 @@ class fit_files(object):
             n_component:    number of fitting components (IntVar)
             n_component_box:Spinbox for number of fitting components
             par_label       StringVar, label for plotting parameter set
+            par_label_entry:draw parameter label entry box
             plt:            self.bfit.plt
 
             pop_addpar:     popup for ading parameters which are combinations of others
             pop_fitres:     modelling popup, for continuity between button presses
-            pop_fitcontr:   popup for fitting constrained values
+            pop_fitconstr:  object for fitting with constrained functions
 
             probe_label:    Label for probe species
             runframe:       frame for displaying fit results and inputs
@@ -111,13 +110,18 @@ class fit_files(object):
         self.draw_components = list(bfit.draw_components)
         self.fit_data_tab = fit_data_tab
         self.plt = self.bfit.plt
+        
+        self.fit_lines = {}
+        self.fit_lines_old = {}
+
+        self.pop_fitconstr = popup_fit_constraints(self.bfit, self)
 
         # additional button bindings
         self.bfit.root.bind('<Control-Key-u>', self.update_param)
 
         # make top level frames
         mid_fit_frame = ttk.Labelframe(fit_data_tab,
-                                       text='Set Initial Parameters', pad=5)
+                                       text='Initial Parameters and Fit Results', pad=5)
 
         mid_fit_frame.grid(column=0, row=1, rowspan=6, sticky=(S, W, E, N), padx=5, pady=5)
 
@@ -135,7 +139,7 @@ class fit_files(object):
         self.fit_function_title_box = ttk.Combobox(fn_select_frame,
                 textvariable=self.fit_function_title, state='readonly')
         self.fit_function_title_box.bind('<<ComboboxSelected>>',
-            lambda x :self.populate_param(force_modify=True))
+                lambda x:self.populate_param(force_modify=True))
 
         # number of components in fit spinbox
         self.n_component = IntVar()
@@ -147,8 +151,8 @@ class fit_files(object):
         # fit and other buttons
         fit_button = ttk.Button(fn_select_frame, text='        Fit        ', command=self.do_fit, \
                                 pad=1)
-        constraint_button = ttk.Button(fn_select_frame, text='Constrained Fit',
-                                       command=self.do_fit_constraints, pad=1)
+        constraint_button = ttk.Button(fn_select_frame, text='Constrain',
+                                       command=self.show_constr_window, pad=1)
         set_param_button = ttk.Button(fn_select_frame, text='   Set Result as P0   ',
                         command=self.do_set_result_as_initial, pad=1)
         reset_param_button = ttk.Button(fn_select_frame, text='     Reset P0     ',
@@ -382,10 +386,6 @@ class fit_files(object):
         for i in range(2):
             results_frame.grid_columnconfigure(i, weight=0)
 
-        # store lines for fitting
-        self.fit_lines = {}
-        self.fit_lines_old = {}
-
     # ======================================================================= #
     def __del__(self):
 
@@ -427,33 +427,6 @@ class fit_files(object):
                             )
 
     # ======================================================================= #
-    def _make_shared_var_dict(self):
-        """Make the dictionary to make sure all shared checkboxes are synched"""
-
-        # get parameter list
-        try:
-            parlst = [p for p in self.fitter.gen_param_names(
-                                                self.fit_function_title.get(),
-                                                self.n_component.get())]
-
-        # no paramteters: empty out the variable list
-        except KeyError:
-            share_var = {}
-
-        # make new shared list
-        else:
-            # re-initialize
-            share_var = {p:BooleanVar() for p in parlst}
-
-            # set to old values if they exist
-            for p in parlst:
-                if p in self.share_var.keys():
-                    share_var[p].set(self.share_var[p].get())
-
-        # save to object
-        self.share_var = share_var
-
-    # ======================================================================= #
     def canvas_scroll(self, event):
         """Scroll canvas with files selected."""
         if event.num == 4:
@@ -478,7 +451,7 @@ class fit_files(object):
         """
             Make tabs for setting fit input parameters.
         """
-
+        
         # get data
         dl = self.bfit.fetch_files.data_lines
         keylist = [k for k in dl.keys() if dl[k].check_state.get()]
@@ -504,7 +477,9 @@ class fit_files(object):
                 # set run functions
                 fn_titles = self.fitter.function_names[self.mode]
                 self.fit_function_title_box['values'] = fn_titles
-                if self.fit_function_title.get() == '':
+                
+                # set current function
+                if self.fit_function_title.get() not in fn_titles:
                     self.fit_function_title.set(fn_titles[0])
 
         except UnboundLocalError:
@@ -512,10 +487,7 @@ class fit_files(object):
             self.fit_function_title.set("")
             self.fit_runmode_label['text'] = ""
             self.mode = ""
-
-        # make shared_var dictionary
-        self._make_shared_var_dict()
-
+        
         # delete unused fitline objects
         for k in list(self.fit_lines.keys()):       # iterate fit list
             self.fit_lines[k].degrid()
@@ -525,15 +497,23 @@ class fit_files(object):
 
         # make or regrid fitline objects
         n = 0
+        parlst = list(self.fitter.gen_param_names(self.fit_function_title.get(),
+                                                  self.n_component.get()))
         for k in keylist:
             if k not in self.fit_lines.keys():
+                
+                # add back old fit line
                 if k in self.fit_lines_old.keys():
                     self.fit_lines[k] = self.fit_lines_old[k]
+                    del self.fit_lines_old[k]
+                                       
+                # make new fit line
                 else:
-                    self.fit_lines[k] = fitline(self.bfit, self.runframe, dl[k], n)
+                    self.fit_lines[k] = fitline(self.bfit, self.runframe, dl[k].bdfit, n)
+                    
             self.fit_lines[k].grid(n)
             n+=1
-
+            
         self.populate_param()
 
     # ======================================================================= #
@@ -543,23 +523,37 @@ class fit_files(object):
 
             force_modify: passed to line.populate
         """
-
+       
         self.logger.debug('Populating fit parameters')
 
         # populate axis comboboxes
         lst = self.draw_components.copy()
 
+        # get list of fit parameters
         try:
-            parlst = [p for p in self.fitter.gen_param_names(
-                                                self.fit_function_title.get(),
-                                                self.n_component.get())]
+            parlst = list(self.fitter.gen_param_names(
+                                            self.fit_function_title.get(),
+                                            self.n_component.get()),
+                          )
         except KeyError:
             self.xaxis_combobox['values'] = []
             self.yaxis_combobox['values'] = []
             self.annotation_combobox['values'] = []
             return
 
+        # set contraints flag
+        constr_pop = self.pop_fitconstr
+        if force_modify:
+            constr_pop.constraints_are_set = False
+
+        # get constrained parameters
+        else:
+            for d, new in zip(constr_pop.defined, constr_pop.new_par):
+                if d in parlst:
+                    parlst.extend(new)
+
         # Sort the parameters
+        parlst = list(np.unique(parlst))
         parlst.sort()
 
         # add parameter beta averaged T1
@@ -593,19 +587,20 @@ class fit_files(object):
         self.yaxis_combobox['values'] = [''] + parlst + lst
         self.annotation_combobox['values'] = [''] + parlst + lst
 
-        self._make_shared_var_dict()
-
         # turn off modify all so we don't cause an infinite loop
         modify_all_value = self.set_as_group.get()
         self.set_as_group.set(False)
 
         # regenerate fitlines
-        for k in self.fit_lines.keys():
-            self.fit_lines[k].populate(force_modify=force_modify)
-
+        for fline in self.fit_lines.values():
+            fline.populate(force_modify=force_modify)
+        
+        for fline in self.fit_lines_old.values():
+            fline.populate(force_modify=force_modify)
+        
         # reset modify all value
         self.set_as_group.set(modify_all_value)
-
+        
     # ======================================================================= #
     def do_add_param(self, *args):
         """Launch popup for adding user-defined parameters to draw"""
@@ -708,36 +703,13 @@ class fit_files(object):
             fitline = self.fit_lines[key]
 
             # bdata object
-            bdfit = fitline.dataline.bdfit
+            bdfit = fitline.data
 
-            # pdict
+            # get entry values
             pdict = {}
-            for parname in fitline.parentry.keys():
-
-                # get entry values
-                pline = fitline.parentry[parname]
-                line = []
-                for col in fitline.collist:
-
-                    # get number entries
-                    if col in ('p0', 'blo', 'bhi'):
-                        try:
-                            line.append(float(pline[col][0].get()))
-                        except ValueError as errmsg:
-                            self.logger.exception("Bad input.")
-                            messagebox.showerror("Error", str(errmsg))
-                            raise errmsg
-
-                    # get "Fixed" entry
-                    elif col in ['fixed']:
-                        line.append(pline[col][0].get())
-
-                    # get "Shared" entry
-                    elif col in ['shared']:
-                        line.append(pline[col][0].get())
-
-                # make dict
-                pdict[parname] = line
+            for line in fitline.lines:
+                inpt = line.get('*')
+                pdict[line.pname] = [inpt[k] for k in ('p0', 'blo', 'bhi', 'fixed', 'shared')]
 
             # doptions
             doptions = {}
@@ -745,12 +717,12 @@ class fit_files(object):
             if self.use_rebin.get():
                 doptions['rebin'] = bdfit.rebin.get()
 
-            if self.mode in ('1f', '1w', '1x'):
+            if '1' in self.mode:
                 dline = self.bfit.fetch_files.data_lines[key]
                 doptions['omit'] = dline.bin_remove.get()
                 if doptions['omit'] == dline.bin_remove_starter_line:
                     doptions['omit'] = ''
-            elif self.mode in ('20', '2h', '2e'):
+            elif '2' in self.mode:
                 pass
             else:
                 msg = 'Fitting mode %s not recognized' % self.mode
@@ -816,13 +788,12 @@ class fit_files(object):
         for key, df in fit_output.items(): # iterate run ids
             
             # get fixed and shared
-            parentry = self.fit_lines[key].parentry
-            keylist = tuple(parentry.keys())
-            fs = {'fixed':[], 'shared':[], 'parnames':keylist}
-            
-            for kk in keylist:  # iterate parameters
-                fs['fixed'].append(parentry[kk]['fixed'][0].get())
-                fs['shared'].append(parentry[kk]['shared'][0].get())
+            fs = {'fixed':[], 'shared':[], 'parnames':[]}
+            for line in self.fit_lines[key].lines:
+                
+                fs['parnames'].append(line.pname)
+                fs['fixed'].append(line.get('fixed'))
+                fs['shared'].append(line.get('shared'))
             
             df2 = pd.concat((df, pd.DataFrame(fs).set_index('parnames')), axis='columns')
             
@@ -830,11 +801,11 @@ class fit_files(object):
             new_output = {'results': df2, 
                           'fn': fns[key],
                           'gchi': gchi}
-                          
+          
             self.bfit.data[key].set_fitresult(new_output)
             self.bfit.data[key].fit_title = self.fit_function_title.get()
             self.bfit.data[key].ncomp = self.n_component.get()
-
+            
         # display run results
         for key in self.fit_lines.keys():
             self.fit_lines[key].show_fit_result()
@@ -843,28 +814,6 @@ class fit_files(object):
         self.gchi_label['text'] = str(np.around(gchi, 2))
 
         self.do_end_of_fit()
-
-    # ======================================================================= #
-    def do_fit_constraints(self):
-
-        self.logger.info('Launching fit constraints popup')
-
-        if hasattr(self, 'pop_fitconstr'):
-            p = self.pop_fitconstr
-
-            # don't make more than one window
-            if Toplevel.winfo_exists(p.win):
-                p.win.lift()
-                return
-
-            # make a new window, using old inputs and outputs
-            self.pop_fitconstr = popup_fit_constraints(self.bfit,
-                                    output_par_text=p.output_par_text_val,
-                                    output_text=p.output_text_val)
-
-        # make entirely new window
-        else:
-            self.pop_fitconstr = popup_fit_constraints(self.bfit)
 
     # ======================================================================= #
     def do_fit_model(self):
@@ -905,25 +854,16 @@ class fit_files(object):
 
         self.logger.info('Setting initial parameters as fit results')
 
-        # turn off modify all
-        modify_all_value = self.set_as_group.get()
-        self.set_as_group.set(False)
-
         # set result to initial value
         for k in self.fit_lines.keys():
 
             # get line
-            line = self.fit_lines[k]
+            fline = self.fit_lines[k]
 
-            # get parameters
-            parentry = line.parentry
-
-            # set
-            for p in parentry.keys():
-                parentry[p]['p0'][0].set(parentry[p]['res'][0].get())
-
-        # reset modify all setting
-        self.set_as_group.set(modify_all_value)
+            # set parameters
+            for line in fline.lines:
+                val = line.get('res')
+                line.set(p0=val)
 
     # ======================================================================= #
     def do_reset_initial(self, *args):
@@ -931,16 +871,18 @@ class fit_files(object):
 
         self.logger.info('Reset initial parameters')
 
-        for k in self.fit_lines.keys():
-            self.fit_lines[k].populate(force_modify=True)
-
+        # reset lines
+        for fline in self.fit_lines.values():
+            fline.get_new_parameters(force_modify=True)
+            fitpar = fline.data.fitpar
+            for line in fline.lines:
+                values = {c: fitpar.loc[line.pname, c] for c in fitpar.columns}
+                line.set(**values)
+            
     # ======================================================================= #
     def draw_param(self, *args):
         """Draw the fit parameters"""
         figstyle = 'param'
-
-        # make sure plot shows
-        plt.ion()
 
         # get draw components
         xdraw = self.xaxis.get()
@@ -1140,7 +1082,7 @@ class fit_files(object):
 
         # bring window to front
         raise_window()
-
+        
     # ======================================================================= #
     def export(self, savetofile=True, filename=None):
         """Export the fit parameter and file headers"""
@@ -1169,23 +1111,24 @@ class fit_files(object):
                 else:
                     val['Error '+v] = v2[1]
 
-        # get fixed and shared
+        # get fixed and shared, if fitted
         keylist = []
         for k, line in self.fit_lines.items():
             keylist.append(k)
-            data = line.dataline.bdfit
+            data = line.data
             
-            for kk in data.fitpar.index:
-                
-                name = 'fixed '+kk
-                if name not in val.keys(): val[name] = []
-                val[name].append(data.fitpar.loc[kk, 'fixed'])
-                
-                name = 'shared '+kk
-                if name not in val.keys(): val[name] = []
-                val[name].append(data.fitpar.loc[kk, 'shared'])
+            if not all(data.fitpar['res'].isna()):
+            
+                for kk in data.fitpar.index:
+                    
+                    name = 'fixed '+kk
+                    if name not in val.keys(): val[name] = []
+                    val[name].append(data.fitpar.loc[kk, 'fixed'])
+                    
+                    name = 'shared '+kk
+                    if name not in val.keys(): val[name] = []
+                    val[name].append(data.fitpar.loc[kk, 'shared'])
 
-        # get shared and fixed parameters
         # make data frame for output
         df = pd.DataFrame(val)
         df.set_index('Run Number', inplace=True)
@@ -1218,10 +1161,21 @@ class fit_files(object):
                           '# Number of components: %d' % data.ncomp,
                           '# Global Chi-Squared: %s' % self.gchi_label['text']
                           ]
+                          
+                # add constrained equations to header
+                if self.pop_fitconstr.defined:
+                    head2 = ['# ',
+                             '# Constrained parameters',
+                             ]
+                    header.extend(head2)
+                    
+                    for d, e in zip(self.pop_fitconstr.defined, self.pop_fitconstr.eqn):
+                        header.append('# {defi} = {eqn}'.format(defi=d, eqn=e))
+                    
             else:
                 header = []
 
-            header.extend(['# Generated by bfit v%s on %s' % (__version__, datetime.datetime.now()),
+            header.extend(['#\n# Generated by bfit v%s on %s' % (__version__, datetime.datetime.now()),
                           '#\n#\n'])
 
             with open(filename, 'w') as fid:
@@ -1370,22 +1324,29 @@ class fit_files(object):
             self.input_enable_disable(child, state=state, first=False)
 
     # ======================================================================= #
-    def modify_all(self, *args, source=None, par='', column=''):
+    def set_lines(self, pname, col, value, skipline=None):
         """
-            Modify all input fields of each line to match the altered one,
+            Modify all input fields of each line to match the altered one
             conditional on self.set_as_group
 
-            source_line: the fitline to copy
-            parameter:   name of the parameter to copy
-            column:      name of the column to copy
+            pname: string, parameter being changed
+            col:   str, column being changed
+            value: new value to assign
+            skipline: if this line, don't modify
         """
-
-        setall = self.set_as_group.get()
-        self.logger.info('Set modify all as %s', setall)
-
-        for k in self.fit_lines.keys():
-            self.fit_lines[k].set_input(source, par, column, setall)
-
+    
+        for fitline in self.fit_lines.values():
+            
+            # get line id
+            id = [line.pname for line in fitline.lines].index(pname)
+            line = fitline.lines[id]
+            
+            if line == skipline:
+                continue
+            
+            # set 
+            line.set(**{col:value})
+                        
     # ======================================================================= #
     def return_binder(self):
         """
@@ -1426,6 +1387,21 @@ class fit_files(object):
         # get fit results
         df = self.export(savetofile=False)
         popup_show_param(df)
+
+    # ======================================================================= #
+    def show_constr_window(self):
+
+        self.logger.info('Launching fit constraints popup')
+
+        p = self.pop_fitconstr
+
+        # don't make more than one window
+        if hasattr(p, 'win') and Toplevel.winfo_exists(p.win):
+            p.win.lift()
+            
+        # make a new window, using old inputs and outputs
+        else:
+            p.show()
 
     # ======================================================================= #
     def update_param(self, *args):
@@ -1515,24 +1491,21 @@ class fitline(object):
         Instance variables
 
             bfit            pointer to top class
-            dataline        pointer to dataline object in fetch_files_tab
+            data            fitdata object in bfit.data dictionary
             disable_entry_callback  disables copy of entry strings to
                                     dataline.bdfit parameter values
+            gui_param_button ttk.Button, set initial parameters 
+            lines           list of InputLine objects
             parent          pointer to parent object (frame)
-            parlabels       label objects, saved for later destruction
-            parentry        [parname][colname] of Entry objects saved for
-                            retrieval and destruction
             run_label       label for showing which run is selected
             run_label_title label for showing which run is selected
             fitframe        mainframe for this tab.
     """
 
-    n_runs_max = 5      # number of runs before scrollbar appears
     collist = ['p0', 'blo', 'bhi', 'res', 'dres-', 'dres+', 'chi', 'fixed', 'shared']
-    selected = 0        # index of selected run
 
     # ======================================================================= #
-    def __init__(self, bfit, parent, dataline, row):
+    def __init__(self, bfit, parent, data, row):
         """
             Inputs:
                 bfit:       top level pointer
@@ -1545,16 +1518,17 @@ class fitline(object):
         # get logger
         self.logger = logging.getLogger(logger_name)
         self.logger.debug('Initializing fit line for run %d in row %d',
-                          dataline.run, row)
+                          data.run, row)
 
         # initialize
         self.bfit = bfit
         self.parent = parent
-        self.dataline = dataline
+        self.data = data
         self.row = row
-        self.parlabels = []
-        self.parentry = {}
         self.disable_entry_callback = False
+        self.lines = []
+
+        data.fitline = self
 
         # get parent frame
         fitframe = ttk.Frame(self.parent, pad=(5, 0))
@@ -1562,14 +1536,14 @@ class fitline(object):
         frame_title = ttk.Frame(fitframe)
 
         # label for displyaing run number
-        if type(self.dataline.bdfit.bd) is bdata:
+        if type(self.data.bd) is bdata:
             self.run_label = Label(frame_title,
-                            text='[ %d - %d ]' % (self.dataline.run,
-                                                  self.dataline.year),
+                            text='[ %d - %d ]' % (self.data.run,
+                                                  self.data.year),
                            bg=colors.foreground, fg=colors.background)
 
-        elif type(self.dataline.bdfit.bd) is bmerged:
-            runs = textwrap.wrap(str(self.dataline.run), 5)
+        elif type(self.data.bd) is bmerged:
+            runs = textwrap.wrap(str(self.data.run), 5)
 
             self.run_label = Label(frame_title,
                                 text='[ %s ]' % ' + '.join(runs),
@@ -1577,28 +1551,28 @@ class fitline(object):
 
         # title of run
         self.run_label_title = Label(frame_title,
-                            text=self.dataline.bdfit.title,
+                            text=self.data.title,
                             justify='right', fg=colors.red)
 
         # Parameter input labels
         gui_param_button = ttk.Button(fitframe, text='Initial Value',
-                        command=lambda : self.bfit.fit_files.do_gui_param(id=self.dataline.id),
+                        command=lambda : self.bfit.fit_files.do_gui_param(id=self.data.id),
                         pad=0)
         result_comp_button = ttk.Button(fitframe, text='Result',
                         command=self.draw_fn_composition, pad=0)
 
         c = 0
-        ttk.Label(fitframe, text='Parameter').grid(    column=c, row=1, padx=5); c+=1
-        gui_param_button.grid(column=c, row=1, padx=5, pady=2); c+=1
-        ttk.Label(fitframe, text='Low Bound').grid(    column=c, row=1, padx=5); c+=1
-        ttk.Label(fitframe, text='High Bound').grid(   column=c, row=1, padx=5); c+=1
-        result_comp_button.grid(column=c, row=1, padx=5, pady=2, sticky=(E, W)); c+=1
-        ttk.Label(fitframe, text='Error (-)').grid(        column=c, row=1, padx=5); c+=1
-        ttk.Label(fitframe, text='Error (+)').grid(        column=c, row=1, padx=5); c+=1
-        ttk.Label(fitframe, text='ChiSq').grid(        column=c, row=1, padx=5); c+=1
-        ttk.Label(fitframe, text='Fixed').grid(        column=c, row=1, padx=5); c+=1
-        ttk.Label(fitframe, text='Shared').grid(       column=c, row=1, padx=5); c+=1
-
+        ttk.Label(fitframe, text='Parameter').grid(     column=c, row=1, padx=5); c+=1
+        gui_param_button.grid(                          column=c, row=1, padx=5, pady=2); c+=1
+        ttk.Label(fitframe, text='Low Bound').grid(     column=c, row=1, padx=5); c+=1
+        ttk.Label(fitframe, text='High Bound').grid(    column=c, row=1, padx=5); c+=1
+        result_comp_button.grid(                        column=c, row=1, padx=5, pady=2, sticky=(E, W)); c+=1
+        ttk.Label(fitframe, text='Error (-)').grid(     column=c, row=1, padx=5); c+=1
+        ttk.Label(fitframe, text='Error (+)').grid(     column=c, row=1, padx=5); c+=1
+        ttk.Label(fitframe, text='ChiSq').grid(         column=c, row=1, padx=5); c+=1
+        ttk.Label(fitframe, text='Fixed').grid(         column=c, row=1, padx=5); c+=1
+        ttk.Label(fitframe, text='Shared').grid(        column=c, row=1, padx=5); c+=1
+        
         self.run_label.grid(column=0, row=0, padx=5, pady=5, sticky=W)
         self.run_label_title.grid(column=2, row=0, padx=5, pady=5, sticky=E)
         frame_title.grid(column=0, row=0, columnspan=c, sticky=(E, W))
@@ -1606,6 +1580,7 @@ class fitline(object):
 
         # save frame
         self.fitframe = fitframe
+        self.gui_param_button = gui_param_button
 
         # resizing
         for i in range(c):
@@ -1613,7 +1588,6 @@ class fitline(object):
 
         # fill with initial parameters
         self.parlabels = []     # track all labels and inputs
-        self.populate()
 
     # ======================================================================= #
     def __del__(self):
@@ -1628,63 +1602,56 @@ class fitline(object):
             pass
 
         if hasattr(self, 'parentry'):    del self.parentry
-
+        
     # ======================================================================= #
-    def get_new_parameters(self):
+    def get_new_parameters(self, force_modify=False):
         """
             Fetch initial parameters from fitter, set to data.
 
             plist: Dictionary of initial parameters {par_name:par_value}
         """
         
-        run = self.dataline.id
-
         # get pointer to fit files object
         fit_files = self.bfit.fit_files
         fitter = fit_files.fitter
         ncomp = fit_files.n_component.get()
         fn_title = fit_files.fit_function_title.get()
 
-        # get list of parameter names
-        plist = list(fitter.gen_param_names(fn_title, ncomp))
-        plist.sort()
-
         # check if we are using the fit results of the prior fit
         values_res = None
-        res = self.bfit.data[run].fitpar['res']
+        res = self.data.fitpar['res']
         
-        isfitted = any(res.values) # is this run fitted?
+        isfitted = not all(res.isna()) # is this run fitted?
         
         if fit_files.set_prior_p0.get() and not isfitted:
             
             r = 0
-            for rkey in self.bfit.data:
-                data = self.bfit.data[rkey]
-                
-                isfitted = any(data.fitpar['res'].values) # is the latest run fitted?
+            for data in self.bfit.data.values():
+                isfitted = not all(data.fitpar['res'].isna()) # is the latest run fitted?
                 if isfitted and data.run > r:
                     r = data.run
-                    values_res = data.fitpar
+                    values_res = data.fitpar.copy()
         
         # get calcuated initial values
         try:
-            values = fitter.gen_init_par(fn_title, ncomp, self.bfit.data[run].bd,
+            values = fitter.gen_init_par(fn_title, ncomp, self.data.bd,
                                     self.bfit.get_asym_mode(fit_files))
         except Exception as err:
             print(err)
             self.logger.exception(err)
-            return tuple()
-            # ~ raise err from None
-              
+            return
+                
         # set p0 from old
         if values_res is not None:
-            values['p0'] = values_res['res']
-                                     
-        # set to data
-        self.bfit.data[run].set_fitpar(values)
+            for idx in values_res.index:
+                if idx not in values.index:
+                    values = values.append(values_res.loc[idx])
+                    values.loc[idx, ['res', 'dres+', 'dres-', 'chi']] = np.nan
+            values.loc[:, 'p0'] = values_res.loc[:, 'res']
         
-        return tuple(plist)
-
+        # set to data
+        self.data.set_fitpar(values)
+        
     # ======================================================================= #
     def grid(self, row):
         """Re-grid a dataline object so that it is in order by run number"""
@@ -1696,7 +1663,7 @@ class fitline(object):
     def degrid(self):
         """Remove displayed dataline object from file selection. """
 
-        self.logger.debug('Degridding fitline for run %s', self.dataline.id)
+        self.logger.debug('Degridding fitline for run %s', self.data.id)
         self.fitframe.grid_forget()
         self.fitframe.update_idletasks()
 
@@ -1706,14 +1673,14 @@ class fitline(object):
             Draw window with function components and total
         """
 
-        self.logger.info('Drawing fit composition for run %s', self.dataline.id)
+        self.logger.info('Drawing fit composition for run %s', self.data.id)
 
         # get top objects
         fit_files = self.bfit.fit_files
         bfit = self.bfit
 
         # get fit object
-        bdfit = self.dataline.bdfit
+        bdfit = self.data
 
         # get base function
         fn_name = fit_files.fit_function_title.get()
@@ -1724,10 +1691,12 @@ class fitline(object):
         pnames_combined = fit_files.fitter.gen_param_names(fn_name, ncomp)
 
         if '2' in bdfit.mode:
-            fn_single = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=1,
+            fn_single = fit_files.fitter.get_fn(fn_name=fn_name, 
+                            ncomp=1,
                             pulse_len=bdfit.pulse_s,
                             lifetime=bd.life[bfit.probe_species.get()])
-            fn_combined = fit_files.fitter.get_fn(fn_name=fn_name, ncomp=ncomp,
+            fn_combined = fit_files.fitter.get_fn(fn_name=fn_name, 
+                            ncomp=ncomp,
                             pulse_len=bdfit.pulse_s,
                             lifetime=bd.life[bfit.probe_species.get()])
         else:
@@ -1844,302 +1813,93 @@ class fitline(object):
             force_modify: if true, clear and reset parameter inputs.
         """
 
-        # get list of parameters and initial values
-        try:
-            plist = self.get_new_parameters()
-        except KeyError as err:
-            return          # returns if no parameters found
-        except RuntimeError as err:
-            messagebox.showerror('RuntimeError', err)
-            raise err from None
-        else:
-            n_old_par = len(self.parlabels)
-            n_new_par = len(plist)
-            min_n_par = min(n_old_par, n_new_par)
-            parkeys = list(self.parentry.keys())    # old parameter keys
-            parkeys.sort()
-
-            # destroy excess labels and entries
-            for i in range(n_new_par, n_old_par):
-                self.parlabels[-1].destroy()
-                for p in self.parentry[parkeys[i]].keys():
-                    self.parentry[parkeys[i]][p][1].destroy()
-
-                del self.parlabels[-1]
-                del self.parentry[parkeys[i]]
-
-        self.logger.debug('Populating parameter list with %s', plist)
-
         # get data and frame
         fitframe = self.fitframe
-        fitdat = self.dataline.bdfit
+        fitdat = self.data
+        fit_files = self.bfit.fit_files
+        pop_constr = fit_files.pop_fitconstr
 
-        # labels ------------------------------------------------------------
-        c = 0
-
-        # repurpose old labels
-        for i in range(min_n_par):
-            self.parlabels[i]['text'] = plist[i]
-
-        # make new labels
-        for i in range(n_old_par, n_new_par):
-            self.parlabels.append(ttk.Label(fitframe, text=plist[i], justify=LEFT))
-            self.parlabels[-1].grid(column=c, row=2+i, padx=5, sticky=E)
-
-        # move all parameters entries and values to new key set
-        new_parentry = {}
-        for i in range(min_n_par):
-            p = plist[i]
-            p_old = parkeys[i]
-            new_parentry[p] = self.parentry[p_old]
-        self.parentry = new_parentry
-
-        # initial parameters -------------------------------------------------
-
-        # repurpose old parameter fields
-        r = 1
-        self.disable_entry_callback = True  # prevent setting bad data
-        for i in range(min_n_par):
-            p = plist[i]
-            c = 1
-            r += 1
-
-            # clear entry and insert new text
-            for col in ('p0', 'blo', 'bhi'):
-                entry = self.parentry[p][col][1]
-
-                if force_modify:
-                    entry.delete(0, 'end')
-                    self.parentry[p]['fixed'][0].set(fitdat.fitpar.loc[p, 'fixed'])
-
-                if not entry.get():
-                    try:
-                        entry.insert(0, str(fitdat.fitpar.loc[p, col]))
-                    except KeyError:
-                        pass
-
-                entry.grid(column=c, row=r, padx=5, sticky=E); c += 1
-
-        r = min_n_par+1
-
-        self.disable_entry_callback = False
-
-        # make new parameter fields
-        for i in range(n_old_par, n_new_par):
-            p = plist[i]
-            self.parentry[p] = {}
-
-            c = 0               # gridding column
-            r += 1              # gridding row
-
-            for col in ('p0', 'blo', 'bhi'):
-                c += 1
-                value = StringVar()
-                entry = Entry(fitframe, textvariable=value, width=13)
+        if force_modify:
+            fitdat.reset_fitpar()
+            
+        # check if new data
+        new_data = len(fitdat.fitpar.index) == 0
+        
+        # disable init button if constrained
+        pop_constr.set_init_button_state(self)
+                    
+        # add constrained parameter and function
+        pop_constr.add_new_par(fitdat)    
+        pop_constr.add_fn(fitdat)
+        
+        # drop parameters which are no longer needed
+        pop_constr.drop_unused_param(fitdat)
                 
-                try:
-                    entry.insert(0, str(fitdat.fitpar.loc[p, col]))
-                except KeyError:
-                    entry.insert(0, '')
-                entry.grid(column=c, row=r, padx=5, sticky=E)
-                self.parentry[p][col] = (value, entry)
-
-        # fit results -------------------------------------------------------
-
-        # repurpose old result fields
-        r = 1
-        for i in range(min_n_par):
-            r += 1
-            c = 4
-            p = plist[i]
-
-            # clear text in parentry fields
-            for col in ('res', 'dres-', 'dres+', 'chi'):
-                if col in self.parentry[p].keys():  # exception needed for chi
-                    par = self.parentry[p][col][1]
-                    par.delete(0, 'end')
-
-                    if col == 'chi':
-                        par.grid(column=c, row=r, padx=5, sticky=E, rowspan=len(plist))
-                    else:
-                        par.grid(column=c, row=r, padx=5, sticky=E)
-                c += 1
-
-            # do fixed box
-            self.parentry[p]['fixed'][1].grid(column=c, row=r, padx=5, sticky=E); c += 1
-
-            # do shared box
-            self.parentry[p]['shared'][1].grid(column=c, row=r, padx=5, sticky=E); c += 1
-
-        # make new result fields
-        r = min_n_par+1
-        for i in range(n_old_par, n_new_par):
-            r += 1
-            c = 4
-            p = plist[i]
-
-            # do results
-            par_val = StringVar()
-            par = Entry(fitframe, textvariable=par_val, width=15)
-            par['state'] = 'readonly'
-            par['foreground'] = colors.foreground
-
-            dpar_val_l = StringVar()
-            dpar_val_u = StringVar()
-            dpar_l = Entry(fitframe, textvariable=dpar_val_l, width=15)
-            dpar_u = Entry(fitframe, textvariable=dpar_val_u, width=15)
-            dpar_l['state'] = 'readonly'
-            dpar_l['foreground'] = colors.foreground
-            dpar_u['state'] = 'readonly'
-            dpar_u['foreground'] = colors.foreground
-
-            par. grid(column=c, row=r, padx=5, sticky=E); c += 1
-            dpar_l.grid(column=c, row=r, padx=5, sticky=E); c += 1
-            dpar_u.grid(column=c, row=r, padx=5, sticky=E); c += 1
-
-            # do chi only once
-            if i==0:
-                chi_val = StringVar()
-                chi = Entry(fitframe, textvariable=chi_val, width=7)
-                chi['state'] = 'readonly'
-                chi['foreground'] = colors.foreground
-
-                chi.grid(column=c, row=r, padx=5, sticky=E, rowspan=len(plist));
-                self.parentry[p]['chi'] = (chi_val, chi)
-            c += 1
-
-            # save Entry objects in dictionary [parname][colname]
-            self.parentry[p]['res'] = (par_val, par)
-            self.parentry[p]['dres-'] = (dpar_val_l, dpar_l)
-            self.parentry[p]['dres+'] = (dpar_val_u, dpar_u)
-
-            # do fixed box
-            value = BooleanVar()
-            entry = ttk.Checkbutton(fitframe, text='', \
-                                     variable=value, onvalue=True, offvalue=False)
-            entry.grid(column=c, row=r, padx=5, sticky=E); c += 1
-            self.parentry[p]['fixed'] = (value, entry)
+        # set new p0
+        if force_modify or new_data:
+            
+            # make a new parameter dataframe
             try:
-                value.set(bool(fitdat.fitpar.loc[p, 'fixed']))
-            except KeyError:
-                pass
+                self.get_new_parameters(force_modify)
+            except KeyError as err:
+                return          # returns if no parameters found
+            except RuntimeError as err:
+                messagebox.showerror('RuntimeError', err)
+                raise err from None
+        
+        # get list of parameters and initial values
+        fitdat.fitpar.sort_index(inplace=True)
+        fitpar = fitdat.fitpar
+        plist = tuple(fitpar.index.values)
+        self.logger.debug('Populating parameter list with %s', plist)
+        
+        # get needed number of lines
+        n_lines_total = len(plist)
+        n_lines_current = len(self.lines)
+        n_lines_needed = n_lines_total - n_lines_current
+        
+        # drop unneeded lines
+        if n_lines_needed < 0:
+            
+            unused = self.lines[n_lines_total:]
+            for rem in unused:
+                rem.degrid()
+                del rem
+            self.lines = self.lines[:n_lines_total]
 
-            # do shared box
-            entry = ttk.Checkbutton(fitframe, text='', onvalue=True, offvalue=False)
-            entry.grid(column=c, row=r, padx=5, sticky=E); c += 1
-            self.parentry[p]['shared'] = [value, entry]
+        # add new lines
+        elif n_lines_needed > 0:
+            self.lines.extend([InputLine(fitframe, self.bfit, fitdat) \
+                                                for i in range(n_lines_needed)])
 
-        # set p0 synchronization ----------------------------------------------
-
-        # make callback function to set p0 values in bdfit object
-        def callback(*args, parname, col, source):
-
-            if self.disable_entry_callback:
-                return
-
-            # set parameter entry synchronization
-            self.bfit.fit_files.modify_all(source=source, par=parname, column=col)
-
-            # set bdfit p0 values
-            if col != 'fixed':
-                try:
-                    self.dataline.bdfit.fitpar.loc[parname, col] = \
-                            float(self.parentry[parname][col][0].get())
-                # failure cases:
-                #   KeyError on ncomp change
-                #   ValueError on bad user input
-                except (ValueError, KeyError):
-                    pass
-
-            elif col == 'fixed':
-                try:
-                    if self.parentry[parname][col][0].get():
-                        self.bfit.fit_files.share_var[parname].set(False)
-                except KeyError:
-                    pass
-
-        # set synchronization
-        for p in self.parentry.keys():
-            parentry = self.parentry[p]
-
-            # shared box value synchronization
-            var = self.bfit.fit_files.share_var[p]
-            parentry['shared'][0] = var
-            parentry['shared'][1].config(variable=var)
-
-            # set callback
-            for k in ('p0', 'blo', 'bhi', 'fixed'):
-
-                # remove old trace callbacks
-                for t in parentry[k][0].trace_vinfo():
-                    parentry[k][0].trace_vdelete(*t)
-
-                # set new trace callback
-                parentry[k][0].trace_id = parentry[k][0].trace("w", \
-                                partial(callback, parname=p, col=k, source=self))
-                parentry[k][0].trace_callback = \
-                                partial(callback, parname=p, col=k, source=self)
-
-        # disallow fixed shared parameters
-        def callback2(*args, parname):
-            parentry = self.parentry[parname]
-            var = self.bfit.fit_files.share_var[parname]
-            if var.get():
-                parentry['fixed'][0].set(False)
-
-        for p in self.parentry.keys():
-            parentry = self.parentry[p]
-            share = parentry['shared'][0]
-            share.trace_id = share.trace("w", partial(callback2, parname=p))
-            share.trace_callback = partial(callback2, parname=p)
-
+        # reassign and regrid lines
+        for i, line in enumerate(self.lines):
+            line.grid(i+2)
+            
         # drop old parameters
-        fitdat.drop_unused_param(self.parentry.keys())
-    
+        fitdat.drop_unused_param(plist)
+        fitdat.fitpar.sort_index(inplace=True)
+        fitpar = fitdat.fitpar
+        
+        # set parameters
+        for i, k in enumerate(fitpar.index):
+            self.lines[i].set(k, **fitpar.loc[k].to_dict())
+                                     
     # ======================================================================= #
-    def set_input(self, source_line, parameter, column, set_all):
+    def set(self, pname, **kwargs):
         """
-            Set the input value for a given parameter to match the value in
-            another fitline
-
-            source_line: the fitline to copy
-            parameter:   name of the parameter to copy
-            column:      name of the column to copy
-            set_all:     boolean corresponding to fit_files.set_as_group
+            Set line columns
         """
-
-        # get parameter entry line and sharing
-        try:
-            parentry = self.parentry[parameter]
-            shared = parentry['shared'][0].get()
-            source_entry = source_line.parentry[parameter]
-        except KeyError:
-            return
-
-        # set value
-        if set_all or shared:
-
-            p = parentry[column][0]
-
-            # remove the trace
-            p.trace_vdelete("w", p.trace_id)
-
-            # set the value
-            p.set(source_entry[column][0].get())
-
-            # add the trace back
-            p.trace_id = p.trace("w", p.trace_callback)
-
+        for line in self.lines:
+            if line.pname == pname:
+                line.set(**kwargs)
+        
     # ======================================================================= #
     def show_fit_result(self):
-
-        self.logger.debug('Showing fit result for run %s', self.dataline.id)
-
-        # Set up variables
-        displays = self.parentry
+        self.logger.debug('Showing fit result for run %s', self.data.id)
 
         try:
-            data = self.dataline.bdfit
+            data = self.data
         except KeyError:
             return
         
@@ -2148,17 +1908,9 @@ class fitline(object):
         except AttributeError:
             return
 
-        # display
-        for parname in displays.keys():
-            disp = displays[parname]
-            showstr = "%"+".%df" % self.bfit.rounding
-            disp['res'][0].set(showstr % data.fitpar.loc[parname, 'res'])
-            disp['dres-'][0].set(showstr % data.fitpar.loc[parname, 'dres-'])
-            disp['dres+'][0].set(showstr % data.fitpar.loc[parname, 'dres+'])
+        # show fit results
+        for line in self.lines:
+            values = {r: data.fitpar.loc[line.pname, r] for r in ('res', 'dres-', 'dres+')}
+            values['chi'] = chi
+            line.set(**values)
 
-            if 'chi' in disp.keys():
-                disp['chi'][0].set('%.2f' % chi)
-                if float(chi) > self.bfit.fit_files.chi_threshold:
-                    disp['chi'][1]['readonlybackground']='red'
-                else:
-                    disp['chi'][1]['readonlybackground']=colors.readonly

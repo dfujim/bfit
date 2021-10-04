@@ -45,6 +45,40 @@ class decay_corrected_fn(object):
                 raise AttributeError(err) from None
 
 # =========================================================================== #
+def get_constrained_fn(fn, pname_orig, pname_constr, constr):
+    """
+        Return constrained function
+        
+        fn: function handle, inputs in the order of pname_orig
+        pname_orig: list of str, parameter names
+        pname_constr: list of str, parameter names after constraining
+        constr: dict {defined (str): [fn (handle), pname (list of str)]}
+    """
+    
+    # par input order is that of pname_constr
+    # reshuffle order to match panme_orig so it can be passed to fn
+    inpt = []
+    for pname in pname_orig:
+        if pname in pname_constr:
+            inpt.append(pname_constr.index(pname))
+        elif pname in constr.keys():
+            
+            c_fn, c_par = constr[pname]
+            c_inpt = [pname_constr.index(c) for c in c_par]
+            inpt.append((c_fn, c_inpt))
+        else:
+            raise RuntimeError('Parameter {param} not'.format(param=pname)+\
+                               ' found in pname_constr or constr')
+    
+    # new fit function with input order matching that of pname_constr
+    def new_fn(x, *pars):
+        pars = np.asarray(pars)
+        new_inpt = [i[0](*pars[i[1]]) if type(i) is tuple else pars[i] for i in inpt]
+        return fn(x, *new_inpt)
+        
+    return new_fn
+
+# =========================================================================== #
 # TYPE 1 FUNCTIONS
 # =========================================================================== #
 def lorentzian(freq, peak, fwhm, amp):

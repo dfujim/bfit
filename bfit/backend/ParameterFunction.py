@@ -64,25 +64,24 @@ class ParameterFunction(ConstrainedFunction):
         draw_comp.append(name)
         
     # ======================================================================= # 
-    def __call__(self):
+    def __call__(self, run_id):
         """ 
             Get data and calculate the parameter
         """
         
         inputs = {}
-        runs = sorted(self.bfit.data.keys())
         for var in self.inputs:
             
             # get value for all data
             if var in KEYVARS:
-                values = [self._get_value(self.bfit.data[r], var) for r in runs]
+                value = self._get_value(self.bfit.data[run_id], var)
             elif var in self.parnames:
                 
                 var_par = var.replace('lambda1', '1_T1')
-                values = [self.bfit.data[r].fitpar['res'][var_par] for r in runs]
+                value = self.bfit.data[run_id].fitpar['res'][var_par]
                     
             # set up inputs
-            inputs[var] = np.array(values)
+            inputs[var] = value
                             
         # calculate the parameter
         return self.equation(**inputs)

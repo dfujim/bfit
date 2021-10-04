@@ -50,6 +50,9 @@ def check_columns(filename, columns):
     for c in columns:
         assert c in df.columns, ('%s not included' % c)
     
+    for c in df.columns:
+        assert c in columns, ("%s included when it shouldn't be" % c)
+    
     # check column length
     assert_equal(len(df.columns), len(columns))
 
@@ -91,13 +94,7 @@ def test_columns_no_fit(b=None):
                      ]:
             new_columns.append('Error '+c)
         
-    columns = new_columns
-        
-    # add missing columns: run number, shared, fixed
-    for name in b.data['2021.40063'].parnames:
-        columns.append('fixed '+name)
-    
-    check_columns(filename, columns)
+    check_columns(filename, new_columns)
 
     # clean
     os.remove(filename)

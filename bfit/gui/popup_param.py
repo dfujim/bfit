@@ -26,6 +26,7 @@ class popup_param(object):
         fitter:         fit_tab.fitter obje (defined in default_routines.py)
         first:          if True, first time through fixing parameters
         fname:          name of the function 
+        lines:          dict of InputLine objects to link parameters
         logger:         logging variable
         mode:           1 or 2 to switch between run modes
         n_components:   number of components in the fit function
@@ -148,12 +149,14 @@ class popup_param(object):
         self.fname = fit_tab.fit_function_title.get()
         self.parnames = self.fitter.gen_param_names(fn_name=self.fname, 
                                           ncomp=self.n_components)
-        parentry = fit_tab.fit_lines[run_id].parentry
+        
+        lines = fit_tab.fit_lines[run_id].lines
+        self.lines = {line.pname:line  for line in lines}
         
         # make initial parameter list
-        self.p0 = {k:parentry[k]['p0'][0] for k in parentry.keys()}
-        self.blo = {k:parentry[k]['blo'][0] for k in parentry.keys()}
-        self.bhi = {k:parentry[k]['bhi'][0] for k in parentry.keys()}
+        self.p0 =  {k:v.variable['p0']  for k, v in self.lines.items()}
+        self.blo = {k:v.variable['blo'] for k, v in self.lines.items()}
+        self.bhi = {k:v.variable['bhi'] for k, v in self.lines.items()}
         
         # check for zero width
         for k in self.p0.keys():
@@ -286,7 +289,7 @@ class popup_param(object):
                         
             # set p0     
             val = p0[i][self.parmap[key]]
-            self.p0[k].set(val)
+            self.lines[k].set(p0=val)
                     
             # check bounds are ok
             blo = float(self.blo[k].get())

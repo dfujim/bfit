@@ -353,7 +353,7 @@ class PltTracker(object):
             self.figure(style)
         
         # draw in active style 
-        fig = plt.figure(active_style)
+        fig = plt.figure(num=active_style)
         
         try:
             ax = fig.axes[0]
