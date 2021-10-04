@@ -6,9 +6,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-import os, collections
+import os
 import time
 from bfit.fitting.minuit import minuit
+from collections.abc import Iterable
 from bfit.fitting.leastsquares import LeastSquares
 import warnings
 
@@ -208,7 +209,7 @@ class global_fitter(object):
                 if dx_low is not None:  dx_low[i] = dx_low[i][idx]
 
         # check if list of functions given 
-        if not isinstance(fn, collections.Iterable):
+        if not isinstance(fn, Iterable):
             fn = [fn]*self.nsets
         
         # check metadata

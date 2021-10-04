@@ -64,14 +64,14 @@ def test_populate_param(b=None, tab=None, tab2=None):
     
     # set fit fn
     tab.fit_function_title.set('Str Exp')
-    tab.populate_param()
-    assert_equal(line.get_new_parameters(), ('1_T1', 'amp', 'beta'), 'Single function parameters populated')
+    tab.populate_param(force_modify=True)
+    assert_equal(tuple(line.data.fitpar.index), ('1_T1', 'amp', 'beta'), 'Single function parameters populated')
     
     # multiple terms
     tab.fit_function_title.set('Exp')
     tab.n_component.set(2)
-    tab.populate_param()
-    assert_equal(line.get_new_parameters(), ('1_T1_0', '1_T1_1', 'amp_0', 'amp_1'), 
+    tab.populate_param(force_modify=True)
+    assert_equal(tuple(line.data.fitpar.index), ('1_T1_0', '1_T1_1', 'amp_0', 'amp_1'), 
                  'Two term function parameters populated')
                  
     # undo changes

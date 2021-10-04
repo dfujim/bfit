@@ -1111,23 +1111,24 @@ class fit_files(object):
                 else:
                     val['Error '+v] = v2[1]
 
-        # get fixed and shared
+        # get fixed and shared, if fitted
         keylist = []
         for k, line in self.fit_lines.items():
             keylist.append(k)
             data = line.data
             
-            for kk in data.fitpar.index:
-                
-                name = 'fixed '+kk
-                if name not in val.keys(): val[name] = []
-                val[name].append(data.fitpar.loc[kk, 'fixed'])
-                
-                name = 'shared '+kk
-                if name not in val.keys(): val[name] = []
-                val[name].append(data.fitpar.loc[kk, 'shared'])
+            if not all(data.fitpar['res'].isna()):
+            
+                for kk in data.fitpar.index:
+                    
+                    name = 'fixed '+kk
+                    if name not in val.keys(): val[name] = []
+                    val[name].append(data.fitpar.loc[kk, 'fixed'])
+                    
+                    name = 'shared '+kk
+                    if name not in val.keys(): val[name] = []
+                    val[name].append(data.fitpar.loc[kk, 'shared'])
 
-        # get shared and fixed parameters
         # make data frame for output
         df = pd.DataFrame(val)
         df.set_index('Run Number', inplace=True)
