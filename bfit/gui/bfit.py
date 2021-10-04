@@ -1117,6 +1117,20 @@ class bfit(object):
         fit_files.populate()
         fit_files.populate_param(force_modify=True)
 
+        # constrain
+        constr = fit_files.pop_fitconstr
+        constr.constraints_are_set = from_file['constr_constraints_are_set']
+        
+        constr.show()
+        constr.entry.insert('1.0', from_file['constr_input_fn_text'])
+        constr.get_input()
+        
+        if constr.constraints_are_set:
+            constr.set_constraints()
+        else:
+            constr.win.destroy()
+            constr.win.update()
+        
         # set parameter values
         data = self.data
         fitpar_all = from_file['fitpar']
@@ -1279,10 +1293,15 @@ class bfit(object):
         to_file['fit_xlo'] = fit_files.xlo.get()
         to_file['fit_xhi'] = fit_files.xhi.get()
         
+        # save constraints
+        constr = fit_files.pop_fitconstr
+        to_file['constr_constraints_are_set'] = constr.constraints_are_set
+        to_file['constr_input_fn_text'] = constr.input_fn_text
+        
         # get parameter values from data
         data_values = {id: dat.fitpar.to_dict() for id, dat in self.data.items()}
         to_file['fitpar'] = data_values
-
+            
         # get xlims
         to_file['xlo'] = fit_files.xlo.get()
         to_file['xhi'] = fit_files.xhi.get()

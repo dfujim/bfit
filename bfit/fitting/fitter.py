@@ -300,6 +300,9 @@ class fitter(object):
             return (names)
         """
         
+        if fn_name == '':
+            return tuple()
+        
         # get names
         names_orig = self.param_names[fn_name]
         

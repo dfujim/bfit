@@ -145,14 +145,14 @@ class popup_fit_constraints(template_fit_popup):
             # get values
             values = []
             for par in self.new_par_unique:
-                if par in data.fitpar.index:
+                if par in data.fitpar.index:                    
                     values.append(data.fitpar.loc[par, c])
                 else:
                     if par not in new_par_added:
                         new_par_added.append(par)
                     values.append(self.defaults[c])
                     
-            # set values                
+            # set values
             new_fit_par[c] = values
             
         data.set_fitpar(pd.DataFrame(new_fit_par, 
@@ -203,6 +203,7 @@ class popup_fit_constraints(template_fit_popup):
         
         try:
             self.new_par_unique = sorted(np.unique(np.concatenate(new_par)))
+            self.new_par_unique = list(map(str, self.new_par_unique))
         except ValueError:
             self.new_par_unique = []
     
