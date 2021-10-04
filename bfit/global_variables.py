@@ -4,6 +4,7 @@
 
 from os.path import join
 
+# variables
 __src__ = join('bfit', 'fitting')
 __version__ = '4.15.0'
 
