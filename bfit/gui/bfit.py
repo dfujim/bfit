@@ -710,8 +710,8 @@ class bfit(object):
     # ======================================================================= #
     def citation(self):
         """Display publication page"""
-        self.logger.info('Opening https://arxiv.org/abs/2004.10395')
-        webbrowser.open('https://arxiv.org/abs/2004.10395')    
+        self.logger.info('Opening https://joss.theoj.org/papers/10.21105/joss.03598')
+        webbrowser.open('https://joss.theoj.org/papers/10.21105/joss.03598')    
     
     # ======================================================================= #
     def do_close_all(self):
