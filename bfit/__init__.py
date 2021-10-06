@@ -4,6 +4,7 @@ from .fitting.global_fitter import global_fitter
 from .fitting.global_bdata_fitter import global_bdata_fitter
 from .fitting.fit_bdata import fit_bdata
 from .fitting.minuit import minuit
+from .fitting.gen_init_par import gen_init_par
 from .global_variables import __version__
 
 import logging, os, sys, argparse, subprocess, requests, json, code
@@ -28,6 +29,7 @@ __all__.extend(("lorentzian",
                 "global_bdata_fitter",
                 "fit_bdata",
                 "minuit",
+                "gen_init_par",
                 ))
 
 from bfit.gui.bfit import bfit
