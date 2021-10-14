@@ -18,6 +18,9 @@ def gen_init_par(fn_name, ncomp, bdataobj, asym_mode='combined'):
             col: p0, blo, bhi, fixed
             index: parameter name
     """
+    
+    fn_name = fn_name.lower()
+    
     # asym_mode un-used types 
     if asym_mode in (   'h',           # Split Helicity          
                         'hm',          # Matched Helicity
@@ -43,7 +46,7 @@ def gen_init_par(fn_name, ncomp, bdataobj, asym_mode='combined'):
     x, a, da = bdataobj.asym(asym_mode)
     
     # set pulsed exp fit initial parameters
-    if fn_name in ('Exp', 'Bi Exp', 'Str Exp'):
+    if fn_name in ('exp', 'bi exp', 'str exp', 'biexp', 'strexp'):
         # ampltitude average of first 5 bins
         amp = abs(np.mean(a[0:5])/ncomp)
         
@@ -64,26 +67,26 @@ def gen_init_par(fn_name, ncomp, bdataobj, asym_mode='combined'):
             amp_bounds = (0, np.inf)
         
         # set values
-        if fn_name == 'Exp':
+        if fn_name == 'exp':
             par_values = {  '1_T1':(1./T1, 0, np.inf, False), 
                             'amp':(amp, *amp_bounds, False), 
                          }
                         
-        elif fn_name == 'Bi Exp':
+        elif fn_name in ('bi exp', 'biexp'):
             par_values = {  '1_T1':(1./T1, 0, np.inf, False), 
                             '1_T1b':(10./T1, 0, np.inf, False), 
                             'fraction_b':(0.5, 0, 1, False), 
                             'amp':(amp, *amp_bounds, False), 
                          }
         
-        elif fn_name == 'Str Exp':
+        elif fn_name in ('str exp', 'strexp'):
             par_values = {  '1_T1':(1./T1, 0, np.inf, False), 
                             'beta':(0.5, 0, 1, False),
                             'amp':(amp, *amp_bounds, False), 
                          }
                         
     # set time integrated fit initial parameters
-    elif fn_name in ('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz'):
+    elif fn_name in ('lorentzian', 'gaussian', 'bilorentzian', 'quadlorentz'):
         
         # get baseline
         base = np.mean(a[:5])
@@ -114,19 +117,19 @@ def gen_init_par(fn_name, ncomp, bdataobj, asym_mode='combined'):
             height_bounds[1] = np.inf
         
         # set values (value, low bnd, high bnd, fixed)
-        if fn_name == 'Lorentzian':	
+        if fn_name == 'lorentzian':	
             par_values = {'peak':(peak, min(x), max(x), False), 
                           'fwhm':(width, 0, np.inf, False), 
                           'height':(height, *height_bounds, False), 
                           'baseline':(base, -np.inf, np.inf, False)
                          }
-        elif fn_name == 'Gaussian':
+        elif fn_name == 'gaussian':
             par_values = {'mean':(peak, min(x), max(x), False), 
                           'sigma':(width, 0, np.inf, False), 
                           'height':(height, *height_bounds, False), 
                           'baseline':(base, -np.inf, np.inf, False)
                           }
-        elif fn_name == 'BiLorentzian':
+        elif fn_name == 'bilorentzian':
             par_values = {'peak':(peak, min(x), max(x), False), 
                           'fwhmA':(width*10, 0, np.inf, False), 
                           'heightA':(height/10, *height_bounds, False), 
@@ -134,7 +137,7 @@ def gen_init_par(fn_name, ncomp, bdataobj, asym_mode='combined'):
                           'heightB':(height*9/10, *height_bounds, False), 
                           'baseline':(base, -np.inf, np.inf, False)
                          }
-        elif fn_name == 'QuadLorentz':
+        elif fn_name == 'quadlorentz':
             
             dx = max(x)-min(x)
             par_values = {'nu_0':((max(x)+min(x))/2, min(x), max(x), False), 
@@ -151,7 +154,7 @@ def gen_init_par(fn_name, ncomp, bdataobj, asym_mode='combined'):
                          }
      
     else:
-        raise RuntimeError('Bad function name.')
+        raise RuntimeError('Bad function name: "{}".'.format(fn_name))
     
     # do multicomponent
     par_values2 = {}

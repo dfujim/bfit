@@ -476,12 +476,14 @@ class fit_files(object):
                 # set current function
                 if self.fit_function_title.get() not in fn_titles:
                     self.fit_function_title.set(fn_titles[0])
+                    self.n_component.set(1)
 
         except UnboundLocalError:
             self.fit_function_title_box['values'] = ()
             self.fit_function_title.set("")
             self.fit_runmode_label['text'] = ""
             self.mode = ""
+            self.n_component.set(1)
         
         # delete unused fitline objects
         for k in list(self.fit_lines.keys()):       # iterate fit list
@@ -591,7 +593,8 @@ class fit_files(object):
             fline.populate(force_modify=force_modify)
         
         for fline in self.fit_lines_old.values():
-            fline.populate(force_modify=force_modify)
+            if self.mode == fline.data.mode:
+                fline.populate(force_modify=force_modify)
         
         # reset modify all value
         self.set_as_group.set(modify_all_value)

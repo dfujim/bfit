@@ -279,9 +279,11 @@ def test_fit_ncomp(b=None, tab=None, tab2=None):
     # set rebin
     tab2.data_lines['2020.40123'].rebin.set(10)
     tab2.data_lines['2020.40127'].rebin.set(20)
+    tab.populate()    
     
     # set ncomp
     tab.n_component.set(2)
+    tab.populate_param(force_modify=True)    
     
     # fit
     tab.populate()    
