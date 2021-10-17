@@ -78,13 +78,6 @@ class fit_files(object):
             xlo, hi:         StringVar, fit range limits on x axis
     """
 
-    default_fit_functions = {
-            '20':('Exp', 'Str Exp'),
-            '2h':('Exp', 'Str Exp'),
-            '1f':('Lorentzian', 'Gaussian'),
-            '1x':('Lorentzian', 'Gaussian'),
-            '1w':('Lorentzian', 'Gaussian'),
-            '1n':('Lorentzian', 'Gaussian')}
     mode = ""
     chi_threshold = 1.5 # threshold for red highlight on bad fits
     n_fitx_pts = 500    # number of points to draw in fitted curves
