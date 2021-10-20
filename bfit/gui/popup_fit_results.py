@@ -199,9 +199,7 @@ class popup_fit_results(template_fit_popup):
         model = 'lambda x, %s : %s' % (parstr, eqn)
         
         self.logger.info('Fitting model %s for x="%s", y="%s"', model, xstr, ystr)
-        
-        model = eval(model)
-        self.model_fn = model
+        self.model_fn = eval(model)
         npar = len(parnames)
         
         # set up p0, bounds
@@ -218,7 +216,7 @@ class popup_fit_results(template_fit_popup):
         yvals, yerrs_l, yerrs_h = self._get_data(ystr)
         
         # minimize
-        m = minuit(model, xvals, yvals, 
+        m = minuit(self.model_fn, xvals, yvals, 
                   dy = yerrs_h, 
                   dx = xerrs_h, 
                   dy_low = yerrs_l, 
@@ -226,6 +224,7 @@ class popup_fit_results(template_fit_popup):
                   name = parnames,
                   print_level = 0,
                   limit = np.array([blo, bhi]).T,
+                  start = p0,
                   )
         
         m.migrad()
