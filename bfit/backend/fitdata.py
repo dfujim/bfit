@@ -44,6 +44,7 @@ class fitdata(object):
                         constrained parameters
             dataline:   pointer to dataline object in fetch_files tab
             fitline:    pointer to fitline object in fit_files tab
+            flip_asym:  BooleanVar, if true, invert asymmetry about 0
             drawarg:    drawing arguments for errorbars (dict)
             field:      magnetic field in T (float)
             field_std:  magnetic field standard deviation in T (float)
@@ -88,6 +89,7 @@ class fitdata(object):
         self.check_draw_fit = BooleanVar()
         self.check_draw_res = BooleanVar()
         self.omit_scan = BooleanVar()
+        self.flip_asym = BooleanVar()
         
         # fetch files defaults
         self.check_state.set(True)
@@ -99,6 +101,7 @@ class fitdata(object):
         self.check_draw_fit.set(False)
         self.check_draw_res.set(False)
         self.omit_scan.set(False)
+        self.flip_asym.set(False)
         
         self.scan_repair_options = ''
         self.parnames = []
@@ -167,12 +170,27 @@ class fitdata(object):
                           
         # check for errors
         try:
-            return self.bd.asym(*args, deadtime=deadtime, 
+            asym = self.bd.asym(*args, deadtime=deadtime, 
                                 **kwargs)
         except Exception as err:
             messagebox.showerror(title=type(err).__name__, message=str(err))
             self.logger.exception(str(err))
             raise err from None
+            
+        # check if inversion is needed
+        if self.flip_asym.get():
+            if type(asym) in (tuple, np.ndarray):
+                asym[1] = -1 * asym[1]
+                
+            else: # assume mdict
+                
+                for k, val in asym.items():
+                    if k in 'pnfbc':
+                        val = list(val)
+                        val[0] = -1*val[0]
+                        asym[k] = tuple(val)
+                        
+        return asym
 
     # ======================================================================= #
     def draw(self, asym_type, figstyle='', asym_args=None, **drawargs):

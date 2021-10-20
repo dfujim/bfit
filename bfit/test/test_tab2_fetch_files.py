@@ -186,3 +186,31 @@ def test_filter(tab=None, b=None):
     removed = [('2020.4012'+k) in b.data.keys() for k in '3678']
     assert not any(removed), "Filter remove didn't remove correct runs"
     
+@with_bfit
+def test_flip(tab=None, b=None):
+    
+    # get data
+    tab.year.set(2020)
+    tab.run.set('40123')
+    tab.get_data()
+    data = b.data['2020.40123']
+    
+    # check asym c
+    asym = data.asym('c')
+    assert np.mean(asym[1][:10]) > 0, 'Run incorrect orientation no flip (tuple)'
+    
+    # flip 
+    data.flip_asym.set(True)
+    asym = data.asym('c')
+    assert np.mean(asym[1][:10]) < 0, 'Run incorrect orientation with flip (tuple)'
+    
+    # check asym dict
+    asym = data.asym()
+    assert np.mean(asym['c'][:10]) < 0, 'Run incorrect orientation with flip (dict)'
+    
+    # flip back
+    data.flip_asym.set(False)
+    asym = data.asym()
+    assert np.mean(asym['c'][:10]) > 0, 'Run incorrect orientation no flip (dict)'
+    
+    

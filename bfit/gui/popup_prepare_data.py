@@ -121,18 +121,20 @@ class popup_prepare_data(object):
         self.checkbutton_state.grid(column=0, row=0)
         
         # rebin ---------------------------------------------------------------
-        frame_rebin = ttk.Labelframe(topframe, text='Rebin', pad=5)
+        frame_rebin = ttk.Labelframe(topframe, text='Misc Options', pad=5)
         label_rebin = ttk.Label(frame_rebin, text='Rebin:')
         spin_rebin = Spinbox(frame_rebin, from_=0, to=100,
                              width=3,
                              textvariable=self.data.rebin)
+        checkbutton_flip = ttk.Checkbutton(frame_rebin, text='Flip asymmetry (a -> -a)', 
+                variable=self.data.flip_asym, onvalue=True, offvalue=False, pad=5)
         
         label_rebin.grid(column=0, row=0, padx=5, pady=5)
         spin_rebin.grid(column=1, row=0, padx=5, pady=5)
+        checkbutton_flip.grid(column=2, row=0, padx=5, pady=5)
         
         # scan repair ---------------------------------------------------------
         frame_scan = ttk.Labelframe(topframe, text='Scan Repair', pad=5)
-        
         
         # omit bins
         label_omit = ttk.Label(frame_scan, text='Remove bins:')
