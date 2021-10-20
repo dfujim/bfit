@@ -78,9 +78,6 @@ class fitdata(object):
         # bdata access
         self.bd = bd
         
-        # bfit variables
-        self.nbm = self.bfit.use_nbm
-        
         # fetch files variables
         self.check_state = BooleanVar()
         self.rebin = IntVar()
@@ -132,7 +129,7 @@ class fitdata(object):
             Get asymmetry
         """
         deadtime = 0
-
+        
         # check if deadtime corrections are needed
         if self.bfit.deadtime_switch.get():
             
@@ -162,7 +159,7 @@ class fitdata(object):
             
         # nbm
         if 'nbm' not in kwargs.keys():
-            kwargs['nbm'] = self.nbm.get()
+            kwargs['nbm'] = self.bfit.use_nbm.get()
                           
         # hist select
         if 'hist_select' not in kwargs.keys():
