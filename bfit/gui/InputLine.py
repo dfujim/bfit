@@ -108,7 +108,7 @@ class InputLine(object):
         """
         
         # check if enabled
-        if not self.bfit.fit_files.set_as_group.get():
+        if not self.bfit.fit_files.set_as_group.get() and not self.variable['shared'].get():
             return 
         
         # disable trace
