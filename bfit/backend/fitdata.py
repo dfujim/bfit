@@ -938,7 +938,7 @@ class fitdata(object):
         raise_window()
     
     # ======================================================================= #
-    def draw_residual(self, figstyle, rebin=1, **drawargs):
+    def draw_residual(self, figstyle, rebin=1, asym_args=None, **drawargs):
         """Draw fitting residuals for a single run"""
 
         self.logger.info('Drawing residual for run %s, rebin %d, '+\
@@ -950,6 +950,10 @@ class fitdata(object):
         # get draw setting
         figstyle = 'data'
         draw_style = self.bfit.draw_style
+        
+        # format
+        if asym_args is None:
+            asym_args = {}
 
         # get data and fit results
         fit_par = self.fitpar.loc[self.parnames, 'res'].values
