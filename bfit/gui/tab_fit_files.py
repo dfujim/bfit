@@ -557,24 +557,25 @@ class fit_files(object):
                 parlst.append('Beta-Avg 1/<T1>')
 
         # add parameter T1 not 1/T1
+        T1_lst = []
         if 'Exp' in self.fit_function_title.get():
             ncomp = self.n_component.get()
 
             if ncomp > 1:
                 for i in range(ncomp):
-                    parlst.append('T1_%d' % i)
+                    T1_lst.append('T1_%d' % i)
                     
                     if self.fit_function_title.get() == 'Bi Exp':
-                        parlst.append('T1b_%d' % i)
+                        T1_lst.append('T1b_%d' % i)
                     
             else:
-                parlst.append('T1')
+                T1_lst.append('T1')
                 
                 if self.fit_function_title.get() == 'Bi Exp':
-                    parlst.append('T1b')
+                    T1_lst.append('T1b')
 
-        self.xaxis_combobox['values'] = [''] + parlst + lst
-        self.yaxis_combobox['values'] = [''] + parlst + lst
+        self.xaxis_combobox['values'] = [''] + parlst + ['all the above'] + T1_lst + lst
+        self.yaxis_combobox['values'] = [''] + parlst + ['all the above'] + T1_lst + lst
         self.annotation_combobox['values'] = [''] + parlst + lst
 
         # turn off modify all so we don't cause an infinite loop
@@ -871,7 +872,7 @@ class fit_files(object):
                 line.set(**values)
             
     # ======================================================================= #
-    def draw_param(self, *args):
+    def draw_param(self, *_):
         """Draw the fit parameters"""
         figstyle = 'param'
 
@@ -881,6 +882,46 @@ class fit_files(object):
         ann = self.annotation.get()
         label = self.par_label.get()
 
+        # check for bad all the above input
+        if ydraw == xdraw == 'all the above':
+            msg = 'x and y cannot both be "all the above"'
+            self.logger.error(msg)
+            messagebox.showerror('Error', msg)
+            raise RuntimeError(msg)
+
+        # check for all the above - draw recursively
+        if ydraw == 'all the above' or xdraw == 'all the above':
+            
+            self.logger.error("Drawing param as 'all the above'")
+            
+            # check which one we're modifying
+            do_x = xdraw == 'all the above'
+            
+            # draw in new windows
+            draw_style = self.bfit.draw_style.get()
+            self.bfit.draw_style.set('new')
+            
+            for val in self.yaxis_combobox['values']:
+                if val == 'all the above':  
+                    break
+                elif val != '':
+                
+                    # set axis value
+                    if do_x:    self.xaxis.set(val)
+                    else:       self.yaxis.set(val)
+                    
+                    # draw
+                    self.draw_param()
+                
+            # reset axis value
+            if do_x:    self.xaxis.set('all the above')
+            else:       self.yaxis.set('all the above')
+                    
+            # reset draw style
+            self.bfit.draw_style.set(draw_style)
+            
+            return
+            
         self.logger.info('Draw fit parameters "%s" vs "%s" with annotation "%s"'+\
                          ' and label %s', ydraw, xdraw, ann, label)
 
