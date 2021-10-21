@@ -85,7 +85,7 @@ class fileviewer(object):
         self.rebin.set(1)
         
         self.entry_year = Spinbox(entry_frame, \
-                from_=2000, to=datetime.datetime.today().year, 
+                from_=2000, to=np.inf, 
                 textvariable=self.year, width=5)
         self.entry_runn = Spinbox(entry_frame, \
                 from_=0, to=np.inf, 
