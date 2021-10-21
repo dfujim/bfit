@@ -402,7 +402,7 @@ class fileviewer(object):
             key_order_sw.append('')
         
         # rates and counts
-        hist = ('F+', 'F-', 'B-', 'B+') if data.area == 'BNMR' \
+        hist = ('F+', 'F-', 'B-', 'B+') if data.area.upper() == 'BNMR' \
                                      else ('L+', 'L-', 'R-', 'R+')
 
         try:     

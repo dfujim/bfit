@@ -7,6 +7,7 @@ from tkinter import ttk
 import numpy as np
 from bfit import logger_name
 from bfit.backend.entry_color_set import on_focusout, on_entry_click
+from bfit.gui.tab_fileviewer import num_prefix
 import bfit.backend.colors as colors
 import matplotlib as mpl
 import webbrowser
@@ -64,14 +65,26 @@ class popup_prepare_data(object):
                 ('Temperature (K)',    'T    = ', ' K'), 
                 ('B0 Field (T)',       'B0   = ', ' T'), 
                 ('Platform Bias (kV)', 'Bias = ', ' kV'), 
-                ('Run Duration (s)', 'Duration: ', ''))
+                ('Run Duration (s)', 'Duration: ', ''),
+                ('Sample Counts', 'Sample Counts: ', ''))
         for key, label, unit in keys:
-            val, err = data.get_values(key)
+            
+            if key not in ('Sample Counts',):
+                val, err = data.get_values(key)
             
             # prep output string
             if key == 'Run Duration (s)':
                 
                 text = '%s%d:%d' % (label, int(val/60), val%60)
+
+            elif key == 'Sample Counts':
+                
+                hist = ('F+', 'F-', 'B-', 'B+') if data.area.upper() == 'BNMR' \
+                                     else ('L+', 'L-', 'R-', 'R+')
+
+                val = int(np.sum([data.hist[h].data for h in hist]))
+                val, unit = num_prefix(val)
+                text = '%s%.3g%s' % (label, val, unit)    
                 
             else:
                 if type(val) not in (str, np.str_) :
