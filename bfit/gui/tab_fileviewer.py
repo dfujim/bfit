@@ -8,7 +8,7 @@ from multiprocessing import Process, Pipe
 from bfit.gui.calculator_nqr_B0 import current2field
 from bfit.gui.calculator_nqr_B0_hh6 import current2field as current2field_hh6
 from bfit.backend.fitdata import fitdata
-from bdata import bdata
+from bdata import bdata, bmerged
 from bfit import logger_name
 
 import numpy as np
@@ -88,7 +88,7 @@ class fileviewer(object):
                 from_=2000, to=datetime.datetime.today().year, 
                 textvariable=self.year, width=5)
         self.entry_runn = Spinbox(entry_frame, \
-                from_=0, to=50000, 
+                from_=0, to=np.inf, 
                 textvariable=self.runn, width=7)
         self.runn.set(40000)
         
@@ -1389,9 +1389,22 @@ class fileviewer(object):
             if run is False:
                 return False
         
+        # check for merged runs
+        if run > 50000:
+            
+            # split run number
+            run = str(run)
+            run = [int(run[start:start+5]) for start in range(0, len(run), 5)]
+            
+            # get data
+            data = bmerged([bdata(r, year=year) for r in run])
+            
+        else:
+            data = bdata(run, year=year)
+        
         self.logger.info('Fetching run %s from %s', run, year)
         
-        return self._get_data(bdata(run, year=year), quiet=quiet)
+        return self._get_data(data, quiet=quiet)
         
     # ======================================================================= #
     def load_file(self, filename=None):
