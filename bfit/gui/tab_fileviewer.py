@@ -1394,10 +1394,17 @@ class fileviewer(object):
             
             # split run number
             run = str(run)
-            run = [int(run[start:start+5]) for start in range(0, len(run), 5)]
+            run = [int(run[i:i+5]) for i in range(0, len(run), 5)]
+            
+            # split year number - note to self: update in 1000 years
+            if year > 3000:
+                year = str(year)
+                year = [int(year[i:i+4]) for i in range(0, len(year), 4)]
+            else:
+                year = [year]*len(run)
             
             # get data
-            data = bmerged([bdata(r, year=year) for r in run])
+            data = bmerged([bdata(r, year=y) for r, y in zip(run, year)])
             
         else:
             data = bdata(run, year=year)
