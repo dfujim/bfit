@@ -112,13 +112,8 @@ class fitline(object):
         for i in range(c):
             self.fitframe.grid_columnconfigure(i, weight=1)
 
-        # fill with initial parameters
-        self.parlabels = []     # track all labels and inputs
-
     # ======================================================================= #
     def __del__(self):
-
-        if hasattr(self, 'parlabels'):   del self.parlabels
 
         # kill buttons and frame
         try:

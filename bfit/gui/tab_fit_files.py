@@ -1356,30 +1356,6 @@ class fit_files(object):
             self.input_enable_disable(child, state=state, first=False)
 
     # ======================================================================= #
-    def set_lines(self, pname, col, value, skipline=None):
-        """
-            Modify all input fields of each line to match the altered one
-            conditional on self.set_as_group
-
-            pname: string, parameter being changed
-            col:   str, column being changed
-            value: new value to assign
-            skipline: if this line, don't modify
-        """
-    
-        for fitline in self.fit_lines.values():
-            
-            # get line id
-            id = [line.pname for line in fitline.lines].index(pname)
-            line = fitline.lines[id]
-            
-            if line == skipline:
-                continue
-            
-            # set 
-            line.set(**{col:value})
-                        
-    # ======================================================================= #
     def return_binder(self):
         """
             Binding to entery key press, depending on focus.
@@ -1410,6 +1386,34 @@ class fit_files(object):
         else:
             self.do_fit()
 
+    # ======================================================================= #
+    def set_lines(self, pname, col, value, skipline=None):
+        """
+            Modify all input fields of each line to match the altered one
+            conditional on self.set_as_group
+
+            pname: string, parameter being changed
+            col:   str, column being changed
+            value: new value to assign
+            skipline: if this line, don't modify
+        """
+    
+        for fitline in self.fit_lines.values():
+            
+            # trivial case
+            if not fitline.lines:
+                return
+            
+            # get line id
+            id = [line.pname for line in fitline.lines].index(pname)
+            line = fitline.lines[id]
+            
+            if line == skipline:
+                continue
+            
+            # set 
+            line.set(**{col:value})
+    
     # ======================================================================= #
     def show_all_results(self):
         """Make a window to display table of fit results"""

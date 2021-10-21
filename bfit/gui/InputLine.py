@@ -108,7 +108,7 @@ class InputLine(object):
         """
         
         # check if enabled
-        if not self.bfit.fit_files.set_as_group.get() and not self.variable['shared'].get():
+        if not (self.bfit.fit_files.set_as_group.get() or self.variable['shared'].get()):
             return 
         
         # disable trace
@@ -191,7 +191,7 @@ class InputLine(object):
             
         # assign
         gen = self.data.gen_set_from_var
-        for k in ('p0', 'blo', 'bhi', 'fixed'):
+        for k in ('p0', 'blo', 'bhi', 'fixed', 'shared'):
 
             # set new trace callback
             self.variable[k] = self._set_trace(self.variable[k], 
@@ -319,7 +319,6 @@ class InputLine(object):
             self.label.config(text=pname)     
             
             # assign inputs
-            self.variable['shared'] = BooleanVar()
             self.assign_shared()
             self.assign_inputs()
             
@@ -331,7 +330,7 @@ class InputLine(object):
                 self.variable['shared'].set(False)
             else:
                 self.enable()
-                
+                        
         # set values
         for k, v in values.items():
             
@@ -340,12 +339,10 @@ class InputLine(object):
             
             # blank
             if str(v) == 'nan':
-
+                
                 # set as blank
                 if type(self.variable[k]) == StringVar:
                     self.variable[k].set('')
-                elif type(self.variable[k]) == BooleanVar:
-                    self.variable[k].set(False)
                     
                 # set chi box color
                 if k == 'chi':
