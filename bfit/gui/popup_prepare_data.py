@@ -74,7 +74,7 @@ class popup_prepare_data(object):
                 text = '%s%d:%d' % (label, int(val/60), val%60)
                 
             else:
-                if type(val) is not str:
+                if type(val) not in (str, np.str_) :
                     val = '%.3f' % val
                 
                 text = '%s%s%s' % (label, val, unit)
