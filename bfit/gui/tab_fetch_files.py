@@ -791,7 +791,7 @@ class fetch_files(object):
         """
 
         # don't hide if mousing over history
-        if obj == 'entry' and 0 < event.x < 800 and event.y > 0:
+        if obj == 'entry' and 0 < event.x < self.entry_run.winfo_reqwidth() and event.y > 0:
             return  
         
         # hide the history box    
