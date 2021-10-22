@@ -301,7 +301,7 @@ class fetch_files(object):
         radio_filter_activate = ttk.Radiobutton(frame_filter_button, 
                                        variable=self.filter_opt, 
                                        value='activate',
-                                       text='By activatation',
+                                       text='By activation',
                                        )
         radio_filter_remove = ttk.Radiobutton(frame_filter_button, 
                                        variable=self.filter_opt, 
