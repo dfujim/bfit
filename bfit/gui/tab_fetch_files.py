@@ -380,6 +380,10 @@ class fetch_files(object):
         val, err = data.get_values(KEYVARS[key])
         string = string.replace(key, str(val))
         
+        # check for nan
+        if 'nan' in string:
+            string = string.replace('nan', 'np.nan')
+        
         # evaluate
         return eval(string)
     
