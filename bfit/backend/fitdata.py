@@ -1261,6 +1261,38 @@ class fitdata(object):
             val = 1/T1avg
             err = dT1avg/(T1avg**2)
 
+        elif 'Beta-Avg <T1' in select:
+
+            # get component
+            idx = select.find('_')
+            if idx < 0:     comp_num = ''
+            else:           comp_num = select[idx:]
+            comp_num = comp_num.replace('>', '')
+
+            # get T1 and beta from that component average
+            T1i = self.fitpar.loc['1_T1'+comp_num, 'res']
+            T1 = 1/T1i
+            dT1_l = self.fitpar.loc['1_T1'+comp_num, 'dres-']/(T1i**2)
+            dT1_u = self.fitpar.loc['1_T1'+comp_num, 'dres+']/(T1i**2)
+
+            dT1 = (dT1_l + dT1_u)/2
+
+            beta = self.fitpar.loc['beta'+comp_num, 'res']
+            dbeta_l = self.fitpar.loc['beta'+comp_num, 'dres-']
+            dbeta_u = self.fitpar.loc['beta'+comp_num, 'dres+']
+
+            dbeta = (dbeta_l + dbeta_u)/2
+
+            # take average
+            betai = 1./beta
+            pd_T1 = gamma(betai)/beta
+            pd_beta = -T1*gamma(betai)*(1+betai*polygamma(0, betai))*(betai**2)
+            T1avg = T1*pd_T1
+            dT1avg = ( (pd_T1*dT1)**2 + (pd_beta*dbeta)**2 )**0.5
+
+            val = T1avg
+            err = dT1avg
+
         elif 'Cryo Lift Set (mm)' in select:
             val = fetch(self, ['clift_set', 'mean'])
             err = fetch(self, ['clift_set', 'std'])

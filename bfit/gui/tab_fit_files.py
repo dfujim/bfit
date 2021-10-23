@@ -551,7 +551,7 @@ class fit_files(object):
             ncomp = self.n_component.get()
 
             if ncomp > 1:
-                for i in range(ncomp):
+                for i in range(ncomp): 
                     parlst.append('Beta-Avg 1/<T1>_%d' % i)
             else:
                 parlst.append('Beta-Avg 1/<T1>')
@@ -573,6 +573,13 @@ class fit_files(object):
                 
                 if self.fit_function_title.get() == 'Bi Exp':
                     T1_lst.append('T1b')
+
+        if self.fit_function_title.get() == 'Str Exp':
+            if ncomp > 1:
+                for i in range(ncomp): 
+                    T1_lst.append('Beta-Avg <T1>_%d' % i)
+            else:
+                T1_lst.append('Beta-Avg <T1>')
 
         self.xaxis_combobox['values'] = [''] + parlst + ['all the above'] + T1_lst + lst
         self.yaxis_combobox['values'] = [''] + parlst + ['all the above'] + T1_lst + lst
