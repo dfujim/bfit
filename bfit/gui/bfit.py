@@ -323,7 +323,7 @@ class bfit(object):
                        'He Mass Flow', 'CryoEx Mass Flow', 'Needle Set (turns)', 
                        'Needle Read (turns)', 'Laser Power (V)', 'Laser Wavelength (nm)', 
                        'Laser Wavenumber (1/cm)', 'Target Bias (kV)', 'NBM Rate (count/s)', 
-                       'Sample Rate (count/s)')
+                       'Sample Rate (count/s)', 'NBM Counts', 'Sample Counts')
         
     # ======================================================================= #
     def __init__(self, testfn=None, commandline=False):

@@ -1309,13 +1309,27 @@ class fitdata(object):
             err = np.nan
 
         elif 'Sample Rate (count/s)' in select:
-            hist = ('F+', 'F-', 'B-', 'B+') if self.area == 'BNMR' \
+            hist = ('F+', 'F-', 'B-', 'B+') if self.area.upper() == 'BNMR' \
                                          else ('L+', 'L-', 'R-', 'R+')
 
             rate = lambda b : np.sum([b.hist[h].data for h in hist])/b.duration
             val = rate(self.bd)
             err = np.nan
 
+        elif 'NBM Counts' in select:
+            counts = lambda b : np.sum([b.hist['NBM'+h].data \
+                                    for h in ('F+', 'F-', 'B-', 'B+')])
+            val = counts(self.bd)
+            err = np.nan
+        
+        elif 'Sample Counts' in select:
+            hist = ('F+', 'F-', 'B-', 'B+') if self.area.upper() == 'BNMR' \
+                                         else ('L+', 'L-', 'R-', 'R+')
+
+            counts = lambda b : np.sum([b.hist[h].data for h in hist])
+            val = counts(self.bd)
+            err = np.nan
+        
         elif 'T1' in select and '1_T1' not in select:
             
             
