@@ -193,6 +193,21 @@ class fitdata(object):
         return asym
 
     # ======================================================================= #
+    @property
+    def beam_kev(self): 
+        try:
+            return self.bd.beam_keV
+        except AttributeError:
+            return np.nan
+    
+    @property
+    def beam_kev_err(self): 
+        try:
+            return self.bd.beam_keV_err
+        except AttributeError:
+            return np.nan
+    
+    # ======================================================================= #
     def draw(self, asym_type, figstyle='', asym_args=None, **drawargs):
         """
             Draw the selected file
@@ -1030,21 +1045,6 @@ class fitdata(object):
         raise_window()
     
     # ======================================================================= #
-    @property
-    def beam_kev(self): 
-        try:
-            return self.bd.beam_keV
-        except AttributeError:
-            return np.nan
-    
-    @property
-    def beam_kev_err(self): 
-        try:
-            return self.bd.beam_keV_err
-        except AttributeError:
-            return np.nan
-        
-    # ======================================================================= #
     def drop_param(self, parnames):
         """
             Check self.fitpar for parameters not in list of parnames. Drop them.
@@ -1060,6 +1060,46 @@ class fitdata(object):
         unused = [p for p in self.fitpar.index if p not in parnames]
         self.fitpar.drop(unused, axis='index', inplace=True)
     
+    # ======================================================================= #
+    def gen_set_from_var(self, pname, col, obj):
+        """Make function to set fitting initial parameters from StringVar or 
+            BooleanVarobject
+            
+            pname: string, name of parameter
+            col: string, one of 'p0', 'blo', 'bhi'
+            obj: the StringVar or BooleanVar to fetch from
+        """
+    
+        if pname in self.fitpar.index and col in self.fitpar.columns:
+            
+            if type(obj) is StringVar:
+                
+                def set_from_var(*args):
+                    try:
+                        value = float(obj.get())
+                    except ValueError:
+                        pass
+                    else:
+                        self.fitpar.loc[pname, col] = value
+                        if pname not in self.constrained.keys():
+                            self.set_constrained(col)
+                        
+            elif type(obj) is BooleanVar:
+                
+                def set_from_var(*args):
+                    try:
+                        value = bool(obj.get())
+                    except ValueError:
+                        pass
+                    else:
+                        self.fitpar.loc[pname, col] = value
+                        
+            else:
+                
+                raise RuntimeError('Bad obj input')
+    
+            return set_from_var
+            
     # ======================================================================= #
     def get_norm(self, asym_type, asym, dasym):
         """
@@ -1504,46 +1544,6 @@ class fitdata(object):
                 else:
                     self.fitline.set(par, **{col:self.constrained[par][0](*inputs)})
                 
-    # ======================================================================= #
-    def gen_set_from_var(self, pname, col, obj):
-        """Make function to set fitting initial parameters from StringVar or 
-            BooleanVarobject
-            
-            pname: string, name of parameter
-            col: string, one of 'p0', 'blo', 'bhi'
-            obj: the StringVar or BooleanVar to fetch from
-        """
-    
-        if pname in self.fitpar.index and col in self.fitpar.columns:
-            
-            if type(obj) is StringVar:
-                
-                def set_from_var(*args):
-                    try:
-                        value = float(obj.get())
-                    except ValueError:
-                        pass
-                    else:
-                        self.fitpar.loc[pname, col] = value
-                        if pname not in self.constrained.keys():
-                            self.set_constrained(col)
-                        
-            elif type(obj) is BooleanVar:
-                
-                def set_from_var(*args):
-                    try:
-                        value = bool(obj.get())
-                    except ValueError:
-                        pass
-                    else:
-                        self.fitpar.loc[pname, col] = value
-                        
-            else:
-                
-                raise RuntimeError('Bad obj input')
-    
-            return set_from_var
-
     # ======================================================================= #
     def set_fitresult(self, values):
         """
