@@ -35,6 +35,7 @@ class fit_files(object):
     """
         Data fields:
             annotation:     stringvar: name of quantity for annotating parameters
+            annotation_combobox: box for choosing annotation label parameter
             asym_type:      asymmetry calculation type
             canvas_frame_id:id number of frame in canvas
             chi_threshold:  if chi > thres, set color to red
@@ -1352,6 +1353,16 @@ class fit_files(object):
 
         # disable everything in fit_tab
         for child in parent.winfo_children():
+            
+            # exceptions
+            if child in (self.xaxis_combobox,
+                         self.yaxis_combobox,
+                         self.annotation_combobox,
+                         self.par_label_entry):
+                continue
+            
+            
+            # disable
             try:
                 if state == 'disabled':
                     child.old_state = child['state']
