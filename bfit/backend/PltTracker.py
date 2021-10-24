@@ -229,7 +229,7 @@ class PltTracker(object):
         """
             Plot data.
             
-            style: one of "data", "fit", or "param"
+            style: one of "inspect", "data", "fit", or "param"
             annot_label: list of annotations for each point
             other arguments: defaults for matplotlib.pyplot.plot
         """
@@ -275,6 +275,10 @@ class PltTracker(object):
         # set the annotation
         if annot_label is not None: 
             ax.lines[-1].annot_label = annot_label
+        elif style == 'inspect':
+            annot_label = [f'({i:f}, {j:f})' for i, j in zip(x,y)]
+            ax.lines[-1].annot_label = annot_label
+            
             
         # save the drawn object to the file
         ax.draw_objs.setdefault(id, []).append(obj)
