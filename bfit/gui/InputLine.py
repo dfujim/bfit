@@ -213,11 +213,10 @@ class InputLine(object):
         
         # check if key is present
         if self.pname not in share_var.keys():
-            share_var[self.pname] = self.variable['shared']
-            
-        # assign key
-        else:
-            self.variable['shared'] = share_var[self.pname]
+            share_var[self.pname] = BooleanVar()
+        
+        # assign key    
+        self.variable['shared'] = share_var[self.pname]
             
         # set trace to uncheck fixed box
         self.variable['shared'] = self._set_trace(self.variable['shared'], 

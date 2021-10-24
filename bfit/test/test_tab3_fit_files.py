@@ -445,6 +445,42 @@ def test_result_as_p0(b=None, tab=None, tab2=None):
         for k in entry.keys():
             assert_almost_equal(float(entry[k]['res'].get()), float(entry[k]['p0'].get()), 
                 err_msg = 'Set result as p0 for %s'%k, decimal=5)
+
+def check_sharing_assignment(tab, fline, test_name):
+    
+    # check all shared param independent
+    for k1, v1 in tab.share_var.items():
+        for k2, v2 in tab.share_var.items():
+            if k1 != k2: 
+                assert v1 != v2, \
+                    'share_var BooleanVar equal for '+\
+                    '"{}" and "{}" during {}'.format(k1, k2, test_name)
+                
+    # check all lines param assigned correctly
+    for l1 in fline.lines:
+        for l2 in fline.lines:
+            if l1 != l2:
+                assert l1.variable['shared'] != l2.variable['shared'], \
+                    'line variable[shared] BooleanVar equal for '+\
+                    '"{}" and "{}" during {}'.format(k1, k2, test_name)
+    
+@with_bfit
+def test_sharing_assignment(b=None, tab=None, tab2=None):
+    """Handling of sharing paramters not being independent"""
+    
+    tab.populate()
+    fline = tab.fit_lines['2020.40123']
+    
+    # check biexp
+    tab.fit_function_title.set('Bi Exp')
+    tab.populate_param(force_modify=True)
+    check_sharing_assignment(tab, fline, 'biexp fn loaded')
+    
+    # check three exp
+    tab.fit_function_title.set('Exp')
+    tab.n_component.set(3)
+    tab.populate_param(force_modify=True)
+    check_sharing_assignment(tab, fline, 'three exp fn loaded')
         
 @pytest.mark.filterwarnings('ignore:Tight layout')
 @pytest.mark.filterwarnings('ignore:Warning')
