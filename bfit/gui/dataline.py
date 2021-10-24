@@ -85,7 +85,7 @@ class dataline(object):
         
         label_label = ttk.Label(line_frame, text="Label:", pad=5)
         self.label_entry = Entry(line_frame, textvariable=self.label, \
-                width=18)
+                width=22)
                 
         remove_button = ttk.Button(line_frame, text='Remove', \
                 command=self.degrid, pad=1)

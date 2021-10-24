@@ -96,7 +96,7 @@ class fetch_files(object):
         
         entry_year = Spinbox(fet_entry_frame, textvariable=self.year, width=5, 
                              from_=2000, to=datetime.datetime.today().year)
-        entry_run = Entry(fet_entry_frame, textvariable=self.run, width=100)
+        entry_run = Entry(fet_entry_frame, textvariable=self.run, width=85)
         entry_run.insert(0, self.run_number_starter_line)
         entry_run.config(foreground=colors.entry_grey)
         
@@ -116,6 +116,7 @@ class fetch_files(object):
         
         # fetch button
         fetch = ttk.Button(fet_entry_frame, text='Fetch', command=self.get_data)
+        update = ttk.Button(fet_entry_frame, text='Update', command=self.update_data)
         
         # grid and labels
         fet_entry_frame.grid(column=0, row=0, sticky=(N, W, E), columnspan=2, padx=5, pady=5)
@@ -124,6 +125,7 @@ class fetch_files(object):
         ttk.Label(fet_entry_frame, text="Run Number:").grid(column=2, row=0, sticky=W)
         entry_run.grid(column=3, row=0, sticky=W)
         fetch.grid(column=4, row=0, sticky=E)
+        update.grid(column=5, row=0, sticky=E)
         self.listbox_history.grid(column=3, row=1, sticky=W)
         
         # padding 
@@ -151,8 +153,6 @@ class fetch_files(object):
                 anchor='nw')
         dataline_frame.bind("<Configure>", self.config_canvas) # bind resize to alter scrollable region
         self.data_canvas.bind("<Configure>", self.config_dataline_frame) # bind resize to change size of contained frame
-        
-        
         
         # Frame to hold everything on the right ------------------------------
         bigright_frame = ttk.Frame(fetch_data_tab, pad=5)
@@ -1032,4 +1032,3 @@ class fetch_files(object):
         for line in self.data_lines.values():
             line.set_check_text()
             line.update_label()
-        
