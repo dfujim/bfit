@@ -274,11 +274,15 @@ class fitdata(object):
             idx_p = a.p[0]!=0
             idx_n = a.n[0]!=0
             
+            # mouseover shows bin
+            drawargs['annot_label'] = x[idx_p]
+            
             xlabel = 'Bin'
             plt.errorbar(figstyle, self.id, x[idx_p], a.p[0][idx_p], a.p[1][idx_p], 
                     label=label+"($+$)", **drawargs)
             
             drawargs['unique'] = False
+            drawargs['annot_label'] = x[idx_n]
             plt.errorbar(figstyle, self.id, x[idx_n], a.n[0][idx_n], a.n[1][idx_n], 
                     label=label+"($-$)", **drawargs)
             
