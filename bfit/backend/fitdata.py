@@ -54,6 +54,8 @@ class fitdata(object):
                         Columns are fit_files.fitinputtab.collist
             id:         key for unique idenfication (str)    
             label:      label for drawing (StringVar)
+            manually_updated_var: dict of epics, camp, ppg, containing dict of 
+                        mvar which will not be updated on read
             mode:       run mode (str, ex: 1f)
             omit:       omit bins, 1f only (StringVar)
             omit_scan:  if true omit incomplete scan (BoolVar)
@@ -112,6 +114,9 @@ class fitdata(object):
         # initialize fitpar
         self.reset_fitpar()
         self.constrained = {}
+        
+        # reset manually set varaibles
+        self.manually_updated_var = {'epics':{}, 'camp':{}, 'ppg':{}}
         
         # set area as upper
         self.area = self.area.upper()
@@ -1461,57 +1466,20 @@ class fitdata(object):
                 
             # load test run
             except ValueError:
-                self.bd = bdata(0, filename = self.bfit.fileviewer.filename)
+                self.bd = bdata(filename = self.bfit.fileviewer.filename)
                 
         elif type(self.bd) is bmerged:
             years = list(map(int, textwrap.wrap(str(self.year), 4)))
             runs = list(map(int, textwrap.wrap(str(self.run), 5)))
             self.bd = bmerged([bdata(r, y) for r, y in zip(runs, years)])
-                
-        # set temperature 
-        try:
-            self.temperature = temperature_class(*self.get_temperature(self.bfit.thermo_channel.get()))
-        except AttributeError as err:
-            self.logger.exception(err)
-            try:
-                self.temperature = self.bd.camp.oven_readC
-            except AttributeError:
-                self.logger.exception('Thermometer oven_readC not found')
-                self.temperature = -1111
-        
-        # field
-        try:
-            if self.area == 'BNMR':
-                self.field = self.bd.camp.b_field.mean
-                self.field_std = self.bd.camp.b_field.std
-            else:
-                
-                if hasattr(self.bd.epics, 'hh6_current'):
-                    self.field = current2field_hh6(self.bd.epics.hh6_current.mean)*1e-4
-                    self.field_std = current2field_hh6(self.bd.epics.hh6_current.std)*1e-4
-                else:
-                    self.field = current2field(self.bd.epics.hh_current.mean)*1e-4
-                    self.field_std = current2field(self.bd.epics.hh_current.std)*1e-4
-                    
-        except AttributeError:
-            self.logger.exception('Field not found')
-            self.field = np.nan
-            self.field_std = np.nan
-            
-        # bias
-        try:
-            if self.area == 'BNMR': 
-                self.bias = self.bd.epics.nmr_bias.mean
-                self.bias_std = self.bd.epics.nmr_bias.std
-            else:
-                self.bias = self.bd.epics.nqr_bias.mean/1000.
-                self.bias_std = self.bd.epics.nqr_bias.std/1000.
-        except AttributeError:
-            self.logger.exception('Bias not found')
-            self.bias = np.nan
-            
-        # set area as upper
-        self.area = self.area.upper()
+         
+        # set manually updated variables
+        for key, dic in self.manually_updated_var.items():
+            for key2, prop in dic.items():
+                getattr(self.bd, key)[key2] = prop
+         
+        # set new variables
+        self.set_new_var()
         
     # ======================================================================= #
     def reset_fitpar(self):
@@ -1580,6 +1548,57 @@ class fitdata(object):
                 self.fitpar.loc[v, c] = df.loc[v, c]
         self.logger.debug('Setting fit results to %s', self.fitpar)
     
+    # ======================================================================= #
+    def set_new_var(self):
+        """
+            Set new variables for easy access
+        """
+        
+        # set temperature 
+        try:
+            self.temperature = temperature_class(*self.get_temperature(self.bfit.thermo_channel.get()))
+        except AttributeError as err:
+            self.logger.exception(err)
+            try:
+                self.temperature = self.bd.camp.oven_readC
+            except AttributeError:
+                self.logger.exception('Thermometer oven_readC not found')
+                self.temperature = -1111
+        
+        # field
+        try:
+            if self.area == 'BNMR':
+                self.field = self.bd.camp.b_field.mean
+                self.field_std = self.bd.camp.b_field.std
+            else:
+                
+                if hasattr(self.bd.epics, 'hh6_current'):
+                    self.field = current2field_hh6(self.bd.epics.hh6_current.mean)*1e-4
+                    self.field_std = current2field_hh6(self.bd.epics.hh6_current.std)*1e-4
+                else:
+                    self.field = current2field(self.bd.epics.hh_current.mean)*1e-4
+                    self.field_std = current2field(self.bd.epics.hh_current.std)*1e-4
+                    
+        except AttributeError:
+            self.logger.exception('Field not found')
+            self.field = np.nan
+            self.field_std = np.nan
+            
+        # bias
+        try:
+            if self.area == 'BNMR': 
+                self.bias = self.bd.epics.nmr_bias.mean
+                self.bias_std = self.bd.epics.nmr_bias.std
+            else:
+                self.bias = self.bd.epics.nqr_bias.mean/1000.
+                self.bias_std = self.bd.epics.nqr_bias.std/1000.
+        except AttributeError:
+            self.logger.exception('Bias not found')
+            self.bias = np.nan
+            
+        # set area as upper
+        self.area = self.area.upper()
+        
 # ========================================================================== #
 class temperature_class(object):
     """

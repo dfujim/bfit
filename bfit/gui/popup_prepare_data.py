@@ -10,10 +10,13 @@ from bfit.backend.entry_color_set import on_focusout, on_entry_click
 from bfit.gui.tab_fileviewer import num_prefix
 import bfit.backend.colors as colors
 import matplotlib as mpl
+import bdata as bd
+import pandas as pd
 import webbrowser
 import logging
 from functools import partial
 import matplotlib.pyplot as plt
+
 
 # ========================================================================== #
 class popup_prepare_data(object):
@@ -37,7 +40,12 @@ class popup_prepare_data(object):
     def __init__(self, bfit, data):
         """
             bfit: bfit object
+            checkbutton_state: checkbutton for state activated/deactivated
             data: fitdata object
+            
+            entry_label: Entry obj input run label
+            
+            win: Toplevel
         """
         
         # set variables
@@ -96,8 +104,7 @@ class popup_prepare_data(object):
             label = ttk.Label(frame_details, text=text, justify=LEFT)
             label.grid(column=0, row=r, sticky='nw')
             r += 1
-        
-        
+                
         # run label
         frame_label = ttk.Frame(frame_details)
         label_label = ttk.Label(frame_label, text='Label:', justify=LEFT)
@@ -115,7 +122,7 @@ class popup_prepare_data(object):
         self.entry_label.grid(column=1, row=0, sticky='w')
         button_label.grid(column=2, row=0, sticky='w', padx=5)
         frame_label.grid(column=0, row=r, sticky='new'); r+=1
-        button_inspect.grid(column=0, row=r, sticky='se', padx=5, pady=5)
+        button_inspect.grid(column=0, row=r, sticky='sew', padx=5, pady=5)
         frame_details.grid_rowconfigure(r, weight=1)
         
         # mode ----------------------------------------------------------------
@@ -205,14 +212,75 @@ class popup_prepare_data(object):
         frame_draw_corrected.grid(column=3, row=r-1, sticky='ens', pady=5, padx=5, 
                                   rowspan=2)
     
-        # grid frames
+    
+        # change run details --------------------------------------------------
+        frame_modify = ttk.Labelframe(topframe, text='Modify Details', pad=5)
+        
+        self.var_type = StringVar()
+        self.var_type.set('')
+        self.combo_var_type = ttk.Combobox(frame_modify, \
+                textvariable=self.var_type, state='readonly', width=25)
+        self.combo_var_type['values'] = ('', 'ppg', 'camp', 'epics')
+        self.combo_var_type.bind('<<ComboboxSelected>>', self.populate_var_selection)
+        
+        self.var = StringVar()
+        self.var.set('')
+        self.combo_var = ttk.Combobox(frame_modify, \
+                textvariable=self.var, state='readonly', width=25)
+        self.combo_var['values'] = ()
+        self.combo_var.bind('<<ComboboxSelected>>', self.populate_prop_selection)
+        
+        self.prop = StringVar()
+        self.prop.set('')
+        self.combo_prop = ttk.Combobox(frame_modify, \
+                textvariable=self.prop, state='readonly', width=25)
+        self.combo_prop['values'] = ('mean', 'std', 'title', 'description', 
+                                     'units', 'low', 'high', 'skew', 
+                                     'id_number',)
+        self.combo_prop.bind('<<ComboboxSelected>>', self.populate_value_entry)
+        
+        self.value = StringVar()
+        self.value.set('')
+        self.entry_value = Entry(frame_modify, textvariable=self.value, width=27)
+        self.entry_value.bind('<KeyRelease>', self.set_value)
+        
+        # labels
+        label_val_type = ttk.Label(frame_modify, text='System', justify=RIGHT)
+        label_val = ttk.Label(frame_modify, text='Variable', justify=RIGHT)
+        label_prop = ttk.Label(frame_modify, text='Property', justify=RIGHT)
+        label_value = ttk.Label(frame_modify, text='Value', justify=RIGHT)
+        
+        # reset button
+        button_reset = ttk.Button(frame_modify, text='Reset All', 
+                                    command=self.reset_all_modified, pad=1)
+        
+        # grid
+        r = 0
+        label_val_type.grid(column=0, row=r, padx=5, pady=5, sticky='e'); r+=1
+        label_val.grid(column=0, row=r, padx=5, pady=5, sticky='e'); r+=1
+        label_prop.grid(column=0, row=r, padx=5, pady=5, sticky='e'); r+=1
+        label_value.grid(column=0, row=r, padx=5, pady=5, sticky='e'); r+=1
+        
+        r = 0
+        self.combo_var_type.grid(column=1, row=r, padx=5, sticky='e'); r+=1
+        self.combo_var.grid(column=1, row=r, padx=5, sticky='e'); r+=1
+        self.combo_prop.grid(column=1, row=r, padx=5, sticky='e'); r+=1
+        self.entry_value.grid(column=1, row=r, padx=5, sticky='e'); r+=1
+        
+        button_reset.grid(column=0, row=r, padx=5, sticky='we', columnspan=2); r+=1
+    
+        # grid frames ---------------------------------------------------------
         topframe.grid(column=0, row=0)
-        frame_details.grid(column=0, row=0, sticky='nws', padx=5, pady=5, rowspan=4)
+        frame_details.grid(column=0, row=0, sticky='nws', padx=5, pady=5, rowspan=3)
+        frame_modify.grid(column=0, row=3, sticky='nwse', padx=5, pady=5)
         
         r = 0
         frame_mode.grid(column=1, row=r, sticky='new', padx=5, pady=5); r+=1
         frame_state.grid(column=1, row=r, sticky='new', padx=5, pady=5); r+=1
         frame_rebin.grid(column=1, row=r, sticky='new', padx=5, pady=5); r+=1
+        
+        frame_mode.grid_columnconfigure(2, weight=1)
+        frame_modify.grid_columnconfigure(1, weight=1)
         
         if '1' in self.data.mode:
             frame_scan.grid(column=1, row=r, sticky='ne', padx=5, pady=5); r+=1
@@ -337,6 +405,76 @@ class popup_prepare_data(object):
         self.bfit.notebook.select(0)
         
     # ====================================================================== #
+    def populate_prop_selection(self, *_):
+        """
+            Set combo_prop based on selection combo_var
+        """
+        self.populate_value_entry()
+    
+    # ====================================================================== #
+    def populate_value_entry(self, *_):
+        """
+            Set entry_value based on selection combo_prop
+        """
+        
+        # get dictionary
+        hist = getattr(self.data, self.var_type.get())
+        
+        # set default
+        self.value.set('')
+        
+        # check if variable exists
+        if self.var.get() in hist.keys():
+            var = hist[self.var.get()]
+            
+            # set property based on varaible info
+            prop = self.prop.get()
+            if prop:
+                self.value.set(str(getattr(var, prop)))
+        
+    # ====================================================================== #
+    def populate_var_selection(self, *_):
+        """
+            Set combo_var based on selection combo_var_type
+        """
+        
+        if self.var_type.get() == 'ppg':
+            val = bd.bdata.dkeys_ppg.values()
+            
+        elif self.var_type.get() == 'camp':
+            val = bd.bdata.dkeys_camp.values()
+
+        elif self.var_type.get() == 'epics':
+            val = bd.bdata.dkeys_epics.values()
+        
+        else:
+            val = []
+            
+        val = pd.Series(val).unique()
+        self.combo_var['values'] = sorted(val)
+        self.var.set('')
+        
+    # ====================================================================== #
+    def reset_all_modified(self):
+        """
+            Reset all modified values back to read values
+        """
+        
+        # clear the manually updated values
+        self.data.manually_updated_var = {'epics':{}, 'camp':{}, 'ppg':{}}
+        
+        # read data again
+        self.data.read()
+        
+        # update fetch tab
+        line = self.bfit.fetch_files.data_lines[self.data.id]
+        line.set_check_text()
+        line.update_label()
+        
+        # reset value
+        self.populate_value_entry()
+        
+    # ====================================================================== #
     def reset_label(self):
         """
             Reset the label back to default
@@ -376,6 +514,46 @@ class popup_prepare_data(object):
             self.label_flatten_base.config(foreground=colors.selected)
         else:
             self.label_flatten_base.config(foreground=colors.foreground)
+        
+    # ====================================================================== #
+    def set_value(self, *_):
+        """
+            Set value of parameter
+        """
+        
+        # get strings
+        var_type = self.var_type.get()
+        var = self.var.get()
+        prop = self.prop.get()
+        value = self.value.get()
+        
+        # get list we're modifying
+        var_list = getattr(self.data, var_type)
+        
+        # cast the input 
+        if prop in ('high', 'id_number', 'low', 'mean', 'std', 'skew'):
+            
+            if not value:
+                value = np.nan
+            else:
+                try:
+                    value = float(value)
+                except ValueError:
+                    return
+                
+        # set the input
+        var_list.set(var, **{prop:value})
+        
+        # update variables
+        self.data.set_new_var()
+        
+        # add property to perminantly updated list
+        self.data.manually_updated_var[var_type][var] = getattr(self.data, var_type)[var]
+        
+        # update fetch tab
+        line = self.bfit.fetch_files.data_lines[self.data.id]
+        line.set_check_text()
+        line.update_label()
         
     # ====================================================================== #
     def ungray_label(self, _):
