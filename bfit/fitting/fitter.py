@@ -6,7 +6,7 @@ import bfit.fitting.functions as fns
 from bfit.fitting.decay_31mg import fa_31Mg
 from bfit.fitting.gen_init_par import gen_init_par
 from functools import partial
-import collections
+from collections.abc import Iterable
 import numpy as np
 import bdata as bd
 import pandas as pd
@@ -240,7 +240,7 @@ class fitter(object):
                                         **kwargs)
         
         # set up output dataframe
-        if not isinstance(chis, collections.Iterable):   # single run
+        if not isinstance(chis, Iterable):   # single run
             pars = [pars]
             stds_l = [stds_l]
             stds_h = [stds_h]

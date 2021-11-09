@@ -2,7 +2,7 @@
 # Derek Fujimoto
 # Nov 2018
 
-import collections
+from collections.abc import Iterable
 import numpy as np
 from bdata import bdata
 from scipy.optimize import curve_fit
@@ -77,7 +77,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
         ndata = 1
     
     # get fn
-    if not isinstance(fn, collections.Iterable):
+    if not isinstance(fn, Iterable):
         fn = [fn]
     else:
         fn = list(fn)
