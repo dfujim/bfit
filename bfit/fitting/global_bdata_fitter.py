@@ -5,7 +5,7 @@
 from bfit.fitting.global_fitter import global_fitter
 import bdata as bd
 import numpy as np
-import collections
+from collections.abc import Iterable
 
 # =========================================================================== #
 class global_bdata_fitter(global_fitter):
@@ -41,7 +41,7 @@ class global_bdata_fitter(global_fitter):
         ndata = len(data)
         
         # Set rebin
-        if not isinstance(rebin, collections.Iterable):
+        if not isinstance(rebin, Iterable):
             rebin = [rebin]*ndata
         
         # Get asymmetry
