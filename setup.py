@@ -60,7 +60,7 @@ setuptools.setup(
                       'bdata >= 6.7.3', 'matplotlib >= 2.2.4', 'pandas >= 0.23.0',
                       'pyyaml >= 5.1', 'scipy >= 1.2.0', 'iminuit >= 2.6.1', 
                       'requests >= 2.25.0', 'argparse >= 1.4.0', 'pytest >= 4.5.0',
-                      'wheel>=0.34'],
+                      'wheel>=0.34', 'pandarallel >= 1.5.4'],
     package_data = {'': ['data']},
     entry_points = {'console_scripts':['bfit = bfit:main']},
     include_package_data = True,
