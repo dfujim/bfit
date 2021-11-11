@@ -11,6 +11,7 @@ from bfit import logger_name
 from scipy.special import gamma, polygamma
 
 from bfit.backend.raise_window import raise_window
+from bfit.backend.get_mcerror import get_mcerror
 
 import numpy as np
 import pandas as pd
@@ -1080,7 +1081,6 @@ class fitdata(object):
         """
     
         if pname in self.fitpar.index and col in self.fitpar.columns:
-            
             if type(obj) is StringVar:
                 
                 def set_from_var(*args):
@@ -1509,12 +1509,28 @@ class fitdata(object):
         """
         for par in self.fitpar.index:
             if par in self.constrained.keys():
-                try:
-                    inputs = self.fitpar.loc[self.constrained[par][1], col]
-                except KeyError:
-                    pass
-                else:
-                    self.fitline.set(par, **{col:self.constrained[par][0](*inputs)})
+                
+                # set errors
+                if 'dres' in col:
+                    try:
+                        inputs_par = self.fitpar.loc[self.constrained[par][1], 'res']
+                        inputs_err = self.fitpar.loc[self.constrained[par][1], col]
+                    except KeyError:
+                        pass
+                    else:
+                        fn = self.constrained[par][0]
+                        val = get_mcerror(fn, inputs_par, inputs_err)
+                        self.fitline.set(par, **{col:val})
+                        
+                # set non-error
+                else:                
+                    try:
+                        inputs = self.fitpar.loc[self.constrained[par][1], col]
+                    except KeyError:
+                        pass
+                    else:
+                        val = self.constrained[par][0](*inputs)
+                        self.fitline.set(par, **{col:val})
                 
     # ======================================================================= #
     def set_fitresult(self, values):
