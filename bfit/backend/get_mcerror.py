@@ -5,7 +5,6 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import truncnorm
-from time import time
 from pandarallel import pandarallel
 pandarallel.initialize(verbose=0)
 
@@ -63,8 +62,6 @@ def get_mcerror(fn, par, err, n=1e6, bounds=None):
         return fn(*arg)
     
     # apply function to input parameters
-    t = time()
     fn_df = df.parallel_apply(fn_new, axis='columns')
-    print(time()-t)
     
     return fn_df.std()
