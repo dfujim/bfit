@@ -11,7 +11,7 @@ from bfit import logger_name
 from scipy.special import gamma, polygamma
 
 from bfit.backend.raise_window import raise_window
-from bfit.backend.get_mcerror import get_mcerror
+from bfit.backend.get_derror import get_derror
 
 import numpy as np
 import pandas as pd
@@ -1519,7 +1519,7 @@ class fitdata(object):
                         pass
                     else:
                         fn = self.constrained[par][0]
-                        val = get_mcerror(fn, inputs_par, inputs_err)
+                        val = get_derror(fn, inputs_par, inputs_err)
                         self.fitline.set(par, **{col:val})
                         
                 # set non-error

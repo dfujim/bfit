@@ -8,7 +8,9 @@ from tkinter import ttk, messagebox
 from functools import partial
 
 import logging, re, os, warnings
+import jax
 import numpy as np
+import jax.numpy as jnp
 import pandas as pd
 import bdata as bd
 
@@ -18,6 +20,7 @@ from bfit.global_variables import KEYVARS
 from bfit.gui.template_fit_popup import template_fit_popup
 from bfit.gui.InputLine import InputLine
 
+jax.config.update('jax_platform_name', 'cpu')
 
 # ========================================================================== #
 class popup_fit_constraints(template_fit_popup):
@@ -110,7 +113,11 @@ class popup_fit_constraints(template_fit_popup):
             f = 'lambda {new_par} : {equation}'
             f = f.format(new_par=','.join(new_par), 
                          equation=eqn)
-                                          
+                                       
+            # replace numpy functions with jax.numpy functions
+            f = f.replace('np.', 'jnp.')
+                                      
+            # evaluate functions string to python handle
             fns[defined] = (eval(f), new_par)
             
         data.constrained = fns
