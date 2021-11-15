@@ -21,6 +21,7 @@ from bfit.gui.template_fit_popup import template_fit_popup
 from bfit.gui.InputLine import InputLine
 
 jax.config.update('jax_platform_name', 'cpu')
+jax.config.update("jax_enable_x64", True)
 
 # ========================================================================== #
 class popup_fit_constraints(template_fit_popup):
