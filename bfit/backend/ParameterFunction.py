@@ -3,11 +3,10 @@
 # Nov 2020
 
 import numpy as np
-from bfit.backend.ConstrainedFunction import ConstrainedFunction
 from bfit.global_variables import KEYVARS
 
 # =========================================================================== # 
-class ParameterFunction(ConstrainedFunction):
+class ParameterFunction(object):
     """
         name:           name of the parameter being defined
         inputs:         list of strings for parameter inputs to equation
@@ -86,3 +85,10 @@ class ParameterFunction(ConstrainedFunction):
         # calculate the parameter
         return self.equation(**inputs)
         
+    # ======================================================================= # 
+    def _get_value(self, data, name):
+        """
+            Tranlate typed constant to numerical value
+        """
+        new_name = KEYVARS[name]
+        return data.get_values(new_name)[0]
