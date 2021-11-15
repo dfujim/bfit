@@ -2,8 +2,14 @@
 # Derek Fujimoto
 # Nov 2020
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 from bfit.global_variables import KEYVARS
+from bfit.backend.get_derror import get_derror
+
+jax.config.update('jax_platform_name', 'cpu')
+jax.config.update("jax_enable_x64", True)
 
 # =========================================================================== # 
 class ParameterFunction(object):
@@ -31,14 +37,11 @@ class ParameterFunction(object):
         varlist = varlist[np.argsort(list(map(len, varlist))[::-1])]
     
         # replace 1_T1 with lambda
-        while '1_T1' in equation:
-            equation = equation.replace('1_T1', 'lambda1')
+        equation = equation.replace('1_T1', 'lambda1')
         
         self.parnames = list(parnames)
         for i, p in enumerate(self.parnames):
-            while '1_T1' in p:
-                p = p.replace('1_T1', 'lambda1')
-            self.parnames[i] = p
+            self.parnames[i] = p.replace('1_T1', 'lambda1')
     
         # make list of input names from meta data
         self.inputs = []
@@ -54,6 +57,7 @@ class ParameterFunction(object):
                 
         # make equation
         input_str = ', '.join(self.inputs)
+        equation = equation.replace('np.', 'jnp.')
         self.equation = eval('lambda %s : %s' % (input_str, equation))
         
         # add name to draw_components
@@ -68,22 +72,34 @@ class ParameterFunction(object):
             Get data and calculate the parameter
         """
         
-        inputs = {}
+        inputs_val = {}
+        inputs_err = {}
         for var in self.inputs:
             
             # get value for all data
             if var in KEYVARS:
-                value = self._get_value(self.bfit.data[run_id], var)
+                value, error = self._get_value(self.bfit.data[run_id], var)
             elif var in self.parnames:
                 
                 var_par = var.replace('lambda1', '1_T1')
                 value = self.bfit.data[run_id].fitpar['res'][var_par]
+                error1 = self.bfit.data[run_id].fitpar['dres+'][var_par]
+                error2 = self.bfit.data[run_id].fitpar['dres-'][var_par]
+                error = (error1+error2)/2
                     
             # set up inputs
-            inputs[var] = value
+            inputs_val[var] = value
+            inputs_err[var] = error
                             
         # calculate the parameter
-        return self.equation(**inputs)
+        val = self.equation(**inputs_val)
+        
+        order = self.equation.__code__.co_varnames
+        inputs_val = [inputs_val[k] for k in order]
+        inputs_err = [inputs_err[k] for k in order]
+        err = get_derror(self.equation, inputs_val, inputs_err)
+        
+        return (val, err)
         
     # ======================================================================= # 
     def _get_value(self, data, name):
@@ -91,4 +107,4 @@ class ParameterFunction(object):
             Tranlate typed constant to numerical value
         """
         new_name = KEYVARS[name]
-        return data.get_values(new_name)[0]
+        return data.get_values(new_name)
