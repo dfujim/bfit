@@ -15,7 +15,6 @@ import pandas as pd
 import bdata as bd
 
 from bfit.global_variables import KEYVARS
-from bfit.backend.ConstrainedFunction import ConstrainedFunction as CstrFnGenerator
 from bfit.global_variables import KEYVARS
 from bfit.gui.template_fit_popup import template_fit_popup
 from bfit.gui.InputLine import InputLine
