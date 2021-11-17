@@ -9,6 +9,11 @@ from bdata import bdata, bmerged
 from scipy.optimize import curve_fit
 
 try:
+    import matplotlib as mpl
+except ImportError:
+    pass
+
+try:
     from mpl_toolkits.mplot3d import Axes3D
 except ImportError as errmsg:
     print('No 3D axes drawing available')
