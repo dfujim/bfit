@@ -1,3 +1,9 @@
+import matplotlib
+try:
+    matplotlib.use('TkAgg')
+except ImportError:
+    pass
+
 from .fitting.functions import lorentzian, bilorentzian, gaussian, quadlorentzian
 from .fitting.functions import pulsed_exp, pulsed_strexp, pulsed_biexp
 from .fitting.global_fitter import global_fitter

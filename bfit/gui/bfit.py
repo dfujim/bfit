@@ -8,13 +8,6 @@ from tkinter import ttk, filedialog, messagebox
 from bdata import bdata, bmerged
 from scipy.optimize import curve_fit
 
-# set MPL backend
-import matplotlib as mpl
-try:
-    mpl.use('TkAgg')
-except ImportError:
-    pass
-
 try:
     from mpl_toolkits.mplot3d import Axes3D
 except ImportError as errmsg:
