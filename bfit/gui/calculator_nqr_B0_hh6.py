@@ -61,7 +61,7 @@ class calculator_nqr_B0_hh6(object):
         amperes = ttk.Label(mainframe, text='Amperes')
                 
         notes_line = ttk.Label(mainframe,   
-                            text='Inferred from 2021 runs \n45019, 45020, and 45041'+\
+                            text='Inferred from 2021 runs \n45019, 45020, and 45042'+\
                                  '\nwith NMR at 2.2 T',
                             justify=CENTER)
         
