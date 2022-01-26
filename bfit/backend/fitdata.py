@@ -5,8 +5,7 @@
 
 from tkinter import *
 from bdata import bdata, bmerged
-from bfit.gui.calculator_nqr_B0 import current2field
-from bfit.gui.calculator_nqr_B0_hh6 import current2field as current2field_hh6
+from bdata.calc import nqr_B0_hh6, nqr_B0_hh3
 from bfit import logger_name
 from scipy.special import gamma, polygamma
 
@@ -1588,11 +1587,15 @@ class fitdata(object):
             else:
                 
                 if hasattr(self.bd.epics, 'hh6_current'):
-                    self.field = current2field_hh6(self.bd.epics.hh6_current.mean)*1e-4
-                    self.field_std = current2field_hh6(self.bd.epics.hh6_current.std)*1e-4
+                    self.field,     err = nqr_B0_hh6(amps=self.bd.epics.hh6_current.mean)
+                    self.field_std, err = nqr_B0_hh6(amps=self.bd.epics.hh6_current.std)                    
                 else:
-                    self.field = current2field(self.bd.epics.hh_current.mean)*1e-4
-                    self.field_std = current2field(self.bd.epics.hh_current.std)*1e-4
+                    self.field,     err = nqr_B0_hh3(amps=self.bd.epics.hh_current.mean)
+                    self.field_std, err = nqr_B0_hh3(amps=self.bd.epics.hh_current.std)
+                
+                self.field_std = (err**2 + self.field_std**2)**0.5
+                self.field *= 1e-4
+                self.field_std *= 1e-4
                     
         except AttributeError:
             self.logger.exception('Field not found')
