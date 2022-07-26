@@ -5,11 +5,11 @@
 from tkinter import *
 from tkinter import ttk
 from multiprocessing import Process, Pipe
-from bfit.gui.calculator_nqr_B0 import current2field
-from bfit.gui.calculator_nqr_B0_hh6 import current2field as current2field_hh6
+from bdata.calc import nqr_B0_hh6, nqr_B0_hh3
 from bfit.backend.fitdata import fitdata
 from bdata import bdata, bmerged
 from bfit import logger_name
+import bdata as bd
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -324,7 +324,7 @@ class fileviewer(object):
             pass
             
         try: 
-            val = current2field(data.epics.hh_current.mean)
+            val, _ = nqr_B0_hh3(amps=data.epics.hh_current.mean)
             data_sw['Magnetic Field'] = "%.3f Gauss" % val
             key_order_sw.append('Magnetic Field')
         except AttributeError:
@@ -575,7 +575,7 @@ class fileviewer(object):
         try: 
             val = data.epics.hh_current.mean
             std = data.epics.hh_current.std
-            field = current2field(val)
+            field, _ = nqr_B0_hh3(amps=val)
             data_se['HH3 Magnet Current'] = "%.3f +/- %.3f A (%.2f G)" % (val, std, field)
             key_order_se.append('HH3 Magnet Current')            
         except AttributeError:
@@ -584,7 +584,7 @@ class fileviewer(object):
         try: 
             val = data.epics.hh6_current.mean
             std = data.epics.hh6_current.std
-            field = current2field_hh6(val)
+            field, _ = nqr_B0_hh6(amps=val)
             data_se['HH6 Magnet Current'] = "%.3f +/- %.3f A (%.2f G)" % \
                                                     (val, std, field)
             key_order_se.append('HH6 Magnet Current')            
@@ -1230,7 +1230,13 @@ class fileviewer(object):
             
         # look for latest run by run number
         for d in [self.bfit.bnmr_archive_label, self.bfit.bnqr_archive_label]:
-            dirloc = os.environ[d]
+            if d not in os.environ.keys():
+                if 'BNMR' in d.upper():
+                    dirloc = os.path.join(bd._mud_data, 'bnmr')
+                else:
+                    dirloc = os.path.join(bd._mud_data, 'bnqr')
+            else:
+                dirloc = os.environ[d]
             runlist.extend(glob.glob(os.path.join(dirloc, str(year), '0%d*.msr'%run)))
         runlist = [int(os.path.splitext(os.path.basename(r))[0]) for r in runlist]
         

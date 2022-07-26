@@ -11,17 +11,13 @@ import bfit
 import os
 from bfit import logger_name
 from bfit.backend import colors
+from bdata.calc import nmr_atten, get_atten_data
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 # =========================================================================== #
 class calculator_nmr_atten(object):
-    
-    data_location = os.path.join(os.path.dirname(__file__), 
-                                '..',
-                                'data', 
-                                'nmr_antenna_data.csv')
     
     # ======================================================================= #
     def __init__(self, commandline=False):
@@ -54,11 +50,7 @@ class calculator_nmr_atten(object):
         self.dac.set("")
         
         # load data
-        self.data = pd.read_csv(self.data_location, comment="#")
-        
-        # normalize 
-        df_max = self.data['antenna_amplitude (mV)'].max()
-        self.data['power (%)'] = self.data['antenna_amplitude (mV)']/df_max*100
+        self.data = get_atten_data()
         
         # main frame
         mainframe = ttk.Frame(root, pad=5)
@@ -145,7 +137,7 @@ class calculator_nmr_atten(object):
         if focus_id == str(self.entry_power):        
             try:
                 power = float(self.power.get()) 
-                value = self.power2dac(power)
+                value = nmr_atten(power=power)
                 self.dac.set("%d" % value)
                 self.logger.debug('Power of %g converted to dac setpoint of %d', 
                                  power, value)
@@ -156,34 +148,10 @@ class calculator_nmr_atten(object):
         elif focus_id == str(self.entry_dac):        
             try:
                 dac = int(self.dac.get()) 
-                value = self.dac2power(dac)
+                value = nmr_atten(dac=dac)
                 self.power.set("%.4f" % np.around(value, 4))
                 self.dac.set("%d" % int(dac))
                 self.logger.debug('dac setpoint of of %d converted to power of %g', 
                                  dac, value)
             except ValueError:
                 self.power.set('')
-            
-    # ======================================================================= #
-    def power2dac(self, value): 
-        if value == 0:
-            return 2047
-        else:
-            self.data.sort_values('power (%)', inplace=True)
-            return int(np.interp(value, 
-                             self.data['power (%)'].values, 
-                             self.data['rf_level_control (DAC)'].values,
-                             left=0,
-                             right=2047)
-                        )
-
-    def dac2power(self, value): 
-        self.data.sort_values('rf_level_control (DAC)', inplace=True)
-        return np.interp(value, 
-                         self.data['rf_level_control (DAC)'],
-                         self.data['power (%)'],
-                         left=100,
-                         right=0)
-                         
-
-

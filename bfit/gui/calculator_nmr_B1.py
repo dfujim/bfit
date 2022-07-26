@@ -9,6 +9,7 @@ import numpy as np
 import webbrowser
 import logging
 import bfit
+from bdata.calc import nmr_B1
 
 # =========================================================================== #
 class calculator_nmr_B1(object):
@@ -119,7 +120,7 @@ class calculator_nmr_B1(object):
         if focus_id == str(self.entry_field):        
             try:
                 field = float(self.field.get())
-                value = field/0.0396*nu
+                value, err = nmr_B1(gauss=field, freq=nu)
                 self.volt.set("%9.6f" % np.around(value, 6))
                 
                 self.logger.debug('Field of %g G converted to voltage of %g mV', 
@@ -131,13 +132,10 @@ class calculator_nmr_B1(object):
         elif focus_id == str(self.entry_voltage):        
             try:
                 voltage = float(self.volt.get())
-                value = voltage*0.0396/nu
+                value, err = nmr_B1(mV=voltage, freq=nu)
                 self.field.set("%9.6f" % np.around(value, 6))
                 
                 self.logger.debug('Voltage of %g mV converted to field of %g G', 
                                  voltage, value)
             except ValueError:
                 self.field.set('')
-            
-
-

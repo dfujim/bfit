@@ -9,6 +9,7 @@ import webbrowser
 import logging
 import bfit
 from bfit import logger_name
+from bdata.calc import nqr_B0_hh3
 
 # =========================================================================== #
 class calculator_nqr_B0(object):
@@ -98,7 +99,7 @@ class calculator_nqr_B0(object):
         if focus_id == str(self.entry_field):        
             try:
                 field = float(self.field.get()) 
-                value = field2current(field)
+                value, err = nqr_B0_hh3(gauss=field)
                 self.current.set("%.4f" % np.around(value, 4))
                 self.logger.debug('Field of %g G converted to current of %g A (HH3)', 
                                  field, value)
@@ -109,14 +110,9 @@ class calculator_nqr_B0(object):
         elif focus_id == str(self.entry_current):        
             try:
                 current = float(self.current.get()) 
-                value = current2field(current)
+                value, err = nqr_B0_hh3(amps=current)
                 self.field.set("%.4f" % np.around(value, 4))
                 self.logger.debug('Current of %g A converted to field of %g G (HH3)', 
                                  current, value)
             except ValueError:
                 self.field.set('debug')
-            
-# ======================================================================= #
-def current2field(current):    return current*2.21309+0.17476
-def field2current(field):      return (field-0.17476)/2.21309
-

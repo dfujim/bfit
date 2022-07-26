@@ -9,6 +9,7 @@ import webbrowser
 import logging
 import bfit
 from bfit import logger_name
+from bdata.calc import nqr_B0_hh6
 
 # =========================================================================== #
 class calculator_nqr_B0_hh6(object):
@@ -61,7 +62,7 @@ class calculator_nqr_B0_hh6(object):
         amperes = ttk.Label(mainframe, text='Amperes')
                 
         notes_line = ttk.Label(mainframe,   
-                            text='Inferred from 2021 runs \n45019, 45020, and 45041'+\
+                            text='Inferred from 2021 runs \n45019, 45020, and 45042'+\
                                  '\nwith NMR at 2.2 T',
                             justify=CENTER)
         
@@ -98,7 +99,7 @@ class calculator_nqr_B0_hh6(object):
         if focus_id == str(self.entry_field):        
             try:
                 field = float(self.field.get()) 
-                value = field2current(field)
+                value, err = nqr_B0_hh6(gauss=field)
                 self.current.set("%.4f" % np.around(value, 4))
                 self.logger.debug('Field of %g G converted to current of %g A (HH6)', 
                                  field, value)
@@ -109,7 +110,7 @@ class calculator_nqr_B0_hh6(object):
         elif focus_id == str(self.entry_current):        
             try:
                 current = float(self.current.get()) 
-                value = current2field(current)
+                value, err = nqr_B0_hh6(amps=current)
                 self.field.set("%.4f" % np.around(value, 4))
                 self.logger.debug('Current of %g A converted to field of %g G (HH6)', 
                                  current, value)
@@ -117,6 +118,5 @@ class calculator_nqr_B0_hh6(object):
                 self.field.set('debug')
             
 # ======================================================================= #
-def current2field(current):    return current*3.561129+1.574797
 def field2current(field):      return (field-1.574797)/3.561129
 
