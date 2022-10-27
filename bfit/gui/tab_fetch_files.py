@@ -5,6 +5,7 @@
 from tkinter import *
 from tkinter import ttk, messagebox, filedialog
 from bfit import logger_name
+import bdata as bd
 from bdata import bdata, bmerged
 from functools import partial
 from bfit.backend.fitdata import fitdata
@@ -972,9 +973,15 @@ class fetch_files(object):
                         
                         # look for latest run by run number
                         if int(spl[0]) < 45000:
-                            dirloc = os.environ[self.bfit.bnmr_archive_label]
+                            try:
+                                dirloc = os.environ[self.bfit.bnmr_archive_label]
+                            except KeyError:
+                                dirloc = os.path.join(bd._mud_data, 'bnmr')
                         else:
-                            dirloc = os.environ[self.bfit.bnqr_archive_label]
+                            try:
+                                dirloc = os.environ[self.bfit.bnqr_archive_label]
+                            except KeyError:
+                                dirloc = os.path.join(bd._mud_data, 'bnqr')
                             
                         runlist = glob.glob(os.path.join(dirloc, 
                                                          str(self.year.get()), 
