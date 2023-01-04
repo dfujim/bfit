@@ -4,6 +4,7 @@
 
 from tkinter import *
 from tkinter import ttk
+from tkinter import filedialog
 from multiprocessing import Process, Pipe
 from bdata.calc import nqr_B0_hh6, nqr_B0_hh3
 from bfit.backend.fitdata import fitdata
