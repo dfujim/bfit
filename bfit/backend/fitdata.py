@@ -4,6 +4,7 @@
 # Nov 2018
 
 from tkinter import *
+from tkinter import messagebox
 from bdata import bdata, bmerged
 from bdata.calc import nqr_B0_hh6, nqr_B0_hh3
 from bfit import logger_name

@@ -3,7 +3,7 @@
 # April 2019
 
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from bfit import logger_name
 from bfit.backend.FunctionPlacer import FunctionPlacer
 from bfit.fitting.decay_31mg import fa_31Mg
