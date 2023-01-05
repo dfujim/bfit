@@ -101,9 +101,9 @@ def main():
     # set
     handler.setFormatter(logging.Formatter(fmt))
     handler.setLevel(level)
-
     logger.addHandler(handler)
     logger.setLevel(level)
+    logger.propagate = False
     
     # testing
     testfn = None
