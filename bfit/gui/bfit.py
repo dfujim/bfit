@@ -772,7 +772,8 @@ class bfit(object):
                       'time_s':'time_s', 
                       'freq':"freq_Hz", 
                       'mV':'voltage_mV', 
-                      'xpar':'x_parameter'}
+                      'xpar':'x_parameter',
+                      }
                         
         index_list = ['time_s', 'freq_Hz', 'voltage_mV', 'x_parameter'] 
         
@@ -783,9 +784,9 @@ class bfit(object):
         # get new keys
         asym_out = {}
         for k in asym.keys():
-            
-            if len(asym[k]) == 2:
-                
+            if k == 'custom':
+                asym_out[data.ppg.customv_name_read.units] = asym[k]
+            elif len(asym[k]) == 2:
                 asym_out[title_dict[k]] = asym[k][0]
                 asym_out[title_dict[k]+"_err"] = asym[k][1]
             else:
@@ -795,10 +796,13 @@ class bfit(object):
         df = pd.DataFrame.from_dict(asym_out)
         
         # set index
-        for i in index_list:
-            if i in asym_out.keys():
-                df.set_index(i, inplace=True)
-                break
+        if 'custom' in asym.keys():
+            df.set_index(data.ppg.customv_name_read.units, inplace=True)
+        else:
+            for i in index_list:
+                if i in asym_out.keys():
+                    df.set_index(i, inplace=True)
+                    break
         
         # make header
         header = [  '# %s' % data.id, 
