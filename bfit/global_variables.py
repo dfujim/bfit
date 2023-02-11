@@ -6,7 +6,7 @@ from os.path import join
 
 # variables
 __src__ = join('bfit', 'fitting')
-__version__ = '4.19.7'
+__version__ = '4.20.0'
 
 # keywords used to identify variables
 KEYVARS = { 'B0'    : 'B0 Field (T)', 
