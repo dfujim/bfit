@@ -713,6 +713,7 @@ class fit_files(object):
 
             # doptions
             doptions = {}
+            doptions['slr_bkgd_corr'] = self.bfit.correct_bkgd.get()
 
             if self.use_rebin.get():
                 doptions['rebin'] = bdfit.rebin.get()

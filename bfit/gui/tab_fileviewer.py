@@ -1260,7 +1260,10 @@ class fileviewer(object):
         if self.get_data(quiet=quiet):
             self.data.draw(self.asym_type.get(), 
                            label=self.bfit.get_label(self.data), 
-                           figstyle=figstyle)
+                           figstyle=figstyle,
+                           asym_args={  
+                                'slr_bkgd_corr':self.bfit.correct_bkgd.get(),
+                                'slr_rm_prebeam':not self.bfit.draw_prebin.get()})
             
     # ======================================================================= #
     def draw_diagnostics(self): #incomplete

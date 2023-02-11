@@ -245,7 +245,9 @@ class dataline(object):
             d = self.bfit.asym_dict[d]
             
             # draw
-            data.draw(d, figstyle=figstyle, label=self.label.get())
+            data.draw(d, figstyle=figstyle, label=self.label.get(), 
+                        asym_args={ 'slr_bkgd_corr':self.bfit.correct_bkgd.get(),
+                                    'slr_rm_prebeam':not self.bfit.draw_prebin.get()})
             
         # draw fit
         if self.check_fit.get():

@@ -100,6 +100,7 @@ class bfit(object):
             asym_dict_keys: asym calc and draw types
             bnmr_data_dir:  string, directory for bnmr data
             bnqr_data_dir:  string, directory for bnqr data
+            correct_bkgd:   BooleanVar, if true apply slr background correction
             data:           dict of fitdata objects for drawing/fitting, keyed by run #
             deadtime:       float, value of deadtime in s or scaling for local calcs
             deadtime_switch:BooleanVar, if true, use deadtime correction
@@ -108,6 +109,7 @@ class bfit(object):
             draw_components:list of titles for labels, options to export, draw.
             draw_fit:       BooleanVar, if true draw fits after fitting
             draw_ppm:       BoolVar for drawing as ppm shift
+            draw_prebin:    BoolVar, if true draw prebeam bins
             draw_rel_peak0: BoolVar for drawing frequencies relative to peak0
             draw_standardized_res: BoolVar for drawing residuals as standardized
             norm_with_param:BoolVar, if true estimate normalization from data only
@@ -586,6 +588,10 @@ class bfit(object):
         self.norm_with_param.set(True)
         self.draw_fit = BooleanVar()
         self.draw_fit.set(True)
+        self.draw_prebin = BooleanVar()
+        self.draw_prebin.set(False)
+        self.correct_bkgd = BooleanVar()
+        self.correct_bkgd.set(True)
         
         menu_draw = Menu(menubar, title='Draw Mode')
         menubar.add_cascade(menu=menu_draw, label='Draw Mode')
@@ -612,10 +618,14 @@ class bfit(object):
         menu_draw.add_checkbutton(label="Draw 1f/1x relative to peak_0",
                 variable = self.draw_rel_peak0, selectcolor = colors.selected,
                 command = lambda : self.set_1f_shift_style('peak'))
-        
+        menu_draw.add_checkbutton(label="Draw prebeam bins",
+                variable=self.draw_prebin, selectcolor=colors.selected)
+
         menu_draw.add_separator()
         menu_draw.add_checkbutton(label="Use NBM in asymmetry", \
-                variable=self.nbm_dict[''], selectcolor=colors.selected)        
+                variable=self.nbm_dict[''], selectcolor=colors.selected)
+        menu_draw.add_checkbutton(label="SLR background correction", \
+                variable=self.correct_bkgd, selectcolor=colors.selected)        
         
         # Fitting minimizers
         menu_mini = Menu(menubar, title='Minimizer')
