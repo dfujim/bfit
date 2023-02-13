@@ -155,6 +155,7 @@ class fitter(object):
         bounds = []
         omit = []
         rebin = []
+        slr_bkgd_corr = []
         sharelist = np.zeros(npar, dtype=bool)
         fixedlist = []
         
@@ -213,11 +214,16 @@ class fitter(object):
             # look for any sharelist
             sharelist += np.array(shlist)
             
-            # rebin and omit
+            # rebin and omit and slr_bkgd_corr
             try:
                 rebin.append(doptions['rebin'])
             except KeyError:
                 rebin.append(1)
+            
+            try:
+                slr_bkgd_corr.append(doptions['slr_bkgd_corr'])
+            except KeyError:
+                slr_bkgd_corr.append(True)
                 
             try:
                 omit.append(doptions['omit'])
@@ -229,9 +235,10 @@ class fitter(object):
         pars, stds_l, stds_h, covs, chis, gchi = self._do_fit(
                                         bdata_list, 
                                         fn, 
-                                        omit, 
-                                        rebin, 
-                                        sharelist, 
+                                        omit=omit, 
+                                        rebin=rebin, 
+                                        slr_bkgd_corr=slr_bkgd_corr,
+                                        shared=sharelist, 
                                         hist_select=hist_select, 
                                         asym_mode=asym_mode, 
                                         fixed=fixedlist, 

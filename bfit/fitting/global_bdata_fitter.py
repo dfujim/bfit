@@ -11,7 +11,7 @@ from collections.abc import Iterable
 class global_bdata_fitter(global_fitter):
     
     # ======================================================================= #
-    def __init__(self, data, fn, xlims=None, rebin=1, asym_mode='c', **kwargs):
+    def __init__(self, data, fn, xlims=None, rebin=1, slr_bkgd_corr=True, asym_mode='c', **kwargs):
         """
             data:       list of bdata objects
             
@@ -44,8 +44,12 @@ class global_bdata_fitter(global_fitter):
         if not isinstance(rebin, Iterable):
             rebin = [rebin]*ndata
         
+        # Set slr_bkgd_corr
+        if not isinstance(slr_bkgd_corr, Iterable):
+            slr_bkgd_corr = [slr_bkgd_corr]*ndata
+        
         # Get asymmetry
-        asym = [d.asym(asym_mode, rebin=re) for d, re in zip(data, rebin)]
+        asym = [d.asym(asym_mode, rebin=re, slr_bkgd_corr=s) for d, re, s in zip(data, rebin, slr_bkgd_corr)]
         
         # split into x, y, dy data sets
         x = [a[0] for a in asym]

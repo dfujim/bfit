@@ -12,7 +12,7 @@ from bfit.fitting.minuit import minuit
 import inspect
 
 # ========================================================================== #
-def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='', 
+def fit_bdata(data, fn, omit=None, rebin=None, slr_bkgd_corr=None, shared=None, hist_select='', 
               xlims=None, asym_mode='c', fixed=None, minimizer='migrad', **kwargs):
     """
         Fit combined asymetry from bdata.
@@ -25,6 +25,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
         
         omit:           list of strings of space-separated bin ranges to omit
         rebin:          list of rebinning of data prior to fitting. 
+        slr_bkgd_corr:  list of booleans for background corrections 
         
         shared:      list of bool to indicate which parameters are shared. 
                         True if shared
@@ -111,6 +112,15 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
     elif len(rebin) < ndata:
         rebin = np.concatenate((rebin, np.ones(ndata-len(rebin))))
     rebin = np.asarray(rebin).astype(int)
+
+    # get slr_bkgd_corr
+    if slr_bkgd_corr is None:
+        slr_bkgd_corr = np.ones(ndata, dtype=bool)
+    elif type(slr_bkgd_corr) is bool:
+        slr_bkgd_corr = np.full(ndata, slr_bkgd_corr)
+    elif len(slr_bkgd_corr) < ndata:
+        slr_bkgd_corr = np.concatenate((slr_bkgd_corr, np.full(ndata-len(slr_bkgd_corr), True)))
+    slr_bkgd_corr = np.asarray(slr_bkgd_corr).astype(bool)
         
     # fit globally -----------------------------------------------------------
     if any(shared) and ndata>1:
@@ -121,7 +131,8 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
                                 shared = shared, 
                                 asym_mode = asym_mode, 
                                 rebin = rebin, 
-                                fixed = fixed, 
+                                fixed = fixed,
+                                slr_bkgd_corr=slr_bkgd_corr 
                                 )
                                 
         g.fit(minimizer=minimizer, **kwargs)
@@ -176,12 +187,12 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
         gchi = 0.
         dof = 0.
         
-        iter_obj = tqdm(zip(data, fn, omit, rebin, p0, bounds, xlims, fixed), 
+        iter_obj = tqdm(zip(data, fn, omit, rebin, p0, bounds, xlims, fixed, slr_bkgd_corr), 
                         total=ndata, desc='Independent Fitting')
-        for d, f, om, re, p, b, xl, fix in iter_obj:
+        for d, f, om, re, p, b, xl, fix, bkgd in iter_obj:
             
             # get data for chisq calculations
-            x, y, dy = _get_asym(d, asym_mode, rebin=re, omit=om)
+            x, y, dy = _get_asym(d, asym_mode, rebin=re, omit=om, slr_bkgd_corr=bkgd)
             
             # get x limits
             if xl is None:  
@@ -268,7 +279,7 @@ def fit_bdata(data, fn, omit=None, rebin=None, shared=None, hist_select='',
     return(pars, stds_l, stds_h, covs, chis, gchi)
 
 # =========================================================================== #
-def _fit_single(data, fn, omit='', rebin=1, hist_select='', xlim=None, asym_mode='c', 
+def _fit_single(data, fn, omit='', rebin=1, slr_bkgd_corr=True, hist_select='', xlim=None, asym_mode='c', 
                fixed=None, minimizer='migrad', **kwargs):
     """
         Fit combined asymetry from bdata.
@@ -279,6 +290,7 @@ def _fit_single(data, fn, omit='', rebin=1, hist_select='', xlim=None, asym_mode
         
         omit:           string of space-separated bin ranges to omit
         rebin:          rebinning of data prior to fitting. 
+        slr_bkgd_corr:  boolean, if true do background correction to asym calc
         
         hist_select:    string for selecting histograms to use in asym calc
         
@@ -312,7 +324,7 @@ def _fit_single(data, fn, omit='', rebin=1, hist_select='', xlim=None, asym_mode
     """
     
     # Get data input
-    x, y, dy = _get_asym(data, asym_mode, rebin=rebin, omit=omit)
+    x, y, dy = _get_asym(data, asym_mode, rebin=rebin, omit=omit, slr_bkgd_corr=slr_bkgd_corr)
             
     # check for values with error == 0. Omit these values. 
     tag = dy != 0

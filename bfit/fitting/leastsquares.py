@@ -22,8 +22,8 @@ class LeastSquares:
             fn_prime_dx:    spacing in x to calculate the derivative in the case of the default calculation
         """
         self.fn = fn
-        self.x = np.asarray(x, dtype=np.float)
-        self.y = np.asarray(y, dtype=np.float)
+        self.x = np.asarray(x, dtype=np.float64)
+        self.y = np.asarray(y, dtype=np.float64)
         self.n = len(x)
         
         # set derivative

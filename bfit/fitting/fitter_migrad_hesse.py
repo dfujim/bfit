@@ -9,7 +9,7 @@ class fitter(fit_base):
     
     __name__ = 'migrad (hesse)'
     
-    def _do_fit(self, data, fn, omit=None, rebin=None, shared=None, hist_select='', 
+    def _do_fit(self, data, fn, omit=None, rebin=None, shared=None, slr_bkgd_corr=None, hist_select='', 
                 xlims=None, asym_mode='c', fixed=None, parnames=None, **kwargs):
         """Inputs match fit_bdata"""
         
@@ -18,6 +18,7 @@ class fitter(fit_base):
                          omit=omit, 
                          rebin=rebin, 
                          shared=shared, 
+                         slr_bkgd_corr=slr_bkgd_corr,
                          hist_select=hist_select, 
                          xlims=xlims, 
                          asym_mode=asym_mode, 
