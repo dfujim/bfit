@@ -218,9 +218,17 @@ def fit_bdata(data, fn, omit=None, rebin=None, slr_bkgd_corr=None, shared=None, 
             else:            
                 kwargs['p0'] = p
                 kwargs['bounds'] = b
-                p, c, sl, sh, ch, m = _fit_single(d, f, om, re, hist_select, xlim=xl, 
-                                    asym_mode=asym_mode, fixed=fix, 
-                                    minimizer=minimizer, **kwargs)
+                p, c, sl, sh, ch, m = _fit_single(data=d, 
+                                                fn=f, 
+                                                omit=om, 
+                                                rebin=re, 
+                                                hist_select=hist_select, 
+                                                xlim=xl, 
+                                                asym_mode=asym_mode, 
+                                                fixed=fix, 
+                                                slr_bkgd_corr=bkgd,
+                                                minimizer=minimizer, 
+                                                **kwargs)
                                     
                 # check minuit validity
                 if m is not None: 
