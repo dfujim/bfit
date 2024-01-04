@@ -1,15 +1,10 @@
-# Cython functions for fast numerical integration 
+# Cython functions for fast numerical integration
 # Derek Fujimoto
 # October 2017
 #
 # Based on the work of John D. Cook
 # https://www.johndcook.com/blog/double_exponential_integration/
 # Note: to see slow lines write 'cython integrator.pyx -a --cplus'
-
-# To build write: python setup_integrator.py build_ext --inplace
-# assuming the cython seup file is called setup_integrator.
-
-# python3 setup_integrator.py build_ext --inplace
 
 cimport cython
 import numpy as np
@@ -28,7 +23,7 @@ cdef extern from 'integration_fns.h':
 cdef class PulsedFns:
     cdef double life            # probe lifetime in s
     cdef double pulse_len       # length of beam on in s
-    cdef Integrator* intr        # integrator
+    cdef Integrator* intr       # integrator
 
     # ======================================================================= #
     def __init__(self, lifetime, pulse_len):
@@ -40,7 +35,7 @@ cdef class PulsedFns:
         self.life = lifetime
         self.pulse_len = pulse_len
         self.intr = new Integrator(lifetime)
-    
+
     # ======================================================================= #
     def __dealloc__(self):
         """
@@ -52,17 +47,17 @@ cdef class PulsedFns:
     @cython.boundscheck(False)  # some speed up in exchange for instability
     cpdef exp(self, double[:] time, double Lambda):
         """
-            Pulsed exponential for an array of times. Efficient c-speed looping 
-            and indexing. 
-            
-            Inputs: 
+            Pulsed exponential for an array of times. Efficient c-speed looping
+            and indexing.
+
+            Inputs:
                 time: array of times
                 Lambda: 1/T1 in s^-1
-                
-            Outputs: 
-                np.array of values for the puslsed stretched exponential. 
+
+            Outputs:
+                np.array of values for the puslsed stretched exponential.
         """
-        
+
         # Variable definitions
         cdef int n = time.shape[0]
         cdef int i
@@ -73,44 +68,44 @@ cdef class PulsedFns:
         cdef double prefac
         cdef double lambda1
         cdef double afterfactor
-        
-        # precalculations 
+
+        # precalculations
         lambda1 = Lambda+1./life
         prefac = 1./(lambda1*life)
         afterfactor = (1-np.exp(-lambda1*pulse_len))/(1-np.exp(-pulse_len/life))
-        
+
         # Calculate pulsed exponential
-        for i in range(n):    
-            
+        for i in range(n):
+
             # get some useful values: time, normalization
             t = time[i]
-        
+
             # during pulse
             if t<pulse_len:
                 out[i] = prefac*(1-np.exp(-lambda1*t))/(1-np.exp(-t/life))
-            
+
             # after pulse
             else:
                 out[i] = prefac*afterfactor*np.exp(-Lambda*(t-pulse_len))
-        
+
         return out
 
     # ======================================================================= #
     @cython.boundscheck(False)  # some speed up in exchange for instability
     cpdef str_exp(self, double[:] time, double Lambda, double Beta):
         """
-            Pulsed stretched exponential for an array of times. Efficient 
-            c-speed looping and indexing. 
-            
-            Inputs: 
+            Pulsed stretched exponential for an array of times. Efficient
+            c-speed looping and indexing.
+
+            Inputs:
                 time: array of times
                 Lambda: 1/T1 in s^-1
                 Beta: stretching factor
-                
-            Outputs: 
-                np.array of values for the puslsed stretched exponential. 
+
+            Outputs:
+                np.array of values for the puslsed stretched exponential.
         """
-        
+
         # Variable definitions
         cdef double out
         cdef int n = time.shape[0]
@@ -122,27 +117,27 @@ cdef class PulsedFns:
         cdef double life = self.life
         cdef double pulse_len = self.pulse_len
         cdef Integrator* intr = self.intr
-        
+
         prefac_post = life*(1.-exp(-pulse_len/life))
-        
+
         # Calculate pulsed str. exponential
-        for i in range(n):    
-            
+        for i in range(n):
+
             # get some useful values: time, normalization
             t = time[i]
-            
+
             # during pulse
             if t<pulse_len:
                 prefac = life*(1.-exp(-t/life))
                 x = intr.StrExp(t, t, Lambda, Beta)
                 out = x/prefac
-            
+
             # after pulse
             else:
                 x = intr.StrExp(t, pulse_len, Lambda, Beta)
                 out = x*exp((t-pulse_len)/life)/prefac_post
-            
+
             # save result
             out_arr[i] = out
-        
+
         return out_arr
