@@ -73,7 +73,7 @@ D. Fujimoto, "bfit: A Python Application For Beta-Detected NMR," [J. Open Source
 ### Dependencies
 
 The following packages/applications are needed _prior_ to [bfit] installation:
-- [Python] 3.6 or higher: a dynamically typed programming language. [[install](https://wiki.python.org/moin/BeginnersGuide/Download)]
+- [Python] 3.9 or higher: a dynamically typed programming language. [[install](https://wiki.python.org/moin/BeginnersGuide/Download)]
 - [Tkinter] : [Python]'s de facto standard GUI package. [[install](https://tkdocs.com/tutorial/install.html)]
 
 ### Install Instructions
