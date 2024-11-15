@@ -80,9 +80,9 @@ The following packages/applications are needed _prior_ to [bfit] installation:
 
 |  | Command |
 |:-- | :--|
-From the [PyPI] as user (recommended) | `pip install --user bfit` |
-From the [PyPI] as root | `pip install bfit` |
-From source | `python3 setup.py install` |
+From the [PyPI] | `pip install bfit` |
+From source | `pip install -e .` |
+Developer mode | `pip --no-build-isolation -e .` |
 
 Note that `pip` should point to a (version 3) [Python] executable
 (e.g., `python3`, `python3.8`, etc.).
@@ -96,7 +96,7 @@ This is done by defining two environment variables:
 `BNMR_ARCHIVE` and `BNQR_ARCHIVE`.
 This can be done, for example, in your `.bashrc` script.
 Both variables expect the data to be stored in directories with a particular
-heirarchy:
+hierarchy:
 
 ```
 /path/
@@ -108,7 +108,7 @@ heirarchy:
 ```
 
 Here, the folders `/path/bnmr/` and `/path/bnqr/` both contain runs
-(i.e., `.msr` files) organized into subdirectories by year of aquasition.
+(i.e., `.msr` files) organized into subdirectories by year of acquisition.
 In this case, you would set (in your `.bashrc`):
 
 ```bash
@@ -116,11 +116,11 @@ export BNMR_ARCHIVE=/path/bnmr/
 export BNQR_ARCHIVE=/path/bnqr/
 ```
 
-If [bfit] cannot find the data, it will attempt to download the relavent [MUD]
+If [bfit] cannot find the data, it will attempt to download the relevant [MUD]
 (i.e., `.msr`) files from <https://cmms.triumf.ca/mud/runSel.html>.
 This is the default behaviour for [bfit] installed from [PyPI].
 
-### First Startup 
+### First Startup
 
 To launch the GUI from a terminal simply call `bfit`, if this fails, one can also use the alternative syntax `python3 -m bfit`, where `python3` may be replaced with any (version 3) [Python] executable.
 
