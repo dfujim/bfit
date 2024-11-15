@@ -82,7 +82,7 @@ class fit_files(object):
     mode = ""
     chi_threshold = 1.5 # threshold for red highlight on bad fits
     n_fitx_pts = 500    # number of points to draw in fitted curves
-    
+
     # ======================================================================= #
     def __init__(self, fit_data_tab, bfit):
 
@@ -99,7 +99,7 @@ class fit_files(object):
         self.draw_components = list(bfit.draw_components)
         self.fit_data_tab = fit_data_tab
         self.plt = self.bfit.plt
-        
+
         self.fit_lines = {}
         self.fit_lines_old = {}
 
@@ -440,7 +440,7 @@ class fit_files(object):
         """
             Make tabs for setting fit input parameters.
         """
-        
+
         # get data
         dl = self.bfit.fetch_files.data_lines
         keylist = [k for k in dl.keys() if dl[k].check_state.get()]
@@ -466,7 +466,7 @@ class fit_files(object):
                 # set run functions
                 fn_titles = self.fitter.function_names[self.mode]
                 self.fit_function_title_box['values'] = fn_titles
-                
+
                 # set current function
                 if self.fit_function_title.get() not in fn_titles:
                     self.fit_function_title.set(fn_titles[0])
@@ -478,7 +478,7 @@ class fit_files(object):
             self.fit_runmode_label['text'] = ""
             self.mode = ""
             self.n_component.set(1)
-        
+
         # delete unused fitline objects
         for k in list(self.fit_lines.keys()):       # iterate fit list
             self.fit_lines[k].degrid()
@@ -492,19 +492,19 @@ class fit_files(object):
                                                   self.n_component.get()))
         for k in keylist:
             if k not in self.fit_lines.keys():
-                
+
                 # add back old fit line
                 if k in self.fit_lines_old.keys():
                     self.fit_lines[k] = self.fit_lines_old[k]
                     del self.fit_lines_old[k]
-                                       
+
                 # make new fit line
                 else:
                     self.fit_lines[k] = fitline(self.bfit, self.runframe, dl[k].bdfit, n)
-                    
+
             self.fit_lines[k].grid(n)
             n+=1
-            
+
         self.populate_param()
 
     # ======================================================================= #
@@ -514,7 +514,7 @@ class fit_files(object):
 
             force_modify: passed to line.populate
         """
-       
+
         self.logger.debug('Populating fit parameters')
 
         # populate axis comboboxes
@@ -552,7 +552,7 @@ class fit_files(object):
             ncomp = self.n_component.get()
 
             if ncomp > 1:
-                for i in range(ncomp): 
+                for i in range(ncomp):
                     parlst.append('Beta-Avg 1/<T1>_%d' % i)
             else:
                 parlst.append('Beta-Avg 1/<T1>')
@@ -565,19 +565,19 @@ class fit_files(object):
             if ncomp > 1:
                 for i in range(ncomp):
                     T1_lst.append('T1_%d' % i)
-                    
+
                     if self.fit_function_title.get() == 'Bi Exp':
                         T1_lst.append('T1b_%d' % i)
-                    
+
             else:
                 T1_lst.append('T1')
-                
+
                 if self.fit_function_title.get() == 'Bi Exp':
                     T1_lst.append('T1b')
 
         if self.fit_function_title.get() == 'Str Exp':
             if ncomp > 1:
-                for i in range(ncomp): 
+                for i in range(ncomp):
                     T1_lst.append('Beta-Avg <T1>_%d' % i)
             else:
                 T1_lst.append('Beta-Avg <T1>')
@@ -593,14 +593,14 @@ class fit_files(object):
         # regenerate fitlines
         for fline in self.fit_lines.values():
             fline.populate(force_modify=force_modify)
-        
+
         for fline in self.fit_lines_old.values():
             if self.mode == fline.data.mode:
                 fline.populate(force_modify=force_modify)
-        
+
         # reset modify all value
         self.set_as_group.set(modify_all_value)
-        
+
     # ======================================================================= #
     def do_add_param(self, *args):
         """Launch popup for adding user-defined parameters to draw"""
@@ -639,7 +639,7 @@ class fit_files(object):
         inv_map = {v: k for k, v in self.bfit.asym_dict.items()}
         asym_mode_fit = inv_map[self.bfit.get_asym_mode(self)]
         asym_mode_fetch = inv_map[self.bfit.get_asym_mode(self.bfit.fetch_files)]
-        
+
         self.bfit.fetch_files.asym_type.set(asym_mode_fit)
 
         # draw fit results
@@ -664,10 +664,10 @@ class fit_files(object):
 
             # reset style
             self.bfit.draw_style.set(style)
-            
+
         # reset asym mode
         self.bfit.fetch_files.asym_type.set(asym_mode_fetch)
-    
+
     # ======================================================================= #
     def do_fit(self, *args):
         # fitter
@@ -770,7 +770,7 @@ class fit_files(object):
         output = popup.run()
 
         # fit success
-        if type(output) is tuple: 
+        if type(output) is tuple:
             fit_output, gchi = output
 
         # error message
@@ -784,29 +784,29 @@ class fit_files(object):
 
         # get fit functions
         fns = fitter.get_fit_fn(fn_name, ncomp, data_list)
-        
+
         # set output results
         for key, df in fit_output.items(): # iterate run ids
-            
+
             # get fixed and shared
             fs = {'fixed':[], 'shared':[], 'parnames':[]}
             for line in self.fit_lines[key].lines:
-                
+
                 fs['parnames'].append(line.pname)
                 fs['fixed'].append(line.get('fixed'))
                 fs['shared'].append(line.get('shared'))
-            
+
             df2 = pd.concat((df, pd.DataFrame(fs).set_index('parnames')), axis='columns')
-            
+
             # make output
-            new_output = {'results': df2, 
+            new_output = {'results': df2,
                           'fn': fns[key],
                           'gchi': gchi}
-          
+
             self.bfit.data[key].set_fitresult(new_output)
             self.bfit.data[key].fit_title = self.fit_function_title.get()
             self.bfit.data[key].ncomp = self.n_component.get()
-            
+
         # display run results
         for key in self.fit_lines.keys():
             self.fit_lines[key].show_fit_result()
@@ -879,7 +879,7 @@ class fit_files(object):
             for line in fline.lines:
                 values = {c: fitpar.loc[line.pname, c] for c in fitpar.columns}
                 line.set(**values)
-            
+
     # ======================================================================= #
     def draw_param(self, *_):
         """Draw the fit parameters"""
@@ -900,37 +900,37 @@ class fit_files(object):
 
         # check for all the above - draw recursively
         if ydraw == 'all the above' or xdraw == 'all the above':
-            
-            self.logger.error("Drawing param as 'all the above'")
-            
+
+            self.logger.info("Drawing param as 'all the above'")
+
             # check which one we're modifying
             do_x = xdraw == 'all the above'
-            
+
             # draw in new windows
             draw_style = self.bfit.draw_style.get()
             self.bfit.draw_style.set('new')
-            
+
             for val in self.yaxis_combobox['values']:
-                if val == 'all the above':  
+                if val == 'all the above':
                     break
                 elif val != '':
-                
+
                     # set axis value
                     if do_x:    self.xaxis.set(val)
                     else:       self.yaxis.set(val)
-                    
+
                     # draw
                     self.draw_param()
-                
+
             # reset axis value
             if do_x:    self.xaxis.set('all the above')
             else:       self.yaxis.set('all the above')
-                    
+
             # reset draw style
             self.bfit.draw_style.set(draw_style)
-            
+
             return
-            
+
         self.logger.info('Draw fit parameters "%s" vs "%s" with annotation "%s"'+\
                          ' and label %s', ydraw, xdraw, ann, label)
 
@@ -1051,21 +1051,29 @@ class fit_files(object):
         ncomp = self.n_component.get()
         xsuffix = ''
         ysuffix = ''
-        
+
         if ncomp > 1:
 
             fn_params = self.fitter.gen_param_names(self.fit_function_title.get(), ncomp)
-                        
+
             if xdraw in fn_params or 'Beta-Avg 1/<T1>' in xdraw or 'T1' in xdraw:
-                spl = xdraw.split('_')
-                xdraw = '_'.join(spl[:-1])
-                xsuffix = ' [%s]' % spl[-1]
+
+                if '_' in xdraw:
+                    spl = xdraw.split('_')
+                    xdraw = '_'.join(spl[:-1])
+                    xsuffix = ' [%s]' % spl[-1]
+                else:
+                    xsuffix = ''
 
             if ydraw in fn_params or 'Beta-Avg 1/<T1>' in ydraw or 'T1' in ydraw:
-                spl = ydraw.split('_')
-                ydraw = '_'.join(spl[:-1])
-                ysuffix = ' [%s]' % spl[-1]
-             
+
+                if '_' in ydraw:
+                    spl = ydraw.split('_')
+                    ydraw = '_'.join(spl[:-1])
+                    ysuffix = ' [%s]' % spl[-1]
+                else:
+                    ysuffix = ''
+
         # pretty labels
         xdraw = self.fitter.pretty_param.get(xdraw, xdraw)
         ydraw = self.fitter.pretty_param.get(ydraw, ydraw)
@@ -1112,7 +1120,7 @@ class fit_files(object):
 
         # format date x axis
         if xerrs is None:   self.plt.gcf(figstyle).autofmt_xdate()
-        
+
         # plot elements
         self.plt.xlabel(figstyle, xdraw)
         self.plt.ylabel(figstyle, ydraw)
@@ -1123,7 +1131,7 @@ class fit_files(object):
 
         # bring window to front
         raise_window()
-        
+
     # ======================================================================= #
     def export(self, savetofile=True, filename=None):
         """Export the fit parameter and file headers"""
@@ -1157,15 +1165,15 @@ class fit_files(object):
         for k, line in self.fit_lines.items():
             keylist.append(k)
             data = line.data
-            
+
             if not all(data.fitpar['res'].isna()):
-            
+
                 for kk in data.fitpar.index:
-                    
+
                     name = 'fixed '+kk
                     if name not in val.keys(): val[name] = []
                     val[name].append(data.fitpar.loc[kk, 'fixed'])
-                    
+
                     name = 'shared '+kk
                     if name not in val.keys(): val[name] = []
                     val[name].append(data.fitpar.loc[kk, 'shared'])
@@ -1186,7 +1194,7 @@ class fit_files(object):
                 filename = filedialog.asksaveasfilename(filetypes=[('csv', '*.csv'),
                                                                    ('allfiles', '*')],
                                                     defaultextension='.csv')
-                if not filename:    
+                if not filename:
                     return
             self.logger.info('Exporting parameters to "%s"', filename)
 
@@ -1202,17 +1210,17 @@ class fit_files(object):
                           '# Number of components: %d' % data.ncomp,
                           '# Global Chi-Squared: %s' % self.gchi_label['text']
                           ]
-                          
+
                 # add constrained equations to header
                 if self.pop_fitconstr.defined:
                     head2 = ['# ',
                              '# Constrained parameters',
                              ]
                     header.extend(head2)
-                    
+
                     for d, e in zip(self.pop_fitconstr.defined, self.pop_fitconstr.eqn):
                         header.append('# {defi} = {eqn}'.format(defi=d, eqn=e))
-                    
+
             else:
                 header = []
 
@@ -1241,7 +1249,7 @@ class fit_files(object):
             directory = filedialog.askdirectory()
             if not directory:
                 return
-        
+
         filename = os.path.join(directory, filename)
 
         # asymmetry type
@@ -1302,7 +1310,7 @@ class fit_files(object):
     # ======================================================================= #
     def get_values(self, select):
         """ Get plottable values from all runs"""
-        
+
         data = self.bfit.data
         dlines = self.bfit.fetch_files.data_lines
 
@@ -1311,17 +1319,17 @@ class fit_files(object):
         runs.sort()
 
         self.logger.debug('Fetching parameter %s', select)
-        
+
         # get values
         out = np.array([data[r].get_values(select) for r in runs], dtype=object)
-        
+
         val = out[:, 0]
         err = np.array(out[:, 1].tolist())
-        if len(err.shape) > 1: 
+        if len(err.shape) > 1:
             err = (err[:, 0], err[:, 1])
-        
+
         return (val, err)
-        
+
     # ======================================================================= #
     def input_enable_disable(self, parent, state, first=True):
         """
@@ -1354,15 +1362,15 @@ class fit_files(object):
 
         # disable everything in fit_tab
         for child in parent.winfo_children():
-            
+
             # exceptions
             if child in (self.xaxis_combobox,
                          self.yaxis_combobox,
                          self.annotation_combobox,
                          self.par_label_entry):
                 continue
-            
-            
+
+
             # disable
             try:
                 if state == 'disabled':
@@ -1416,23 +1424,23 @@ class fit_files(object):
             value: new value to assign
             skipline: if this line, don't modify
         """
-    
+
         for fitline in self.fit_lines.values():
-            
+
             # trivial case
             if not fitline.lines:
                 return
-            
+
             # get line id
             id = [line.pname for line in fitline.lines].index(pname)
             line = fitline.lines[id]
-            
+
             if line == skipline:
                 continue
-            
-            # set 
+
+            # set
             line.set(**{col:value})
-    
+
     # ======================================================================= #
     def show_all_results(self):
         """Make a window to display table of fit results"""
@@ -1453,7 +1461,7 @@ class fit_files(object):
         # don't make more than one window
         if hasattr(p, 'win') and Toplevel.winfo_exists(p.win):
             p.win.lift()
-            
+
         # make a new window, using old inputs and outputs
         else:
             p.show()
@@ -1482,13 +1490,13 @@ class fit_files(object):
         # back-translate pretty labels to originals
         ivd = {}
         for  k, v in self.fitter.pretty_param.items():
-            
+
             try:
                 v = v % unit[1]
             except TypeError:
-                pass    
-             
-            ivd[v] = k     
+                pass
+
+            ivd[v] = k
 
         for fig_num in figlist:
 
@@ -1496,7 +1504,7 @@ class fit_files(object):
             ax = plt.figure(fig_num).axes[0]
             xlab = ax.get_xlabel()
             ylab = ax.get_ylabel()
-            
+
             # remove multi-compoent extension
             try:
                 ext_x = xlab.split('[')[1]
@@ -1505,7 +1513,7 @@ class fit_files(object):
             else:
                 ext_x = ext_x.split(']')[0]
             xlab = xlab.split('[')[0].strip()
-            
+
             try:
                 ext_y = ylab.split('[')[1]
             except IndexError:
@@ -1517,11 +1525,11 @@ class fit_files(object):
             # convert from fancy label to simple label
             xlab = ivd.get(xlab, xlab)
             ylab = ivd.get(ylab, ylab)
-            
+
             # add multi-componet stuff
             if ext_x: xlab += '_%s' % ext_x
             if ext_y: ylab += '_%s' % ext_y
-                        
+
             # set new labels for drawing
             self.xaxis.set(xlab)
             self.yaxis.set(ylab)
