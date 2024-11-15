@@ -1022,6 +1022,10 @@ class fitdata(object):
 
         # draw
         if self.bfit.draw_standardized_res.get():
+            idx= da > 0
+            res = res[idx]
+            da = da[idx]
+            x = x[idx]
             plt.errorbar(figstyle, id, x, res/da, np.zeros(len(x)),
                               label=label, **drawargs)
 
