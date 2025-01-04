@@ -2,7 +2,7 @@
 # Derek Fujimoto
 # Oct 2020
 
-from scipy.misc import derivative 
+from ._scipy_misc import derivative
 import numpy as np
 
 
