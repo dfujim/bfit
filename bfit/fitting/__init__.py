@@ -9,4 +9,6 @@ __all__=['functions',
          'fit_bdata', 
          'decay_31mg', 
          'leastsquares', 
-         'minuit']
+         'minuit',
+         '_scipy_misc',
+]

@@ -40,6 +40,7 @@ python_sources = [
     '__init__.py',
     'leastsquares.py',
     'minuit.py',
+    '_scipy_misc.py',
 ]
 
 py.install_sources(
