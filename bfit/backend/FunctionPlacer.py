@@ -69,7 +69,7 @@ class FunctionPlacer(object):
         self.p0 = [{k:float(p[k].get()) for k in p.keys() if 'base' not in k} for p in p0]
 
         # baseline
-        if self.fname in ('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz'):
+        if self.fname in ('Lorentzian', 'Gaussian', 'BiLorentzian', 'QuadLorentz', 'PseudoVoigt'):
             self.base = float(p0[0]['base'].get())
             y = np.ones(len(self.x))*self.base
             self.baseline = self.ax.plot(self.x, y, zorder=20, ls='--', label='Baseline')[0]
@@ -141,6 +141,21 @@ class FunctionPlacer(object):
                 self.list_points['fwhm'].append(widthpt)
             self.list_points['base'] = self.run_1f_quad_base(self.p0[0], self.list_points['fwhm'], 'C0')
 
+        elif self.fname == 'PseudoVoigt':
+
+            # if points are not saved they are garbage collected
+            self.list_points = {'peak':[], 'fwhm':[], 'sigma':[]}
+
+            # make points
+            for i, (p, line) in enumerate(zip(self.p0, self.lines)):
+                peakpt, widthpt, sigmapt = self.run_1f_voigt_single(p, line, f'C{i+1}')
+                self.list_points['peak'].append(peakpt)
+                self.list_points['fwhm'].append(widthpt)
+                self.list_points['sigma'].append(sigmapt)
+
+            self.list_points['base'] = self.run_1f_voigt_base(self.list_points['fwhm'],
+                                                              self.list_points['sigma'], 'C0')
+
         # SLR measurements ----------------------------------------------------
         elif self.fname in ('Exp', 'Str Exp'):
 
@@ -152,11 +167,11 @@ class FunctionPlacer(object):
 
             # make points
             for i, (p, line) in enumerate(zip(self.p0, self.lines)):
-                self.list_points['amp'].append(self.run_20_initial(p, line, 'C%d'%i))
-                self.list_points['lam'].append(self.run_20_lambda(p, line, 'C%d'%i))
+                self.list_points['amp'].append(self.run_20_initial(p, line, f'C{i}'))
+                self.list_points['lam'].append(self.run_20_lambda(p, line, f'C{i}'))
 
                 if self.fname == 'Str Exp':
-                    self.list_points['beta'].append(self.run_20_beta(p, line, 'C%d'%i))
+                    self.list_points['beta'].append(self.run_20_beta(p, line, f'C{i}'))
 
             # connect point shifter
             self.fig.canvas.mpl_connect('button_release_event', self.shift_20_pts_resize)
@@ -282,6 +297,107 @@ class FunctionPlacer(object):
                                 self.base-p0['amp'], color=color)
 
         return (peakpt, widthpt)
+
+    # ======================================================================= #
+    def run_1f_voigt_base(self, widths, sigmas, color):
+        """
+            widths: list of points for widths, need to update y values
+        """
+
+        def update_base(x, y):
+
+            # base point
+            oldbase = self.base
+            self.base = y
+            for i in range(len(self.p0)):
+                self.p0[i]['amp'] -= oldbase-y
+
+            # update width points
+            for p0, wpoint, spoint, line in zip(self.p0, widths, sigmas, self.lines):
+                wpoint.point.set_ydata((self.fn(p0['peak']+p0['fwhm']/2, **p0),))
+                spoint.point.set_ydata((self.fn(p0['peak']-p0['sigma']/2, **p0),))
+
+                # update other lines
+                line.set_ydata(self.fn(self.x, **p0))
+
+            # update sumline
+            self.sumline.set_ydata(self.sumfn(self.x))
+
+            # update baseline line
+            self.baseline.set_ydata(np.ones(self.npts)*self.base)
+            self.fig.canvas.draw()
+
+        # return so matplotlib doesn't garbage collect
+        xpt = self.ax.get_xticks()[-1]
+        return DraggablePoint(self, update_base, xpt,
+                                 self.base,
+                                 color=color, setx=False)
+
+    # ======================================================================= #
+    def run_1f_voigt_single(self, p0, line, color):
+
+        # make point for fwhm
+        def update_width(x, y):
+
+            # width point
+            p0['fwhm'] = abs(p0['peak']-x)*2
+
+            # update line
+            line.set_ydata(self.fn(self.x, **p0))
+
+            # update sum line
+            self.sumline.set_ydata(self.sumfn(self.x))
+            self.fig.canvas.draw()
+
+        x = p0['peak']+p0['fwhm']/2
+        widthpt = DraggablePoint(self, update_width, x, self.fn(x, **p0),
+                                 color=color, sety=False)
+
+        # make point for sigma
+        def update_sigma(x, y):
+
+            # width point
+            p0['sigma'] = abs(p0['peak']-x)*2
+
+            # update line
+            line.set_ydata(self.fn(self.x, **p0))
+
+            # update sum line
+            self.sumline.set_ydata(self.sumfn(self.x))
+            self.fig.canvas.draw()
+
+        x = p0['peak']-p0['sigma']/2
+        sigmapt = DraggablePoint(self, update_sigma, x, self.fn(x, **p0),
+                                 color=color, sety=False, marker='o')
+
+        # make point for peak
+        def update_peak(x, y):
+
+            # peak point
+            p0['amp'] = self.base-y
+            p0['peak'] = x
+
+            # width point
+            x2 = x+p0['fwhm']/2
+            widthpt.point.set_xdata((x2,))
+            # widthpt.point.set_ydata((self.fn(x2, **p0),))
+
+            # sigma point
+            x2 = x-p0['sigma']/2
+            sigmapt.point.set_xdata((x2,))
+            # sigmapt.point.set_ydata((self.fn(x2, **p0),))
+
+            # update line
+            line.set_ydata(self.fn(self.x, **p0))
+
+            # update sum line
+            self.sumline.set_ydata(self.sumfn(self.x))
+            self.fig.canvas.draw()
+
+        peakpt = DraggablePoint(self, update_peak, p0['peak'],
+                                self.base-p0['amp'], color=color)
+
+        return (peakpt, widthpt, sigmapt)
 
     # ======================================================================= #
     def run_1f_quad_base(self, p0, widths, color):
