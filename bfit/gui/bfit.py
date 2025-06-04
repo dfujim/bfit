@@ -1617,7 +1617,7 @@ class bfit(object):
         def do_update():
             try:
                 subprocess.call([sys.executable, "-m", "pip", "install",
-                                 "--user", "--upgrade", 'bfit'])
+                                 "--upgrade", 'bfit'])
             except subprocess.CalledProcessError:
                 que.put('Error')
             else:
