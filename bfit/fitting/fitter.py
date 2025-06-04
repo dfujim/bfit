@@ -39,7 +39,7 @@ class fitter(object):
 	                               'amp0', 'amp1', 'amp2', 'amp3', 'fwhm',
                                        'baseline'),
                         'Gaussian'  :('mean', 'sigma', 'height', 'baseline'),
-                        'PseudoVoigt':('peak', 'fwhmL', 'sigmaG', 'height', 'baseline'),
+                        'PseudoVoigt':('peak', 'fwhm', 'height', 'fracL', 'baseline'),
                         }
 
     # nice parameter names for labels - must be one to one unique for later inversion
@@ -72,7 +72,7 @@ class fitter(object):
                     'Beta-Avg 1/<T1>':  r'$1/\langle T_1\rangle_\beta$ (s$^{-1}$)',
                     'B0 Field (T)':     r'$B_0$ Field (T)',
                     'fwhmL':            r'FWHM$_{\mathrm{lorentzian}}$ (%s)',
-                    'sigmaG':           r'$\sigma_{\mathrm{gaussian}}$ (%s)',
+                    'fracL':            r'Fraction Lorentzian',
                     }
 
     # define list of ok run modes

@@ -115,36 +115,22 @@ def quadlorentzian(freq, nu_0, nu_q, eta, theta, phi,
 
     return lor0+lor1+lor2+lor3
 
-def pseudo_voigt(freq, peak, fwhmL, sigmaG, amp):
+def pseudo_voigt(freq, peak, fwhm, amp, fracL):
     """Pseudo-Voigt approximation from Wikipedia https://en.wikipedia.org/wiki/Voigt_profile#Pseudo-Voigt_approximation
 
     Args:
         freq (float): independent variable, frequency in Hz
         peak (float): position of shared peak in Hz
         amp (float): amplitude
-        fwhmL (float): full-width half-max of the lorentzian component
-        sigmaG (float): standard deviation of the gaussian component
+        fwhm (float): full-width half-max of both lorentzian and gaussian components
+        fracL (float): fraction of lorentzian component 0 < fracL < 1
     """
-    # gaussian fwhm
-    fwhmG = 2*sigmaG*np.sqrt(2*np.log(2))
-
-    # total fwhm
-    fwhm = (fwhmG**5 + \
-            2.69269*(fwhmG**4)*(fwhmL**1) + \
-            2.42843*(fwhmG**3)*(fwhmL**2) + \
-            4.47163*(fwhmG**2)*(fwhmL**3) + \
-            0.07842*(fwhmG**1)*(fwhmL**4) + \
-            fwhmL**5)**0.2
-
-    # fraction of lor vs gauss components, 0 < eta < 1
-    fratio = fwhmL/fwhm
-    eta = 1.36603*(fratio) - 0.47719*(fratio**2) + 0.11116*(fratio**3)
 
     # components
-    L = lorentzian(freq, peak, fwhmL, amp)
-    G = gaussian(freq, peak, sigmaG, amp)
+    L = lorentzian(freq, peak, fwhm, amp)
+    G = gaussian(freq, peak, fwhm, amp)
 
-    return eta*L + (1-eta)*G
+    return fracL*L + (1-fracL)*G
 
 # =========================================================================== #
 # TYPE 2 PULSED FUNCTIONS

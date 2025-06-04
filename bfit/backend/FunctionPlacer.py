@@ -144,17 +144,17 @@ class FunctionPlacer(object):
         elif self.fname == 'PseudoVoigt':
 
             # if points are not saved they are garbage collected
-            self.list_points = {'peak':[], 'fwhm':[], 'sigma':[]}
+            self.list_points = {'peak':[], 'fwhm':[], 'fracL':[]}
 
             # make points
             for i, (p, line) in enumerate(zip(self.p0, self.lines)):
-                peakpt, widthpt, sigmapt = self.run_1f_voigt_single(p, line, f'C{i+1}')
+                peakpt, widthpt, fracpt = self.run_1f_voigt_single(p, line, f'C{i+1}')
                 self.list_points['peak'].append(peakpt)
                 self.list_points['fwhm'].append(widthpt)
-                self.list_points['sigma'].append(sigmapt)
+                self.list_points['fracL'].append(fracpt)
 
             self.list_points['base'] = self.run_1f_voigt_base(self.list_points['fwhm'],
-                                                              self.list_points['sigma'], 'C0')
+                                                              self.list_points['fracL'], 'C0')
 
         # SLR measurements ----------------------------------------------------
         elif self.fname in ('Exp', 'Str Exp'):
@@ -299,7 +299,7 @@ class FunctionPlacer(object):
         return (peakpt, widthpt)
 
     # ======================================================================= #
-    def run_1f_voigt_base(self, widths, sigmas, color):
+    def run_1f_voigt_base(self, widths, fracs, color):
         """
             widths: list of points for widths, need to update y values
         """
@@ -312,10 +312,10 @@ class FunctionPlacer(object):
             for i in range(len(self.p0)):
                 self.p0[i]['amp'] -= oldbase-y
 
-            # update width points
-            for p0, wpoint, spoint, line in zip(self.p0, widths, sigmas, self.lines):
-                wpoint.point.set_ydata((self.fn(p0['peak']+p0['fwhm']/2, **p0),))
-                spoint.point.set_ydata((self.fn(p0['peak']-p0['sigma']/2, **p0),))
+            # update width and frac points
+            for p0, wpoint, fpoint, line in zip(self.p0, widths, fracs, self.lines):
+                wpoint.point.set_ydata((self.fn(p0['peak']+p0['fwhm'], **p0),))
+                fpoint.point.set_ydata((y,))
 
                 # update other lines
                 line.set_ydata(self.fn(self.x, **p0))
@@ -340,7 +340,7 @@ class FunctionPlacer(object):
         def update_width(x, y):
 
             # width point
-            p0['fwhm'] = abs(p0['peak']-x)*2
+            p0['fwhm'] = abs(p0['peak']-x)
 
             # update line
             line.set_ydata(self.fn(self.x, **p0))
@@ -349,25 +349,34 @@ class FunctionPlacer(object):
             self.sumline.set_ydata(self.sumfn(self.x))
             self.fig.canvas.draw()
 
-        x = p0['peak']+p0['fwhm']/2
+        x = p0['peak']+p0['fwhm']
         widthpt = DraggablePoint(self, update_width, x, self.fn(x, **p0),
                                  color=color, sety=False)
 
-        # make point for sigma
-        def update_sigma(x, y):
+        # make point for fracL
+        def update_frac(x, y):
 
             # width point
-            p0['sigma'] = abs(p0['peak']-x)*2
+            xpt0, xpt1 = self.ax.get_xlim()
+            xwidth = xpt1 - xpt0
+
+            p0['fracL'] = abs(xpt0-x)/xwidth
 
             # update line
             line.set_ydata(self.fn(self.x, **p0))
+
+            # width point
+            x2 = p0['peak']+p0['fwhm']
+            widthpt.point.set_xdata((x2,))
+            widthpt.point.set_ydata((self.fn(x2, **p0),))
 
             # update sum line
             self.sumline.set_ydata(self.sumfn(self.x))
             self.fig.canvas.draw()
 
-        x = p0['peak']-p0['sigma']/2
-        sigmapt = DraggablePoint(self, update_sigma, x, self.fn(x, **p0),
+        xpt0, xpt1 = self.ax.get_xlim()
+        x = p0['fracL']*(xpt1-xpt0)+xpt0
+        fracpt = DraggablePoint(self, update_frac, x, self.base,
                                  color=color, sety=False, marker='o')
 
         # make point for peak
@@ -378,14 +387,9 @@ class FunctionPlacer(object):
             p0['peak'] = x
 
             # width point
-            x2 = x+p0['fwhm']/2
+            x2 = x+p0['fwhm']
             widthpt.point.set_xdata((x2,))
-            # widthpt.point.set_ydata((self.fn(x2, **p0),))
-
-            # sigma point
-            x2 = x-p0['sigma']/2
-            sigmapt.point.set_xdata((x2,))
-            # sigmapt.point.set_ydata((self.fn(x2, **p0),))
+            widthpt.point.set_ydata((self.fn(x2, **p0),))
 
             # update line
             line.set_ydata(self.fn(self.x, **p0))
@@ -397,7 +401,7 @@ class FunctionPlacer(object):
         peakpt = DraggablePoint(self, update_peak, p0['peak'],
                                 self.base-p0['amp'], color=color)
 
-        return (peakpt, widthpt, sigmapt)
+        return (peakpt, widthpt, fracpt)
 
     # ======================================================================= #
     def run_1f_quad_base(self, p0, widths, color):

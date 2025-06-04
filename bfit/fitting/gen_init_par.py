@@ -155,9 +155,9 @@ def gen_init_par(fn_name, ncomp, bdataobj, asym_mode='combined'):
         elif fn_name == 'pseudovoigt':
 
             par_values = {'peak':(peak, min(x), max(x), False),
-                          'fwhmL':(width, 0, np.inf, False),
-                          'sigmaG':(width, 0, np.inf, False),
+                          'fwhm':(width, 0, np.inf, False),
                           'height':(height, *height_bounds, False),
+                          'fracL':(0.5, 0, 1, False),
                           'baseline':(base, -np.inf, np.inf, False)
                          }
 

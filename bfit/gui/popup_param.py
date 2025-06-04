@@ -52,7 +52,7 @@ class popup_param(object):
                 'heightA':'amp',
                 'heightB':'amp',
                 'sigma':'fwhm',
-                'sigmaG':'sigma',
+                'fracL':'fracL',
                 'mean':'peak',
                 'amp0':'amp0',
                 'amp1':'amp1',
@@ -228,7 +228,7 @@ class popup_param(object):
                         fwhm, fwhm, fwhm, fwhm,
                         I = self.fitter.spin[self.fitter.probe_species])
         elif self.fname == 'PseudoVoigt':
-            fn = lambda freq, peak, fwhm, sigma, amp : fns.pseudo_voigt(freq, peak, fwhm, sigma,  amp)
+            fn = lambda freq, peak, fwhm, amp, fracL : fns.pseudo_voigt(freq, peak, fwhm, amp, fracL)
 
         elif self.fname in ('Exp', 'Str Exp'):
 
