@@ -11,7 +11,7 @@ requires = [
 [project]
 name = "bfit"
 authors  = [{name="Derek Fujimoto", email="dfujimoto@triumf.ca" }]
-version = '4.22.0'
+version = '4.22.1'
 description = "β-NMR and β-NQR Data Analysis"
 readme = "README.md"
 classifiers = [
