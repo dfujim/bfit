@@ -4,7 +4,7 @@
 
 from tkinter import *
 from tkinter import ttk
-from multiprocessing import Process
+import multiprocessing
 from queue import Empty
 
 import bfit.backend.colors as colors
@@ -106,7 +106,7 @@ class popup_ongoing_process(object):
     def run(self):
         
         # start fit
-        self.process = Process(target = self.target)
+        self.process = multiprocessing.get_context("fork").Process(target = self.target)
         self.process.start()
         
         # disable GUI
