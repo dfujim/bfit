@@ -13,6 +13,7 @@ from bfit.backend.entry_color_set import on_focusout, on_entry_click
 import bfit.backend.colors as colors
 from bfit.global_variables import KEYVARS
 from bfit.gui.dataline import dataline
+from bfit.backend.raise_window import raise_window
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -462,11 +463,15 @@ class fetch_files(object):
         
         self.logger.debug('Drawing all data (ignore check: %s)', ignore_check)
         
-        # condense drawing into a funtion
+        # lines to draw
+        lines = [line for line in self.data_lines.values() 
+                 if line.check_state.get() or ignore_check]
+        
+        # condense drawing into a funtion. Skip per-run legend and layout 
+        # (O(N^2) for N runs): done once below
         def draw_lines():
-            for k, line in self.data_lines.items():
-                if line.check_state.get() or ignore_check:
-                    line.draw(figstyle)
+            for line in lines:
+                line.draw(figstyle, finalize=False)
                 
         # get draw style
         style = self.bfit.draw_style.get()
@@ -498,16 +503,35 @@ class fetch_files(object):
             self.logger.error(s)
             raise ValueError(s)
     
-        # remove legned if too many drawn values
-        n_selected = sum([d.check_state.get() for d in self.data_lines.values()])
-        if n_selected > self.bfit.legend_max_draw:
-            
-            try:
-                self.bfit.plt.gca(figstyle).get_legend().remove()
-            except AttributeError:
-                pass
+        # nothing drawn: don't create empty figures
+        if not lines:
+            return
+        
+        # figures drawn in (residuals are always drawn in the data figure)
+        figstyles = {figstyle}
+        if any(line.check_res.get() for line in lines):
+            figstyles.add('data')
+        
+        # legend only if few enough drawn values, then layout
+        for fig in figstyles:
+
+            # skip figures that don't exist (nothing drawn)
+            if not self.bfit.plt.plots[fig]:
+                continue
+
+            if len(lines) <= self.bfit.legend_max_draw:
+                self.bfit.plt.legend(fig)
+
+            # remove legend left from a previous (stacked) draw
             else:
-                self.bfit.plt.tight_layout(figstyle)
+                legend = self.bfit.plt.gca(fig).get_legend()
+                if legend is not None:
+                    legend.remove()
+
+            self.bfit.plt.tight_layout(fig)
+        
+        # bring window to front
+        raise_window()
         
     # ======================================================================= #
     def export(self, directory=None):
@@ -622,9 +646,9 @@ class fetch_files(object):
             # get key for data storage
             runkey = self.bfit.get_run_key(new_dat)
 
-            # update data
+            # update data (reuse the file just read)
             if runkey in self.bfit.data.keys():
-                self.bfit.data[runkey].read()
+                self.bfit.data[runkey].read(new_dat)
                 
             # new data
             else:

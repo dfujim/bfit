@@ -222,21 +222,22 @@ class dataline(object):
         self.check_fit.set(not status)    
     
     # ======================================================================= #
-    def draw(self, figstyle):
+    def draw(self, figstyle, finalize=True):
         """
             Draw single data file.
             
             figstyle: one of "data", "fit", or "param" to choose which figure 
                     to draw in
+            finalize: if True, draw legend, tight layout, and raise window. 
+                    Set False when drawing many runs and finalize once after.
         """
         
         # draw data
         if self.check_data.get():
             self.logger.info('Draw run %d (%d)', self.run, self.year)
                     
-            # get new data file
+            # get data file (not re-read: use the Update button to refresh)
             data = self.bfit.data[self.bfit.get_run_key(self.bdfit.bd)]
-            data.read()
             
             # get data file run type
             d = self.bfit.fetch_files.asym_type.get()
@@ -245,7 +246,8 @@ class dataline(object):
             # draw
             data.draw(d, figstyle=figstyle, label=self.label.get(), 
                         asym_args={ 'slr_bkgd_corr':self.bfit.correct_bkgd.get(),
-                                    'slr_rm_prebeam':not self.bfit.draw_prebin.get()})
+                                    'slr_rm_prebeam':not self.bfit.draw_prebin.get()},
+                        finalize=finalize)
             
         # draw fit
         if self.check_fit.get():
@@ -254,16 +256,19 @@ class dataline(object):
                 self.bfit.draw_style.set('stack')
                 self.bdfit.draw_fit(unique=False, 
                                     asym_mode=self.bfit.get_asym_mode(self.bfit.fetch_files), 
-                                    figstyle=figstyle)
+                                    figstyle=figstyle, 
+                                    finalize=finalize)
                 self.bfit.draw_style.set(mode)
             else:
                 self.bdfit.draw_fit(figstyle=figstyle, 
-                                    asym_mode=self.bfit.get_asym_mode(self.bfit.fetch_files))
+                                    asym_mode=self.bfit.get_asym_mode(self.bfit.fetch_files), 
+                                    finalize=finalize)
                 
         # draw residual
         if self.check_res.get():
             self.bdfit.draw_residual(figstyle=figstyle, 
-                                     rebin=self.rebin.get())
+                                     rebin=self.rebin.get(), 
+                                     finalize=finalize)
 
     # ======================================================================= #
     def set_check_text(self):

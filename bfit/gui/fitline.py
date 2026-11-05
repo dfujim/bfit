@@ -53,6 +53,10 @@ class fitline(object):
         self.row = row
         self.disable_entry_callback = False
         self.lines = []
+        
+        # fitpar and display state at last populate, to skip unchanged updates
+        self.populated_fitpar = None
+        self.populated_state = None
 
         data.fitline = self
 
@@ -400,9 +404,25 @@ class fitline(object):
         fitdat.fitpar.sort_index(inplace=True)
         fitpar = fitdat.fitpar
         
+        # skip setting the input lines if nothing changed since last populate
+        # (setting re-binds all variable traces: slow when many runs loaded)
+        state = (pop_constr.constraints_are_set, 
+                 self.bfit.rounding, 
+                 fit_files.chi_threshold)
+        unchanged = not force_modify and \
+                    state == self.populated_state and \
+                    [line.pname for line in self.lines] == list(fitpar.index) and \
+                    fitpar.equals(self.populated_fitpar)
+        if unchanged:
+            return
+        
         # set parameters
         for i, k in enumerate(fitpar.index):
             self.lines[i].set(k, **fitpar.loc[k].to_dict())
+        
+        # save state (after setting: traces may write rounded values to fitpar)
+        self.populated_state = state
+        self.populated_fitpar = fitdat.fitpar.copy()
                                      
     # ======================================================================= #
     def set(self, pname, **kwargs):

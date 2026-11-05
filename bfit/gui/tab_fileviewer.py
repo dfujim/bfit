@@ -43,11 +43,13 @@ class fileviewer(object):
             runn: IntVar() run number
             text: Text widget for displaying run information
             update_id: string, run id for the currently updating run
+            update_after_id: id of the pending periodic update callback
             year: IntVar() year of exp 
     """
     
     default_export_filename = "%d_%d.csv" # year_run.csv
     update_id = ''
+    update_after_id = None  # id of pending periodic update (root.after)
     mode_dict = {"1c":"Camp Scan", 
                  "1d":"Laser Scan", 
                  "1e":"Field Scan", 
@@ -1518,9 +1520,12 @@ class fileviewer(object):
             runid = self.data.id
             self.update_id = runid
             
-            # repeat
+            # repeat (cancel any pending update so loops don't stack)
             if not first:
-                self.bfit.root.after(self.bfit.update_period*1000, 
+                if self.update_after_id:
+                    self.bfit.root.after_cancel(self.update_after_id)
+                self.update_after_id = self.bfit.root.after(
+                                     self.bfit.update_period*1000, 
                                      lambda:self.do_update(first=False, 
                                                            runid=runid))
                 return
@@ -1585,8 +1590,11 @@ class fileviewer(object):
             print('Updated figure at:', str(datetime.datetime.now()).split('.')[0], 
                   flush=True)
             
-            # repeat
-            self.bfit.root.after(self.bfit.update_period*1000, 
+            # repeat (cancel any pending update so loops don't stack)
+            if self.update_after_id:
+                self.bfit.root.after_cancel(self.update_after_id)
+            self.update_after_id = self.bfit.root.after(
+                                 self.bfit.update_period*1000, 
                                  lambda:self.do_update(first=False, runid=runid))
             
         # remove window from updating list

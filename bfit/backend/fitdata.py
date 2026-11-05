@@ -215,13 +215,15 @@ class fitdata(object):
             return np.nan
 
     # ======================================================================= #
-    def draw(self, asym_type, figstyle='', asym_args=None, **drawargs):
+    def draw(self, asym_type, figstyle='', asym_args=None, finalize=True, **drawargs):
         """
             Draw the selected file
 
             bfit:       bfit object
             asym_type:  input for asymmetry calculation
             figstyle:   figure style. One of "inspect", "data", "fit", or "param"
+            finalize:   if True, draw legend, tight layout, and raise window.
+                        Set False when drawing many runs and finalize once after.
             drawargs:   passed to errorbar
         """
 
@@ -827,23 +829,26 @@ class fitdata(object):
             if bfit.use_nbm.get():              label = 'NBM ' + label
             plt.ylabel(figstyle, label)
 
-        plt.tight_layout(figstyle)
-        plt.legend(figstyle)
+        # skip legend/layout when drawing many runs: caller finalizes once
+        if finalize:
+            plt.tight_layout(figstyle)
+            plt.legend(figstyle)
 
-        # bring window to front
-        if figstyle != 'periodic':
-            raise_window()
+            # bring window to front
+            if figstyle != 'periodic':
+                raise_window()
 
         self.logger.debug('Drawing success.')
 
     # ======================================================================= #
-    def draw_fit(self, figstyle, unique=True, asym_mode=None, **drawargs):
+    def draw_fit(self, figstyle, unique=True, asym_mode=None, finalize=True, **drawargs):
         """
             Draw fit for a single run
 
             figstyle: one of "data", "fit", or "param" to choose which figure
                     to draw in
             asym_mode: from bfit.get_asym_mode, string of mode to draw
+            finalize: if True, draw legend, tight layout, and raise window
          """
 
         self.logger.info('Drawing fit for run %s. %s', id, drawargs)
@@ -957,16 +962,20 @@ class fitdata(object):
         plt.ylabel(figstyle, self.bfit.ylabel_dict.get(asym_mode, 'Asymmetry'))
         plt.xlabel(figstyle, xlabel)
 
-        # show
-        plt.tight_layout(figstyle)
-        plt.legend(figstyle)
+        # show (skipped when drawing many runs: caller finalizes once)
+        if finalize:
+            plt.tight_layout(figstyle)
+            plt.legend(figstyle)
 
-        # bring window to front
-        raise_window()
+            # bring window to front
+            raise_window()
 
     # ======================================================================= #
-    def draw_residual(self, figstyle, rebin=1, asym_args=None, **drawargs):
-        """Draw fitting residuals for a single run"""
+    def draw_residual(self, figstyle, rebin=1, asym_args=None, finalize=True, **drawargs):
+        """Draw fitting residuals for a single run
+
+            finalize: if True, draw legend, tight layout, and raise window
+        """
 
         self.logger.info('Drawing residual for run %s, rebin %d, '+\
                          'standardized: %s, %s', self.id, rebin,
@@ -1056,11 +1065,12 @@ class fitdata(object):
         plt.axhline(figstyle, 'line', 0, color='k', linestyle='-', zorder=20,
                         unique=unq)
 
-        # show
-        plt.tight_layout(figstyle)
-        plt.legend(figstyle)
+        # show (skipped when drawing many runs: caller finalizes once)
+        if finalize:
+            plt.tight_layout(figstyle)
+            plt.legend(figstyle)
 
-        raise_window()
+            raise_window()
 
     # ======================================================================= #
     def drop_param(self, parnames):
@@ -1461,11 +1471,19 @@ class fitdata(object):
             raise AttributeError('Selection "%s" not found' % select) from None
 
     # ======================================================================= #
-    def read(self):
-        """Read data file"""
+    def read(self, bd=None):
+        """Read data file
+
+            bd: if not None, already-read bdata or bmerged object to use 
+                instead of reading the file again
+        """
+
+        # use data already read
+        if bd is not None:
+            self.bd = bd
 
         # bdata access
-        if type(self.bd) is bdata:
+        elif type(self.bd) is bdata:
 
             # load real run
             try:

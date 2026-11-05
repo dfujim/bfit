@@ -117,7 +117,8 @@ class popup_ongoing_process(object):
         try:
             while True:  
                 try: 
-                    output = self.queue.get(timeout = 0.001)
+                    # 50 ms poll: responsive GUI without spinning a core
+                    output = self.queue.get(timeout = 0.05)
                     
                 except Empty:
                     
