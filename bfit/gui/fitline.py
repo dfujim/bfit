@@ -6,6 +6,7 @@ from bfit.gui.InputLine import InputLine
 
 import bfit.backend.colors as colors
 import numpy as np
+import pandas as pd
 import bdata as bd
 
 import logging, textwrap
@@ -170,7 +171,7 @@ class fitline(object):
         if values_res is not None:
             for idx in values_res.index:
                 if idx not in values.index:
-                    values = values.append(values_res.loc[idx])
+                    values = pd.concat((values, values_res.loc[[idx]]))
                     values.loc[idx, ['res', 'dres+', 'dres-', 'chi']] = np.nan
             values.loc[:, 'p0'] = values_res.loc[:, 'res']
         

@@ -28,6 +28,10 @@ class InputLine(object):
     width = 13
     width_chi = 7
     columns = ['p0', 'blo', 'bhi', 'res', 'dres-', 'dres+', 'chi', 'fixed', 'shared']
+    
+    # user inputs: synced to fitdata.fitpar. Results (res, dres, chi) are not 
+    # synced, since the displayed values are rounded
+    input_columns = ('p0', 'blo', 'bhi', 'fixed', 'shared')
 
     # ======================================================================= #
     def __init__(self, frame, bfit, data, show_chi=False):
@@ -192,11 +196,11 @@ class InputLine(object):
 
         # assign
         gen = self.data.gen_set_from_var
-        for k in ('p0', 'blo', 'bhi', 'fixed', 'shared'):
+        for k in self.input_columns:
 
             # set new trace callback
             self.variable[k] = self._set_trace(self.variable[k],
-                                               'sync_fitpar',
+                                               self._sync_name(k),
                                                gen(self.pname, k, self.variable[k]))
 
     # ======================================================================= #
@@ -216,6 +220,10 @@ class InputLine(object):
         if self.pname not in share_var.keys():
             share_var[self.pname] = BooleanVar()
 
+        # remove this line's traces from the previous shared variable, so it 
+        # doesn't write to a parameter this line no longer shows
+        self._pop_shared_traces()
+
         # assign key
         self.variable['shared'] = share_var[self.pname]
 
@@ -228,10 +236,31 @@ class InputLine(object):
         self.entry['shared'].config(variable=self.variable['shared'])
 
     # ======================================================================= #
+    def _pop_shared_traces(self):
+        """
+            Remove this line's traces from the shared variable, which is common 
+            to all lines with the same parameter name
+        """
+        var = self.variable['shared']
+        self._pop_trace(var, 'unfix_{id}'.format(id=self.data.id))
+        self._pop_trace(var, self._sync_name('shared'))
+
+    # ======================================================================= #
+    def _sync_name(self, col):
+        """
+            Name of trace syncing a column variable to fitpar. The shared 
+            variable is common to all runs, so needs one trace per run.
+        """
+        if col == 'shared':
+            return 'sync_fitpar_{id}'.format(id=self.data.id)
+        return 'sync_fitpar'
+
+    # ======================================================================= #
     def degrid(self):
         """
             Remove the entries
         """
+        self._pop_shared_traces()
         self.label.destroy()
 
         for i, key in enumerate(self.columns):
@@ -413,9 +442,11 @@ class InputLine(object):
                         pass
                     self.variable[k].set('{:.{p}g}'.format(v, p=8))
 
-            # set traces
+            # set traces (only inputs sync to fitpar: results are rounded)
             self.variable[k] = self._set_trace(self.variable[k], 'modify_all', tr)
-            self.variable[k] = self._set_trace(self.variable[k], 'sync_fitpar',
+            if k in self.input_columns:
+                self.variable[k] = self._set_trace(self.variable[k], 
+                                                self._sync_name(k),
                                                 self.data.gen_set_from_var(self.pname,
                                                                            k,
                                                                            self.variable[k]))

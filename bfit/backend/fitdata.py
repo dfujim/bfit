@@ -851,7 +851,7 @@ class fitdata(object):
             finalize: if True, draw legend, tight layout, and raise window
          """
 
-        self.logger.info('Drawing fit for run %s. %s', id, drawargs)
+        self.logger.info('Drawing fit for run %s. %s', self.id, drawargs)
 
         # get data and fit results
         fit_par = self.fitpar.loc[self.parnames, 'res'].values
@@ -1039,7 +1039,7 @@ class fitdata(object):
             res = res[idx]
             da = da[idx]
             x = x[idx]
-            plt.errorbar(figstyle, id, x, res/da, np.zeros(len(x)),
+            plt.errorbar(figstyle, self.id, x, res/da, np.zeros(len(x)),
                               label=label, **drawargs)
 
             # draw fill
@@ -1050,7 +1050,7 @@ class fitdata(object):
             plt.xlim(figstyle, lim)
             plt.ylabel(figstyle, r'Standardized Residual ($\sigma$)')
         else:
-            plt.errorbar(figstyle, id, x, res, da, label=label, **drawargs)
+            plt.errorbar(figstyle, self.id, x, res, da, label=label, **drawargs)
             plt.ylabel(figstyle, 'Residual')
 
         # draw pulse marker
