@@ -479,10 +479,11 @@ class fit_files(object):
             self.mode = ""
             self.n_component.set(1)
 
-        # delete unused fitline objects
+        # delete unused fitline objects (lines still in use stay gridded to
+        # avoid needlessly unmapping and remapping all their widgets)
         for k in list(self.fit_lines.keys()):       # iterate fit list
-            self.fit_lines[k].degrid()
             if k not in keylist:                    # check data list
+                self.fit_lines[k].degrid()
                 self.fit_lines_old[k] = self.fit_lines[k]
                 del self.fit_lines[k]
 
@@ -502,7 +503,10 @@ class fit_files(object):
                 else:
                     self.fit_lines[k] = fitline(self.bfit, self.runframe, dl[k].bdfit, n)
 
-            self.fit_lines[k].grid(n)
+            # grid only if not shown or out of order
+            fline = self.fit_lines[k]
+            if fline.fitframe.winfo_manager() != 'grid' or fline.row != n:
+                fline.grid(n)
             n+=1
 
         self.populate_param()

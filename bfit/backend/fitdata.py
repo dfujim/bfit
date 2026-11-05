@@ -122,7 +122,8 @@ class fitdata(object):
         # set area as upper
         self.area = self.area.upper()
 
-        self.read()
+        # bd is freshly read by the caller: only derive variables, don't re-read
+        self.set_new_var()
 
     # ======================================================================= #
     def __getattr__(self, name):
