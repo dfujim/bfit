@@ -178,7 +178,6 @@ class fitline(object):
         """Re-grid a dataline object so that it is in order by run number"""
         self.row = row
         self.fitframe.grid(column=0, row=row, sticky=(W, N))
-        self.fitframe.update_idletasks()
 
     # ======================================================================= #
     def degrid(self):
@@ -186,7 +185,6 @@ class fitline(object):
 
         self.logger.debug('Degridding fitline for run %s', self.data.id)
         self.fitframe.grid_forget()
-        self.fitframe.update_idletasks()
 
     # ======================================================================= #
     def draw_fn_composition(self):

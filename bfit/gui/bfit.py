@@ -381,6 +381,13 @@ class bfit(object):
         # root
         root = Tk()
         self.root = root
+
+        # disable X input methods (XIM): with ibus, every widget mapped and
+        # every keypress goes through the input method, making the GUI
+        # extremely slow (~0.3 s per widget). Only affects X11.
+        if root.tk.call('tk', 'windowingsystem') == 'x11':
+            root.tk.call('tk', 'useinputmethods', '0')
+
         root.title("bfit: β-NMR and β-NQR Data Analysis "+\
                    "(version %s)" % __version__)
         root.columnconfigure(0, weight=1)

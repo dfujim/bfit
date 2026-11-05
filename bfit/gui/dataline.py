@@ -163,7 +163,6 @@ class dataline(object):
         """Re-grid a dataline object so that it is in order by run number"""
         self.row = row
         self.line_frame.grid(column=0, row=row, columnspan=2, sticky=(W, N))
-        self.line_frame.update_idletasks()
         self.bfit.data[self.id] = self.bdfit
         self.set_check_text()
         
@@ -175,7 +174,6 @@ class dataline(object):
         
         # degrid
         self.line_frame.grid_forget()
-        self.line_frame.update_idletasks()
         
         self.lines_list_old[self.id] = self.lines_list[self.id]
         del self.lines_list[self.id]
