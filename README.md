@@ -3,7 +3,7 @@
 <a href="https://pypi.org/project/bfit/" alt="PyPI Version"><img src="https://img.shields.io/pypi/v/bfit?label=PyPI%20Version"/></a>
 <img src="https://img.shields.io/pypi/format/bfit?label=PyPI%20Format"/>
 <img src="https://img.shields.io/github/languages/code-size/dfujim/bfit"/>
-<img src="https://img.shields.io/tokei/lines/github/dfujim/bfit"/>
+<img src="https://img.shields.io/github/repo-size/dfujim/bfit"/>
 <img src="https://img.shields.io/pypi/l/bfit"/>
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.03598/status.svg)](https://doi.org/10.21105/joss.03598)
 
