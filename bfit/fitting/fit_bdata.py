@@ -10,6 +10,11 @@ from tqdm import tqdm
 from bfit.fitting.global_bdata_fitter import global_bdata_fitter
 from bfit.fitting.minuit import minuit
 import inspect
+import multiprocessing
+import os
+
+# per-run arguments for independent fits, set by fit_bdata before forking workers
+_independent_fit_args = []
 
 # ========================================================================== #
 def fit_bdata(data, fn, omit=None, rebin=None, slr_bkgd_corr=None, shared=None, hist_select='',
@@ -179,6 +184,16 @@ def fit_bdata(data, fn, omit=None, rebin=None, slr_bkgd_corr=None, shared=None, 
         else:
             fixed = [[False]*npar]*ndata
 
+        # per-run arguments, read by worker processes via fork inheritance
+        # (fit functions are closures/Cython objects and cannot be pickled)
+        global _independent_fit_args
+        _independent_fit_args = []
+        for d, f, om, re, p, b, xl, fix, bkgd in zip(data, fn, omit, rebin, p0,
+                                                     bounds, xlims, fixed, slr_bkgd_corr):
+            run_kwargs = dict(kwargs, p0=p, bounds=b)
+            _independent_fit_args.append((d, f, om, re, xl, fix, bkgd, hist_select,
+                                          asym_mode, minimizer, run_kwargs))
+
         pars = []
         covs = []
         chis = []
@@ -187,87 +202,43 @@ def fit_bdata(data, fn, omit=None, rebin=None, slr_bkgd_corr=None, shared=None, 
         gchi = 0.
         dof = 0.
 
-        iter_obj = tqdm(zip(data, fn, omit, rebin, p0, bounds, xlims, fixed, slr_bkgd_corr),
-                        total=ndata, desc='Independent Fitting')
-        for d, f, om, re, p, b, xl, fix, bkgd in iter_obj:
-
-            # get data for chisq calculations
-            x, y, dy = _get_asym(d, asym_mode, rebin=re, omit=om, slr_bkgd_corr=bkgd)
-
-            # get x limits
-            if xl is None:
-                xl = [-np.inf, np.inf]
+        try:
+            # single run: no pool overhead
+            if ndata == 1:
+                results = [_fit_independent_one(0)]
+                iter_obj = tqdm(results, total=ndata, desc='Independent Fitting')
+                pool = None
             else:
-                if xl[0] is None: xl[0] = -np.inf
-                if xl[1] is None: xl[1] = np.inf
+                nproc = min(ndata, os.cpu_count() or 1)
+                pool = multiprocessing.get_context('fork').Pool(nproc)
+                iter_obj = tqdm(pool.imap(_fit_independent_one, range(ndata)),
+                                total=ndata, desc='Independent Fitting')
 
-            # get good data
-            idx = (xl[0]<x)*(x<xl[1])*(dy!=0)
-            x = x[idx]
-            y = y[idx]
-            dy = dy[idx]
+            try:
+                for p, c, sl, sh, ch, gchi_part, dof_part, warn_msgs in iter_obj:
 
-            # trivial case: all parameters fixed
-            if all(fix):
-                lenp = len(p)
-                c = np.full((lenp, lenp), np.nan)
-                s = np.diag(c)
-                ch = np.sum(np.square((y-f(x, *p))/dy))/len(y)
-
-            # fit with free parameters
-            else:
-                kwargs['p0'] = p
-                kwargs['bounds'] = b
-                p, c, sl, sh, ch, m = _fit_single(data=d,
-                                                fn=f,
-                                                omit=om,
-                                                rebin=re,
-                                                hist_select=hist_select,
-                                                xlim=xl,
-                                                asym_mode=asym_mode,
-                                                fixed=fix,
-                                                slr_bkgd_corr=bkgd,
-                                                minimizer=minimizer,
-                                                **kwargs)
-
-                # check minuit validity
-                if m is not None:
-
-                    if not all((m.fmin.is_valid,
-                                m.fmin.has_valid_parameters,
-                                not m.fmin.hesse_failed,
-                                m.fmin.has_accurate_covar,
-                                m.fmin.has_covariance,
-                                m.fmin.has_posdef_covar,
-                                not m.fmin.has_made_posdef_covar,
-                                not m.fmin.has_reached_call_limit,
-                                not m.fmin.is_above_max_edm,
-                                )):
-
+                    # print minuit validity warnings
+                    if warn_msgs is not None:
                         try:
-                            msg = ('====== %d.%d ======\n' % (d.year, d.run),
-                               str(m.fmin), '\n',
-                               str(m.params), '\n',
-                               )
-
-                            iter_obj.write(''.join(msg))
+                            iter_obj.write(warn_msgs[0])
                         except UnicodeEncodeError:
-                            msg = ('====== %d.%d ======\n' % (d.year, d.run),
-                               repr(m.fmin), '\n',
-                               repr(m.params), '\n',
-                               )
-                            iter_obj.write(''.join(msg))
+                            iter_obj.write(warn_msgs[1])
 
-            # outputs
-            pars.append(p)
-            covs.append(c)
-            stds_l.append(sl)
-            stds_h.append(sh)
-            chis.append(ch)
+                    # outputs
+                    pars.append(p)
+                    covs.append(c)
+                    stds_l.append(sl)
+                    stds_h.append(sh)
+                    chis.append(ch)
+                    gchi += gchi_part
+                    dof += dof_part
+            finally:
+                if pool is not None:
+                    pool.terminate()
+                    pool.join()
+        finally:
+            _independent_fit_args = []
 
-            # get global chi
-            gchi += np.sum(np.square((y-f(x, *p))/dy))
-            dof += len(x)-len(p)
         gchi /= dof
 
     try:    pars = np.asarray(pars)
@@ -295,6 +266,92 @@ def fit_bdata(data, fn, omit=None, rebin=None, slr_bkgd_corr=None, shared=None, 
         chis = chis[0]
 
     return(pars, stds_l, stds_h, covs, chis, gchi)
+
+# =========================================================================== #
+def _fit_independent_one(index):
+    """
+        Fit a single run as part of an independent (non-shared) fit.
+
+        Runs in a forked worker process. Arguments are read from the module
+        global _independent_fit_args, inherited through fork, since fit
+        functions cannot be pickled.
+
+        index:          index of the run in _independent_fit_args
+
+        Returns: (par, cov, std_l, std_h, chi, gchi_part, dof_part, warn_msgs)
+            gchi_part:  unnormalized chisquared contribution of this run
+            dof_part:   degrees of freedom contribution of this run
+            warn_msgs:  None if minuit fit is valid, else tuple of
+                        (str message, repr message fallback for encoding errors)
+    """
+
+    (d, f, om, re, xl, fix, bkgd, hist_select,
+     asym_mode, minimizer, kwargs) = _independent_fit_args[index]
+
+    # get data for chisq calculations
+    x, y, dy = _get_asym(d, asym_mode, rebin=re, omit=om, slr_bkgd_corr=bkgd)
+
+    # get x limits
+    if xl is None:
+        xl = [-np.inf, np.inf]
+    else:
+        if xl[0] is None: xl[0] = -np.inf
+        if xl[1] is None: xl[1] = np.inf
+
+    # get good data
+    idx = (xl[0]<x)*(x<xl[1])*(dy!=0)
+    x = x[idx]
+    y = y[idx]
+    dy = dy[idx]
+
+    p = kwargs['p0']
+    warn_msgs = None
+
+    # trivial case: all parameters fixed
+    if all(fix):
+        lenp = len(p)
+        c = np.full((lenp, lenp), np.nan)
+        sl = sh = np.diag(c)
+        ch = np.sum(np.square((y-f(x, *p))/dy))/len(y)
+
+    # fit with free parameters
+    else:
+        p, c, sl, sh, ch, m = _fit_single(data=d,
+                                        fn=f,
+                                        omit=om,
+                                        rebin=re,
+                                        hist_select=hist_select,
+                                        xlim=xl,
+                                        asym_mode=asym_mode,
+                                        fixed=fix,
+                                        slr_bkgd_corr=bkgd,
+                                        minimizer=minimizer,
+                                        **kwargs)
+
+        # check minuit validity; minuit object is not picklable so return text
+        if m is not None:
+
+            if not all((m.fmin.is_valid,
+                        m.fmin.has_valid_parameters,
+                        not m.fmin.hesse_failed,
+                        m.fmin.has_accurate_covar,
+                        m.fmin.has_covariance,
+                        m.fmin.has_posdef_covar,
+                        not m.fmin.has_made_posdef_covar,
+                        not m.fmin.has_reached_call_limit,
+                        not m.fmin.is_above_max_edm,
+                        )):
+
+                header = '====== %d.%d ======\n' % (d.year, d.run)
+                warn_msgs = (''.join((header, str(m.fmin), '\n', str(m.params), '\n')),
+                             ''.join((header, repr(m.fmin), '\n', repr(m.params), '\n')))
+
+    # global chi contributions
+    gchi_part = np.sum(np.square((y-f(x, *p))/dy))
+    dof_part = len(x)-len(p)
+
+    # minuit value/error views reference the minuit object: convert to arrays to pickle
+    return (np.asarray(p), c, np.asarray(sl), np.asarray(sh), ch, gchi_part, dof_part, warn_msgs)
 
 # =========================================================================== #
 def _fit_single(data, fn, omit='', rebin=1, slr_bkgd_corr=True, hist_select='', xlim=None, asym_mode='c',

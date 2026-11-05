@@ -5,6 +5,8 @@
 from tkinter import *
 from tkinter import ttk
 import multiprocessing
+import signal
+import sys
 from queue import Empty
 
 import bfit.backend.colors as colors
@@ -105,8 +107,14 @@ class popup_ongoing_process(object):
     
     def run(self):
         
+        # in the child, convert SIGTERM (sent on cancel) into SystemExit so that
+        # cleanup runs and any worker pools are terminated rather than orphaned
+        def target_with_sigterm_exit():
+            signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(1))
+            self.target()
+
         # start fit
-        self.process = multiprocessing.get_context("fork").Process(target = self.target)
+        self.process = multiprocessing.get_context("fork").Process(target = target_with_sigterm_exit)
         self.process.start()
         
         # disable GUI
