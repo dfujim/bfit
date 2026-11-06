@@ -1,5 +1,6 @@
 project('bfit', 'cython', 'cpp',
     license: 'LGPLv3',
+    meson_version: '>=1.11',    # needed for cython language without c
     default_options: [
         'buildtype=release',
         'cpp_std=c++14',
