@@ -267,12 +267,28 @@ class InputLine(object):
             self.entry[key].destroy()
 
     # ======================================================================= #
+    def hide(self):
+        """
+            Remove the entries from view but keep them for reuse (faster than
+            destroying and remaking). Unlinks the line from its parameter.
+        """
+        self._pop_shared_traces()
+        for col in self.input_columns:
+            self._pop_trace(self.variable[col], self._sync_name(col))
+        self.pname = ''
+
+        self.label.grid_remove()
+        for key in self.columns:
+            self.entry[key].grid_remove()
+
+    # ======================================================================= #
     def disable(self):
         """
             Prevent editing
         """
+        # configure only on change: each configure forces a widget redraw
         for k, e in self.entry.items():
-            if k not in ('chi',):
+            if k not in ('chi',) and str(e.cget('state')) != 'disabled':
                 e.configure(state='disabled')
 
     # ======================================================================= #
@@ -280,11 +296,11 @@ class InputLine(object):
         """
             Allow editing
         """
+        # configure only on change: each configure forces a widget redraw
         for k, e in self.entry.items():
-            if k in ('res', 'dres+', 'dres-', 'chi'):
-                e.configure(state='readonly')
-            else:
-                e.configure(state='normal')
+            state = 'readonly' if k in ('res', 'dres+', 'dres-', 'chi') else 'normal'
+            if str(e.cget('state')) != state:
+                e.configure(state=state)
 
     # ======================================================================= #
     def get(self, col):
@@ -345,7 +361,8 @@ class InputLine(object):
         # label
         if pname is not None:
             self.pname = pname
-            self.label.config(text=pname)
+            if self.label.cget('text') != pname:
+                self.label.config(text=pname)
 
             # assign inputs
             self.assign_shared()

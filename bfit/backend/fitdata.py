@@ -1521,9 +1521,16 @@ class fitdata(object):
 
         self.parnames = values.index.values
 
-        for v in self.parnames:
-            for c in values.columns:
-                self.fitpar.loc[v, c] = values.loc[v, c]
+        # add missing rows and columns in one step (cell-wise enlargement is slow)
+        new_rows = values.index.difference(self.fitpar.index, sort=False)
+        new_cols = values.columns.difference(self.fitpar.columns, sort=False)
+        if len(new_rows) or len(new_cols):
+            self.fitpar = self.fitpar.reindex(
+                                index=self.fitpar.index.append(new_rows),
+                                columns=self.fitpar.columns.append(new_cols))
+
+        # set values, keeping object dtype so cell types (bool, float) are preserved
+        self.fitpar.loc[values.index, values.columns] = values.to_numpy(dtype=object)
 
         self.logger.debug('Fit initial parameters set to %s', self.fitpar)
 

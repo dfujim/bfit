@@ -135,7 +135,8 @@ class fit_files(object):
         self.n_component.set(1)
         self.n_component_box = Spinbox(fn_select_frame, from_=1, to=20,
                 textvariable=self.n_component, width=5,
-                command=lambda:self.populate_param(force_modify=True))
+                command=self.do_change_n_component)
+        self.n_component_after_id = None    # pending repopulate from spinbox
 
         # fit and other buttons
         fit_button = ttk.Button(fn_select_frame, text='        Fit        ', command=self.do_fit, \
@@ -598,9 +599,12 @@ class fit_files(object):
         for fline in self.fit_lines.values():
             fline.populate(force_modify=force_modify)
 
-        for fline in self.fit_lines_old.values():
-            if self.mode == fline.data.mode:
-                fline.populate(force_modify=force_modify)
+        # hidden fitlines: only clear the parameters. New initial values and
+        # input lines are made by fitline.populate when the run is reselected
+        if force_modify:
+            for fline in self.fit_lines_old.values():
+                if self.mode == fline.data.mode:
+                    fline.data.reset_fitpar()
 
         # reset modify all value
         self.set_as_group.set(modify_all_value)
@@ -673,7 +677,34 @@ class fit_files(object):
         self.bfit.fetch_files.asym_type.set(asym_mode_fetch)
 
     # ======================================================================= #
+    def do_change_n_component(self, delay_ms=150):
+        """
+            Repopulate parameters after the number of terms changes. Debounced
+            so that rapid or held spinbox clicks repopulate only once.
+
+            Args:
+                delay_ms (int): wait this long after the last change. If 0,
+                    run any pending repopulate now.
+        """
+        if self.n_component_after_id is not None:
+            self.bfit.root.after_cancel(self.n_component_after_id)
+            self.n_component_after_id = None
+
+            # run now: only needed if a change is pending
+            if delay_ms == 0:
+                self.populate_param(force_modify=True)
+
+        if delay_ms > 0:
+            def run_populate():
+                self.n_component_after_id = None
+                self.populate_param(force_modify=True)
+            self.n_component_after_id = self.bfit.root.after(delay_ms, run_populate)
+
+    # ======================================================================= #
     def do_fit(self, *args):
+        # apply any pending change in the number of terms
+        self.do_change_n_component(delay_ms=0)
+
         # fitter
         fitter = self.fitter
         figstyle = 'fit'

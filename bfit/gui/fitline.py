@@ -54,6 +54,7 @@ class fitline(object):
         self.row = row
         self.disable_entry_callback = False
         self.lines = []
+        self.spare_lines = []   # hidden InputLines kept for reuse
         
         # fitpar and display state at last populate, to skip unchanged updates
         self.populated_fitpar = None
@@ -382,19 +383,22 @@ class fitline(object):
         n_lines_current = len(self.lines)
         n_lines_needed = n_lines_total - n_lines_current
         
-        # drop unneeded lines
+        # hide unneeded lines, keeping them for reuse
         if n_lines_needed < 0:
             
             unused = self.lines[n_lines_total:]
             for rem in unused:
-                rem.degrid()
-                del rem
+                rem.hide()
+            self.spare_lines.extend(unused)
             self.lines = self.lines[:n_lines_total]
 
-        # add new lines
+        # add lines: reuse hidden lines first, then make new ones
         elif n_lines_needed > 0:
+            n_reuse = min(n_lines_needed, len(self.spare_lines))
+            self.lines.extend(self.spare_lines[:n_reuse])
+            self.spare_lines = self.spare_lines[n_reuse:]
             self.lines.extend([InputLine(fitframe, self.bfit, fitdat) \
-                                                for i in range(n_lines_needed)])
+                                    for i in range(n_lines_needed-n_reuse)])
 
         # reassign and regrid lines
         for i, line in enumerate(self.lines):
